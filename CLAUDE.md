@@ -23,6 +23,7 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 6. **Las ideas nuevas no se construyen:** se apuntan en `IDEAS.md`.
 7. **Simple y corto.** Código, documentos y este archivo: lo mínimo que funcione. Aquí no se repite lo que ya está en otro archivo o se ve leyendo el código; si algo ya no sirve, bórralo.
 8. **Git lo ejecuto yo.** Claude nunca ejecuta comandos `git`: solo me los da escritos. Commits: uno por paso, mensaje corto en español, sin autoría ni `Co-Authored-By`.
+9. **Los límites de las pruebas no se tocan solos.** Cambiar el límite de una prueba requiere propuesta y aprobación, con el motivo y la medida real.
 
 ## Modo ligero (ahorro de tokens)
 

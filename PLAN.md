@@ -3,7 +3,7 @@
 > Paso a paso. Un paso cada vez y siempre con aprobación (ver `CLAUDE.md`).
 > Lo que no es del MVP va a `IDEAS.md`.
 
-**Estado actual:** Fase 3 · paso 3.5 pendiente
+**Estado actual:** Fase 3 · paso 3.6 pendiente
 **Leyenda:** `[ ]` pendiente · `[~]` en curso · `[x]` hecho
 
 ---
@@ -63,12 +63,13 @@ Un programa hecho con Godot, con una pestaña **Cuerpo** que permite:
 - [x] 3.2 Deslizadores de forma (*blend shapes*) con simetría. Comprobar que Godot calcula los mismos pesos que el script de Blender, incluidas las 81 correcciones.
 - [x] 3.3 Deslizadores de proporción (escala uniforme de huesos).
 - [x] 3.4 Reajuste de huesos con `articulaciones.json` (base + desplazamientos de cada forma) y *bind poses*.
-- [ ] 3.5 Prenda base: el shader corta en 0,5 el color por vértice `garment` (degradado de 6 cm: borde recto en la malla completa; ya sigue al cuerpo sola), con un interruptor para mostrarla u ocultarla que también se guarda al exportar.
-- [ ] 3.6 Exportar `.glb`: hornear, 4 influencias, anclajes como nodos vacíos y nombres humanoides. Preparar dos salidas para comparar: pose T horneada y pose A con la corrección de silueta de Godot. Al exportar, la escala de pose se hornea en la malla y en el reposo; prueba: todos los huesos del .glb con escala 1 y la malla igual que antes de hornear (< 0,1 mm). Horneado en CPU (skinning con los pesos, sin GPU), para exportar y probar sin ventana; prueba cruzada: CPU contra `bake_mesh_from_current_skeleton_pose()` con ventana, diferencia < 0,01 mm; cuando exista, pasar la prueba de malla del 3.3 a modo sin ventana. Al exportar, apoyar el personaje en el suelo: punto más bajo de los pies en y = 0.
+- [x] 3.5 Prenda base: el shader corta en 0,5 el color por vértice `garment` (degradado de 6 cm: borde recto en la malla completa; ya sigue al cuerpo sola), con un interruptor para mostrarla u ocultarla que también se guarda al exportar.
+- [ ] 3.6 Exportar `.glb`: hornear, 4 influencias, anclajes como nodos vacíos y nombres humanoides. Preparar dos salidas para comparar: pose T horneada y pose A con la corrección de silueta de Godot. Al exportar, la escala de pose se hornea en la malla y en el reposo; prueba: todos los huesos del .glb con escala 1 y la malla igual que antes de hornear (< 0,1 mm). Horneado en CPU (skinning con los pesos, sin GPU), para exportar y probar sin ventana; prueba cruzada: CPU contra `bake_mesh_from_current_skeleton_pose()` con ventana, diferencia < 0,01 mm; cuando exista, pasar la prueba de malla del 3.3 a modo sin ventana. Al exportar, apoyar el personaje en el suelo: punto más bajo de los pies en y = 0. La prenda debe verse igual fuera del editor (Blender, otros motores, Godot sin el addon). Proponer: textura horneada con las UV o dos materiales por caras. Prueba: abrir el .glb exportado en Blender y comprobar que se ve la prenda.
 - [ ] 3.7 Guardar y cargar presets en JSON.
 - [ ] 3.8 Pruebas: 10 cuerpos aleatorios → exportar → reimportar → comparar.
-- [ ] 3.9 Estilo ilustración: shader de sombra a dos tonos + contorno negro (grosor ajustable), dentro del núcleo.
-- [ ] 3.10 Al exportar, el personaje sale con ese estilo listo para el juego (el `.glb` + el material de Godot).
+- [ ] 3.9 `update_character()`: única función del núcleo que aplica, en este orden, formas → reajuste → pose base → escala de proporción. El resto del programa solo usa esta función. Prueba: llamarla dos veces seguidas da el mismo resultado.
+- [ ] 3.10 Estilo ilustración: shader de sombra a dos tonos + contorno negro (grosor ajustable), dentro del núcleo.
+- [ ] 3.11 Al exportar, el personaje sale con ese estilo listo para el juego (el `.glb` + el material de Godot).
 
 **Hecho cuando:** todas las pruebas pasan sin tocar la interfaz.
 
@@ -131,7 +132,7 @@ Según `diseno/maqueta-pestana-cuerpo.html`.
 | 2026-11-10 | 0.1 / 0.3 | Blender 5.2.2 LTS anotado; carpetas creadas, `README.md` y `CREDITOS.md`; maqueta a `diseno/`, conceptos a `referencias/cuerpos/` |
 | 2026-11-10 | 0.1 | MPFB 2.0.18 activado en Blender 5.2.2; prueba sin ventana: humano base de 19158 vértices |
 | 2026-11-10 | 0.2 | Godot 4.7.2 estable instalado (`godot` en el PATH) |
-| 2026-11-10 | — | Meta visual añadida al MVP: estilo ilustración con contorno (pasos 3.9, 3.10 y 4.6) |
+| 2026-11-10 | — | Meta visual añadida al MVP: estilo ilustración con contorno (pasos 3.10, 3.11 (antes 3.9, 3.10) y 4.6) |
 | 2026-11-10 | 0.1 | Pack "MakeHuman system assets" (CC0) instalado en MPFB; zips borrados |
 | 2026-11-10 | 0.4 (parcial) | Humano MPFB + rig Game engine → `.glb` → Godot sin ventana: 53 huesos, 1,66 m, mira a +Z, 4 influencias que suman 1. Sale en pose A. Falta la parte a mano: BoneMap y animación |
 | 2026-11-10 | 0.4 | BoneMap humanoide por script (53/56), animaciones de Quaternius sobre el humano: caminar, atacar y sentarse sin deformaciones. Hallazgo: la pose A rompe los brazos; hace falta pose T |
@@ -151,3 +152,4 @@ Según `diseno/maqueta-pestana-cuerpo.html`.
 | 2026-11-10 | 3.2 | `godot/addons/creador/shape_weights.gd`: valores por deslizador y lado (`id`, `id_l`/`id_r`), pesos con la regla de FORMATO.md (81 correcciones por producto), `apply` en la malla y simetría al escribir. Decidido: fuera de rango se recorta a [0, 1]; NaN e infinito se rechazan. La regla de pesos en Python es ahora una sola, `shape_weights()` en `exportar_datos.py`, usada por la prueba del 2.3 y por la referencia (2.3 y 2.4 repetidas: mismos números). Prueba `pruebas/godot/probar_formas.gd`: pesos = Python en 483 casos (6 cuerpos, 234 de continuidad, 243 esquinas; las 81 correcciones entran), horneado contra MPFB en atlético y extremo máx. 0,0005 / media 0,0001 mm, simetría y valores fuera de rango |
 | 2026-11-10 | 3.3 | `godot/addons/creador/proportions.gd`: 6 valores de Proporción → escala uniforme en la **pose** del hueso (0 → `decr`, 0,5 → 1, 1 → `incr`); guarda valores con `ShapeWeights.set_value`. Prueba `pruebas/godot/probar_proporciones.gd` (con ventana): fórmula, huesos e hijos (anclaje de mano incluido), malla horneada con altura × 1,15 (error 0,0000 mm; los pies bajan 0,084 mm porque `Root` está 0,56 mm bajo el suelo) y simetría. Aprendido: leer una pose en el fotograma en que la escena entra en el árbol deja al esqueleto sin ver cambios (esperar 2 fotogramas); `bake_mesh_from_current_skeleton_pose()` no funciona con `--headless` y lee la pose ya dibujada. Añadidos al 3.6: horneado en CPU y apoyar en el suelo |
 | 2026-11-10 | 3.4 | `godot/addons/creador/skeleton_refit.gd`: reajusta reposo, pose (posición y giro) y *bind poses* de los 57 huesos con `bone_refit.gd`; la escala de Proporción no se toca. `species_data.gd` da a cada personaje su `Skin` propia y exige malla y esqueleto en el origen. Prueba `pruebas/godot/probar_reajuste_esqueleto.gd` (con ventana; sin ella se salta la malla horneada): reposo contra MPFB en 6 cuerpos máx. 0,0035 mm y 0,000°; reposo × *bind pose* = identidad (máx. 0,002 mm por los 32 bits de Godot; límite 0,01 mm); ida y vuelta exacta; dos personajes independientes; 0,62 ms por reajuste; malla quieta en reposo 0,0006 mm; codo a 90° en el cuerpo largo contra MPFB + esqueleto de Blender máx. 0,020 / media 0,001 mm. Aprendido: `bake_mesh_from_current_skeleton_pose()` no incluye las formas (se hornean antes) |
+| 2026-11-11 | 3.5 | `godot/addons/creador/body.gdshader` (piel o prenda con corte en 0,5 del color `garment`, por píxel; sin luces hasta el 3.10) y `body_material.gd` (interruptor `show_garment`, parámetro del material). Prueba `pruebas/godot/probar_prenda.gd` (con ventana, imagen de 1024 px): 1.320 vértices de frente caen en un píxel de su color (0 errores), también con caderas y grasa al máximo y con la prenda oculta; solo dos colores, sin mezcla; el borde de la cintura varía 1 píxel (2 mm) en 16 cm (medida, sin límite fijado). Pasos de estilo renumerados a 3.10 y 3.11 por el nuevo 3.9 (`update_character()`); regla 9 en CLAUDE.md |
