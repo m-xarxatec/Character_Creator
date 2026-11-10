@@ -1,0 +1,1 @@
+{"version": 1, "macros": {"gender": 0.3, "height": 0.6, "weight": 0.1, "muscle": 0.4, "race": {"asian": 1, "caucasian": 0, "african": 0}}, "targets": {"head-scale-horiz-incr": 0.5, "measure-neck-height-incr": 0.6, "lowerlegs-height-incr": 0.7}}

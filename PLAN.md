@@ -3,7 +3,7 @@
 > Paso a paso. Un paso cada vez y siempre con aprobación (ver `CLAUDE.md`).
 > Lo que no es del MVP va a `IDEAS.md`.
 
-**Estado actual:** Fase 0 terminada · Fase 1 · paso 1.1 pendiente
+**Estado actual:** Fase 1 · 1.1 hecho · 1.2 pendiente
 **Leyenda:** `[ ]` pendiente · `[~]` en curso · `[x]` hecho
 
 ---
@@ -35,7 +35,7 @@ Un programa hecho con Godot, con una pestaña **Cuerpo** que permite:
 
 ## Fase 1 — Pipeline en Blender (sin ventana)
 
-- [ ] 1.1 Script `blender/generar_cuerpo.py`: recibe un JSON con valores y crea el humano con MPFB2.
+- [x] 1.1 Script `blender/generar_cuerpo.py`: recibe un JSON con valores y crea el humano con MPFB2.
 - [ ] 1.2 Aplicar el rig *Game engine*, el proxy ligero y la prenda base. (Ojo: el pack no trae ropa interior; se decide al llegar, buscando material gratuito con licencia limpia.)
 - [ ] 1.3 Hornear formas, quitar helpers y resolver las máscaras.
 - [ ] 1.4 Exportar `.glb` según `CLAUDE.md` (sección 6) y añadir los 4 puntos de anclaje.
@@ -134,3 +134,4 @@ Según `diseno/maqueta-pestana-cuerpo.html`.
 | 2026-11-10 | 0.4 (parcial) | Humano MPFB + rig Game engine → `.glb` → Godot sin ventana: 53 huesos, 1,66 m, mira a +Z, 4 influencias que suman 1. Sale en pose A. Falta la parte a mano: BoneMap y animación |
 | 2026-11-10 | 0.4 | BoneMap humanoide por script (53/56), animaciones de Quaternius sobre el humano: caminar, atacar y sentarse sin deformaciones. Hallazgo: la pose A rompe los brazos; hace falta pose T |
 | 2026-11-10 | 0.5 | Licencia MIT para el editor (`LICENSE`) y nombre provisional GameMolde. Fase 0 terminada |
+| 2026-11-10 | 1.1 | `blender/generar_cuerpo.py`: JSON (versión 1) → cuerpo MPFB con macros y targets, validado y con los pies en el suelo. 5 cuerpos de ejemplo y 23 pruebas |

@@ -63,7 +63,8 @@ Riesgos: …
 
 Aún no hay código, así que no hay comandos de pruebas. Añade aquí cada comando real cuando exista (una línea cada uno).
 
-- Previsto (Fase 1): `blender -b -P blender/generar_cuerpo.py -- cuerpo.json salida.glb`
+- Crear un cuerpo: `blender -b -P blender/generar_cuerpo.py -- "$PWD/pruebas/fase_1/cuerpos/neutro.json"` (imprime `RESUMEN:` con las medidas; el `.glb` llega en el paso 1.4). El formato del JSON está en la cabecera del script.
+- Pruebas de Fase 1: `blender -b -P pruebas/fase_1/probar_generar_cuerpo.py 2>&1 | grep -E 'bien|FALLO|RESULTADO'`
 - Prueba 0.4, desde `pruebas/paso_0_4/proyecto/` (cada script explica su uso en la cabecera):
   - `godot --headless --path . -s crear_bonemap.gd` y luego `godot --headless --path . --import`
   - `godot --headless --path . -s comprobar.gd` (huesos, tamaño, pesos)
