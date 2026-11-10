@@ -14,6 +14,12 @@
 
 ---
 
+## Después del MVP: más deslizadores
+
+- Ir añadiendo filas a la tabla del paso 2.1 hasta cubrir cada detalle del cuerpo (MakeHuman trae unas 800 formas listas: orejas, nariz, mandíbula, dedos, pies…).
+
+---
+
 ## Después del MVP: nuevas pestañas
 
 - **Cara y ojos:** forma de la cara, ojos (forma y color), cejas, nariz, boca, orejas; expresiones y visemas.

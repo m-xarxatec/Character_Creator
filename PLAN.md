@@ -48,7 +48,7 @@ Un programa hecho con Godot, con una pestaña **Cuerpo** que permite:
 
 ## Fase 2 — Datos para Godot
 
-- [ ] 2.1 Tabla de deslizadores del MVP: zona → deslizador → tipo (Forma / Proporción / Por crear) → target de MakeHuman o hueso.
+- [ ] 2.1 Tabla de deslizadores del MVP: zona → deslizador → tipo (Forma / Proporción / Por crear) → target de MakeHuman o hueso. Meta: poder cambiar el tamaño de cada parte (cuello, espalda a lo ancho y hacia atrás, largo de la cara…). La tabla es un archivo de datos: añadir un deslizador = añadir una fila, sin tocar código.
 - [ ] 2.2 Definir el formato de `datos/` (manifiesto con `version`).
 - [ ] 2.3 Conversor `blender/exportar_datos.py`: malla base, formas, pesos, vértices de cada articulación y anclajes de la prenda.
 - [ ] 2.4 Prueba: reajustar los huesos fuera de Blender da el mismo resultado que MPFB2 (diferencia < 1 mm) en 5 cuerpos.
