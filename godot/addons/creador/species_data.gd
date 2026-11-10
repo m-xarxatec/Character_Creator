@@ -55,6 +55,14 @@ func _load_scene(path: String) -> String:
 		return "cuerpo.glb debe tener un esqueleto y una malla"
 	skeleton = skeletons[0]
 	mesh = meshes[0]
+	var node: Node3D = mesh
+	while node != scene:  # el núcleo trabaja en un solo espacio: el de articulaciones.json
+		if not node.transform.is_equal_approx(Transform3D.IDENTITY):
+			return "cuerpo.glb: el nodo %s no está en el origen" % node.name
+		node = node.get_parent()
+	if mesh.get_parent() != skeleton:
+		return "cuerpo.glb: la malla debe colgar del esqueleto"
+	mesh.skin = mesh.skin.duplicate()  # Skin propia: el reajuste de un personaje no toca a otro
 	var bones: Array = manifest["bones"]["deform"] + manifest["bones"]["sockets"]
 	if skeleton.get_bone_count() != bones.size() or bones.any(func(b: String) -> bool: return skeleton.find_bone(b) < 0):
 		return "Los huesos de cuerpo.glb no son los del manifiesto"
