@@ -3,7 +3,7 @@
 > Paso a paso. Un paso cada vez y siempre con aprobación (ver `CLAUDE.md`).
 > Lo que no es del MVP va a `IDEAS.md`.
 
-**Estado actual:** Fase 2 · paso 2.2 pendiente
+**Estado actual:** Fase 2 · paso 2.3 pendiente
 **Leyenda:** `[ ]` pendiente · `[~]` en curso · `[x]` hecho
 
 ---
@@ -49,9 +49,9 @@ Un programa hecho con Godot, con una pestaña **Cuerpo** que permite:
 ## Fase 2 — Datos para Godot
 
 - [x] 2.1 Tabla de deslizadores del MVP: zona → deslizador → tipo (Forma / Proporción / Por crear) → target de MakeHuman o hueso. Meta: poder cambiar el tamaño de cada parte (cuello, espalda a lo ancho y hacia atrás, largo de la cara…). La tabla es un archivo de datos: añadir un deslizador = añadir una fila, sin tocar código.
-- [ ] 2.2 Definir el formato de `datos/` (manifiesto con `version`).
-- [ ] 2.3 Conversor `blender/exportar_datos.py`: malla base, formas, pesos, vértices de cada articulación y anclajes de la prenda.
-- [ ] 2.4 Prueba: reajustar los huesos fuera de Blender da el mismo resultado que MPFB2 (diferencia < 1 mm) en 5 cuerpos.
+- [x] 2.2 Definir el formato de `datos/` (manifiesto con `version`): `datos/FORMATO.md`.
+- [ ] 2.3 Conversor `blender/exportar_datos.py`: genera `datos/humana/` según `datos/FORMATO.md` (cuerpo en pose A con formas y anclajes como huesos, articulaciones con sus desplazamientos y manifiesto con `sha256`).
+- [ ] 2.4 Prueba: reajustar los huesos fuera de Blender da el mismo resultado que MPFB2 (diferencia < 1 mm) en 5 cuerpos. La diferencia de malla al combinar varias macros se mide aparte y se informa.
 
 **Hecho cuando:** `datos/` está completa, versionada y probada.
 
@@ -62,9 +62,9 @@ Un programa hecho con Godot, con una pestaña **Cuerpo** que permite:
 - [ ] 3.1 Cargar `datos/` y montar malla y esqueleto.
 - [ ] 3.2 Deslizadores de forma (*blend shapes*) con simetría.
 - [ ] 3.3 Deslizadores de proporción (escala uniforme de huesos).
-- [ ] 3.4 Reajuste de huesos (centro de vértices) y *bind poses*.
-- [ ] 3.5 Prenda base: el shader pinta el atributo `garment` de la malla (ya sigue al cuerpo sola), con un interruptor para mostrarla u ocultarla que también se guarda al exportar.
-- [ ] 3.6 Exportar `.glb`: hornear, 4 influencias, anclajes y nombres humanoides.
+- [ ] 3.4 Reajuste de huesos con `articulaciones.json` (base + desplazamientos de cada forma) y *bind poses*.
+- [ ] 3.5 Prenda base: el shader corta en 0,5 el color por vértice `garment` (degradado de 6 cm: borde recto en la malla completa; ya sigue al cuerpo sola), con un interruptor para mostrarla u ocultarla que también se guarda al exportar.
+- [ ] 3.6 Exportar `.glb`: hornear, 4 influencias, anclajes como nodos vacíos y nombres humanoides. Preparar dos salidas para comparar: pose T horneada y pose A con la corrección de silueta de Godot.
 - [ ] 3.7 Guardar y cargar presets en JSON.
 - [ ] 3.8 Pruebas: 10 cuerpos aleatorios → exportar → reimportar → comparar.
 - [ ] 3.9 Estilo ilustración: shader de sombra a dos tonos + contorno negro (grosor ajustable), dentro del núcleo.
@@ -95,6 +95,7 @@ Según `diseno/maqueta-pestana-cuerpo.html`.
 - [ ] 5.2 Poses extremas: brazos arriba, sentadilla, giro de tronco.
 - [ ] 5.3 Comprobaciones automáticas: pesos que suman 1, ≤ 4 influencias, 56 huesos humanoides, anclajes presentes.
 - [ ] 5.4 Informe visible (bien / aviso / error) con la zona afectada.
+- [ ] 5.5 Decidir la pose de exportación con las dos salidas del 3.6 (si gana la A, cambiar la regla de `CLAUDE.md`).
 
 **Hecho cuando:** un cuerpo extremo muestra los avisos correctos.
 
@@ -142,3 +143,4 @@ Según `diseno/maqueta-pestana-cuerpo.html`.
 | 2026-11-10 | 1.5 | `blender/render_vistas.py`: frente, perfil y espalda en una imagen (en `pruebas/**/capturas/`, fuera de git). Revisados los 5 cuerpos: pose T, prenda en su sitio, sin cortes ni huecos |
 | 2026-11-10 | 1.6 | `pruebas/godot/probar_glb.gd`: Godot abre los 5 `.glb` sin errores; nombres y padres de los 53 huesos coinciden con el perfil humanoide, pose T, anclajes, pesos y prenda. 91 comprobaciones. Fase 1 terminada |
 | 2026-11-10 | 2.1 | `datos/humana/deslizadores.csv`: 40 deslizadores en 14 zonas (33 Forma, 4 Proporción, 3 Por crear). Decidido: las macros se hornean como 2 formas (menos/más) sobre el cuerpo neutro; los largos son formas de MakeHuman y los huesos se reajustan (2.4); Proporción = escala uniforme de un hueso. Sobras del 0.4 borradas. 47 pruebas |
+| 2026-11-10 | 2.2 | `datos/FORMATO.md`: carpeta por especie con manifiesto (`sha256`), `cuerpo.glb` en pose A con formas `_decr`/`_incr` y 4 huesos de anclaje, y `articulaciones.json` (base + desplazamientos). Macros: 2 formas cada una, pesos explicados. Proxy ligero para después. Pose de exportación: se decide en el 5.5 |

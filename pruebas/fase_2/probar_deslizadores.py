@@ -16,7 +16,7 @@ import exportar_glb  # noqa: E402
 import generar_cuerpo as gc  # noqa: E402
 
 TABLE = os.path.join(ROOT, "datos", "humana", "deslizadores.csv")
-COLUMNS = ["id", "zona", "nombre", "tipo", "menos", "mas", "lados"]
+COLUMNS = ["id", "zona", "nombre", "tipo", "decr", "incr", "lados"]
 ZONES = 14
 failures = []
 
@@ -62,14 +62,14 @@ def scale_of(row, value):
 def check_row(row):
     label = f"{row['id']}:"
     if row["tipo"] == "Forma":
-        check(f"{label} formas existen", shape_ok(row, row["menos"]) and shape_ok(row, row["mas"]),
-              f"{row['menos']} / {row['mas']}")
+        check(f"{label} formas existen", shape_ok(row, row["decr"]) and shape_ok(row, row["incr"]),
+              f"{row['decr']} / {row['incr']}")
     elif row["tipo"] == "Proporción":
-        low, high = scale_of(row, row["menos"]), scale_of(row, row["mas"])
+        low, high = scale_of(row, row["decr"]), scale_of(row, row["incr"])
         check(f"{label} escala de hueso humanoide, menos < 1 < más",
               low is not None and high is not None and 0 < low < 1 < high)
     else:
-        check(f"{label} por crear sin fuente", row["menos"] == row["mas"] == "")
+        check(f"{label} por crear sin fuente", row["decr"] == row["incr"] == "")
 
 
 with open(TABLE, encoding="utf-8", newline="") as file:

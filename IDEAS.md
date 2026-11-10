@@ -17,6 +17,7 @@
 ## Después del MVP: más deslizadores
 
 - Ir añadiendo filas a la tabla del paso 2.1 hasta cubrir cada detalle del cuerpo (MakeHuman trae unas 800 formas listas: orejas, nariz, mandíbula, dedos, pies…).
+- Macros exactas: mezclar en Godot los cuerpos combinados de MakeHuman (p. ej. "musculado y gordo") en vez de sumar dos formas por macro, como decidimos en el 2.1.
 
 ---
 
@@ -27,7 +28,7 @@
 - **Ropa:** prendas que siguen al cuerpo (anclaje tipo `.mhclo`), capas, ocultar la piel que queda bajo la ropa.
 - **Accesorios:** cascos, gafas o armas en los puntos de anclaje.
 - **Materiales:** color de piel (decidido: después del MVP), texturas, estilo pixel art. (El estilo ilustración con contorno ya está en `PLAN.md`.)
-- **Exportar:** VRM 1.0, niveles de detalle (LOD), opción "solo proxy ligero".
+- **Exportar:** VRM 1.0, niveles de detalle (LOD), opción "solo proxy ligero" (`cuerpo_ligero.glb` con `proxy741` de MakeHuman, mismas formas y nombres; la prenda necesitaría una máscara en textura para no salir dentada).
 
 ---
 

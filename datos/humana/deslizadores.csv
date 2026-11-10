@@ -1,4 +1,4 @@
-id,zona,nombre,tipo,menos,mas,lados
+id,zona,nombre,tipo,decr,incr,lados
 height,Global,Altura,Proporción,escala:Root=0.85,escala:Root=1.15,1
 gender,Global,Complexión,Forma,macro:gender=0,macro:gender=1,1
 muscle,Global,Músculo,Forma,macro:muscle=0,macro:muscle=1,1
