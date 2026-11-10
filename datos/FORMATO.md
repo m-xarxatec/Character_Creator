@@ -12,6 +12,7 @@ Unidades y ejes de Godot: metros, Y arriba, mirando a +Z.
 | `deslizadores.csv` | La tabla del paso 2.1 |
 
 Si el formato cambia de forma incompatible, sube `version`.
+Si `datos/` va dentro de un proyecto Godot, `deslizadores.csv` debe importarse como "Keep File (exported as is)": por defecto Godot toma los `.csv` como traducciones.
 
 ## `manifiesto.json`
 
