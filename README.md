@@ -9,7 +9,7 @@ Un programa libre para crear personajes 3D moviendo deslizadores, y guardarlos l
 - Cambiar el cuerpo por zonas (cabeza, torso, brazos, piernas…) con deslizadores.
 - Ver el personaje en 3D mientras lo cambias.
 - Probarlo con animaciones (caminar, atacar…).
-- Guardarlo como archivo `.glb` para tu juego.
+- Guardarlo como archivo `.glb` para tu juego, con o sin la prenda base (se quita con un botón).
 - Que se vea como un dibujo: estilo anime, con borde negro grueso alrededor.
 
 ## Qué hay en cada carpeta

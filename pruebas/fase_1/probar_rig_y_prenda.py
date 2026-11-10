@@ -8,7 +8,8 @@ import bpy
 ROOT = os.path.dirname(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
 sys.path.insert(0, os.path.join(ROOT, "blender"))
 import generar_cuerpo as gc  # noqa: E402
-from poner_rig import bone_weights  # noqa: E402
+from poner_rig import add_rig, bone_weights  # noqa: E402
+from prenda_base import paint_base_garment  # noqa: E402
 
 BODIES = ("neutro", "mujer_baja", "hombre_alto_fuerte", "robusto_mayor", "delgada_estilizada")
 failures = []
@@ -33,7 +34,9 @@ reference = None
 for body in BODIES:
     print(body)
     bpy.ops.wm.read_factory_settings(use_empty=True)
-    mesh = gc.build_character(gc.load_spec(os.path.join(ROOT, "pruebas", "fase_1", "cuerpos", body + ".json")))
+    mesh = gc.create_body(gc.load_spec(os.path.join(ROOT, "pruebas", "fase_1", "cuerpos", body + ".json")))
+    add_rig(mesh)
+    paint_base_garment(mesh)
     rig = mesh.parent
     height = gc.measure(mesh)["height"]
     skin = skin_vertices(mesh)

@@ -108,7 +108,7 @@ juego_demo/
 | Compresión | Sin Draco |
 | Puntos de anclaje | `socket_hand_r`, `socket_hand_l`, `socket_back`, `socket_hip` |
 | Malla | La base completa de MakeHuman (~13.400 vértices), sin proxy: una sola malla para todos los cuerpos |
-| Cuerpo por defecto | Neutro, sin detalle anatómico, con prenda base **pintada** (top y short): atributo de color por vértice `garment` (1 = prenda), que el shader corta en 0,5. No es geometría |
+| Cuerpo por defecto | Neutro, sin detalle anatómico, con prenda base **pintada** (top y short): atributo de color por vértice `garment` (1 = prenda), que el shader corta en 0,5. No es geometría. **Se puede quitar con un botón** y exportar con o sin ella (nos diferencia de VRoid): la marca `garment` viaja siempre en la malla y lo que se enciende o apaga es el shader |
 | Carpeta `datos/` | Manifiesto con `version`; si cambia el formato, sube la versión |
 
 ---

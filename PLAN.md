@@ -3,7 +3,7 @@
 > Paso a paso. Un paso cada vez y siempre con aprobación (ver `CLAUDE.md`).
 > Lo que no es del MVP va a `IDEAS.md`.
 
-**Estado actual:** Fase 1 · 1.1 y 1.2 hechos · 1.3 pendiente
+**Estado actual:** Fase 1 · 1.1–1.3 hechos · 1.4 pendiente
 **Leyenda:** `[ ]` pendiente · `[~]` en curso · `[x]` hecho
 
 ---
@@ -37,7 +37,7 @@ Un programa hecho con Godot, con una pestaña **Cuerpo** que permite:
 
 - [x] 1.1 Script `blender/generar_cuerpo.py`: recibe un JSON con valores y crea el humano con MPFB2.
 - [x] 1.2 Aplicar el rig *Game engine* (pesos a 4 influencias) y la prenda base pintada. Sin proxy: se usa la malla completa.
-- [ ] 1.3 Hornear formas, quitar helpers y resolver las máscaras.
+- [x] 1.3 Hornear formas, quitar helpers y resolver las máscaras.
 - [ ] 1.4 Exportar `.glb` según `CLAUDE.md` (sección 6) y añadir los 4 puntos de anclaje.
 - [ ] 1.5 Renders de frente, perfil y espalda para revisarlos.
 - [ ] 1.6 Prueba automática: el `.glb` se abre en Godot sin errores y el BoneMap se rellena solo.
@@ -63,7 +63,7 @@ Un programa hecho con Godot, con una pestaña **Cuerpo** que permite:
 - [ ] 3.2 Deslizadores de forma (*blend shapes*) con simetría.
 - [ ] 3.3 Deslizadores de proporción (longitud y escala de huesos).
 - [ ] 3.4 Reajuste de huesos (centro de vértices) y *bind poses*.
-- [ ] 3.5 Prenda base: el shader pinta el atributo `garment` de la malla (ya sigue al cuerpo sola).
+- [ ] 3.5 Prenda base: el shader pinta el atributo `garment` de la malla (ya sigue al cuerpo sola), con un interruptor para mostrarla u ocultarla que también se guarda al exportar.
 - [ ] 3.6 Exportar `.glb`: hornear, 4 influencias, anclajes y nombres humanoides.
 - [ ] 3.7 Guardar y cargar presets en JSON.
 - [ ] 3.8 Pruebas: 10 cuerpos aleatorios → exportar → reimportar → comparar.
@@ -82,7 +82,7 @@ Según `diseno/maqueta-pestana-cuerpo.html`.
 - [ ] 4.2 Vista 3D con cámara orbital y maniquí en vivo.
 - [ ] 4.3 Zonas y deslizadores con etiqueta de tipo.
 - [ ] 4.4 Simetría, deshacer y rehacer, y "restablecer zona".
-- [ ] 4.5 Botones Probar huesos y Exportar .glb conectados al núcleo.
+- [ ] 4.5 Botones Probar huesos y Exportar .glb conectados al núcleo, y botón para quitar o poner la prenda base.
 - [ ] 4.6 El maniquí se ve con el estilo ilustración; control de grosor del contorno.
 
 **Hecho cuando:** se crea y se exporta un personaje usando solo el ratón.
@@ -136,3 +136,5 @@ Según `diseno/maqueta-pestana-cuerpo.html`.
 | 2026-11-10 | 0.5 | Licencia MIT para el editor (`LICENSE`) y nombre provisional GameMolde. Fase 0 terminada |
 | 2026-11-10 | 1.1 | `blender/generar_cuerpo.py`: JSON (versión 1) → cuerpo MPFB con macros y targets, validado y con los pies en el suelo. 5 cuerpos de ejemplo y 23 pruebas |
 | 2026-11-10 | 1.2 | `blender/poner_rig.py` (53 huesos, máx. 4 influencias, suman 1) y `blender/prenda_base.py` (top y short pintados, iguales en todos los cuerpos). Decidido: malla completa sin proxy y prenda pintada. 45 pruebas |
+| 2026-11-10 | — | Requisito nuevo: la prenda base se puede quitar con un botón y exportar con o sin ella (pasos 3.5 y 4.5) |
+| 2026-11-10 | 1.3 | `blender/limpiar_malla.py`: formas horneadas, sin malla auxiliar ni máscaras, solo grupos de huesos. Quedan 13.380 vértices y el cuerpo no se mueve ni 0,01 mm. 45 pruebas |

@@ -19,6 +19,7 @@ import bpy
 from bl_ext.blender_org.mpfb.services import HumanService, TargetService
 
 sys.path.insert(0, os.path.dirname(os.path.abspath(__file__)))  # para importar los otros scripts de blender/
+from limpiar_malla import clean_mesh  # noqa: E402
 from poner_rig import add_rig  # noqa: E402
 from prenda_base import paint_base_garment  # noqa: E402
 
@@ -118,10 +119,11 @@ def _put_feet_on_ground(basemesh):
 
 
 def build_character(spec):
-    """Cuerpo completo: malla con formas, esqueleto con pesos y prenda base pintada."""
+    """Personaje listo para exportar: formas horneadas, esqueleto con pesos, prenda pintada y solo piel."""
     basemesh = create_body(spec)
     add_rig(basemesh)
     paint_base_garment(basemesh)
+    clean_mesh(basemesh)
     return basemesh
 
 
