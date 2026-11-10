@@ -3,7 +3,7 @@
 > Paso a paso. Un paso cada vez y siempre con aprobación (ver `CLAUDE.md`).
 > Lo que no es del MVP va a `IDEAS.md`.
 
-**Estado actual:** Fase 1 · 1.1–1.5 hechos · 1.6 pendiente
+**Estado actual:** Fase 1 terminada · Fase 2 · paso 2.1 pendiente
 **Leyenda:** `[ ]` pendiente · `[~]` en curso · `[x]` hecho
 
 ---
@@ -40,7 +40,7 @@ Un programa hecho con Godot, con una pestaña **Cuerpo** que permite:
 - [x] 1.3 Hornear formas, quitar helpers y resolver las máscaras.
 - [x] 1.4 Exportar `.glb` según `CLAUDE.md` (sección 6) y añadir los 4 puntos de anclaje.
 - [x] 1.5 Renders de frente, perfil y espalda para revisarlos.
-- [ ] 1.6 Prueba automática: el `.glb` se abre en Godot sin errores y el BoneMap se rellena solo.
+- [x] 1.6 Prueba automática: el `.glb` se abre en Godot sin errores y el BoneMap se rellena solo.
 
 **Hecho cuando:** `blender -b -P blender/generar_cuerpo.py -- cuerpo.json salida.glb` funciona con 5 JSON distintos.
 
@@ -140,3 +140,4 @@ Según `diseno/maqueta-pestana-cuerpo.html`.
 | 2026-11-10 | 1.3 | `blender/limpiar_malla.py`: formas horneadas, sin malla auxiliar ni máscaras, solo grupos de huesos. Quedan 13.380 vértices y el cuerpo no se mueve ni 0,01 mm. 45 pruebas |
 | 2026-11-10 | 1.4 | Exporta `.glb`: pose T (`pose_t.py`), nombres humanoides y export (`exportar_glb.py`), 4 anclajes (`anclajes.py`). Los 5 cuerpos pasan 110 comprobaciones y el neutro se anima bien en Godot sin corrección. Proyecto Godot de pruebas movido a `pruebas/godot/` |
 | 2026-11-10 | 1.5 | `blender/render_vistas.py`: frente, perfil y espalda en una imagen (en `pruebas/**/capturas/`, fuera de git). Revisados los 5 cuerpos: pose T, prenda en su sitio, sin cortes ni huecos |
+| 2026-11-10 | 1.6 | `pruebas/godot/probar_glb.gd`: Godot abre los 5 `.glb` sin errores; nombres y padres de los 53 huesos coinciden con el perfil humanoide, pose T, anclajes, pesos y prenda. 91 comprobaciones. Fase 1 terminada |
