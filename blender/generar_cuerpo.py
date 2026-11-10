@@ -1,5 +1,5 @@
 # SPDX-License-Identifier: GPL-3.0-or-later
-"""Crea un cuerpo humano con MPFB a partir de un JSON de valores.
+"""Crea un personaje con MPFB a partir de un JSON de valores: cuerpo, esqueleto y prenda base.
 
 Uso: blender -b -P blender/generar_cuerpo.py -- cuerpo.json
 
@@ -17,6 +17,10 @@ import sys
 
 import bpy
 from bl_ext.blender_org.mpfb.services import HumanService, TargetService
+
+sys.path.insert(0, os.path.dirname(os.path.abspath(__file__)))  # para importar los otros scripts de blender/
+from poner_rig import add_rig  # noqa: E402
+from prenda_base import paint_base_garment  # noqa: E402
 
 FORMAT_VERSION = 1
 MIN_AGE = 0.5  # 0.5 = adulto joven en MakeHuman; el editor solo crea adultos
@@ -113,6 +117,14 @@ def _put_feet_on_ground(basemesh):
     bpy.ops.object.transform_apply(location=True, rotation=True, scale=True)
 
 
+def build_character(spec):
+    """Cuerpo completo: malla con formas, esqueleto con pesos y prenda base pintada."""
+    basemesh = create_body(spec)
+    add_rig(basemesh)
+    paint_base_garment(basemesh)
+    return basemesh
+
+
 def measure(basemesh):
     """Medidas de la piel visible (sin malla auxiliar), en metros. Blender: Z arriba, X ancho, Y fondo."""
     evaluated = basemesh.evaluated_get(bpy.context.evaluated_depsgraph_get())
@@ -130,7 +142,7 @@ def measure(basemesh):
 def main():
     json_path = sys.argv[sys.argv.index("--") + 1]
     bpy.ops.wm.read_factory_settings(use_empty=True)
-    basemesh = create_body(load_spec(json_path))
+    basemesh = build_character(load_spec(json_path))
     print("RESUMEN:", json.dumps({key: round(value, 4) for key, value in measure(basemesh).items()}))
 
 

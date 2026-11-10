@@ -64,7 +64,7 @@ Riesgos: …
 Aún no hay código, así que no hay comandos de pruebas. Añade aquí cada comando real cuando exista (una línea cada uno).
 
 - Crear un cuerpo: `blender -b -P blender/generar_cuerpo.py -- "$PWD/pruebas/fase_1/cuerpos/neutro.json"` (imprime `RESUMEN:` con las medidas; el `.glb` llega en el paso 1.4). El formato del JSON está en la cabecera del script.
-- Pruebas de Fase 1: `blender -b -P pruebas/fase_1/probar_generar_cuerpo.py 2>&1 | grep -E 'bien|FALLO|RESULTADO'`
+- Pruebas de Fase 1 (una por archivo `pruebas/fase_1/probar_*.py`): `blender -b -P pruebas/fase_1/probar_generar_cuerpo.py 2>&1 | grep -E 'bien|FALLO|RESULTADO'`
 - Prueba 0.4, desde `pruebas/paso_0_4/proyecto/` (cada script explica su uso en la cabecera):
   - `godot --headless --path . -s crear_bonemap.gd` y luego `godot --headless --path . --import`
   - `godot --headless --path . -s comprobar.gd` (huesos, tamaño, pesos)
@@ -107,7 +107,8 @@ juego_demo/
 | Huesos exportados | Solo de deformación |
 | Compresión | Sin Draco |
 | Puntos de anclaje | `socket_hand_r`, `socket_hand_l`, `socket_back`, `socket_hip` |
-| Cuerpo por defecto | Neutro, sin detalle anatómico, con prenda base (ropa interior o traje de baño) |
+| Malla | La base completa de MakeHuman (~13.400 vértices), sin proxy: una sola malla para todos los cuerpos |
+| Cuerpo por defecto | Neutro, sin detalle anatómico, con prenda base **pintada** (top y short): atributo de color por vértice `garment` (1 = prenda), que el shader corta en 0,5. No es geometría |
 | Carpeta `datos/` | Manifiesto con `version`; si cambia el formato, sube la versión |
 
 ---

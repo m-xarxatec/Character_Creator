@@ -3,7 +3,7 @@
 > Paso a paso. Un paso cada vez y siempre con aprobación (ver `CLAUDE.md`).
 > Lo que no es del MVP va a `IDEAS.md`.
 
-**Estado actual:** Fase 1 · 1.1 hecho · 1.2 pendiente
+**Estado actual:** Fase 1 · 1.1 y 1.2 hechos · 1.3 pendiente
 **Leyenda:** `[ ]` pendiente · `[~]` en curso · `[x]` hecho
 
 ---
@@ -36,7 +36,7 @@ Un programa hecho con Godot, con una pestaña **Cuerpo** que permite:
 ## Fase 1 — Pipeline en Blender (sin ventana)
 
 - [x] 1.1 Script `blender/generar_cuerpo.py`: recibe un JSON con valores y crea el humano con MPFB2.
-- [ ] 1.2 Aplicar el rig *Game engine*, el proxy ligero y la prenda base. (Ojo: el pack no trae ropa interior; se decide al llegar, buscando material gratuito con licencia limpia.)
+- [x] 1.2 Aplicar el rig *Game engine* (pesos a 4 influencias) y la prenda base pintada. Sin proxy: se usa la malla completa.
 - [ ] 1.3 Hornear formas, quitar helpers y resolver las máscaras.
 - [ ] 1.4 Exportar `.glb` según `CLAUDE.md` (sección 6) y añadir los 4 puntos de anclaje.
 - [ ] 1.5 Renders de frente, perfil y espalda para revisarlos.
@@ -63,7 +63,7 @@ Un programa hecho con Godot, con una pestaña **Cuerpo** que permite:
 - [ ] 3.2 Deslizadores de forma (*blend shapes*) con simetría.
 - [ ] 3.3 Deslizadores de proporción (longitud y escala de huesos).
 - [ ] 3.4 Reajuste de huesos (centro de vértices) y *bind poses*.
-- [ ] 3.5 Prenda base que sigue al cuerpo.
+- [ ] 3.5 Prenda base: el shader pinta el atributo `garment` de la malla (ya sigue al cuerpo sola).
 - [ ] 3.6 Exportar `.glb`: hornear, 4 influencias, anclajes y nombres humanoides.
 - [ ] 3.7 Guardar y cargar presets en JSON.
 - [ ] 3.8 Pruebas: 10 cuerpos aleatorios → exportar → reimportar → comparar.
@@ -135,3 +135,4 @@ Según `diseno/maqueta-pestana-cuerpo.html`.
 | 2026-11-10 | 0.4 | BoneMap humanoide por script (53/56), animaciones de Quaternius sobre el humano: caminar, atacar y sentarse sin deformaciones. Hallazgo: la pose A rompe los brazos; hace falta pose T |
 | 2026-11-10 | 0.5 | Licencia MIT para el editor (`LICENSE`) y nombre provisional GameMolde. Fase 0 terminada |
 | 2026-11-10 | 1.1 | `blender/generar_cuerpo.py`: JSON (versión 1) → cuerpo MPFB con macros y targets, validado y con los pies en el suelo. 5 cuerpos de ejemplo y 23 pruebas |
+| 2026-11-10 | 1.2 | `blender/poner_rig.py` (53 huesos, máx. 4 influencias, suman 1) y `blender/prenda_base.py` (top y short pintados, iguales en todos los cuerpos). Decidido: malla completa sin proxy y prenda pintada. 45 pruebas |
