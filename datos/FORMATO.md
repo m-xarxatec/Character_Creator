@@ -112,6 +112,12 @@ cubos siempre igual, así que basta con guardar la posición base y cuánto la m
 - Los anclajes también se guardan aquí: la mano, entre la muñeca y el nudillo del dedo corazón; la espalda y la cadera, en un vértice fijo de la piel + 2 cm.
 - Los deslizadores Proporción se aplican después, escalando el hueso por igual en todas direcciones.
 
+## Pesos de los huesos en Godot
+
+`cuerpo.glb` guarda los pesos en 32 bits, pero Godot los guarda en la malla en **16 bits** (múltiplos de 1/65535).
+Por eso los 4 pesos de un vértice pueden sumar 1 ± 0,00005 y el horneado en CPU los divide por su suma.
+Explica la diferencia con MPFB al doblar un hueso (codo a 90°: máx. 0,006 mm), no la del horneado de Godot (0,02 mm), que sigue sin causa conocida.
+
 ## Pose
 
 Se guarda en **pose A** porque los targets de MakeHuman están hechos sobre ella: si se guardara en pose T, los cambios de largo de los brazos saldrían torcidos.

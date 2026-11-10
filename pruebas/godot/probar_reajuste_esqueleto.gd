@@ -1,21 +1,22 @@
 extends SceneTree
 # Paso 3.4: reajuste de huesos en el esqueleto real, con sus bind poses (skeleton_refit.gd).
 # Antes: blender -b -P pruebas/fase_2/referencia_reajuste.py  (escribe pruebas/fase_2/salida/referencia_reajuste.json)
-# Uso: godot --path pruebas/godot -s probar_reajuste_esqueleto.gd 2>&1 | grep -E 'FALLO|AVISO|RESULTADO|ERROR'
-# Con --headless también funciona, pero se salta las pruebas de malla horneada (necesitan la tarjeta gráfica).
+# Uso: godot --headless --path pruebas/godot -s probar_reajuste_esqueleto.gd 2>&1 | grep -E 'FALLO|AVISO|RESULTADO|ERROR'
+# La malla se hornea en CPU (mesh_baker.gd, paso 3.6.1): no necesita ventana.
 
 const MAX_MM := 1.0
 const MAX_DEG := 1.0
 const EXACT_MM := 0.001
 const LOAD_MM := 0.01  # articulaciones.json está redondeado a micras
 const STILL_MM := 0.01  # Godot calcula con 32 bits: encadenar 57 huesos deja ~0,002 mm de redondeo
-const ELBOW_MM := 0.5
+const ELBOW_MM := 0.05  # medido con el horneado en CPU: máx. 0,0064 mm. Aprobado el 2026-11-11
 const MAX_REFIT_MS := 1.0
 
 var failures := 0
 var addon: String
 var data_folder: String
 var refit: GDScript
+var baker: GDScript
 var shapes: GDScript
 var reference: Dictionary
 
@@ -25,6 +26,7 @@ func _initialize() -> void:
 	addon = root_dir.path_join("godot/addons/creador")
 	data_folder = root_dir.path_join("datos/humana")
 	refit = load(addon.path_join("skeleton_refit.gd"))
+	baker = load(addon.path_join("mesh_baker.gd"))
 	shapes = load(addon.path_join("shape_weights.gd"))
 	reference = JSON.parse_string(
 		FileAccess.get_file_as_string(root_dir.path_join("pruebas/fase_2/salida/referencia_reajuste.json")))
@@ -40,10 +42,7 @@ func _initialize() -> void:
 		species.mesh.skin != other.mesh.skin and _difference_mm(other_loaded, _snapshot(other)) == 0.0)
 	_check_scale(species, base)
 	_check_time(species, base)
-	if DisplayServer.get_name() == "headless":
-		print("  AVISO sin ventana: no se prueban la malla quieta ni el codo doblado")
-	else:
-		await _check_baked(species, base)
+	_check_baked(species, base)
 	print("RESULTADO: ", "TODO BIEN" if failures == 0 else "%d FALLOS" % failures)
 	quit(1 if failures else 0)
 
@@ -149,29 +148,18 @@ func _check_time(species, base: Dictionary) -> void:
 	print(("  bien  " if ms < MAX_REFIT_MS else "  AVISO ") + "un reajuste tarda %.3f ms (aviso si > %s ms)" % [ms, MAX_REFIT_MS])
 
 
-## Vértices del personaje con sus formas y su pose actuales (formas en CPU + esqueleto en la tarjeta gráfica).
+## Vértices del personaje con sus formas y su pose actuales, horneados en CPU (mesh_baker.gd).
 func _baked_vertices(species) -> PackedVector3Array:
-	var shaped := MeshInstance3D.new()
-	shaped.mesh = species.mesh.bake_mesh_from_current_blend_shape_mix()
-	shaped.skin = species.mesh.skin
-	species.skeleton.add_child(shaped)
-	shaped.skeleton = NodePath("..")
-	await process_frame
-	await process_frame
-	var baked := shaped.bake_mesh_from_current_skeleton_pose()
-	shaped.queue_free()
-	return baked.surface_get_arrays(0)[Mesh.ARRAY_VERTEX]
+	return baker.bake(species.mesh, species.skeleton)["vertices"]
 
 
 func _check_baked(species, base: Dictionary) -> void:
-	await process_frame
-	await process_frame
 	var elbow: Dictionary = reference["elbow"]
 	var weights: Dictionary = _body(elbow["body"])["weights"]
 	shapes.apply(species.mesh, weights)
 	_refit(species, base, weights)
 	var shaped: PackedVector3Array = species.mesh.bake_mesh_from_current_blend_shape_mix().surface_get_arrays(0)[Mesh.ARRAY_VERTEX]
-	var still := await _baked_vertices(species)
+	var still := _baked_vertices(species)
 	var worst := 0.0
 	for i in shaped.size():
 		worst = maxf(worst, 1000.0 * shaped[i].distance_to(still[i]))
@@ -186,7 +174,7 @@ func _check_baked(species, base: Dictionary) -> void:
 	var local := skeleton.get_bone_global_rest(skeleton.get_bone_parent(bone)).affine_inverse() * turned
 	skeleton.set_bone_pose_position(bone, local.origin)
 	skeleton.set_bone_pose_rotation(bone, local.basis.get_rotation_quaternion())
-	var bent := await _baked_vertices(species)
+	var bent := _baked_vertices(species)
 	var base_vertices: PackedVector3Array = species.mesh.mesh.surface_get_arrays(0)[Mesh.ARRAY_VERTEX]
 	var grid := _skin_grid(reference["neutral_vertices"])
 	var real: Array = elbow["vertices"]

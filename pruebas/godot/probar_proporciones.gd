@@ -1,8 +1,7 @@
 extends SceneTree
 # Paso 3.3: deslizadores Proporción, escala uniforme de huesos (proportions.gd).
-# Necesita ventana (no --headless): bake_mesh_from_current_skeleton_pose() usa la tarjeta gráfica.
-# Cuando exista el horneado en CPU (paso 3.6), la prueba de malla pasará a modo sin ventana.
-# Uso: godot --path pruebas/godot -s probar_proporciones.gd 2>&1 | grep -E 'FALLO|RESULTADO|ERROR'
+# La malla se hornea en CPU (mesh_baker.gd, paso 3.6.1): no necesita ventana.
+# Uso: godot --headless --path pruebas/godot -s probar_proporciones.gd 2>&1 | grep -E 'FALLO|RESULTADO|ERROR'
 # Espera 2 fotogramas tras añadir la escena: si se lee una pose antes de la primera actualización del
 # esqueleto, este no ve los cambios de pose hechos hasta entonces.
 
@@ -11,6 +10,7 @@ const MAX_MM := 0.1
 var failures := 0
 var proportions: GDScript
 var shapes: GDScript
+var baker: GDScript
 var species
 
 
@@ -19,6 +19,7 @@ func _initialize() -> void:
 	var addon := root_dir.path_join("godot/addons/creador")
 	proportions = load(addon.path_join("proportions.gd"))
 	shapes = load(addon.path_join("shape_weights.gd"))
+	baker = load(addon.path_join("mesh_baker.gd"))
 	species = load(addon.path_join("species_data.gd")).new()
 	if species.load_folder(root_dir.path_join("datos/humana")):
 		print("ERROR: ", species.error)
@@ -29,7 +30,7 @@ func _initialize() -> void:
 	await process_frame
 	_check_formula()
 	_check_skeleton()
-	await _check_mesh()
+	_check_mesh()
 	_check_symmetry()
 	print("RESULTADO: ", "TODO BIEN" if failures == 0 else "%d FALLOS" % failures)
 	quit(1 if failures else 0)
@@ -116,26 +117,20 @@ func _check_skeleton() -> void:
 		head_scale.is_equal_approx(Vector3.ONE * 1.3) and neck_scale.is_equal_approx(Vector3.ONE), str(head_scale))
 
 
-## (altura, punto más bajo) de la malla deformada por el esqueleto con esas escalas.
-## Espera 2 fotogramas: el horneado lee la pose que ya llegó a la tarjeta gráfica.
+## (altura, punto más bajo) de la malla deformada por el esqueleto con esas escalas, horneada en CPU.
 func _baked_extent(scales: Dictionary) -> Vector2:
-	var mesh: MeshInstance3D = species.mesh
 	proportions.apply(species.skeleton, scales)
-	await process_frame
-	await process_frame
-	var baked := mesh.bake_mesh_from_current_skeleton_pose()
 	var low := INF
 	var high := -INF
-	for v: Vector3 in baked.surface_get_arrays(0)[Mesh.ARRAY_VERTEX]:
-		var y := (mesh.global_transform * v).y
-		low = minf(low, y)
-		high = maxf(high, y)
+	for v: Vector3 in baker.bake(species.mesh, species.skeleton)["vertices"]:
+		low = minf(low, v.y)
+		high = maxf(high, v.y)
 	return Vector2(high - low, low)
 
 
 func _check_mesh() -> void:
-	var before: Vector2 = await _baked_extent(_scales({}))
-	var after: Vector2 = await _baked_extent(_scales({"height": 1.0}))
+	var before := _baked_extent(_scales({}))
+	var after := _baked_extent(_scales({"height": 1.0}))
 	proportions.apply(species.skeleton, _scales({}))
 	var height_mm := 1000.0 * absf(after.x - 1.15 * before.x)
 	var ground_mm := 1000.0 * absf(after.y - before.y)

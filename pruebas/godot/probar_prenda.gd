@@ -1,7 +1,7 @@
 extends SceneTree
 # Paso 3.5: prenda base (body.gdshader y body_material.gd).
 # Necesita ventana (no --headless): dibuja el cuerpo de frente y lee los píxeles.
-# Uso: godot --path pruebas/godot -s probar_prenda.gd 2>&1 | grep -E 'FALLO|MEDIDA|RESULTADO|ERROR'
+# Uso: godot --path pruebas/godot -s probar_prenda.gd 2>&1 | grep -E 'FALLO|RESULTADO|ERROR'
 # Compara cada vértice que mira al frente (piel o prenda claras, lejos del borde) con el píxel donde cae.
 
 const SIZE := 1024  # píxeles de lado
@@ -11,6 +11,7 @@ const SKIN := Color(0.9, 0.6, 0.5)
 const GARMENT := Color(0.1, 0.2, 0.6)
 const HALF_WIDTH := 0.14  # solo tronco, cabeza y piernas: nada los tapa de frente
 const EDGE_HALF_WIDTH := 0.08
+const EDGE_MAX_PX := 2  # a 1024 px = 4 mm (medido: 1 px); aprobado el 2026-11-11
 
 var failures := 0
 var viewport: SubViewport
@@ -39,7 +40,7 @@ func _initialize() -> void:
 	var image := await _render()
 	_check_vertices("prenda visible", image, true)
 	_check_two_colors(image)
-	_measure_edge(image)
+	_check_edge(image)
 
 	var values: Dictionary = shapes.neutral_values(species.sliders)
 	shapes.set_value(values, "hip_width", 1.0, false)
@@ -134,7 +135,7 @@ func _check_two_colors(image: Image) -> void:
 
 
 ## Borde de arriba de la prenda de abajo: de arriba abajo, la segunda vez que la piel pasa a prenda (la primera es el top).
-func _measure_edge(image: Image) -> void:
+func _check_edge(image: Image) -> void:
 	var rows: Array[int] = []
 	var half := roundi(EDGE_HALF_WIDTH * SIZE / VIEW)
 	for x in range(SIZE / 2 - half, SIZE / 2 + half):
@@ -149,5 +150,6 @@ func _measure_edge(image: Image) -> void:
 	if rows.is_empty():
 		check("se encuentra el borde de la prenda de abajo", false)
 		return
-	print("  MEDIDA borde de la cintura en %d columnas (16 cm de ancho): varía %d píxeles = %.1f mm (1 píxel = %.2f mm)"
-		% [rows.size(), rows.max() - rows.min(), (rows.max() - rows.min()) * mm, mm])
+	var change: int = rows.max() - rows.min()
+	check("borde de la cintura recto en 16 cm (≤ %d px a %d px)" % [EDGE_MAX_PX, SIZE], change <= EDGE_MAX_PX and SIZE == 1024,
+		"%d columnas: varía %d px = %.1f mm" % [rows.size(), change, change * mm])
