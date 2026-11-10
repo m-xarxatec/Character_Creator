@@ -1,0 +1,10 @@
+# Godot
+.godot/
+
+# Blender
+*.blend1
+__pycache__/
+
+# Descargas y temporales
+*.zip
+*.tmp

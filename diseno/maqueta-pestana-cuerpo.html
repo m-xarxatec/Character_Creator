@@ -1,0 +1,99 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Maqueta — pestaña Cuerpo</title>
+<style>
+:root{--surface-0:#f5f4ef;--surface-1:#faf9f5;--surface-2:#ffffff;--border:rgba(31,30,29,.15);--border-strong:rgba(31,30,29,.3);--border-stronger:rgba(31,30,29,.45);--text-primary:#141413;--text-secondary:#5e5d59;--text-muted:#8c8a84;--bg-accent:#e6f1fb;--text-accent:#185fa5;--border-accent:#85b7eb;--fill-accent:#378add;--bg-pro:#eeedfe;--text-pro:#534ab7;--bg-neutral:#ecebe6;--bg-warning:#faeeda;--text-warning:#854f0b;--radius:8px}
+@media (prefers-color-scheme:dark){:root{--surface-0:#1f1e1d;--surface-1:#262624;--surface-2:#30302e;--border:rgba(255,255,255,.12);--border-strong:rgba(255,255,255,.25);--border-stronger:rgba(255,255,255,.4);--text-primary:#f5f4ef;--text-secondary:#c2c0b6;--text-muted:#8c8a84;--bg-accent:#0c447c;--text-accent:#b5d4f4;--border-accent:#378add;--fill-accent:#378add;--bg-pro:#3c3489;--text-pro:#cecbf6;--bg-neutral:#3a3936;--bg-warning:#633806;--text-warning:#fac775}}
+*{box-sizing:border-box}
+body{margin:0;padding:24px;background:var(--surface-0);color:var(--text-primary);font-family:system-ui,-apple-system,"Segoe UI",sans-serif}
+button{font:inherit;font-size:13px;padding:6px 12px;border-radius:var(--radius);border:.5px solid var(--border-strong);background:transparent;color:var(--text-primary);cursor:pointer}
+button:hover{background:var(--surface-1)}
+input[type=range]{accent-color:var(--fill-accent)}
+.app{max-width:1000px;margin:0 auto;background:var(--surface-1);border:.5px solid var(--border);border-radius:12px;padding:12px}
+.tabs{display:flex;flex-wrap:wrap;gap:4px;margin-bottom:10px}
+.tab{font-size:13px;padding:5px 10px;border-radius:var(--radius);color:var(--text-muted)}
+.tab.on{background:var(--surface-2);color:var(--text-primary);border:.5px solid var(--border)}
+.main{display:grid;grid-template-columns:minmax(0,1fr);gap:12px}
+@media (min-width:800px){.main{grid-template-columns:minmax(0,1.2fr) minmax(0,1fr)}}
+.view{background:var(--surface-2);border:.5px solid var(--border);border-radius:12px;padding:8px}
+.bar{display:flex;align-items:center;gap:6px;flex-wrap:wrap}
+.pz.on{background:var(--bg-accent);color:var(--text-accent);border-color:var(--border-accent)}
+.chip{padding:4px 10px;color:var(--text-secondary);border-color:var(--border)}
+.chip.on{background:var(--bg-accent);color:var(--text-accent);border-color:var(--border-accent)}
+.chips{display:flex;flex-wrap:wrap;gap:6px;margin-bottom:8px}
+.zt{font-size:14px;font-weight:500;margin:10px 0 2px}
+.rw{display:flex;align-items:center;gap:8px;margin:8px 0}
+.rw label{font-size:13px;min-width:96px}
+.rw input{flex:1;min-width:0}
+.bd{font-size:11px;padding:2px 6px;border-radius:var(--radius);white-space:nowrap;min-width:76px;text-align:center}
+.bF{background:var(--bg-pro);color:var(--text-pro)}
+.bP{background:var(--bg-neutral);color:var(--text-secondary)}
+.bN{background:var(--bg-warning);color:var(--text-warning)}
+.foot{display:flex;justify-content:flex-end;gap:8px;margin-top:12px}
+.note{max-width:1000px;margin:12px auto 0;font-size:12px;color:var(--text-secondary)}
+</style>
+</head>
+<body>
+<div class="app">
+  <div class="tabs">
+    <span class="tab on">Cuerpo</span><span class="tab">Cara y ojos</span><span class="tab">Pelo</span><span class="tab">Ropa</span><span class="tab">Accesorios</span><span class="tab">Exportar</span>
+  </div>
+  <div class="main">
+    <div class="view">
+      <div class="bar">
+        <button class="pz on">Reposo</button><button class="pz">Caminar</button><button class="pz">Atacar</button>
+        <label style="font-size:12px;color:var(--text-secondary);margin-left:auto;display:flex;align-items:center;gap:4px;"><input type="checkbox" checked> Simetría</label>
+      </div>
+      <svg width="100%" viewBox="0 0 380 300" role="img" aria-label="Maniquí de vista previa">
+        <line x1="110" y1="292" x2="270" y2="292" stroke="var(--border-strong)" stroke-width="1"/>
+        <g id="fig">
+          <line id="ll" stroke="var(--border-stronger)" stroke-width="12" stroke-linecap="round"/>
+          <line id="lr" stroke="var(--border-stronger)" stroke-width="12" stroke-linecap="round"/>
+          <line id="al" stroke="var(--border-stronger)" stroke-width="10" stroke-linecap="round"/>
+          <line id="ar" stroke="var(--border-stronger)" stroke-width="10" stroke-linecap="round"/>
+          <polygon id="t" fill="var(--bg-neutral)" stroke="var(--border-stronger)" stroke-width="1"/>
+          <line id="nk" stroke="var(--border-stronger)" stroke-width="8" stroke-linecap="round"/>
+          <circle id="h" fill="var(--bg-neutral)" stroke="var(--border-stronger)" stroke-width="1"/>
+          <circle id="hl" r="5" fill="var(--fill-accent)"/>
+          <circle id="hr" r="5" fill="var(--fill-accent)"/>
+        </g>
+      </svg>
+      <div style="font-size:12px;color:var(--text-secondary);display:flex;align-items:center;gap:6px;"><span style="width:10px;height:10px;border-radius:50%;background:var(--fill-accent);display:inline-block"></span>Puntos de anclaje para armas</div>
+    </div>
+    <div>
+      <div class="chips" id="ch">
+        <button class="chip" data-k="global">Global</button><button class="chip on" data-k="cabeza">Cabeza</button><button class="chip" data-k="cuello">Cuello</button><button class="chip" data-k="hombros">Hombros</button><button class="chip" data-k="torso">Torso</button><button class="chip" data-k="pecho">Pecho</button><button class="chip" data-k="cintura">Cintura</button><button class="chip" data-k="caderas">Caderas</button><button class="chip" data-k="gluteos">Glúteos</button><button class="chip" data-k="brazos">Brazos</button><button class="chip" data-k="manos">Manos</button><button class="chip" data-k="dedos">Dedos</button><button class="chip" data-k="piernas">Piernas</button><button class="chip" data-k="pies">Pies</button>
+      </div>
+      <div class="zt" id="zt">Cabeza</div>
+      <div id="sl"></div>
+    </div>
+  </div>
+  <div class="foot">
+    <button>Probar huesos</button><button>Exportar .glb</button>
+  </div>
+</div>
+<p class="note">Maqueta de referencia (no es el programa real). Mueven el maniquí: Global › Altura, Cabeza › Tamaño, Hombros › Ancho, Torso › Largo, Caderas › Ancho, Brazos › Largo y Piernas › Largo. Etiquetas: Forma = mezcla de formas; Proporción = cambia un hueso; Por crear = forma propia pendiente (Fase 6).</p>
+<script>
+const R={global:[['Altura','P','height'],['Complexión','F'],['Músculo','F'],['Grasa','F']],cabeza:[['Tamaño','P','head'],['Ancho','F'],['Alto','F']],cuello:[['Largo','P'],['Grosor','F']],hombros:[['Ancho','P','shoulders'],['Altura','P'],['Músculo','F']],torso:[['Largo','P','torso'],['Ancho','F'],['Forma en V','F']],pecho:[['Volumen','F'],['Firmeza','F'],['Separación','F'],['Altura','N']],cintura:[['Ancho','F'],['Altura','P']],caderas:[['Ancho','F','hips'],['Profundidad','F']],gluteos:[['Volumen','F'],['Altura','N'],['Redondez','N']],brazos:[['Largo','P','arms'],['Grosor','F'],['Músculo','F']],manos:[['Tamaño','P'],['Posición','F']],dedos:[['Largo','P'],['Grosor','F'],['Separación','F']],piernas:[['Largo','P','legs'],['Muslo','F'],['Pantorrilla','F']],pies:[['Tamaño','P']]};
+const L={F:['bF','Forma'],P:['bP','Proporción'],N:['bN','Por crear']};
+const S={};
+const g=k=>S[k]===undefined?50:S[k];
+const $=id=>document.getElementById(id);
+function set(el,a){for(const k in a)el.setAttribute(k,a[k]);}
+function draw(){const cx=190,gr=292;const hr=12+g('head')*0.12,sw=50+g('shoulders')*0.5,hw=34+g('hips')*0.36,lg=70+g('legs')*0.4,arm=60+g('arms')*0.4,to=60+g('torso')*0.28,s=0.85+g('height')*0.003;const hy=gr-lg,sy=hy-to;
+set($('ll'),{x1:cx-hw/2+8,y1:hy,x2:cx-hw/2+4,y2:gr-6});set($('lr'),{x1:cx+hw/2-8,y1:hy,x2:cx+hw/2-4,y2:gr-6});
+const ax=sw/2,ay=sy+6;set($('al'),{x1:cx-ax,y1:ay,x2:cx-ax-12,y2:ay+arm});set($('ar'),{x1:cx+ax,y1:ay,x2:cx+ax+12,y2:ay+arm});
+set($('hl'),{cx:cx-ax-12,cy:ay+arm+4});set($('hr'),{cx:cx+ax+12,cy:ay+arm+4});
+set($('t'),{points:`${cx-sw/2},${sy} ${cx+sw/2},${sy} ${cx+hw/2},${hy} ${cx-hw/2},${hy}`});
+set($('nk'),{x1:cx,y1:sy,x2:cx,y2:sy-8});set($('h'),{cx:cx,cy:sy-8-hr,r:hr});
+$('fig').setAttribute('transform',`translate(${cx},${gr}) scale(${s.toFixed(3)}) translate(${-cx},${-gr})`);}
+function panel(k,name){$('zt').textContent=name;const box=$('sl');box.innerHTML='';R[k].forEach(([n,t,key])=>{const id=key||(k+'_'+n);const d=document.createElement('div');d.className='rw';d.innerHTML=`<label>${n}</label><input type="range" min="0" max="100" step="1" value="${g(id)}"><span class="bd ${L[t][0]}">${L[t][1]}</span>`;d.querySelector('input').addEventListener('input',e=>{S[id]=Math.round(+e.target.value);draw();});box.appendChild(d);});}
+document.querySelectorAll('.chip').forEach(c=>c.addEventListener('click',()=>{document.querySelectorAll('.chip').forEach(x=>x.classList.remove('on'));c.classList.add('on');panel(c.dataset.k,c.textContent);}));
+document.querySelectorAll('.pz').forEach(b=>b.addEventListener('click',()=>{document.querySelectorAll('.pz').forEach(x=>x.classList.remove('on'));b.classList.add('on');}));
+panel('cabeza','Cabeza');draw();
+</script>
+</body>
+</html>
