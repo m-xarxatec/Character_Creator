@@ -3,7 +3,7 @@ extends SceneTree
 # Uso: godot --headless --path . -s crear_bonemap.gd   (y despues: godot --headless --path . --import)
 
 # archivo -> si hay que corregir los brazos a pose T (personaje.glb ya sale en pose T desde Blender)
-const FILES := {"humano.glb": true, "UAL1_Standard.glb": true, "personaje.glb": false}
+const FILES := {"UAL1_Standard.glb": true, "personaje.glb": false}
 const KEEP_AS_IS: Array[StringName] = [&"Hips", &"Spine", &"Chest", &"UpperChest", &"Neck", &"Head", &"LeftUpperLeg", &"LeftLowerLeg", &"LeftFoot", &"LeftToes", &"RightUpperLeg", &"RightLowerLeg", &"RightFoot", &"RightToes"]
 const FINGERS := {"Thumb": "thumb", "Index": "index", "Middle": "middle", "Ring": "ring", "Little": "pinky"}
 

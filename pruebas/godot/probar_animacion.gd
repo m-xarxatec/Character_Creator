@@ -14,7 +14,7 @@ func _initialize() -> void:
 	view.render_target_update_mode = SubViewport.UPDATE_ALWAYS
 	root.add_child(view)
 	var args := OS.get_cmdline_user_args()
-	var file: String = args[0] if args.size() > 0 else "humano.glb"
+	var file: String = args[0] if args.size() > 0 else "personaje.glb"
 	var human: Node3D = load("res://" + file).instantiate()
 	view.add_child(human)
 	var source: Node = load("res://UAL1_Standard.glb").instantiate()

@@ -47,7 +47,7 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 - `blender/` prepara el cuerpo con MPFB; `datos/` guarda lo preparado (manifiesto con `version`; si cambia el formato, sube); `godot/addons/creador/` es el **núcleo** y `godot/app/` la interfaz.
 - El núcleo no depende de la interfaz: se usará también como plugin y en tiempo de juego.
 - La humana es una **especie**: el código no debe suponer que es la única.
-- Deslizadores de tres tipos: **Forma** (blend shapes), **Proporción** (longitud o escala de hueso) y **Por crear** (forma pendiente, Fase 6).
+- Deslizadores de tres tipos: **Forma** (blend shapes), **Proporción** (escala uniforme de hueso) y **Por crear** (forma pendiente, Fase 6).
 - `referencias/` es solo inspiración: no la leas salvo que se pida.
 
 ## Reglas del personaje exportado
