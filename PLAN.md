@@ -3,7 +3,7 @@
 > Paso a paso. Un paso cada vez y siempre con aprobación (ver `CLAUDE.md`).
 > Lo que no es del MVP va a `IDEAS.md`.
 
-**Estado actual:** Fase 3 · paso 3.3 pendiente
+**Estado actual:** Fase 3 · paso 3.4 pendiente
 **Leyenda:** `[ ]` pendiente · `[~]` en curso · `[x]` hecho
 
 ---
@@ -61,10 +61,10 @@ Un programa hecho con Godot, con una pestaña **Cuerpo** que permite:
 
 - [x] 3.1 Cargar `datos/` y montar malla y esqueleto.
 - [x] 3.2 Deslizadores de forma (*blend shapes*) con simetría. Comprobar que Godot calcula los mismos pesos que el script de Blender, incluidas las 81 correcciones.
-- [ ] 3.3 Deslizadores de proporción (escala uniforme de huesos).
+- [x] 3.3 Deslizadores de proporción (escala uniforme de huesos).
 - [ ] 3.4 Reajuste de huesos con `articulaciones.json` (base + desplazamientos de cada forma) y *bind poses*.
 - [ ] 3.5 Prenda base: el shader corta en 0,5 el color por vértice `garment` (degradado de 6 cm: borde recto en la malla completa; ya sigue al cuerpo sola), con un interruptor para mostrarla u ocultarla que también se guarda al exportar.
-- [ ] 3.6 Exportar `.glb`: hornear, 4 influencias, anclajes como nodos vacíos y nombres humanoides. Preparar dos salidas para comparar: pose T horneada y pose A con la corrección de silueta de Godot.
+- [ ] 3.6 Exportar `.glb`: hornear, 4 influencias, anclajes como nodos vacíos y nombres humanoides. Preparar dos salidas para comparar: pose T horneada y pose A con la corrección de silueta de Godot. Al exportar, la escala de pose se hornea en la malla y en el reposo; prueba: todos los huesos del .glb con escala 1 y la malla igual que antes de hornear (< 0,1 mm). Horneado en CPU (skinning con los pesos, sin GPU), para exportar y probar sin ventana; prueba cruzada: CPU contra `bake_mesh_from_current_skeleton_pose()` con ventana, diferencia < 0,01 mm; cuando exista, pasar la prueba de malla del 3.3 a modo sin ventana. Al exportar, apoyar el personaje en el suelo: punto más bajo de los pies en y = 0.
 - [ ] 3.7 Guardar y cargar presets en JSON.
 - [ ] 3.8 Pruebas: 10 cuerpos aleatorios → exportar → reimportar → comparar.
 - [ ] 3.9 Estilo ilustración: shader de sombra a dos tonos + contorno negro (grosor ajustable), dentro del núcleo.
@@ -96,7 +96,7 @@ Según `diseno/maqueta-pestana-cuerpo.html`.
 - [ ] 5.3 Comprobaciones automáticas: pesos que suman 1, ≤ 4 influencias, 56 huesos humanoides, anclajes presentes.
 - [ ] 5.4 Informe visible (bien / aviso / error) con la zona afectada.
 - [ ] 5.5 Decidir la pose de exportación con las dos salidas del 3.6 (si gana la A, cambiar la regla de `CLAUDE.md`).
-- [ ] 5.6 Prueba de anclaje real: espada en `socket_hand_r` durante la animación de atacar.
+- [ ] 5.6 Prueba de anclaje real: espada en `socket_hand_r` durante la animación de atacar. Los anclajes heredan la escala de su hueso en el editor; la espada no debe escalar con la mano.
 
 **Hecho cuando:** un cuerpo extremo muestra los avisos correctos.
 
@@ -149,3 +149,4 @@ Según `diseno/maqueta-pestana-cuerpo.html`.
 | 2026-11-10 | 2.4 | `godot/addons/creador/bone_refit.gd` (primer archivo del núcleo, hecho solo desde FORMATO.md): cabeza, cola y giro de cada hueso. Contra MPFB en 6 cuerpos (neutro, atlético, mujer robusta, largo, al azar, extremo 0/1), 57 huesos con anclajes: máx. 0,0036 mm y 0,000° (giros reales de hasta 51° en los dedos del pie, sin problemas). Continuidad en 0,5 (0,49985 / 0,50015, 78 tríos): máx. 0,056 mm. Decidido: los deslizadores Forma con targets usan la regla de pesos de las macros. Referencia: `pruebas/fase_2/referencia_reajuste.py`; prueba: `pruebas/godot/probar_reajuste.gd` |
 | 2026-11-10 | 3.1 | `godot/addons/creador/species_data.gd`: carga una especie de `datos/` (versión y sha256 de cada archivo; si algo falla, no carga nada) y monta malla y esqueleto con `GLTFDocument` en tiempo de ejecución. Prueba `pruebas/godot/probar_carga.gd`: 57 huesos, 159 formas, color `garment`, 13.380 vértices únicos, reposo del esqueleto = `articulaciones.json` (máx. 0,0011 mm), rechaza sha256 cambiado y versión 2. Nota en FORMATO.md sobre importar el `.csv` en Godot; añadidos 5.6 y la nota del 7.1 |
 | 2026-11-10 | 3.2 | `godot/addons/creador/shape_weights.gd`: valores por deslizador y lado (`id`, `id_l`/`id_r`), pesos con la regla de FORMATO.md (81 correcciones por producto), `apply` en la malla y simetría al escribir. Decidido: fuera de rango se recorta a [0, 1]; NaN e infinito se rechazan. La regla de pesos en Python es ahora una sola, `shape_weights()` en `exportar_datos.py`, usada por la prueba del 2.3 y por la referencia (2.3 y 2.4 repetidas: mismos números). Prueba `pruebas/godot/probar_formas.gd`: pesos = Python en 483 casos (6 cuerpos, 234 de continuidad, 243 esquinas; las 81 correcciones entran), horneado contra MPFB en atlético y extremo máx. 0,0005 / media 0,0001 mm, simetría y valores fuera de rango |
+| 2026-11-10 | 3.3 | `godot/addons/creador/proportions.gd`: 6 valores de Proporción → escala uniforme en la **pose** del hueso (0 → `decr`, 0,5 → 1, 1 → `incr`); guarda valores con `ShapeWeights.set_value`. Prueba `pruebas/godot/probar_proporciones.gd` (con ventana): fórmula, huesos e hijos (anclaje de mano incluido), malla horneada con altura × 1,15 (error 0,0000 mm; los pies bajan 0,084 mm porque `Root` está 0,56 mm bajo el suelo) y simetría. Aprendido: leer una pose en el fotograma en que la escena entra en el árbol deja al esqueleto sin ver cambios (esperar 2 fotogramas); `bake_mesh_from_current_skeleton_pose()` no funciona con `--headless` y lee la pose ya dibujada. Añadidos al 3.6: horneado en CPU y apoyar en el suelo |
