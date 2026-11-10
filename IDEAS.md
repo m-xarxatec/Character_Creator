@@ -61,6 +61,7 @@ El zip está en `referencias/` (git no lo guarda). Versión gratis: 2 cuerpos es
 - **Android** (tablet).
 - **Rig automático con IA** (UniRig) para mallas importadas sin huesos, cuando haya una GPU con más de 8 GB.
 - **Comunidad:** repositorio de packs, guía para crear piezas, traducciones.
+- **Simetría relativa:** mover un lado suma lo mismo al otro y conserva la diferencia.
 
 ---
 

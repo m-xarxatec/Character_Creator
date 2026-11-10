@@ -3,7 +3,7 @@
 > Paso a paso. Un paso cada vez y siempre con aprobación (ver `CLAUDE.md`).
 > Lo que no es del MVP va a `IDEAS.md`.
 
-**Estado actual:** Fase 3 · paso 3.2 pendiente
+**Estado actual:** Fase 3 · paso 3.3 pendiente
 **Leyenda:** `[ ]` pendiente · `[~]` en curso · `[x]` hecho
 
 ---
@@ -60,7 +60,7 @@ Un programa hecho con Godot, con una pestaña **Cuerpo** que permite:
 ## Fase 3 — Núcleo en Godot (sin interfaz)
 
 - [x] 3.1 Cargar `datos/` y montar malla y esqueleto.
-- [ ] 3.2 Deslizadores de forma (*blend shapes*) con simetría. Comprobar que Godot calcula los mismos pesos que el script de Blender, incluidas las 81 correcciones.
+- [x] 3.2 Deslizadores de forma (*blend shapes*) con simetría. Comprobar que Godot calcula los mismos pesos que el script de Blender, incluidas las 81 correcciones.
 - [ ] 3.3 Deslizadores de proporción (escala uniforme de huesos).
 - [ ] 3.4 Reajuste de huesos con `articulaciones.json` (base + desplazamientos de cada forma) y *bind poses*.
 - [ ] 3.5 Prenda base: el shader corta en 0,5 el color por vértice `garment` (degradado de 6 cm: borde recto en la malla completa; ya sigue al cuerpo sola), con un interruptor para mostrarla u ocultarla que también se guarda al exportar.
@@ -81,7 +81,7 @@ Según `diseno/maqueta-pestana-cuerpo.html`.
 - [ ] 4.1 Ventana con pestañas (solo Cuerpo activa).
 - [ ] 4.2 Vista 3D con cámara orbital y maniquí en vivo.
 - [ ] 4.3 Zonas y deslizadores con etiqueta de tipo.
-- [ ] 4.4 Simetría, deshacer y rehacer, y "restablecer zona".
+- [ ] 4.4 Simetría, deshacer y rehacer, y "restablecer zona". Aviso al activar la simetría si los lados difieren: lista de deslizadores distintos y botones Mantener como está (por defecto) / Igualar a la izquierda / Igualar a la derecha. Igualar cuenta como un solo cambio para Deshacer. Si los lados son iguales, no se muestra el aviso.
 - [ ] 4.5 Botones Probar huesos y Exportar .glb conectados al núcleo, y botón para quitar o poner la prenda base.
 - [ ] 4.6 El maniquí se ve con el estilo ilustración; control de grosor del contorno.
 
@@ -148,3 +148,4 @@ Según `diseno/maqueta-pestana-cuerpo.html`.
 | 2026-11-10 | 2.3 | `blender/exportar_datos.py` genera `datos/humana/` (159 formas: 78 de la tabla + 81 correcciones de macros; 15,5 MB; mismos sha256 al repetir). Contra MPFB: 243 esquinas máx. 0,004 / media 0,001 mm; 242 cuerpos al azar máx. 0,025 / media 0,006 mm (1 saltado por el hueco de MPFB, reproducido en `pruebas/fase_2/hueco_mpfb/`); huesos 0,0008 mm y 0,000°. Fluido en Godot: 0,69 ms por fotograma con las 159 formas (GTX 1650). Arreglos: anclaje de cadera en pose A, sin el descarte de pesos < 0,01 de MPFB, `generar_cuerpo.py` pasa a 0,5 los valores en un hueco (con aviso en el log). Blender fijado en 5.2.2 |
 | 2026-11-10 | 2.4 | `godot/addons/creador/bone_refit.gd` (primer archivo del núcleo, hecho solo desde FORMATO.md): cabeza, cola y giro de cada hueso. Contra MPFB en 6 cuerpos (neutro, atlético, mujer robusta, largo, al azar, extremo 0/1), 57 huesos con anclajes: máx. 0,0036 mm y 0,000° (giros reales de hasta 51° en los dedos del pie, sin problemas). Continuidad en 0,5 (0,49985 / 0,50015, 78 tríos): máx. 0,056 mm. Decidido: los deslizadores Forma con targets usan la regla de pesos de las macros. Referencia: `pruebas/fase_2/referencia_reajuste.py`; prueba: `pruebas/godot/probar_reajuste.gd` |
 | 2026-11-10 | 3.1 | `godot/addons/creador/species_data.gd`: carga una especie de `datos/` (versión y sha256 de cada archivo; si algo falla, no carga nada) y monta malla y esqueleto con `GLTFDocument` en tiempo de ejecución. Prueba `pruebas/godot/probar_carga.gd`: 57 huesos, 159 formas, color `garment`, 13.380 vértices únicos, reposo del esqueleto = `articulaciones.json` (máx. 0,0011 mm), rechaza sha256 cambiado y versión 2. Nota en FORMATO.md sobre importar el `.csv` en Godot; añadidos 5.6 y la nota del 7.1 |
+| 2026-11-10 | 3.2 | `godot/addons/creador/shape_weights.gd`: valores por deslizador y lado (`id`, `id_l`/`id_r`), pesos con la regla de FORMATO.md (81 correcciones por producto), `apply` en la malla y simetría al escribir. Decidido: fuera de rango se recorta a [0, 1]; NaN e infinito se rechazan. La regla de pesos en Python es ahora una sola, `shape_weights()` en `exportar_datos.py`, usada por la prueba del 2.3 y por la referencia (2.3 y 2.4 repetidas: mismos números). Prueba `pruebas/godot/probar_formas.gd`: pesos = Python en 483 casos (6 cuerpos, 234 de continuidad, 243 esquinas; las 81 correcciones entran), horneado contra MPFB en atlético y extremo máx. 0,0005 / media 0,0001 mm, simetría y valores fuera de rango |

@@ -45,19 +45,9 @@ def generate(name):
     return folder, ed.export_species(folder)
 
 
-def macro_weights(slider_id, value):
-    """Pesos de las dos formas de una macro, como los calcula Godot (FORMATO.md)."""
-    return {f"{slider_id}_decr": max(0.0, 1 - 2 * value), f"{slider_id}_incr": max(0.0, 2 * value - 1)}
-
-
 def weights_for(macros, shape_weights, names):
     """Pesos de todas las formas: los dados, los de cada macro y, en las correcciones, el producto de sus partes."""
-    weights = dict(shape_weights)
-    for slider_id, value in macros.items():
-        weights.update(macro_weights(slider_id, value))
-    for name in (n for n in names if "*" in n):
-        weights[name] = float(np.prod([weights.get(part, 0.0) for part in name.split("*")]))
-    return weights
+    return ed.shape_weights({(i, None): v for i, v in macros.items()}, names, shape_weights)
 
 
 def mpfb(macros=None, targets=None):

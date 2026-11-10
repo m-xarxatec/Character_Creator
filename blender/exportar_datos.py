@@ -213,6 +213,23 @@ def socket_delta(rule, verts_delta, joints_delta):
     return verts_delta[rule[1]]
 
 
+def shape_weights(values, names, fixed=None):
+    """{forma: peso} como los calcula Godot (FORMATO.md), para todas las formas de names.
+
+    values: {(id, lado o None): valor de 0 a 1}; fixed: {forma: peso} puestos a mano.
+    _decr = max(0, 1−2v), _incr = max(0, 2v−1); cada correccion, el producto de los pesos de sus partes.
+    """
+    weights = dict.fromkeys(names, 0.0)
+    for (slider, side), v in values.items():
+        end = f"_{side}" if side else ""
+        weights[f"{slider}_decr{end}"] = max(0.0, 1 - 2 * v)
+        weights[f"{slider}_incr{end}"] = max(0.0, 2 * v - 1)
+    weights.update(fixed or {})
+    for name in (n for n in names if "*" in n):
+        weights[name] = float(np.prod([weights[part] for part in name.split("*")]))
+    return weights
+
+
 def add_shape_keys(basemesh, shapes):
     base = np.empty(len(basemesh.data.vertices) * 3)
     basemesh.data.vertices.foreach_get("co", base)

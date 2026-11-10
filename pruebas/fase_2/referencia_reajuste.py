@@ -5,13 +5,17 @@ Uso: blender -b -P pruebas/fase_2/referencia_reajuste.py
 Lee datos/humana/ y escribe pruebas/fase_2/salida/referencia_reajuste.json (lo usa pruebas/godot/probar_reajuste.gd).
 
 Cada cuerpo se define con los valores de los deslizadores Forma (0 a 1; 0,5 = neutro; los de dos lados, por lado).
-Se guardan, en ejes de Godot, los pesos de las formas (regla de FORMATO.md) y la cabeza, la cola y el giro de cada
+Se guardan, en ejes de Godot, los valores de los deslizadores, los pesos de las formas (regla de FORMATO.md) y la cabeza, la cola y el giro de cada
 hueso según MPFB (sin su descarte de pesos < 0,01, como en el paso 2.3). Los anclajes no existen en MPFB: se colocan
 con su regla de FORMATO.md sobre el cuerpo de MPFB; como no cambian de dirección, su giro es el de la base.
-También guarda los pesos de la prueba de continuidad en 0,5 (sin MPFB, que ahí tiene huecos).
+También guarda los pesos de la prueba de continuidad en 0,5 (sin MPFB, que ahí tiene huecos) y los vértices de
+la piel de MPFB del cuerpo neutro y de WITH_VERTICES (prueba de punta a punta del paso 3.2),
+y los pesos de las 243 esquinas de las macros (cada una a 0, 0,5 o 1) para el paso 3.2.
 """
+import itertools
 import json
 import os
+import struct
 import sys
 
 import numpy as np
@@ -24,6 +28,7 @@ from exportar_glb import humanoid_names  # noqa: E402
 DATA = os.path.join(ROOT, "datos", "humana")
 OUT = os.path.join(ROOT, "pruebas", "fase_2", "salida", "referencia_reajuste.json")
 CONTINUITY = (0.49985, 0.5, 0.50015)
+WITH_VERTICES = ("atletico", "extremo")  # prueba de punta a punta del paso 3.2
 IDENTITY = [[1.0, 0.0, 0.0], [0.0, 1.0, 0.0], [0.0, 0.0, 1.0]]
 
 
@@ -53,15 +58,21 @@ def bodies(rows):
 
 
 def weights(values, shape_names):
-    """{forma: peso} como en FORMATO.md: _decr = max(0, 1−2v), _incr = max(0, 2v−1); correcciones, el producto."""
-    found = {}
-    for (slider, side), v in values.items():
-        end = f"_{side}" if side else ""
-        found[f"{slider}_decr{end}"] = max(0.0, 1 - 2 * v)
-        found[f"{slider}_incr{end}"] = max(0.0, 2 * v - 1)
-    for name in (n for n in shape_names if "*" in n):
-        found[name] = float(np.prod([found.get(part, 0.0) for part in name.split("*")]))
-    return {name: w for name, w in sorted(found.items()) if w > 0}
+    """{forma: peso > 0}, con la misma función que se comparó con MPFB en el paso 2.3."""
+    return {name: w for name, w in sorted(ed.shape_weights(values, shape_names).items()) if w > 0}
+
+
+def slot_values(values):
+    """{"id" o "id_l"/"id_r": valor}, las claves que usa Godot (shape_weights.gd)."""
+    return {(f"{i}_{side}" if side else i): v for (i, side), v in values.items()}
+
+
+def glb_shape_names(path):
+    """Nombres de las formas de cuerpo.glb (los guarda el exportador glTF en extras.targetNames)."""
+    with open(path, "rb") as file:
+        data = file.read()
+    size = struct.unpack_from("<I", data, 12)[0]
+    return json.loads(data[20:20 + size])["meshes"][0]["extras"]["targetNames"]
 
 
 def mpfb_inputs(values, rows):
@@ -128,11 +139,12 @@ def main():
     rows = ed.read_sliders(DATA)
     with open(os.path.join(DATA, "articulaciones.json"), encoding="utf-8") as file:
         joints = json.load(file)["bones"]
-    shape_names = sorted({s for bone in joints.values() for s in bone["deltas"]})
+    shape_names = glb_shape_names(os.path.join(DATA, "cuerpo.glb"))
     neutral_verts, neutral_joints, neutral_turns = mpfb_body(ed.neutral_macros(), {})
     offset = np.array([0.0, 0.0, -neutral_verts[:, 2].min()])  # articulaciones.json tiene los pies en el suelo
     rules = socket_rules(joints, neutral_verts, offset)
-    reference = {"base": {b: basis(t) for b, t in neutral_turns.items()}, "bodies": [], "continuity": []}
+    reference = {"base": {b: basis(t) for b, t in neutral_turns.items()}, "bodies": [], "continuity": [], "corners": [],
+                 "shapes": shape_names, "neutral_vertices": [to_godot(v + offset) for v in neutral_verts]}
     reference["base"].update({s: IDENTITY for s in rules})
     every = bodies(rows)
     for name, values in every.items():
@@ -142,12 +154,20 @@ def main():
             move = rule(verts, body_joints) - rule(neutral_verts, neutral_joints)
             head, tail = (to_blender(joints[socket][end]) + move for end in ("head", "tail"))
             bones[socket] = bone_record(head, tail, IDENTITY)
-        reference["bodies"].append({"name": name, "weights": weights(values, shape_names), "bones": bones})
+        record = {"name": name, "values": slot_values(values), "weights": weights(values, shape_names), "bones": bones}
+        if name in WITH_VERTICES:
+            record["vertices"] = [to_godot(v + offset) for v in verts]
+        reference["bodies"].append(record)
     for background in ("neutro", "extremo"):
         for slot in slots(rows):
             label = f"{background}: {slot[0]}" + (f" {slot[1]}" if slot[1] else "")
-            triple = [weights({**every[background], slot: v}, shape_names) for v in CONTINUITY]
-            reference["continuity"].append({"name": label, "weights": triple})
+            triple = [{**every[background], slot: v} for v in CONTINUITY]
+            reference["continuity"].append({"name": label, "values": [slot_values(b) for b in triple],
+                                            "weights": [weights(b, shape_names) for b in triple]})
+    macros = [i for i, _ in ed.macro_sliders(rows)]
+    for corner in itertools.product((0.0, 0.5, 1.0), repeat=len(macros)):  # activan las 81 correcciones
+        values = {**every["neutro"], **{(i, None): v for i, v in zip(macros, corner)}}
+        reference["corners"].append({"values": slot_values(values), "weights": weights(values, shape_names)})
     os.makedirs(os.path.dirname(OUT), exist_ok=True)
     with open(OUT, "w", encoding="utf-8") as file:
         json.dump(reference, file, ensure_ascii=False)
