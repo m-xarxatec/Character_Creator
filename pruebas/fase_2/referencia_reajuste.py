@@ -10,7 +10,8 @@ hueso según MPFB (sin su descarte de pesos < 0,01, como en el paso 2.3). Los an
 con su regla de FORMATO.md sobre el cuerpo de MPFB; como no cambian de dirección, su giro es el de la base.
 También guarda los pesos de la prueba de continuidad en 0,5 (sin MPFB, que ahí tiene huecos) y los vértices de
 la piel de MPFB del cuerpo neutro y de WITH_VERTICES (prueba de punta a punta del paso 3.2),
-los vértices del cuerpo ELBOW["body"] con el codo doblado (paso 3.4: MPFB + esqueleto de Blender)
+los vértices del cuerpo ELBOW["body"] con el codo doblado (paso 3.4: MPFB + esqueleto de Blender),
+los de T_POSE_BODIES en pose T con blender/pose_t.py (paso 3.6.2)
 y los pesos de las 243 esquinas de las macros (cada una a 0, 0,5 o 1) para el paso 3.2.
 """
 import itertools
@@ -27,12 +28,14 @@ ROOT = os.path.dirname(os.path.dirname(os.path.dirname(os.path.abspath(__file__)
 sys.path.insert(0, os.path.join(ROOT, "blender"))
 import exportar_datos as ed  # noqa: E402
 from exportar_glb import humanoid_names  # noqa: E402
+import pose_t  # noqa: E402
 
 DATA = os.path.join(ROOT, "datos", "humana")
 OUT = os.path.join(ROOT, "pruebas", "fase_2", "salida", "referencia_reajuste.json")
 CONTINUITY = (0.49985, 0.5, 0.50015)
 WITH_VERTICES = ("atletico", "extremo")  # prueba de punta a punta del paso 3.2
 ELBOW = {"body": "largo", "bone": "LeftLowerArm", "axis": [0.0, 0.0, 1.0], "degrees": 90.0}  # ejes de Godot
+T_POSE_BODIES = ("neutro", "extremo")  # paso 3.6.2
 IDENTITY = [[1.0, 0.0, 0.0], [0.0, 1.0, 0.0], [0.0, 0.0, 1.0]]
 
 
@@ -135,18 +138,29 @@ def socket_rules(joints, neutral_verts, offset):
     return rules
 
 
-def posed_vertices(values, rows, offset):
-    """Vértices de la piel de MPFB (ejes de Godot) con el hueso de ELBOW girado sobre su cabeza (paso 3.4)."""
-    body = ed.raw_body(*mpfb_inputs(values, rows))
-    rig = body.parent
-    if rig.matrix_world != Matrix.Identity(4):
-        raise ValueError("El rig de MPFB no está en el origen")
+def bend_elbow(rig):
+    """Gira el hueso de ELBOW sobre su cabeza (paso 3.4)."""
     name = next(old for old, new in humanoid_names().items() if new == ELBOW["bone"])
     pose = rig.pose.bones[name]
     axis = Vector(to_blender(ELBOW["axis"]))
     turn = Matrix.Translation(pose.head) @ Matrix.Rotation(np.radians(ELBOW["degrees"]), 4, axis) \
         @ Matrix.Translation(-pose.head)
     pose.matrix = turn @ pose.matrix
+
+
+def t_pose(rig):
+    """Brazos en T con blender/pose_t.py, sin fijarla como reposo (paso 3.6.2)."""
+    for suffix, direction in pose_t.SIDES:
+        pose_t._straighten_arm(rig, suffix, Vector((direction, 0.0, 0.0)))
+
+
+def posed_vertices(values, rows, offset, pose):
+    """Vértices de la piel de MPFB (ejes de Godot) tras poner el esqueleto de Blender con pose(rig)."""
+    body = ed.raw_body(*mpfb_inputs(values, rows))
+    rig = body.parent
+    if rig.matrix_world != Matrix.Identity(4):
+        raise ValueError("El rig de MPFB no está en el origen")
+    pose(rig)
     for modifier in body.modifiers:  # solo el esqueleto: MPFB pone otro que oculta la malla auxiliar
         modifier.show_viewport = modifier.type == "ARMATURE"
     bpy.context.view_layer.update()
@@ -190,7 +204,8 @@ def main():
             triple = [{**every[background], slot: v} for v in CONTINUITY]
             reference["continuity"].append({"name": label, "values": [slot_values(b) for b in triple],
                                             "weights": [weights(b, shape_names) for b in triple]})
-    reference["elbow"] = {**ELBOW, "vertices": posed_vertices(every[ELBOW["body"]], rows, offset)}
+    reference["elbow"] = {**ELBOW, "vertices": posed_vertices(every[ELBOW["body"]], rows, offset, bend_elbow)}
+    reference["t_pose"] = {name: posed_vertices(every[name], rows, offset, t_pose) for name in T_POSE_BODIES}
     macros = [i for i, _ in ed.macro_sliders(rows)]
     for corner in itertools.product((0.0, 0.5, 1.0), repeat=len(macros)):  # activan las 81 correcciones
         values = {**every["neutro"], **{(i, None): v for i, v in zip(macros, corner)}}
