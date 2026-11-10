@@ -1,4 +1,4 @@
-# Editor de personajes 3D
+# GameMolde
 
 Un programa libre para crear personajes 3D moviendo deslizadores, y guardarlos listos para usar en un juego hecho con Godot.
 
@@ -36,4 +36,6 @@ Un programa libre para crear personajes 3D moviendo deslizadores, y guardarlos l
 
 ## Licencia
 
-Por decidir (MIT o GPL-3.0).
+- El programa: **MIT** (ver `LICENSE`). Puedes usarlo en tu juego, también si es comercial.
+- Los scripts de `blender/`: GPL-3.0 o posterior.
+- Los datos del cuerpo (`datos/`): CC0, de MakeHuman.

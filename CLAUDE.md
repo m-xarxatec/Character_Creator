@@ -2,7 +2,7 @@
 
 This file provides guidance to Claude Code (claude.ai/code) when working with code in this repository.
 
-**Proyecto:** Editor de personajes 3D
+**Proyecto:** GameMolde (nombre provisional) — editor de personajes 3D
 
 > Instrucciones para Claude Code. Léelo entero al empezar cada sesión.
 > Todo en español. El paso a paso está en `PLAN.md`; lo que no es del MVP, en `IDEAS.md`.
@@ -23,7 +23,7 @@ Un programa libre, hecho con Godot, para crear personajes 3D al estilo de VRoid.
 2. **Un paso cada vez.** Trabaja solo en el paso actual de `PLAN.md`. Al terminarlo, para, informa y espera.
 3. **Si dudas, pregunta.** Si algo no está claro o choca con este archivo, pregunta antes de seguir (máximo 3 preguntas a la vez).
 4. **No inventes.** Si no puedes comprobar una API, una versión o una licencia, dilo.
-5. **Licencias limpias.** Solo CC0, MIT, Apache 2.0 o GPL. Nada de MB-Lab (AGPL), VRoid ni SMPL. Si el núcleo es MIT, no copies código de MPFB2 (GPL): reimplementa a partir de la documentación y los datos CC0. Todo asset de terceros se anota en `CREDITOS.md`.
+5. **Licencias limpias.** Solo CC0, MIT, Apache 2.0 o GPL. Nada de MB-Lab (AGPL), VRoid ni SMPL. **El editor es MIT** (`LICENSE`): no copies código de MPFB2 (GPL), reimplementa a partir de la documentación y los datos CC0. Solo `blender/` es GPL-3.0+; `datos/` es CC0. Todo asset de terceros se anota en `CREDITOS.md`.
 6. **Las ideas nuevas no se construyen:** se apuntan en `IDEAS.md`.
 7. **Simple y corto.** Código, documentos y este archivo: lo mínimo que funcione. Si añades una línea a `CLAUDE.md`, que sea corta; si algo ya no sirve, bórralo. Nada de detalles que se ven leyendo el código.
 
@@ -163,8 +163,7 @@ juego_demo/
 
 ## 10. Decisiones pendientes (no las asumas)
 
-- Licencia del editor: MIT o GPL-3.0.
-- Nombre del proyecto.
+- Nombre definitivo (el provisional es GameMolde).
 - Lista final de deslizadores del MVP (paso 2.1).
 - Plataformas de la primera versión (Linux, Windows).
 

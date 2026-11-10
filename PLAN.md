@@ -1,9 +1,9 @@
-# PLAN — Editor de personajes 3D (hasta el MVP)
+# PLAN — GameMolde (hasta el MVP)
 
 > Paso a paso. Un paso cada vez y siempre con aprobación (ver `CLAUDE.md`).
 > Lo que no es del MVP va a `IDEAS.md`.
 
-**Estado actual:** Fase 0 · 0.1–0.4 hechos · 0.5 pendiente (licencia y nombre: lo decide el usuario)
+**Estado actual:** Fase 0 terminada · Fase 1 · paso 1.1 pendiente
 **Leyenda:** `[ ]` pendiente · `[~]` en curso · `[x]` hecho
 
 ---
@@ -27,7 +27,7 @@ Un programa hecho con Godot, con una pestaña **Cuerpo** que permite:
 - [x] 0.2 Instalar Godot 4 estable y anotar la versión en `CLAUDE.md`.
 - [x] 0.3 Crear el repositorio git con la estructura de `CLAUDE.md` y un `CREDITOS.md` vacío.
 - [x] 0.4 Prueba a mano: humano en MPFB2 → `.glb` → Godot con `SkeletonProfileHumanoid` → animación CC0 de Quaternius.
-- [ ] 0.5 Decidir la licencia del editor (MIT o GPL-3.0) y un nombre provisional.
+- [x] 0.5 Decidir la licencia del editor (MIT o GPL-3.0) y un nombre provisional.
 
 **Hecho cuando:** el humano de prueba camina en Godot sin deformaciones raras y las versiones están anotadas.
 
@@ -133,3 +133,4 @@ Según `diseno/maqueta-pestana-cuerpo.html`.
 | 2026-11-10 | 0.1 | Pack "MakeHuman system assets" (CC0) instalado en MPFB; zips borrados |
 | 2026-11-10 | 0.4 (parcial) | Humano MPFB + rig Game engine → `.glb` → Godot sin ventana: 53 huesos, 1,66 m, mira a +Z, 4 influencias que suman 1. Sale en pose A. Falta la parte a mano: BoneMap y animación |
 | 2026-11-10 | 0.4 | BoneMap humanoide por script (53/56), animaciones de Quaternius sobre el humano: caminar, atacar y sentarse sin deformaciones. Hallazgo: la pose A rompe los brazos; hace falta pose T |
+| 2026-11-10 | 0.5 | Licencia MIT para el editor (`LICENSE`) y nombre provisional GameMolde. Fase 0 terminada |
