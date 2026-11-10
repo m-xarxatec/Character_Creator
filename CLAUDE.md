@@ -36,6 +36,7 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 ## Entorno y comandos
 
 - Godot 4.7.2 estable (no .NET), GDScript: `godot`. Blender 5.2.2 LTS + MPFB 2.0.18 (`bl_ext.blender_org.mpfb`), sin ventana: `blender -b -P script.py -- args`.
+- Blender 5.2.2 fijo (snap retenido con `snap refresh --hold`): sin actualizaciones automáticas; cambiar de versión solo con un paso del PLAN.
 - Sin dependencias nuevas sin aprobación.
 - Crear un personaje: `blender -b -P blender/generar_cuerpo.py -- cuerpo.json salida.glb`
 - Pruebas de Blender (una por archivo `pruebas/fase_*/probar_*.py`): `blender -b -P <archivo> 2>&1 | grep -E 'FALLO|RESULTADO'`

@@ -65,6 +65,9 @@ check("target inventado", rejected({"version": 1, "targets": {"no-existe": 0.5}}
 check("target por prefijo", rejected({"version": 1, "targets": {"hip-scale": 0.5}}))
 check("target de genitales", rejected({"version": 1, "targets": {"penis-length-incr": 0.5}}))
 check("otra especie", rejected({"version": 1, "species": "dragon"}))
+snapped = gc.validate_spec({"version": 1, "macros": {"firmness": 0.49985, "muscle": 0.4997}})["macros"]
+check("firmeza en el hueco de MPFB pasa a 0,5", snapped["firmness"] == 0.5, snapped["firmness"])
+check("fuera del hueco no se toca", snapped["muscle"] == 0.4997, snapped["muscle"])
 
 print("RESULTADO:", "TODO BIEN" if not failures else f"{len(failures)} FALLOS: {failures}")
 sys.exit(1 if failures else 0)

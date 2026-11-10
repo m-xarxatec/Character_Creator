@@ -17,7 +17,7 @@
 ## Después del MVP: más deslizadores
 
 - Ir añadiendo filas a la tabla del paso 2.1 hasta cubrir cada detalle del cuerpo (MakeHuman trae unas 800 formas listas: orejas, nariz, mandíbula, dedos, pies…).
-- Macros exactas: mezclar en Godot los cuerpos combinados de MakeHuman (p. ej. "musculado y gordo") en vez de sumar dos formas por macro, como decidimos en el 2.1.
+- Deslizador **Edad** (de adulto joven a mayor; nunca menores): la macro `age` de MakeHuman, con sus correcciones.
 
 ---
 

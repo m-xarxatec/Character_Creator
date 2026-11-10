@@ -1,14 +1,16 @@
 # SPDX-License-Identifier: GPL-3.0-or-later
 """Puntos de anclaje (sockets): objetos vacios pegados a un hueso, para colgar armas y accesorios.
 
-No son huesos (solo se exportan huesos de deformacion). Se crean en pose T, con la misma
-orientacion que el mundo: asi en Godot quedan con Y arriba y Z hacia delante.
+En el personaje exportado no son huesos (solo se exportan huesos de deformacion); en datos/ si
+(los convierte exportar_datos.py). Valen en pose A o T, con la misma orientacion que el mundo:
+asi en Godot quedan con Y arriba y Z hacia delante.
 """
 import bpy
 from mathutils import Matrix, Vector
 
 MARGIN = 0.02  # metros de separacion de la piel
 SLICE = 0.03  # media altura de la rebanada de malla que se mide
+HIP_GROUPS = ("Hips", "LeftUpperLeg")
 
 
 def add_sockets(basemesh):
@@ -19,7 +21,10 @@ def add_sockets(basemesh):
     chest = (bones["UpperChest"].head_local + bones["UpperChest"].tail_local) / 2
     hips = bones["Hips"].head_local
     back_y = max(p.y for p in points if abs(p.x) < SLICE and abs(p.z - chest.z) < SLICE)
-    side_x = max(p.x for p in points if abs(p.z - hips.z) < SLICE)
+    # Solo piel de cadera y muslo: en pose A las manos cuelgan a esta altura.
+    hip_groups = {basemesh.vertex_groups[name].index for name in HIP_GROUPS}
+    side_x = max(v.co.x for v in basemesh.data.vertices
+                 if abs(v.co.z - hips.z) < SLICE and any(g.group in hip_groups and g.weight > 0 for g in v.groups))
     return [
         _socket(rig, "socket_hand_r", "RightHand", _palm(bones, "Right")),
         _socket(rig, "socket_hand_l", "LeftHand", _palm(bones, "Left")),

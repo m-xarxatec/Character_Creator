@@ -22,7 +22,7 @@ Si el formato cambia de forma incompatible, sube `version`.
   "pose": "A",
   "source": "MakeHuman system assets (CC0) con MPFB 2.0.18",
   "vertex_count": 13380,
-  "bone_count": 57,
+  "bones": {"deform": ["Root", "Hips", "…"], "sockets": ["socket_hand_r", "socket_hand_l", "socket_back", "socket_hip"]},
   "files": {"cuerpo.glb": {"sha256": "…"}, "articulaciones.json": {"sha256": "…"}, "deslizadores.csv": {"sha256": "…"}}
 }
 ```
@@ -36,6 +36,7 @@ Al cargar, el núcleo comprueba `version` y el `sha256` de cada archivo; si no c
 - Color por vértice `garment` (ver más abajo).
 - Formas (*blend shapes*): `<id>_decr` e `<id>_incr`, con `<id>` del CSV. Si `lados` = 2, hay una por lado: `<id>_incr_l`, `<id>_incr_r`.
   Los deslizadores Proporción y Por crear no tienen formas.
+- **Correcciones** de macros combinadas: nombres de formas de macro unidos por `*`, p. ej. `muscle_incr*weight_incr` (ver más abajo).
 
 ### Formas que suman varios targets
 
@@ -63,7 +64,25 @@ peso(<id>_incr) = max(0, 2·v − 1)
 ```
 
 - Si solo se mueve **una** macro, el resultado es igual al de MakeHuman, porque entre 0 y 0,5 y entre 0,5 y 1 MakeHuman también mezcla en línea recta.
-- Si se mueven **varias**, Godot suma sus formas y MakeHuman usaría su cuerpo combinado: se parecen, pero no son idénticos. El paso 2.4 mide esa diferencia y la informa aparte. La mezcla exacta está en `IDEAS.md`.
+- Si se mueven **varias**, sumar no basta: en MakeHuman, mucho músculo y mucho peso juntos dan un cuerpo que no es
+  "el musculado + el gordo". Ese extra se guarda como **forma de corrección**.
+
+### Formas de corrección (regla del producto)
+
+Una corrección es lo que una combinación de macros extremas (cada una a 0 o a 1) añade a la suma de sus partes.
+Se llama con sus partes unidas por `*` y **su peso es el producto de los pesos de sus partes**:
+
+```
+peso(muscle_incr*weight_incr) = peso(muscle_incr) × peso(weight_incr)
+```
+
+Ejemplo: músculo al 100 % (peso 1) y peso al 75 % (peso 0,5) → la corrección entra al 50 %. Si cualquiera de sus
+partes está en su valor neutro (peso 0), la corrección no entra. Hay correcciones de 2, 3 y 4 macros.
+
+- El conversor mide las 243 esquinas (cada macro a 0, 0,5 o 1) y solo guarda las correcciones de más de 0,5 mm.
+- MPFB descarta cada combinación de macros con peso < 0,01, y eso da saltos de hasta ~3 mm (sobre todo en el pecho).
+  El conversor mide sin ese descarte, así que las formas siguen la mezcla de MakeHuman de forma continua.
+- Godot no necesita saber nada de MakeHuman: le basta con multiplicar.
 - Las macros que no están en la tabla se quedan en su valor por defecto: **edad** 0,5 (adulto joven; el MVP solo hace adultos), **altura** 0,5 (la altura se cambia con la escala del hueso `Root`, que es Proporción), proporciones y etnia.
 
 ## `articulaciones.json`
@@ -84,7 +103,10 @@ cubos siempre igual, así que basta con guardar la posición base y cuánto la m
 }
 ```
 
-- Posición = base + Σ (peso de la forma × su delta). Solo se guardan las formas que mueven ese hueso.
+- Se guardan **posiciones** (cabeza y cola), no orientaciones. Posición = base + Σ (peso de la forma × su delta). Solo se guardan las formas que mueven ese hueso.
+- La **orientación la recalcula Godot** como MPFB, que mantiene fijo el giro de cada hueso sobre su eje (*roll*):
+  `nueva = R(ref → dir_nueva) · R(ref → dir_base)⁻¹ · base`, donde `dir` = cola − cabeza,
+  `R(a → b)` es el giro mínimo de `a` a `b` y `ref` = (0, 0, −1) en Godot (el +Y de Blender). Probado contra MPFB: error 0,000°.
 - Los anclajes también se guardan aquí: la mano, entre la muñeca y el nudillo del dedo corazón; la espalda y la cadera, en un vértice fijo de la piel + 2 cm.
 - Los deslizadores Proporción se aplican después, escalando el hueso por igual en todas direcciones.
 

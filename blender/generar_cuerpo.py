@@ -15,6 +15,7 @@ import json
 import os
 import sys
 
+import bl_ext.blender_org.mpfb as mpfb
 import bpy
 from bl_ext.blender_org.mpfb.services import HumanService, TargetService
 
@@ -70,6 +71,29 @@ def _validate_macros(raw):
             macros[name] = _unit(value, f"macros.{name}")
     if macros["age"] < MIN_AGE:
         raise BodyError(f"macros.age debe ser >= {MIN_AGE} (solo adultos)")
+    return _snap_out_of_gaps(macros)
+
+
+def mpfb_gaps():
+    """{macro: [(desde, hasta)]}: valores que MPFB no asigna a ningun tramo (pruebas/fase_2/hueco_mpfb/)."""
+    path = os.path.join(os.path.dirname(mpfb.__file__), "data", "targets", "macrodetails", "macro.json")
+    with open(path, encoding="utf-8") as file:
+        config = json.load(file)["macrotargets"]
+    return {name: [(a["highest"], b["lowest"]) for a, b in zip(m["parts"], m["parts"][1:])] for name, m in config.items()}
+
+
+def in_mpfb_gap(name, value, gaps=None):
+    return any(low <= value <= high for low, high in (gaps or mpfb_gaps()).get(name, []))
+
+
+def _snap_out_of_gaps(macros):
+    """Dentro de un hueco MPFB quita todas las formas de la macro (hasta 9 cm en el pecho): se usa 0,5.
+    Los huecos de un adulto estan todos junto a 0,5."""
+    gaps = mpfb_gaps()
+    for name, value in macros.items():
+        if name != "race" and value != 0.5 and in_mpfb_gap(name, value, gaps):
+            print(f"AVISO: macros.{name} = {value} cae en un hueco de MPFB; se usa 0.5")
+            macros[name] = 0.5
     return macros
 
 

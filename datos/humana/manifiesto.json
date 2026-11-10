@@ -1,0 +1,81 @@
+{
+ "bones": {
+  "deform": [
+   "Root",
+   "Hips",
+   "Spine",
+   "Chest",
+   "UpperChest",
+   "LeftShoulder",
+   "LeftUpperArm",
+   "LeftLowerArm",
+   "LeftHand",
+   "LeftIndexProximal",
+   "LeftIndexIntermediate",
+   "LeftIndexDistal",
+   "LeftMiddleProximal",
+   "LeftMiddleIntermediate",
+   "LeftMiddleDistal",
+   "LeftLittleProximal",
+   "LeftLittleIntermediate",
+   "LeftLittleDistal",
+   "LeftRingProximal",
+   "LeftRingIntermediate",
+   "LeftRingDistal",
+   "LeftThumbMetacarpal",
+   "LeftThumbProximal",
+   "LeftThumbDistal",
+   "RightShoulder",
+   "RightUpperArm",
+   "RightLowerArm",
+   "RightHand",
+   "RightIndexProximal",
+   "RightIndexIntermediate",
+   "RightIndexDistal",
+   "RightMiddleProximal",
+   "RightMiddleIntermediate",
+   "RightMiddleDistal",
+   "RightLittleProximal",
+   "RightLittleIntermediate",
+   "RightLittleDistal",
+   "RightRingProximal",
+   "RightRingIntermediate",
+   "RightRingDistal",
+   "RightThumbMetacarpal",
+   "RightThumbProximal",
+   "RightThumbDistal",
+   "Neck",
+   "Head",
+   "LeftUpperLeg",
+   "LeftLowerLeg",
+   "LeftFoot",
+   "LeftToes",
+   "RightUpperLeg",
+   "RightLowerLeg",
+   "RightFoot",
+   "RightToes"
+  ],
+  "sockets": [
+   "socket_hand_l",
+   "socket_hand_r",
+   "socket_back",
+   "socket_hip"
+  ]
+ },
+ "files": {
+  "articulaciones.json": {
+   "sha256": "298864ad48c39fe4f78de17566e6d529951d680d03b44bb74b8f08f46c3346cb"
+  },
+  "cuerpo.glb": {
+   "sha256": "3abf12e6dc1cd8b919d751d56256e61656d714c6e11cd73248f435ee3d3ee65d"
+  },
+  "deslizadores.csv": {
+   "sha256": "c0a3e439036bef2db1d44d74d7daf3069a58010f6a0bc0dbef29b16f4d98f60d"
+  }
+ },
+ "pose": "A",
+ "source": "MakeHuman system assets (CC0) con MPFB 2.0.18",
+ "species": "humana",
+ "version": 1,
+ "vertex_count": 13380
+}
