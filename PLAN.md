@@ -3,7 +3,7 @@
 > Paso a paso. Un paso cada vez y siempre con aprobación (ver `CLAUDE.md`).
 > Lo que no es del MVP va a `IDEAS.md`.
 
-**Estado actual:** Fase 0 · 0.1 y 0.2 hechos · 0.3 en curso (falta `git init`)
+**Estado actual:** Fase 0 · 0.1–0.3 hechos · 0.4 en curso
 **Leyenda:** `[ ]` pendiente · `[~]` en curso · `[x]` hecho
 
 ---
@@ -25,8 +25,8 @@ Un programa hecho con Godot, con una pestaña **Cuerpo** que permite:
 
 - [x] 0.1 Instalar Blender 4.2 LTS o superior, MPFB2 y el pack "MakeHuman system assets". Anotar versiones en `CLAUDE.md`.
 - [x] 0.2 Instalar Godot 4 estable y anotar la versión en `CLAUDE.md`.
-- [~] 0.3 Crear el repositorio git con la estructura de `CLAUDE.md` y un `CREDITOS.md` vacío.
-- [ ] 0.4 Prueba a mano: humano en MPFB2 → `.glb` → Godot con `SkeletonProfileHumanoid` → animación CC0 de Quaternius.
+- [x] 0.3 Crear el repositorio git con la estructura de `CLAUDE.md` y un `CREDITOS.md` vacío.
+- [~] 0.4 Prueba a mano: humano en MPFB2 → `.glb` → Godot con `SkeletonProfileHumanoid` → animación CC0 de Quaternius.
 - [ ] 0.5 Decidir la licencia del editor (MIT o GPL-3.0) y un nombre provisional.
 
 **Hecho cuando:** el humano de prueba camina en Godot sin deformaciones raras y las versiones están anotadas.
@@ -131,3 +131,4 @@ Según `diseno/maqueta-pestana-cuerpo.html`.
 | 2026-11-10 | 0.2 | Godot 4.7.2 estable instalado (`godot` en el PATH) |
 | 2026-11-10 | — | Meta visual añadida al MVP: estilo ilustración con contorno (pasos 3.9, 3.10 y 4.6) |
 | 2026-11-10 | 0.1 | Pack "MakeHuman system assets" (CC0) instalado en MPFB; zips borrados |
+| 2026-11-10 | 0.4 (parcial) | Humano MPFB + rig Game engine → `.glb` → Godot sin ventana: 53 huesos, 1,66 m, mira a +Z, 4 influencias que suman 1. Sale en pose A. Falta la parte a mano: BoneMap y animación |

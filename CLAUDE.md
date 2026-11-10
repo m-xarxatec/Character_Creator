@@ -64,6 +64,8 @@ Riesgos: …
 Aún no hay código, así que no hay comandos de pruebas. Añade aquí cada comando real cuando exista (una línea cada uno).
 
 - Previsto (Fase 1): `blender -b -P blender/generar_cuerpo.py -- cuerpo.json salida.glb`
+- Prueba 0.4 (humano → `.glb`): `blender -b -P pruebas/paso_0_4/crear_humano.py -- "$PWD/pruebas/paso_0_4/proyecto/humano.glb"`
+- Prueba 0.4 (comprobar en Godot): `godot --headless --path pruebas/paso_0_4/proyecto --import` y luego `godot --headless --path pruebas/paso_0_4/proyecto -s comprobar.gd`
 
 ---
 
@@ -83,7 +85,7 @@ juego_demo/
 └── pruebas/                          # cuerpos de prueba, renders, informes
 ```
 
-- Las carpetas ya existen pero están vacías. Falta `git init` (paso 0.3).
+- Las carpetas ya existen pero están vacías.
 
 - El **núcleo** no depende de la interfaz: se podrá usar después como plugin dentro de Godot o en tiempo de juego.
 - La base humana es una **especie**: el código no debe suponer que solo existe la humana.
@@ -95,7 +97,7 @@ juego_demo/
 | Regla | Valor |
 | --- | --- |
 | Unidades y ejes | Metros; Y hacia arriba; mirando a +Z (convención de Godot) |
-| Pose de reposo | Pose T |
+| Pose de reposo | Pose T (ojo: MPFB sale en pose A; hay que convertirla, Fase 1) |
 | Esqueleto | Compatible con `SkeletonProfileHumanoid` (56 huesos): el BoneMap se rellena solo, sin huesos en rojo |
 | Pesos | Máximo 4 influencias por vértice, y suman 1 |
 | Huesos exportados | Solo de deformación |
