@@ -63,6 +63,7 @@ peso(<id>_decr) = max(0, 1 − 2·v)
 peso(<id>_incr) = max(0, 2·v − 1)
 ```
 
+- Los deslizadores Forma con targets usan la misma regla con sus formas `_decr` e `_incr`: todos van de 0 a 1 y se manejan igual.
 - Si solo se mueve **una** macro, el resultado es igual al de MakeHuman, porque entre 0 y 0,5 y entre 0,5 y 1 MakeHuman también mezcla en línea recta.
 - Si se mueven **varias**, sumar no basta: en MakeHuman, mucho músculo y mucho peso juntos dan un cuerpo que no es
   "el musculado + el gordo". Ese extra se guarda como **forma de corrección**.

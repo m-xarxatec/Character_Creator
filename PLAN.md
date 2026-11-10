@@ -3,7 +3,7 @@
 > Paso a paso. Un paso cada vez y siempre con aprobación (ver `CLAUDE.md`).
 > Lo que no es del MVP va a `IDEAS.md`.
 
-**Estado actual:** Fase 2 · paso 2.4 pendiente
+**Estado actual:** Fase 3 · paso 3.1 pendiente
 **Leyenda:** `[ ]` pendiente · `[~]` en curso · `[x]` hecho
 
 ---
@@ -51,7 +51,7 @@ Un programa hecho con Godot, con una pestaña **Cuerpo** que permite:
 - [x] 2.1 Tabla de deslizadores del MVP: zona → deslizador → tipo (Forma / Proporción / Por crear) → target de MakeHuman o hueso. Meta: poder cambiar el tamaño de cada parte (cuello, espalda a lo ancho y hacia atrás, largo de la cara…). La tabla es un archivo de datos: añadir un deslizador = añadir una fila, sin tocar código.
 - [x] 2.2 Definir el formato de `datos/` (manifiesto con `version`): `datos/FORMATO.md`.
 - [x] 2.3 Conversor `blender/exportar_datos.py`: genera `datos/humana/` según `datos/FORMATO.md` (cuerpo en pose A con formas y anclajes como huesos, articulaciones con sus desplazamientos y manifiesto con `sha256`).
-- [ ] 2.4 Prueba: reajustar los huesos fuera de Blender da el mismo resultado que MPFB2 (diferencia < 1 mm) en 5 cuerpos.
+- [x] 2.4 Prueba: reajustar los huesos fuera de Blender da el mismo resultado que MPFB2 (diferencia < 1 mm) en 5 cuerpos.
 
 **Hecho cuando:** `datos/` está completa, versionada y probada.
 
@@ -145,3 +145,4 @@ Según `diseno/maqueta-pestana-cuerpo.html`.
 | 2026-11-10 | 2.1 | `datos/humana/deslizadores.csv`: 40 deslizadores en 14 zonas (33 Forma, 4 Proporción, 3 Por crear). Decidido: las macros se hornean como 2 formas (menos/más) sobre el cuerpo neutro; los largos son formas de MakeHuman y los huesos se reajustan (2.4); Proporción = escala uniforme de un hueso. Sobras del 0.4 borradas. 47 pruebas |
 | 2026-11-10 | 2.2 | `datos/FORMATO.md`: carpeta por especie con manifiesto (`sha256`), `cuerpo.glb` en pose A con formas `_decr`/`_incr` y 4 huesos de anclaje, y `articulaciones.json` (base + desplazamientos). Macros: 2 formas cada una, pesos explicados. Proxy ligero para después. Pose de exportación: se decide en el 5.5 |
 | 2026-11-10 | 2.3 | `blender/exportar_datos.py` genera `datos/humana/` (159 formas: 78 de la tabla + 81 correcciones de macros; 15,5 MB; mismos sha256 al repetir). Contra MPFB: 243 esquinas máx. 0,004 / media 0,001 mm; 242 cuerpos al azar máx. 0,025 / media 0,006 mm (1 saltado por el hueco de MPFB, reproducido en `pruebas/fase_2/hueco_mpfb/`); huesos 0,0008 mm y 0,000°. Fluido en Godot: 0,69 ms por fotograma con las 159 formas (GTX 1650). Arreglos: anclaje de cadera en pose A, sin el descarte de pesos < 0,01 de MPFB, `generar_cuerpo.py` pasa a 0,5 los valores en un hueco (con aviso en el log). Blender fijado en 5.2.2 |
+| 2026-11-10 | 2.4 | `godot/addons/creador/bone_refit.gd` (primer archivo del núcleo, hecho solo desde FORMATO.md): cabeza, cola y giro de cada hueso. Contra MPFB en 6 cuerpos (neutro, atlético, mujer robusta, largo, al azar, extremo 0/1), 57 huesos con anclajes: máx. 0,0036 mm y 0,000° (giros reales de hasta 51° en los dedos del pie, sin problemas). Continuidad en 0,5 (0,49985 / 0,50015, 78 tríos): máx. 0,056 mm. Decidido: los deslizadores Forma con targets usan la regla de pesos de las macros. Referencia: `pruebas/fase_2/referencia_reajuste.py`; prueba: `pruebas/godot/probar_reajuste.gd` |
