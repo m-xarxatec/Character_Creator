@@ -2,13 +2,15 @@ extends SceneTree
 # Crea el BoneMap humanoide de cada .glb y lo apunta en su archivo .import.
 # Uso: godot --headless --path . -s crear_bonemap.gd   (y despues: godot --headless --path . --import)
 
-const FILES := ["humano.glb", "UAL1_Standard.glb"]
+# archivo -> si hay que corregir los brazos a pose T (personaje.glb ya sale en pose T desde Blender)
+const FILES := {"humano.glb": true, "UAL1_Standard.glb": true, "personaje.glb": false}
 const KEEP_AS_IS: Array[StringName] = [&"Hips", &"Spine", &"Chest", &"UpperChest", &"Neck", &"Head", &"LeftUpperLeg", &"LeftLowerLeg", &"LeftFoot", &"LeftToes", &"RightUpperLeg", &"RightLowerLeg", &"RightFoot", &"RightToes"]
 const FINGERS := {"Thumb": "thumb", "Index": "index", "Middle": "middle", "Ring": "ring", "Little": "pinky"}
 
 func _init() -> void:
 	for file: String in FILES:
-		_map_file(file)
+		if FileAccess.file_exists("res://" + file):
+			_map_file(file, FILES[file])
 	quit()
 
 # Tabla: hueso del perfil humanoide de Godot -> nombre estilo Unreal (el de MPFB y el de Quaternius).
@@ -34,7 +36,7 @@ func _table() -> Dictionary:
 				t[s + finger + parts[i]] = "%s_0%d%s" % [FINGERS[finger], i + 1, x]
 	return t
 
-func _map_file(file: String) -> void:
+func _map_file(file: String, fix_arms: bool) -> void:
 	# Se lee el .glb original (no el importado) para ver los nombres de hueso sin renombrar.
 	var doc := GLTFDocument.new()
 	var state := GLTFState.new()
@@ -51,7 +53,9 @@ func _map_file(file: String) -> void:
 	var missing: PackedStringArray = []
 	for i in profile.bone_size:
 		var bone := profile.get_bone_name(i)
-		if table.has(bone) and real.has(table[bone]):
+		if real.has(bone.to_lower()):  # el hueso ya se llama como en el perfil
+			map.set_skeleton_bone_name(bone, real[bone.to_lower()])
+		elif table.has(bone) and real.has(table[bone]):
 			map.set_skeleton_bone_name(bone, real[table[bone]])
 		else:
 			missing.append(bone + (" (OBLIGATORIO)" if profile.is_required(i) else ""))
@@ -63,7 +67,7 @@ func _map_file(file: String) -> void:
 	cfg.set_value("params", "_subresources", {"nodes": {node_key: {
 		"retarget/bone_map": load(map_path),
 		# Lleva la pose de reposo a pose T (MPFB sale en pose A y sin esto los brazos se rompen).
-		"retarget/rest_fixer/fix_silhouette/enable": true,
+		"retarget/rest_fixer/fix_silhouette/enable": fix_arms,
 		# Solo se corrigen los brazos: enderezar columna y piernas deforma la barriga.
 		"retarget/rest_fixer/fix_silhouette/filter": KEEP_AS_IS,
 	}}})

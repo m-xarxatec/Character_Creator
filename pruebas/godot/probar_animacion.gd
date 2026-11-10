@@ -1,8 +1,9 @@
 extends SceneTree
 # Pone al humano a reproducir animaciones de Quaternius y guarda una hoja de capturas.
-# Necesita ventana (no --headless). Uso: godot --path . -s probar_animacion.gd
+# Necesita ventana (no --headless). Uso: godot --path . -s probar_animacion.gd -- [archivo.glb]
+# Guarda pruebas/capturas/<archivo>.png
 
-const SHOTS := [["Idle", 0.5], ["Walk", 0.0], ["Walk", 0.3], ["Walk", 0.6], ["Sword_Attack", 0.4], ["Sitting_Idle", 0.5]]
+const SHOTS := [["A_TPose", 0.0], ["Walk", 0.0], ["Walk", 0.3], ["Walk", 0.6], ["Sword_Attack", 0.4], ["Sitting_Idle", 0.5]]
 const TILE := Vector2i(400, 600)
 
 func _initialize() -> void:
@@ -12,7 +13,9 @@ func _initialize() -> void:
 	view.own_world_3d = true
 	view.render_target_update_mode = SubViewport.UPDATE_ALWAYS
 	root.add_child(view)
-	var human: Node3D = load("res://humano.glb").instantiate()
+	var args := OS.get_cmdline_user_args()
+	var file: String = args[0] if args.size() > 0 else "humano.glb"
+	var human: Node3D = load("res://" + file).instantiate()
 	view.add_child(human)
 	var source: Node = load("res://UAL1_Standard.glb").instantiate()
 	var source_player: AnimationPlayer = source.find_children("*", "AnimationPlayer", true, false)[0]
@@ -52,8 +55,9 @@ func _initialize() -> void:
 		var foot_y := minf(_bone_y(skel, "LeftToes"), _bone_y(skel, "RightToes"))
 		print("%s t=%.1f | cadera y=%.2f | cabeza y=%.2f | pie mas bajo y=%.2f" % [anim, SHOTS[i][1], _bone_y(skel, "Hips"), _bone_y(skel, "Head"), foot_y])
 	DirAccess.make_dir_absolute(ProjectSettings.globalize_path("res://../capturas"))
-	sheet.save_png(ProjectSettings.globalize_path("res://../capturas/animaciones.png"))
-	print("GUARDADO capturas/animaciones.png")
+	var out := "res://../capturas/%s.png" % file.get_basename()
+	sheet.save_png(ProjectSettings.globalize_path(out))
+	print("GUARDADO ", out)
 	source.free()
 	quit()
 

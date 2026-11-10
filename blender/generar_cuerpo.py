@@ -1,7 +1,7 @@
 # SPDX-License-Identifier: GPL-3.0-or-later
 """Crea un personaje con MPFB a partir de un JSON de valores: cuerpo, esqueleto y prenda base.
 
-Uso: blender -b -P blender/generar_cuerpo.py -- cuerpo.json
+Uso: blender -b -P blender/generar_cuerpo.py -- cuerpo.json [salida.glb]
 
 Formato del JSON (version 1); todo menos "version" es opcional:
 {
@@ -19,8 +19,11 @@ import bpy
 from bl_ext.blender_org.mpfb.services import HumanService, TargetService
 
 sys.path.insert(0, os.path.dirname(os.path.abspath(__file__)))  # para importar los otros scripts de blender/
+from anclajes import add_sockets  # noqa: E402
+from exportar_glb import export_glb, rename_to_humanoid  # noqa: E402
 from limpiar_malla import clean_mesh  # noqa: E402
 from poner_rig import add_rig  # noqa: E402
+from pose_t import apply_t_pose  # noqa: E402
 from prenda_base import paint_base_garment  # noqa: E402
 
 FORMAT_VERSION = 1
@@ -119,12 +122,14 @@ def _put_feet_on_ground(basemesh):
 
 
 def build_character(spec):
-    """Personaje listo para exportar: formas horneadas, esqueleto con pesos, prenda pintada y solo piel."""
+    """Personaje listo para exportar, en pose T y con nombres humanoides. Devuelve (malla, anclajes)."""
     basemesh = create_body(spec)
     add_rig(basemesh)
     paint_base_garment(basemesh)
     clean_mesh(basemesh)
-    return basemesh
+    apply_t_pose(basemesh)
+    rename_to_humanoid(basemesh)
+    return basemesh, add_sockets(basemesh)
 
 
 def measure(basemesh):
@@ -142,9 +147,13 @@ def measure(basemesh):
 
 
 def main():
-    json_path = sys.argv[sys.argv.index("--") + 1]
+    args = sys.argv[sys.argv.index("--") + 1:]
+    json_path = args[0]
     bpy.ops.wm.read_factory_settings(use_empty=True)
-    basemesh = build_character(load_spec(json_path))
+    basemesh, sockets = build_character(load_spec(json_path))
+    if len(args) > 1:
+        export_glb(basemesh, sockets, os.path.abspath(args[1]))
+        print("EXPORTADO:", os.path.abspath(args[1]))
     print("RESUMEN:", json.dumps({key: round(value, 4) for key, value in measure(basemesh).items()}))
 
 

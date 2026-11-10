@@ -11,3 +11,8 @@ __pycache__/
 
 # Capturas de prueba (se regeneran con los scripts)
 pruebas/**/capturas/
+
+# Personajes generados por las pruebas
+pruebas/**/salida/
+pruebas/godot/personaje.glb*
+pruebas/godot/bonemap_personaje.tres

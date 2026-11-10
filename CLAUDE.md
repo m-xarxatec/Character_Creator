@@ -63,12 +63,10 @@ Riesgos: …
 
 Aún no hay código, así que no hay comandos de pruebas. Añade aquí cada comando real cuando exista (una línea cada uno).
 
-- Crear un cuerpo: `blender -b -P blender/generar_cuerpo.py -- "$PWD/pruebas/fase_1/cuerpos/neutro.json"` (imprime `RESUMEN:` con las medidas; el `.glb` llega en el paso 1.4). El formato del JSON está en la cabecera del script.
-- Pruebas de Fase 1 (una por archivo `pruebas/fase_1/probar_*.py`): `blender -b -P pruebas/fase_1/probar_generar_cuerpo.py 2>&1 | grep -E 'bien|FALLO|RESULTADO'`
-- Prueba 0.4, desde `pruebas/paso_0_4/proyecto/` (cada script explica su uso en la cabecera):
-  - `godot --headless --path . -s crear_bonemap.gd` y luego `godot --headless --path . --import`
-  - `godot --headless --path . -s comprobar.gd` (huesos, tamaño, pesos)
-  - `godot --path . -s probar_animacion.gd` (con ventana; guarda `../capturas/animaciones.png`)
+- Crear un personaje: `blender -b -P blender/generar_cuerpo.py -- cuerpo.json salida.glb` (formato del JSON en la cabecera del script; ejemplos en `pruebas/fase_1/cuerpos/`).
+- Pruebas de Fase 1, una por archivo `pruebas/fase_1/probar_*.py`: `blender -b -P pruebas/fase_1/probar_exportar_glb.py 2>&1 | grep -E 'FALLO|RESULTADO'`
+- Proyecto Godot de pruebas en `pruebas/godot/` (cada script explica su uso en la cabecera). Para ver un `.glb` animado: cópialo como `pruebas/godot/personaje.glb` y, desde esa carpeta:
+  `godot --headless --path . --import && godot --headless --path . -s crear_bonemap.gd && godot --headless --path . --import && godot --path . -s probar_animacion.gd -- personaje.glb` (abre ventana; guarda `pruebas/capturas/personaje.png`)
 - GDScript: una función propia no puede llamarse `_process` ni `_init` en un script `extends SceneTree`.
 
 ---
@@ -101,12 +99,13 @@ juego_demo/
 | Regla | Valor |
 | --- | --- |
 | Unidades y ejes | Metros; Y hacia arriba; mirando a +Z (convención de Godot) |
-| Pose de reposo | Pose T. MPFB sale en pose A: sin corregir, los brazos se rompen al animar. En la prueba 0.4 se corrigió con *Fix Silhouette* de Godot solo en brazos; en Fase 1 se exporta ya en pose T |
+| Pose de reposo | Pose T, hecha en Blender (`blender/pose_t.py`): MPFB sale en pose A y con ella los brazos se rompen al animar |
 | Esqueleto | Compatible con `SkeletonProfileHumanoid` (56 huesos). El rig *Game engine* cubre 53 (faltan ojos y mandíbula, no obligatorios). Se exporta con los nombres del perfil para no depender del autorrelleno del BoneMap |
 | Pesos | Máximo 4 influencias por vértice, y suman 1 |
 | Huesos exportados | Solo de deformación |
 | Compresión | Sin Draco |
-| Puntos de anclaje | `socket_hand_r`, `socket_hand_l`, `socket_back`, `socket_hip` |
+| Puntos de anclaje | `socket_hand_r`, `socket_hand_l`, `socket_back`, `socket_hip` (cadera izquierda). Son nodos vacíos hijos del hueso, no huesos; sin giro respecto al mundo en pose T |
+| En Godot | Al importar hay que asignar un BoneMap humanoide al esqueleto para que las animaciones retargeteadas funcionen (ver `pruebas/godot/crear_bonemap.gd`) |
 | Malla | La base completa de MakeHuman (~13.400 vértices), sin proxy: una sola malla para todos los cuerpos |
 | Cuerpo por defecto | Neutro, sin detalle anatómico, con prenda base **pintada** (top y short): atributo de color por vértice `garment` (1 = prenda), que el shader corta en 0,5. No es geometría. **Se puede quitar con un botón** y exportar con o sin ella (nos diferencia de VRoid): la marca `garment` viaja siempre en la malla y lo que se enciende o apaga es el shader |
 | Carpeta `datos/` | Manifiesto con `version`; si cambia el formato, sube la versión |

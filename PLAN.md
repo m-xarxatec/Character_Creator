@@ -3,7 +3,7 @@
 > Paso a paso. Un paso cada vez y siempre con aprobación (ver `CLAUDE.md`).
 > Lo que no es del MVP va a `IDEAS.md`.
 
-**Estado actual:** Fase 1 · 1.1–1.3 hechos · 1.4 pendiente
+**Estado actual:** Fase 1 · 1.1–1.4 hechos · 1.5 pendiente
 **Leyenda:** `[ ]` pendiente · `[~]` en curso · `[x]` hecho
 
 ---
@@ -38,7 +38,7 @@ Un programa hecho con Godot, con una pestaña **Cuerpo** que permite:
 - [x] 1.1 Script `blender/generar_cuerpo.py`: recibe un JSON con valores y crea el humano con MPFB2.
 - [x] 1.2 Aplicar el rig *Game engine* (pesos a 4 influencias) y la prenda base pintada. Sin proxy: se usa la malla completa.
 - [x] 1.3 Hornear formas, quitar helpers y resolver las máscaras.
-- [ ] 1.4 Exportar `.glb` según `CLAUDE.md` (sección 6) y añadir los 4 puntos de anclaje.
+- [x] 1.4 Exportar `.glb` según `CLAUDE.md` (sección 6) y añadir los 4 puntos de anclaje.
 - [ ] 1.5 Renders de frente, perfil y espalda para revisarlos.
 - [ ] 1.6 Prueba automática: el `.glb` se abre en Godot sin errores y el BoneMap se rellena solo.
 
@@ -138,3 +138,4 @@ Según `diseno/maqueta-pestana-cuerpo.html`.
 | 2026-11-10 | 1.2 | `blender/poner_rig.py` (53 huesos, máx. 4 influencias, suman 1) y `blender/prenda_base.py` (top y short pintados, iguales en todos los cuerpos). Decidido: malla completa sin proxy y prenda pintada. 45 pruebas |
 | 2026-11-10 | — | Requisito nuevo: la prenda base se puede quitar con un botón y exportar con o sin ella (pasos 3.5 y 4.5) |
 | 2026-11-10 | 1.3 | `blender/limpiar_malla.py`: formas horneadas, sin malla auxiliar ni máscaras, solo grupos de huesos. Quedan 13.380 vértices y el cuerpo no se mueve ni 0,01 mm. 45 pruebas |
+| 2026-11-10 | 1.4 | Exporta `.glb`: pose T (`pose_t.py`), nombres humanoides y export (`exportar_glb.py`), 4 anclajes (`anclajes.py`). Los 5 cuerpos pasan 110 comprobaciones y el neutro se anima bien en Godot sin corrección. Proyecto Godot de pruebas movido a `pruebas/godot/` |
