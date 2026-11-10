@@ -25,6 +25,17 @@
 
 ---
 
+## Pack "Universal Base Characters" de Quaternius (CC0)
+
+El zip está en `referencias/` (git no lo guarda). Versión gratis: 2 cuerpos estilizados en pose T con ropa interior pintada, 8 peinados, cejas y barba. Mismo esqueleto que sus animaciones.
+
+- **No sirve como cuerpo del MVP:** no trae formas (*blend shapes*), así que no habría deslizadores de Forma.
+- **Peinados, cejas y barba:** primeras piezas para la pestaña Pelo.
+- **Segunda base estilizada** (solo deslizadores de Proporción), como otra "especie".
+- **Referencia de estilo** para esculpir nuestras formas propias (Fase 6) y para la ropa interior pintada.
+
+---
+
 ## Sistema de piezas (packs)
 
 - Carpeta de packs: `.glb` + ficha `.json` (tipo, ranura, autor, licencia, origen) + miniatura.

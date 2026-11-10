@@ -8,3 +8,6 @@ __pycache__/
 # Descargas y temporales
 *.zip
 *.tmp
+
+# Capturas de prueba (se regeneran con los scripts)
+pruebas/**/capturas/

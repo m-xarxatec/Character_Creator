@@ -11,10 +11,10 @@ func _init() -> void:
 	print("ALTURA (m): ", snappedf(box.size.y, 0.001), "  pies en y=", snappedf(box.position.y, 0.001))
 	print("ANCHO x: ", snappedf(box.size.x, 0.001), "  FONDO z: ", snappedf(box.size.z, 0.001))
 	# La mano izquierda del personaje debe estar en +X si mira a +Z.
-	var hand_l := skel.get_bone_global_rest(skel.find_bone("hand_l")).origin
-	var ball_l := skel.get_bone_global_rest(skel.find_bone("ball_l")).origin
-	var foot_l := skel.get_bone_global_rest(skel.find_bone("foot_l")).origin
-	print("hand_l: ", hand_l, "  punta del pie - talon (z): ", snappedf(ball_l.z - foot_l.z, 0.001))
+	var hand_l := skel.get_bone_global_rest(skel.find_bone("LeftHand")).origin
+	var ball_l := skel.get_bone_global_rest(skel.find_bone("LeftToes")).origin
+	var foot_l := skel.get_bone_global_rest(skel.find_bone("LeftFoot")).origin
+	print("mano izquierda: ", hand_l, "  punta del pie - talon (z): ", snappedf(ball_l.z - foot_l.z, 0.001))
 	# Pesos: 4 u 8 influencias por vertice.
 	var arr := mesh.mesh.surface_get_arrays(0)
 	var n_verts: int = (arr[Mesh.ARRAY_VERTEX] as PackedVector3Array).size()

@@ -64,8 +64,11 @@ Riesgos: …
 Aún no hay código, así que no hay comandos de pruebas. Añade aquí cada comando real cuando exista (una línea cada uno).
 
 - Previsto (Fase 1): `blender -b -P blender/generar_cuerpo.py -- cuerpo.json salida.glb`
-- Prueba 0.4 (humano → `.glb`): `blender -b -P pruebas/paso_0_4/crear_humano.py -- "$PWD/pruebas/paso_0_4/proyecto/humano.glb"`
-- Prueba 0.4 (comprobar en Godot): `godot --headless --path pruebas/paso_0_4/proyecto --import` y luego `godot --headless --path pruebas/paso_0_4/proyecto -s comprobar.gd`
+- Prueba 0.4, desde `pruebas/paso_0_4/proyecto/` (cada script explica su uso en la cabecera):
+  - `godot --headless --path . -s crear_bonemap.gd` y luego `godot --headless --path . --import`
+  - `godot --headless --path . -s comprobar.gd` (huesos, tamaño, pesos)
+  - `godot --path . -s probar_animacion.gd` (con ventana; guarda `../capturas/animaciones.png`)
+- GDScript: una función propia no puede llamarse `_process` ni `_init` en un script `extends SceneTree`.
 
 ---
 
@@ -97,8 +100,8 @@ juego_demo/
 | Regla | Valor |
 | --- | --- |
 | Unidades y ejes | Metros; Y hacia arriba; mirando a +Z (convención de Godot) |
-| Pose de reposo | Pose T (ojo: MPFB sale en pose A; hay que convertirla, Fase 1) |
-| Esqueleto | Compatible con `SkeletonProfileHumanoid` (56 huesos): el BoneMap se rellena solo, sin huesos en rojo |
+| Pose de reposo | Pose T. MPFB sale en pose A: sin corregir, los brazos se rompen al animar. En la prueba 0.4 se corrigió con *Fix Silhouette* de Godot solo en brazos; en Fase 1 se exporta ya en pose T |
+| Esqueleto | Compatible con `SkeletonProfileHumanoid` (56 huesos). El rig *Game engine* cubre 53 (faltan ojos y mandíbula, no obligatorios). Se exporta con los nombres del perfil para no depender del autorrelleno del BoneMap |
 | Pesos | Máximo 4 influencias por vértice, y suman 1 |
 | Huesos exportados | Solo de deformación |
 | Compresión | Sin Draco |
