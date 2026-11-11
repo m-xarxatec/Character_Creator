@@ -28,7 +28,8 @@
 - **Ropa:** prendas que siguen al cuerpo (anclaje tipo `.mhclo`), capas, ocultar la piel que queda bajo la ropa.
 - **Accesorios:** cascos, gafas o armas en los puntos de anclaje.
 - **Materiales:** color de piel (decidido: después del MVP), texturas, estilo pixel art. (El estilo ilustración con contorno ya está en `PLAN.md`.)
-- **Exportar:** VRM 1.0, niveles de detalle (LOD), opción "solo proxy ligero" (`cuerpo_ligero.glb` con `proxy741` de MakeHuman, mismas formas y nombres; la prenda necesitaría una máscara en textura para no salir dentada).
+- **Exportar:** VRM 1.0, niveles de detalle (LOD).
+- **Selector de polígonos al exportar:** Low-poly (proxy741), Ligero (proxy ~1.600), Medio (reducción automática de la base), Completo (base). Opción de sombreado plano. Mismos huesos y anclajes; pesos heredados de la base; textura de prenda horneada por nivel; pruebas de deformación por nivel.
 
 ---
 

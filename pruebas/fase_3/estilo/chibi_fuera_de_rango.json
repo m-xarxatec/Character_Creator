@@ -1,0 +1,8 @@
+{
+	"nombre": "Chibi fuera de rango (solo para juzgar: cabeza ×2,2, sin tocar datos/)",
+	"valores": {"gender": 0.5, "muscle": 0.2, "weight": 0.5, "head_width": 0.7, "neck_length": 0.0,
+		"neck_thickness": 0.3, "torso_length": 0.0, "leg_length": 0.0, "arm_length": 0.0, "hand_size": 0.85,
+		"foot_size": 0.9, "finger_length": 0.2},
+	"escalas_fuera_de_rango": {"Head": 2.2},
+	"colores": {"skin_color": [0.93, 0.88, 0.9], "garment_color": [0.1, 0.08, 0.12]}
+}

@@ -1,0 +1,7 @@
+{
+	"nombre": "Anime femenino",
+	"valores": {"gender": 0.0, "muscle": 0.3, "weight": 0.4, "head_size": 0.8, "neck_thickness": 0.1, "neck_length": 0.6,
+		"shoulder_width": 0.35, "waist_width": 0.15, "torso_length": 0.35, "hip_width": 0.55, "leg_length": 0.9,
+		"arm_thickness": 0.3, "thigh": 0.45, "calf": 0.35, "hand_size": 0.2, "foot_size": 0.15, "finger_thickness": 0.3},
+	"colores": {"skin_color": [1.0, 0.89, 0.83], "garment_color": [0.22, 0.24, 0.36]}
+}
