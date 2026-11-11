@@ -112,6 +112,11 @@ cubos siempre igual, así que basta con guardar la posición base y cuánto la m
 - Los anclajes también se guardan aquí: la mano, entre la muñeca y el nudillo del dedo corazón; la espalda y la cadera, en un vértice fijo de la piel + 2 cm.
 - Los deslizadores Proporción se aplican después, escalando el hueso por igual en todas direcciones.
 
+## Pesos de los huesos
+
+Se quitan los pesos del lado contrario a más de 5 cm del centro, antes del recorte a 4 influencias
+(`blender/poner_rig.py`; MakeHuman trae unos pocos, de hasta 0,005, en dedos de los pies, piernas y mano).
+
 ## Pesos de los huesos en Godot
 
 `cuerpo.glb` guarda los pesos en 32 bits, pero Godot los guarda en la malla en **16 bits** (múltiplos de 1/65535).

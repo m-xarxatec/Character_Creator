@@ -3,7 +3,7 @@
 > Paso a paso. Un paso cada vez y siempre con aprobación (ver `CLAUDE.md`).
 > Lo que no es del MVP va a `IDEAS.md`.
 
-**Estado actual:** Fase 3 · paso 3.6.4 pendiente (antes, el 2.5)
+**Estado actual:** Fase 3 · paso 3.6.4 pendiente
 **Leyenda:** `[ ]` pendiente · `[~]` en curso · `[x]` hecho
 
 ---
@@ -52,7 +52,7 @@ Un programa hecho con Godot, con una pestaña **Cuerpo** que permite:
 - [x] 2.2 Definir el formato de `datos/` (manifiesto con `version`): `datos/FORMATO.md`.
 - [x] 2.3 Conversor `blender/exportar_datos.py`: genera `datos/humana/` según `datos/FORMATO.md` (cuerpo en pose A con formas y anclajes como huesos, articulaciones con sus desplazamientos y manifiesto con `sha256`).
 - [x] 2.4 Prueba: reajustar los huesos fuera de Blender da el mismo resultado que MPFB2 (diferencia < 1 mm) en 6 cuerpos.
-- [ ] 2.5 Limpiar pesos cruzados entre lados en `datos/` (umbral y medida antes de aplicar); al terminar, el límite de la variante A (codo a 90°, `probar_personaje_horneado.gd`) vuelve a 0,1 mm.
+- [x] 2.5 Limpiar pesos cruzados entre lados en `datos/` (umbral y medida antes de aplicar); al terminar, el límite de la variante A (codo a 90°, `probar_personaje_horneado.gd`) vuelve a 0,1 mm.
 
 **Hecho cuando:** `datos/` está completa, versionada y probada.
 
@@ -164,3 +164,4 @@ Según `diseno/maqueta-pestana-cuerpo.html`.
 | 2026-11-11 | 3.6.1 | `godot/addons/creador/mesh_baker.gd`: horneado en CPU de vértices y normales (formas como forma − base, 4 pesos divididos por su suma, poses globales encadenadas aquí; sin tangentes). 46–204 ms por personaje. Prueba `pruebas/godot/probar_horneado.gd`: 4 casos contra el horneado de Godot (con ventana) máx. 0,0196 mm y 0,015°; límites aprobados 0,05 mm y 0,1° (el de Godot es el menos preciso: contra MPFB da 0,0199 mm y el de CPU 0,0064 mm). Las pruebas de malla del 3.3 y del 3.4 pasan a CPU y a `--headless`; límite del codo contra MPFB bajado a 0,05 mm. Límite del borde de la prenda (3.5): 2 px a 1024 px. Godot guarda los pesos en 16 bits (anotado en FORMATO.md). 3.6 dividido en 6 subpasos |
 | 2026-11-11 | 3.6.2 | `godot/addons/creador/t_pose.gd`: pose T como pose (brazo, antebrazo y mano en línea hacia los lados, palma hacia abajo), porte a MIT de `blender/pose_t.py` con permiso del autor (comprobado: no trae código de MPFB). Parte siempre del reposo + escala de pose, así que repetirla da exactamente lo mismo. Prueba `pruebas/godot/probar_pose_t.gd` (sin ventana; neutro, extremo y al azar): horizontales y palma 0,0001° (límite 1°); manos sin deformar 0,0004 mm; contra la pose T de Blender, hombro y axila máx. 0,0037 / media 0,0006 mm y resto máx. 0,0063 / media 0,0004 mm (límite 0,05 mm). Contra el perfil humanoide de Godot: dirección igual en brazo, antebrazo y mano (clavícula 8,7°); los ejes propios de los huesos difieren hasta 93° (apuntado en el 5.7) |
 | 2026-11-11 | 3.6.3 | `godot/addons/creador/character_baker.gd`: personaje nuevo sin formas ni escalas (reposo = pose global sin escala, *bind poses* nuevas, malla horneada en CPU), apoyado en y = 0, en variante A o T; el del editor no cambia. Prueba `pruebas/godot/probar_personaje_horneado.gd` (extremo y al azar con escalas, A y T): malla igual que antes de hornear máx. 0,0006 mm; suelo 0,000000 mm (límite 0,001); T + codo a 90° contra Blender con la pose T como reposo máx. 0,0135 mm (límite 0,1); A + codo contra el editor 0,111 mm (límite provisional 0,2 hasta el 2.5: pesos cruzados entre manos). Hallazgo: hornear una pose cambia cómo se dobla después (T horneada contra el editor en T: 12–20 mm en el codo; apuntado en el 5.7). Nueva `pruebas/fase_2/probar_cuatro_influencias.py`: el recorte a 4 pesos de la Fase 1 (608 vértices de torso y cuello tenían hasta 6) mueve como máximo 3,89 mm con el tronco a 45° (límite 5 mm). Godot guarda tangentes aunque no se le pasen. Añadido el paso 2.5 |
+| 2026-11-11 | 2.5 | `blender/poner_rig.py`: `remove_cross_weights()` quita los pesos del lado contrario a más de 5 cm del centro, antes del recorte a 4 (regla en FORMATO.md). `datos/humana/` regenerado (nuevos sha256, `version` 1). Limpiados 11 vértices (dedos de los pies, piernas y mano; peso cruzado máx. 0,0051). La variante A con el codo a 90° pasa de 0,111 a 0,0008 mm; límite de vuelta a 0,1 mm. Todas las pruebas de Blender (fases 1 y 2, 2.3 contra MPFB y 4 influencias) y de Godot (9) pasan |

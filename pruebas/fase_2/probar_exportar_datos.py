@@ -18,6 +18,7 @@ ROOT = os.path.dirname(os.path.dirname(os.path.dirname(os.path.abspath(__file__)
 sys.path.insert(0, os.path.join(ROOT, "blender"))
 import exportar_datos as ed  # noqa: E402
 from exportar_glb import humanoid_names  # noqa: E402
+import poner_rig  # noqa: E402
 
 OUT = os.path.join(ROOT, "pruebas", "fase_2", "salida")
 SLIDERS = os.path.join(ROOT, "datos", "humana", "deslizadores.csv")
@@ -155,6 +156,37 @@ check("glb: 57 huesos", len(rig.data.bones) == 57, len(rig.data.bones))
 socket_groups = {g.index for g in mesh.vertex_groups if g.name.startswith("socket_")}
 check("glb: anclajes sin peso", len(socket_groups) == 4 and not any(
     g.group in socket_groups and g.weight > 0 for v in mesh.data.vertices for g in v.groups))
+
+# --- Pesos cruzados entre lados (paso 2.5) ---
+groups = {g.index: g.name for g in mesh.vertex_groups}
+glb_cross = sum(1 for v in mesh.data.vertices if abs(v.co.x) > poner_rig.CROSS_MIN_X and any(
+    g.weight > 0 and groups[g.group].startswith("Right" if v.co.x > 0 else "Left") for g in v.groups))
+check("glb: 0 vértices con peso del otro lado a más de 5 cm", glb_cross == 0, glb_cross)
+
+
+def cross_report():
+    """{vertice: peso cruzado} antes (MPFB sin limpiar) y despues (con poner_rig.add_rig)."""
+    found = []
+    for clean in (False, True):
+        ed.keep_small_macro_weights()
+        bpy.ops.wm.read_factory_settings(use_empty=True)
+        body = ed.HumanService.create_human(macro_detail_dict=ed.neutral_macros(), feet_on_ground=False)
+        if clean:
+            ed.add_rig(body)
+        else:
+            ed.HumanService.add_builtin_rig(body, poner_rig.RIG_NAME, import_weights=True)
+            poner_rig.limit_weights(body)
+        skin = ed._skin_count(body)
+        found.append({v.index: sum(poner_rig.cross_weights(body, v).values()) for v in body.data.vertices[:skin]})
+    return found
+
+
+before, after = cross_report()
+listed = sorted(i for i, w in before.items() if w > 0)
+for i in listed:
+    print(f"  vértice {i}: peso cruzado {before[i]:.4f} -> {after[i]:.4f}")
+check("pesos cruzados a más de 5 cm del centro: 0 tras limpiar", listed and not any(after.values()),
+      f"{len(listed)} vértices los tenían")
 
 # --- Malla: comparar con MPFB ---
 neutral, neutral_joints, neutral_matrices = mpfb()

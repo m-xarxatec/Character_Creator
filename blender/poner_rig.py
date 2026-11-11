@@ -5,13 +5,33 @@ from bl_ext.blender_org.mpfb.services import HumanService
 
 RIG_NAME = "game_engine"
 MAX_INFLUENCES = 4
+CROSS_MIN_X = 0.05  # metros: mas lejos del centro, un vertice no lleva pesos de huesos del otro lado
 
 
 def add_rig(basemesh):
     """Crea el esqueleto ajustado al cuerpo y devuelve el objeto armature."""
     HumanService.add_builtin_rig(basemesh, RIG_NAME, import_weights=True)
+    remove_cross_weights(basemesh)
     limit_weights(basemesh)
     return basemesh.parent
+
+
+def cross_weights(basemesh, vertex):
+    """{grupo: peso} de huesos del lado contrario (sufijo _l en +X, _r en -X) si el vertice esta a mas de CROSS_MIN_X."""
+    if abs(vertex.co.x) <= CROSS_MIN_X:
+        return {}
+    other = "_r" if vertex.co.x > 0 else "_l"
+    return {name: w for name, w in bone_weights(basemesh, vertex).items() if name.endswith(other)}
+
+
+def remove_cross_weights(basemesh):
+    """Quita los pesos del lado contrario lejos del centro (vienen asi de MakeHuman). Devuelve cuantos quito."""
+    removed = 0
+    for vertex in basemesh.data.vertices:
+        for name in cross_weights(basemesh, vertex):
+            basemesh.vertex_groups[name].remove([vertex.index])
+            removed += 1
+    return removed
 
 
 def limit_weights(basemesh):

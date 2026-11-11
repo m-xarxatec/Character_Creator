@@ -7,7 +7,7 @@ extends SceneTree
 # de doblar el personaje del editor puesto en T (hornear una pose cambia cómo se dobla después; ver PLAN, 5.7).
 
 const SAME_MM := 0.1
-const A_BEND_MM := 0.2  # provisional (medido: 0,111 mm, por pesos cruzados entre manos); vuelve a 0,1 tras el paso 2.5. Aprobado el 2026-11-11
+const A_BEND_MM := 0.1  # vuelve a 0,1 tras limpiar los pesos cruzados (paso 2.5)
 const MAX_DEG := 1.0
 const GROUND_MM := 0.001  # medido: 0,000000 mm. Aprobado el 2026-11-11
 const WEIGHT_SUM := 1e-4
