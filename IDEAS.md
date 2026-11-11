@@ -37,7 +37,7 @@
 
 - Deslizadores por rasgo (mentón, nariz, pómulos, mandíbula, ojos, boca…), como los creadores de personajes de los juegos. Valorar reutilizar las formas de cara de MakeHuman sobre la cabeza anime (mismos vértices).
 - Los ojos de calcomanía se deforman en tres cuartos y de perfil: hará falta otro sistema de ojos.
-- Candidatas CC0 de OpenGameArt para la pestaña Cara y la base chibi (licencias por comprobar antes de usarlas): Generic Anime Face (Barely_Banquo, con expresiones), 3d female anime head (ColdOneK), Base Rigged Stylized Humanoid YW (Girush) y Tiby (PINKCANNON, chibi).
+- Candidatas CC0 de OpenGameArt para la pestaña Cara y la base chibi: Generic Anime Face (Barely_Banquo, con expresiones), 3d female anime head (ColdOneK), Base Rigged Stylized Humanoid YW (Girush) y Tiby (PINKCANNON, chibi).
 - Cabezas con licencia CC-BY-SA como pack opcional, con aviso claro de la licencia al elegirlas.
 
 ---
@@ -54,6 +54,8 @@
 
 - **Estilo como archivo de datos** (como la tabla de deslizadores): tonos de sombra (2, 3 o suave), dureza del borde, contorno (grosor y color), luz de borde y tono de la piel en sombra. Añadir un estilo = añadir un archivo.
 - **Grado de realismo**, de anime a semirrealista: cambia el sombreado (toon o PBR), las texturas de piel y la cabeza. Sin hiperrealismo: el `.glb` sale con UV limpias y malla completa para que cada uno añada sus texturas en Blender.
+- **Umbral del tono medio en la cara** como valor del acabado (no viaja a otros motores, por eso no es el arreglo de la franja de sombra).
+- **Aplanar más las normales de la cara:** con fondo 0,35 sale una línea dura en la sien, probablemente por el escalón entre el medio elipsoide trasero y el delantero. Probar una transición gradual de la profundidad (sin escalón).
 - **Estilos de ojos como packs** (iris, pestañas, brillos), según "Sistema de piezas".
 - **Pantalla inicial con botones de estilo**, cada uno con un render del propio editor (nunca capturas de otros programas): Realista, Semi, Anime, Caricatura y Personalizado.
   - Cada botón elige una **BASE** (cabeza, proporciones de partida y qué deslizadores se muestran), que no se cambia a mitad de edición, y un **ACABADO** de partida (valores del shader), que sí se cambia en vivo.

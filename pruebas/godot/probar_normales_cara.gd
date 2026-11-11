@@ -3,6 +3,8 @@ extends "res://probar_estilo.gd"
 # Necesita ventana (no --headless).
 # Uso: (ulimit -v 4000000; timeout 600 godot --path pruebas/godot -s probar_normales_cara.gd 2>&1 | grep -E 'medida|ERROR|GUARDADO')
 # Capturas: pruebas/capturas/normales_cara/ (antes = normales suavizadas del 3.12; mezcla = 50 %; elipsoide = 100 %).
+# Aplanado (aplanado_*.png y aplanado_hoja.png): elipsoide al 100 % con menos fondo por delante (DEPTHS), para que
+# las normales de la cara miren más al frente y el corte de tono se vaya al borde.
 # Escribe pruebas/fase_3/salida/normales/cara.glb (pose T, con las normales al 100 %) y cara_normales.json (lo enviado).
 # Después: probar_normales_leidas.gd, pruebas/fase_3/probar_normales_importador.sh y probar_normales_en_blender.py.
 #
@@ -11,6 +13,8 @@ extends "res://probar_estilo.gd"
 
 const PRESET := "anime_femenino"
 const BLENDS := {"antes": 0.0, "mezcla": 0.5, "elipsoide": 1.0}
+const DEPTHS := {"aplanado_100": 1.0, "aplanado_060": 0.6, "aplanado_035": 0.35}  # fondo del elipsoide por delante
+const EXPORT_DEPTH := 0.6  # el que va en cara.glb
 
 var head_weight: PackedFloat32Array
 
@@ -36,6 +40,7 @@ func _initialize() -> void:
 	head_weight = _head_weight()
 	_build_view()
 	await _captures()
+	await _flatten_captures()
 	_export(load(addon.path_join("glb_exporter.gd")))
 	quit(0)
 
@@ -62,7 +67,8 @@ func _head_weight() -> PackedFloat32Array:
 
 
 ## Mezcla cada normal con la del elipsoide de la cabeza: amount × peso de Head.
-func _face_normals(vertices: PackedVector3Array, normals: PackedVector3Array, amount: float) -> PackedVector3Array:
+## depth < 1 quita fondo al elipsoide solo por delante: las normales de la cara miran más al frente.
+func _face_normals(vertices: PackedVector3Array, normals: PackedVector3Array, amount: float, depth := 1.0) -> PackedVector3Array:
 	var box := AABB()
 	var first := true
 	for i in vertices.size():
@@ -75,7 +81,11 @@ func _face_normals(vertices: PackedVector3Array, normals: PackedVector3Array, am
 	for i in vertices.size():
 		var w := head_weight[i] * amount
 		if w > 0.0:
-			var ellipsoid := ((vertices[i] - center) / (radii * radii)).normalized()
+			var offset := vertices[i] - center
+			var r := radii
+			if offset.z > 0.0:
+				r.z *= depth
+			var ellipsoid := (offset / (r * r)).normalized()
 			result[i] = normals[i].lerp(ellipsoid, w).normalized()
 	return result
 
@@ -103,6 +113,30 @@ func _captures() -> void:
 	_save(_sheet(rows), "hoja")
 
 
+## A/B del aplanado: una fila por valor de DEPTHS, de frente, en tres cuartos y con la cámara del juego.
+func _flatten_captures() -> void:
+	var preset := _load_preset(PRESET)
+	var body := _bake(preset["valores"], {})
+	var colors := _colors(preset)
+	var smooth := _smooth_normals(body["vertices"], body["normals"], SMOOTH_STEPS)
+	var head: float = body["height"] - body["chin"]
+	var rows: Array[Array] = []
+	for name: String in DEPTHS:
+		var normals := _face_normals(body["vertices"], smooth, 1.0, DEPTHS[name])
+		var row := []
+		for view: String in ["frente", "tres_cuartos"]:
+			var model := _model(body, normals, _toon_material(colors))
+			_ortho((body["head_center"] as Vector3).rotated(Vector3.UP, deg_to_rad(VIEWS[view])), head * 1.5)
+			row.append(await _shot(model, VIEWS[view], CLOSE_TILE, "%s_%s" % [name, view]))
+			model.free()
+		var game := _model(body, normals, _toon_material(colors))
+		_game_camera(Vector3(0.0, body["height"] / 2.0, 0.0))
+		row.append(await _shot(game, -25.0, GAME_TILE, name + "_juego"))
+		game.free()
+		rows.append(row)
+	_save(_sheet(rows), "aplanado_hoja")
+
+
 ## Exporta el personaje del preset (pose T) con las normales de elipsoide en la malla, y guarda lo enviado en un JSON.
 func _export(exporter: GDScript) -> void:
 	var folder := root_dir.path_join("pruebas/fase_3/salida/normales")
@@ -114,7 +148,7 @@ func _export(exporter: GDScript) -> void:
 	if vertices.size() != head_weight.size():
 		print("ERROR: la malla exportada tiene otro número de vértices")
 		return
-	var normals := _face_normals(vertices, _smooth_normals(vertices, arrays[Mesh.ARRAY_NORMAL], SMOOTH_STEPS), 1.0)
+	var normals := _face_normals(vertices, _smooth_normals(vertices, arrays[Mesh.ARRAY_NORMAL], SMOOTH_STEPS), 1.0, EXPORT_DEPTH)
 	arrays[Mesh.ARRAY_NORMAL] = normals
 	arrays[Mesh.ARRAY_TANGENT] = null
 	var mesh := ArrayMesh.new()
