@@ -15,7 +15,7 @@ Un programa hecho con Godot, con una pestaña **Cuerpo** que permite:
 - Editar un cuerpo humano por zonas (14 zonas) con deslizadores de **forma** y de **proporción**, con simetría.
 - Ver el resultado en vivo en un maniquí 3D y probarlo con animaciones.
 - Exportar un `.glb` listo para un juego de Godot: huesos reajustados, pesos correctos, perfil humanoide y puntos de anclaje.
-- **Estilo ilustración** (anime 3D): sombra a dos tonos y contorno negro grueso, igual en el editor y en el juego.
+- **Estilo ilustración** (anime 3D): sombra de 3 tonos (valor por defecto) y contorno negro grueso, igual en el editor y en el juego.
 
 **Fuera del MVP:** cara y ojos, pelo, ropa (salvo la prenda base), accesorios, catálogo de packs y VRM.
 
@@ -75,7 +75,7 @@ Un programa hecho con Godot, con una pestaña **Cuerpo** que permite:
 - [ ] 3.7 Guardar y cargar presets en JSON.
 - [ ] 3.8 Pruebas: 10 cuerpos aleatorios → exportar → reimportar → comparar.
 - [ ] 3.9 `update_character()`: única función del núcleo que aplica, en este orden, formas → reajuste → pose base → escala de proporción. El resto del programa solo usa esta función. Prueba: llamarla dos veces seguidas da el mismo resultado.
-- [ ] 3.10 Estilo ilustración: shader de sombra a dos tonos + contorno negro (grosor ajustable), dentro del núcleo.
+- [ ] 3.10 Estilo ilustración: shader de sombra de 3 tonos (valor por defecto) + contorno negro (grosor ajustable), dentro del núcleo.
 - [ ] 3.11 Al exportar, el personaje sale con ese estilo listo para el juego (el `.glb` + el material de Godot).
 
 ### ★ 3.12 Prueba de estilo — se hace justo después del 3.6.6 y antes de la Fase 4
@@ -114,6 +114,16 @@ Un programa hecho con Godot, con una pestaña **Cuerpo** que permite:
 **Reglas:** propuesta antes de empezar. El shader va al núcleo (MIT). Sin dependencias nuevas. Lanzar con `ulimit` y `timeout`. Modelo: Fable.
 
 **Hecho cuando:** todas las pruebas pasan sin tocar la interfaz.
+
+### 3.13 Elegir el camino de la cabeza anime
+
+A = cabeza propia unida al anillo del cuello (pieza intercambiable); B = formas anime sobre la cara de MakeHuman. Se decide con maquetas (rápidas, sin pulir):
+
+- [ ] 3.13a-1 Cortar la cabeza de MakeHuman por el cuello y volver a unirla: costura y contorno con cuerpos extremos.
+- [x] 3.13a-2 Normales de elipsoide en la cara actual: capturas de antes y después, y comprobar que llegan a Blender y a Godot sin el addon.
+- [ ] 3.13a-3 B barato: aplanar la cara solo con formas de MakeHuman que ya existen, con macros extremas (máximo y media).
+- [ ] 3.13a-4 Cortar la cabeza de `referencias/anime-model.blend`, unirla a nuestro cuello y sacar capturas con el toon de frente, de perfil y con la cámara del juego. **Bloqueada hasta confirmar la licencia**: nada de ese archivo sale de `referencias/`.
+- [ ] 3.13 Decisión (A o B) y origen de la cabeza.
 
 ---
 
@@ -212,3 +222,4 @@ Según `diseno/maqueta-pestana-cuerpo.html`.
 | 2026-11-11 | 3.6.6 | Prenda fuera del editor con textura horneada (opción A; por caras el borde fallaba hasta 23 mm). `godot/addons/creador/garment_texture.gd`: dibuja la prenda con las UV en una imagen de 2048 px (1 píxel ≈ 0,9 mm en el borde), en CPU, con 8 px de margen en las costuras UV. `glb_exporter.gd`: material sin luces con esa textura (prenda oculta: sin textura, todo piel); +20 KB, 1,5 s. Hallazgo: la norma glTF multiplica el material por el color por vértice, y Blender lo hace: con `garment` en el RGB, la piel salía negra. En el `.glb`, `garment` va en el alfa y el RGB es blanco. `body_material.gd`: `get_color()` y `DEFAULTS` (con `--headless` Godot no lee los valores del shader). Pruebas: nueva `probar_prenda_exportada.gd` (con ventana, leído sin el addon: 0 vértices de otro color, visible y oculta; borde de la cintura 1 px = 2 mm, igual que en el editor); `probar_glb_en_blender.py` (textura 2048 px; 75.076 esquinas en su color en la textura; captura con Cycles en `pruebas/capturas/prenda_blender/`: 0 píxeles oscuros, y con el color de antes salían 20.423). `probar_exportar`, `probar_glb` (T y A), `probar_prenda` y el importador del editor siguen pasando |
 | 2026-11-11 | 3.12 | Prueba de estilo. Núcleo: `toon.gdshader` (3 tonos con bordes suaves, sombra cálida, rim, sin brillo) y `outline.gdshader` (malla invertida como `next_pass`, grosor en píxeles). Prueba `pruebas/godot/probar_estilo.gd` con 3 presets + chibi fuera de rango (`pruebas/fase_3/estilo/*.json`) y ojos provisionales como calcomanía (`Decal`; las esferas no se ven tras los párpados de MakeHuman). Cabezas de alto: femenino 6,96, masculino 6,94, chibi 5,25, chibi fuera de rango 3,46 (con ×1,3 de cabeza no se llega a 2,5). Anatomía: bajar músculo y grasa ayuda poco; las normales suavizadas ×10 limpian el torso. Capturas y hoja en `pruebas/capturas/estilo/`. Recomendación: cabeza estilizada propia. Además (3.6.6): el `.glb` se queda con el color por vértice y la prueba comprueba que el material es OPAQUE |
 | 2026-11-11 | — | Documentos del revisor visual: `diseno/GUIA_ESTILO.md` (valores pendientes de aprobar; 26.756 triángulos medidos; contradicción de 2 o 3 tonos marcada), `diseno/referencias/README.md`, `pruebas/capturas/aprobadas/README.md`, `pruebas/capturas/revision/HISTORIAL.md` y `.gitignore`. Pasos 5.9–5.14 y nota del 6.1. Ideas de contorno y estilos visuales en `IDEAS.md`. Regla del revisor en `CLAUDE.md` |
+| 2026-11-11 | 3.13a-2 | Maqueta: normales de elipsoide en la cara (mezcladas con el peso del hueso `Head`). `pruebas/godot/probar_normales_cara.gd` (capturas antes / 50 % / 100 % en `pruebas/capturas/normales_cara/`): al 100 % desaparecen las manchas de nariz, boca y pómulos y la sombra queda en una sola curva limpia; la cara sigue siendo realista de forma (perfil, labios). Viajan en el `.glb`: Godot con `GLTFDocument` y con el importador del editor sin el addon, máx. 0,0125° / media 0,0030°; Blender, máx. 0,53° / media 0,0007° (límite inicial 1°). Añadidos el 3.13 y sus maquetas (3.13a-4 bloqueada por licencia). Inspeccionados dos `.blend` de `referencias/` (capturas en `pruebas/capturas/revision/2026-11-11_cabezas_cc0/`) |
