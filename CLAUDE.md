@@ -33,6 +33,7 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 - Usa Fable para lo difícil; si un paso es sencillo, avísame para cambiar a un modelo más barato.
 - Propuesta: `PROPUESTA — Paso X.Y` / Archivos / Qué hace / Cómo se prueba / Riesgos / ¿Apruebas?
 - Al cerrar un paso: ejecuta las pruebas, marca el paso y añade una línea al registro de `PLAN.md`, e informa en 3 líneas (**hecho / cómo se probó / qué sigue**).
+- Al cerrar un paso que cambie el aspecto, la malla, los huesos o la exportación, propón pasar el revisor-visual antes de seguir.
 
 ## Entorno y comandos
 

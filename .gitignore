@@ -9,8 +9,15 @@ __pycache__/
 *.zip
 *.tmp
 
-# Capturas de prueba (se regeneran con los scripts)
-pruebas/**/capturas/
+# Capturas de prueba (se regeneran con los scripts), salvo las aprobadas y el historial
+pruebas/**/capturas/*
+!pruebas/capturas/aprobadas/
+!pruebas/capturas/revision/
+pruebas/capturas/revision/*
+!pruebas/capturas/revision/HISTORIAL.md
+
+# Referencias con derechos de autor (solo en local)
+diseno/referencias/privadas/
 
 # Personajes generados por las pruebas
 pruebas/**/salida/

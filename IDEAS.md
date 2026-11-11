@@ -33,6 +33,28 @@
 
 ---
 
+## Después del MVP: contorno
+
+- Contorno tipo ilustración regulable: desde quitarlo del todo hasta muy grueso, con un deslizador; quizá también color del contorno y grosor distinto por zona (cara más fino, silueta más grueso).
+- Hace grumos en los dedos de manos y pies (grosor en píxeles mayor que el dedo en pantalla): hace falta grosor por zona.
+- El borde de la prenda sale ondulado en primeros planos: revisarlo.
+
+---
+
+## Después del MVP: estilos visuales
+
+- **Estilo como archivo de datos** (como la tabla de deslizadores): tonos de sombra (2, 3 o suave), dureza del borde, contorno (grosor y color), luz de borde y tono de la piel en sombra. Añadir un estilo = añadir un archivo.
+- **Grado de realismo**, de anime a semirrealista: cambia el sombreado (toon o PBR), las texturas de piel y la cabeza. Sin hiperrealismo: el `.glb` sale con UV limpias y malla completa para que cada uno añada sus texturas en Blender.
+- **Estilos de ojos como packs** (iris, pestañas, brillos), según "Sistema de piezas".
+- **Pantalla inicial con botones de estilo**, cada uno con un render del propio editor (nunca capturas de otros programas): Realista, Semi, Anime, Caricatura y Personalizado.
+  - Cada botón elige una **BASE** (cabeza, proporciones de partida y qué deslizadores se muestran), que no se cambia a mitad de edición, y un **ACABADO** de partida (valores del shader), que sí se cambia en vivo.
+  - Personalizado copia un acabado y lo guarda como archivo propio.
+  - Caricatura, al final: necesita cabeza y proporciones propias; valorar compartir trabajo con el chibi.
+- **Origen de los assets:** gratuitos con licencia comprobada o hechos por nosotros.
+- **Decisión pendiente:** ¿la regla 5 admite CC-BY? Si se admite, el autor va a `CREDITOS.md` como el resto.
+
+---
+
 ## Pack "Universal Base Characters" de Quaternius (CC0)
 
 El zip está en `referencias/` (git no lo guarda). Versión gratis: 2 cuerpos estilizados en pose T con ropa interior pintada, 8 peinados, cejas y barba. Mismo esqueleto que sus animaciones.
