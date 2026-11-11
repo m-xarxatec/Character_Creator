@@ -1,6 +1,7 @@
 extends SceneTree
 # Paso 1.6: abre cada .glb con el lector glTF de Godot y comprueba que sirve para un juego.
-# Uso: godot --headless --path pruebas/godot -s probar_glb.gd -- <carpeta con .glb> 2>&1 | grep -E 'FALLO|RESULTADO|ERROR'
+# Uso: godot --headless --path pruebas/godot -s probar_glb.gd -- <carpeta con .glb> [--pose-a] 2>&1 | grep -E 'FALLO|RESULTADO|ERROR'
+# Con --pose-a comprueba brazos en pose A en vez de pose T.
 # El autorrelleno del BoneMap solo existe en la ventana del editor; aqui se comprueba lo que necesita
 # para salir todo en verde: cada hueso con el nombre y el padre del SkeletonProfileHumanoid.
 
@@ -8,6 +9,7 @@ const SOCKETS := {"socket_hand_r": "RightHand", "socket_hand_l": "LeftHand", "so
 const OPTIONAL := ["LeftEye", "RightEye", "Jaw"]  # el rig Game engine no los trae
 
 var failures := 0
+var pose_a := "--pose-a" in OS.get_cmdline_user_args()  # variante en pose A del paso 3.6.5
 
 
 func _init() -> void:
@@ -75,7 +77,9 @@ func _check_t_pose(skel: Skeleton3D) -> void:
 		var shoulder: Vector3 = at.call(side[0] + "UpperArm")
 		var hand: Vector3 = at.call(side[0] + "Hand")
 		var ok: bool = side[1] * hand.x > 0.4 and absf(hand.y - shoulder.y) < 0.01 and absf(hand.z - shoulder.z) < 0.01
-		check("brazo %s en pose T hacia %sX" % [side[0], "+" if side[1] > 0 else "-"], ok, str(hand))
+		if pose_a:  # brazos hacia abajo y hacia fuera
+			ok = side[1] * (hand.x - shoulder.x) > 0.1 and hand.y < shoulder.y - 0.2
+		check("brazo %s en pose %s hacia %sX" % [side[0], "A" if pose_a else "T", "+" if side[1] > 0 else "-"], ok, str(hand))
 	check("mira a +Z (la punta del pie va delante del tobillo)", at.call("LeftToes").z > at.call("LeftFoot").z + 0.05)
 	check("Y hacia arriba", at.call("Head").y > at.call("Hips").y + 0.4)
 
