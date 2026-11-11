@@ -7,10 +7,17 @@ extends RefCounted
 ## - t_pose: true = pose T horneada; false = pose A.
 ## Hornea (character_baker.gd), pasa los anclajes a nodos (sockets.gd) y escribe con GLTFDocument.
 ## En el archivo: Character → Armature → huesos, malla y anclajes (misma estructura que los .glb de Blender).
-## El personaje del editor no cambia. Sin material propio: la prenda fuera del editor es el paso 3.6.6.
+## El personaje del editor no cambia.
+## Material: StandardMaterial3D sin luces (como body.gdshader hasta el paso 3.10) con la prenda horneada en una textura
+## (garment_texture.gd), para que se vea fuera del editor. Con la prenda oculta, sin textura: todo color piel.
+## Color por vértice: en el archivo, `garment` va en el alfa y el RGB es blanco. La norma glTF multiplica el material
+## por el color por vértice (Blender lo hace): con `garment` en el RGB, la piel saldría negra.
 
 const CharacterBaker := preload("character_baker.gd")
 const Sockets := preload("sockets.gd")
+const BodyMaterial := preload("body_material.gd")
+const GarmentTexture := preload("garment_texture.gd")
+const TEXTURE_SIZE := 2048  # 1 píxel ≈ 0,9 mm en el borde de la prenda (medido en el paso 3.6.6)
 
 
 ## El personaje que se exporta, en memoria (quien llama lo libera). null si no se puede (ver Sockets.error).
@@ -18,7 +25,36 @@ static func build(mesh: MeshInstance3D, skeleton: Skeleton3D, socket_names: Arra
 	var baked: Node3D = CharacterBaker.bake(mesh, skeleton, t_pose)
 	var character: Node3D = Sockets.to_nodes(baked, socket_names)
 	baked.free()
+	if character != null:
+		var exported := character.find_children("*", "MeshInstance3D", true, false)[0] as MeshInstance3D
+		var material := _material(mesh, exported.mesh)
+		exported.mesh = _garment_in_alpha(exported.mesh)
+		exported.mesh.surface_set_material(0, material)
 	return character
+
+
+static func _garment_in_alpha(source: Mesh) -> ArrayMesh:
+	var arrays := source.surface_get_arrays(0)
+	var colors: PackedColorArray = arrays[Mesh.ARRAY_COLOR]
+	for i in colors.size():
+		colors[i] = Color(1.0, 1.0, 1.0, colors[i].r)
+	arrays[Mesh.ARRAY_COLOR] = colors
+	var mesh := ArrayMesh.new()
+	mesh.add_surface_from_arrays(Mesh.PRIMITIVE_TRIANGLES, arrays)
+	return mesh
+
+
+static func _material(editor_mesh: MeshInstance3D, mesh: Mesh) -> StandardMaterial3D:
+	var material := StandardMaterial3D.new()
+	material.resource_name = "cuerpo"
+	material.shading_mode = BaseMaterial3D.SHADING_MODE_UNSHADED
+	var skin := BodyMaterial.get_color(editor_mesh, "skin_color")
+	if BodyMaterial.is_garment_visible(editor_mesh):
+		var image := GarmentTexture.bake(mesh, TEXTURE_SIZE, skin, BodyMaterial.get_color(editor_mesh, "garment_color"))
+		material.albedo_texture = ImageTexture.create_from_image(image)
+	else:
+		material.albedo_color = skin
+	return material
 
 
 static func save(mesh: MeshInstance3D, skeleton: Skeleton3D, socket_names: Array, path: String, t_pose: bool) -> Error:
