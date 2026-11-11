@@ -1,7 +1,7 @@
 extends SceneTree
 # Pone al humano a reproducir animaciones de Quaternius y guarda una hoja de capturas.
-# Necesita ventana (no --headless). Uso: godot --path . -s probar_animacion.gd -- [archivo.glb]
-# Guarda pruebas/capturas/<archivo>.png
+# Necesita ventana (no --headless). Uso: godot --path . -s probar_animacion.gd -- [archivo.glb] [nombre]
+# Guarda pruebas/capturas/animacion/<nombre>.png (sin nombre, el del archivo). Carpeta propia: no pisa otras capturas.
 
 const SHOTS := [["A_TPose", 0.0], ["Walk", 0.0], ["Walk", 0.3], ["Walk", 0.6], ["Sword_Attack", 0.4], ["Sitting_Idle", 0.5]]
 const TILE := Vector2i(400, 600)
@@ -54,8 +54,8 @@ func _initialize() -> void:
 		sheet.blit_rect(img, Rect2i(Vector2i.ZERO, TILE), Vector2i((i % 3) * TILE.x, (i / 3) * TILE.y))
 		var foot_y := minf(_bone_y(skel, "LeftToes"), _bone_y(skel, "RightToes"))
 		print("%s t=%.1f | cadera y=%.2f | cabeza y=%.2f | pie mas bajo y=%.2f" % [anim, SHOTS[i][1], _bone_y(skel, "Hips"), _bone_y(skel, "Head"), foot_y])
-	DirAccess.make_dir_absolute(ProjectSettings.globalize_path("res://../capturas"))
-	var out := "res://../capturas/%s.png" % file.get_basename()
+	DirAccess.make_dir_recursive_absolute(ProjectSettings.globalize_path("res://../capturas/animacion"))
+	var out := "res://../capturas/animacion/%s.png" % (args[1] if args.size() > 1 else file.get_basename())
 	sheet.save_png(ProjectSettings.globalize_path(out))
 	print("GUARDADO ", out)
 	source.free()

@@ -78,6 +78,39 @@ Un programa hecho con Godot, con una pestaña **Cuerpo** que permite:
 - [ ] 3.10 Estilo ilustración: shader de sombra a dos tonos + contorno negro (grosor ajustable), dentro del núcleo.
 - [ ] 3.11 Al exportar, el personaje sale con ese estilo listo para el juego (el `.glb` + el material de Godot).
 
+### ★ 3.12 Prueba de estilo — se hace justo después del 3.6.6 y antes de la Fase 4
+
+**Es el paso que decide si el editor cumple su objetivo: personajes bonitos, tipo VRoid.**
+
+- [ ] 3.12 Prueba de estilo.
+
+**Objetivo:** comprobar si la base de MakeHuman puede llegar a un aspecto anime tipo VRoid, o si hace falta una cabeza estilizada propia. Es una prueba visual: rápida y sin pulir el código, pero con un resultado visual cuidado.
+
+**Qué hacer:**
+
+- **Sombreado toon** sobre `body.gdshader`: 2 o 3 tonos planos con bordes suaves, una luz de contorno (*rim*) suave, sin brillo especular y con la piel en un tono cálido. Contorno exterior de grosor regulable (malla invertida o el método que se proponga). Puede adelantar parte del 3.10.
+- **Suavizar la anatomía:** el sombreado toon marca costillas, músculos y bultos. Probar a reducir ese detalle con los deslizadores existentes (músculo, grasa) y, si hace falta, con normales suavizadas. Decir qué funciona.
+- **Tres presets de proporciones**, solo con los deslizadores que ya existen, guardados en JSON. Para cada uno, medir cuántas cabezas de alto tiene:
+  - a) Anime femenino: cabeza algo mayor, cuello fino, cintura estrecha, piernas largas, manos y pies pequeños.
+  - b) Anime masculino: hombros algo anchos, cintura estrecha, piernas largas, poco músculo marcado.
+  - c) Chibi oscuro (para el juego): unas 2,5 cabezas de alto, manos y botas algo grandes.
+- **Ojos provisionales:** solo para juzgar la cabeza, unos ojos sencillos (esferas o calcomanía plana). No es la pestaña Cara; se quitan después.
+- **Referencia:** describir el aspecto VRoid con palabras (proporciones, sombreado, cara). No usar mallas, texturas ni capturas de VRoid: es software cerrado.
+
+**Capturas:** en `pruebas/capturas/estilo/`, con la misma luz y cámara en todas:
+
+- Cada preset de frente, perfil y tres cuartos, con el sombreado normal y con el toon.
+- Primer plano de la cara de cada preset con el toon.
+- Una hoja de contacto con todo junto.
+
+**Informe final, corto:**
+
+- Qué funciona y qué no, en 5 líneas como mucho.
+- Recomendación, con el porqué: (1) la base sirve con ajustes, (2) hace falta una cabeza estilizada propia, o (3) hace falta una base completa estilizada.
+- Qué formas «Por crear» harían más falta para el aspecto anime.
+
+**Reglas:** propuesta antes de empezar. El shader va al núcleo (MIT). Sin dependencias nuevas. Lanzar con `ulimit` y `timeout`. Modelo: Fable.
+
 **Hecho cuando:** todas las pruebas pasan sin tocar la interfaz.
 
 ---
@@ -106,6 +139,7 @@ Según `diseno/maqueta-pestana-cuerpo.html`.
 - [ ] 5.5 Decidir la pose de exportación con las dos salidas del 3.6 (si gana la A, cambiar la regla de `CLAUDE.md`).
 - [ ] 5.6 Prueba de anclaje real: espada en `socket_hand_r` durante la animación de atacar. Los anclajes heredan la escala de su hueso en el editor; la espada no debe escalar con la mano.
 - [ ] 5.7 Animaciones de Quaternius con y sin Overwrite Axis. Valorar exportar los huesos con los ejes del perfil humanoide de Godot para que no haga falta Overwrite Axis. Medida del 3.6.3 para elegir entre T y A: con el codo a 90°, la variante T horneada difiere del personaje del editor puesto en T hasta 20,1 mm (cuerpo extremo) y 12,1 mm (al azar), en el codo; la variante A, 0,11 mm. Hornear una pose cambia cómo se dobla después (Blender hace lo mismo).
+- [ ] 5.8 Revisar de cerca la variante T: (a) hombro y axila en la estocada, con el brazo sobre la cabeza (zona oscura en el costado: ¿sombra o la piel se hunde?); (b) la mano derecha en pose T en reposo, que parece plana de canto.
 
 **Hecho cuando:** un cuerpo extremo muestra los avisos correctos.
 

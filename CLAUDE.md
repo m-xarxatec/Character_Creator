@@ -71,6 +71,7 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 
 - Nombres de código en inglés; interfaz, comentarios, documentos y commits en español.
 - Funciones pequeñas; un archivo por responsabilidad; cada cálculo con su prueba.
+- Cada prueba guarda sus capturas con su propio nombre o carpeta, sin pisar las de otras.
 
 ## Referencias
 
