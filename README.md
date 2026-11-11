@@ -37,5 +37,6 @@ Un programa libre para crear personajes 3D moviendo deslizadores, y guardarlos l
 ## Licencia
 
 - El programa: **MIT** (ver `LICENSE`). Puedes usarlo en tu juego, también si es comercial.
+- Las formas de la cara anime (los desplazamientos por vértice que escribe `blender/cara_anime.py`) y sus zonas (`blender/cara_anime_zonas.json`): **CC0**, como la malla de MakeHuman. Son datos de salida del script, no código GPL.
 - Los scripts de `blender/`: GPL-3.0 o posterior.
 - Los datos del cuerpo (`datos/`): CC0, de MakeHuman.

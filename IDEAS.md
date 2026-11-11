@@ -37,6 +37,8 @@
 
 - Deslizadores por rasgo (mentón, nariz, pómulos, mandíbula, ojos, boca…), como los creadores de personajes de los juegos. Valorar reutilizar las formas de cara de MakeHuman sobre la cabeza anime (mismos vértices).
 - Los ojos de calcomanía se deforman en tres cuartos y de perfil: hará falta otro sistema de ojos.
+- Un deslizador por rasgo a partir de las formas de la cara anime (`cuenca_plana`, `boca_anime`, `mandibula_anime`, `menton_anime`, `nariz_anime`): cada una, una fila de la tabla del 2.1.
+- Esas formas aplastan las bolsas interiores de la boca y los ojos (hasta 58 mm): hay que resolverlo antes de abrir la boca (expresiones, visemas).
 - Candidatas CC0 de OpenGameArt para la pestaña Cara y la base chibi: Generic Anime Face (Barely_Banquo, con expresiones), 3d female anime head (ColdOneK), Base Rigged Stylized Humanoid YW (Girush) y Tiby (PINKCANNON, chibi).
 - Cabezas con licencia CC-BY-SA como pack opcional, con aviso claro de la licencia al elegirlas.
 
