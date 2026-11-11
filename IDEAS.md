@@ -33,6 +33,15 @@
 
 ---
 
+## Después del MVP: pestaña Cara
+
+- Deslizadores por rasgo (mentón, nariz, pómulos, mandíbula, ojos, boca…), como los creadores de personajes de los juegos. Valorar reutilizar las formas de cara de MakeHuman sobre la cabeza anime (mismos vértices).
+- Los ojos de calcomanía se deforman en tres cuartos y de perfil: hará falta otro sistema de ojos.
+- Candidatas CC0 de OpenGameArt para la pestaña Cara y la base chibi (licencias por comprobar antes de usarlas): Generic Anime Face (Barely_Banquo, con expresiones), 3d female anime head (ColdOneK), Base Rigged Stylized Humanoid YW (Girush) y Tiby (PINKCANNON, chibi).
+- Cabezas con licencia CC-BY-SA como pack opcional, con aviso claro de la licencia al elegirlas.
+
+---
+
 ## Después del MVP: contorno
 
 - Contorno tipo ilustración regulable: desde quitarlo del todo hasta muy grueso, con un deslizador; quizá también color del contorno y grosor distinto por zona (cara más fino, silueta más grueso).
