@@ -14,6 +14,7 @@ los vértices del cuerpo ELBOW["body"] con el codo doblado (paso 3.4: MPFB + esq
 los de T_POSE_BODIES en pose T con blender/pose_t.py (paso 3.6.2)
 y los pesos de las 243 esquinas de las macros (cada una a 0, 0,5 o 1) para el paso 3.2.
 """
+import collections
 import itertools
 import json
 import os
@@ -29,6 +30,8 @@ sys.path.insert(0, os.path.join(ROOT, "blender"))
 import exportar_datos as ed  # noqa: E402
 from exportar_glb import humanoid_names  # noqa: E402
 import pose_t  # noqa: E402
+import poner_rig  # noqa: E402
+from bl_ext.blender_org.mpfb.services import HumanService, TargetService  # noqa: E402
 
 DATA = os.path.join(ROOT, "datos", "humana")
 OUT = os.path.join(ROOT, "pruebas", "fase_2", "salida", "referencia_reajuste.json")
@@ -36,6 +39,14 @@ CONTINUITY = (0.49985, 0.5, 0.50015)
 WITH_VERTICES = ("atletico", "extremo")  # prueba de punta a punta del paso 3.2
 ELBOW = {"body": "largo", "bone": "LeftLowerArm", "axis": [0.0, 0.0, 1.0], "degrees": 90.0}  # ejes de Godot
 T_POSE_BODIES = ("neutro", "extremo")  # paso 3.6.2
+T_REST_BODIES = ("extremo", "al_azar")  # paso 3.6.3
+FOUR_WEIGHT_POSES = {  # paso 3.6.3: (hueso, eje en Blender, grados)
+    "codo 90°": [(ELBOW["bone"], (0.0, -1.0, 0.0), 90.0)],
+    "giro de tronco 45° (Spine)": [("Spine", (0.0, 0.0, 1.0), 45.0)],
+    "giro de tronco 45° (Chest)": [("Chest", (0.0, 0.0, 1.0), 45.0)],
+    "tronco hacia delante 45° (Chest)": [("Chest", (1.0, 0.0, 0.0), 45.0)],
+    "cabeza girada 45° (Neck)": [("Neck", (0.0, 0.0, 1.0), 45.0)],
+}
 IDENTITY = [[1.0, 0.0, 0.0], [0.0, 1.0, 0.0], [0.0, 0.0, 1.0]]
 
 
@@ -171,6 +182,88 @@ def posed_vertices(values, rows, offset, pose):
     return [to_godot(np.array(world @ v.co) + offset) for v in evaluated.data.vertices[:ed._skin_count(body)]]
 
 
+def evaluated_skin(body):
+    """Vértices de la piel deformados solo por el esqueleto, en ejes de Blender."""
+    for modifier in body.modifiers:
+        modifier.show_viewport = modifier.type == "ARMATURE"
+    bpy.context.view_layer.update()
+    evaluated = body.evaluated_get(bpy.context.evaluated_depsgraph_get())
+    world = evaluated.matrix_world
+    return np.array([world @ v.co for v in evaluated.data.vertices[:ed._skin_count(body)]])
+
+
+def turn_bone(rig, bone, axis, degrees):
+    """Gira un hueso (nombre humanoide) sobre su cabeza, con un eje en ejes de Blender."""
+    name = next(old for old, new in humanoid_names().items() if new == bone)
+    pose = rig.pose.bones[name]
+    turn = Matrix.Translation(pose.head) @ Matrix.Rotation(np.radians(degrees), 4, Vector(axis)) \
+        @ Matrix.Translation(-pose.head)
+    pose.matrix = turn @ pose.matrix
+    bpy.context.view_layer.update()
+
+
+def clear_pose(rig):
+    for pose in rig.pose.bones:
+        pose.matrix_basis = Matrix.Identity(4)
+    bpy.context.view_layer.update()
+
+
+def four_weights_measure(values, rows):
+    """Paso 3.6.3: cuánto cambia la malla deformada al recortar los pesos de MPFB a 4 por vértice (poner_rig.py)."""
+    ed.keep_small_macro_weights()
+    bpy.ops.wm.read_factory_settings(use_empty=True)
+    macros, targets = mpfb_inputs(values, rows)
+    body = HumanService.create_human(macro_detail_dict=macros, feet_on_ground=False)
+    for name, weight in targets.items():
+        TargetService.load_target(body, TargetService.target_full_path(name), weight=weight, name=name)
+    HumanService.add_builtin_rig(body, poner_rig.RIG_NAME, import_weights=True)  # sin recortar
+    rig = body.parent
+    skin = ed._skin_count(body)
+    weights = [poner_rig.bone_weights(body, v) for v in body.data.vertices[:skin]]
+    over = [len(w) > 4 for w in weights]
+    names = humanoid_names()
+    where = collections.Counter(names[max(w, key=w.get)] for w in weights if len(w) > 4)
+    dropped = max(sum(sorted(w.values())[:-4]) / sum(w.values()) for w in weights if len(w) > 4)
+
+    def posed():
+        found = {}
+        for label, turns in FOUR_WEIGHT_POSES.items():
+            clear_pose(rig)
+            for bone, axis, degrees in turns:
+                turn_bone(rig, bone, axis, degrees)
+            found[label] = evaluated_skin(body)
+        clear_pose(rig)
+        return found
+
+    before = posed()
+    poner_rig.limit_weights(body)
+    after = posed()
+    poses = {}
+    for label in before:
+        moved = np.linalg.norm(after[label] - before[label], axis=1) * 1000
+        poses[label] = {"max_mm": float(moved.max()), "mean_mm": float(moved.mean()),
+                        "mean_over_four_mm": float(moved[over].mean()), "over_0_1_mm": int((moved > 0.1).sum())}
+    return {"vertices": skin, "over_four": int(sum(over)), "most": int(max(len(w) for w in weights)),
+            "main_bones": dict(where.most_common(6)), "largest_dropped_weight": float(dropped), "poses": poses}
+
+
+def t_rest_elbow(values, rows):
+    """Paso 3.6.3: pose T fijada como reposo con blender/pose_t.py (como en la Fase 1) y después el codo de ELBOW.
+
+    Devuelve los vértices de la piel en ejes de Godot, con el suelo (punto más bajo antes de doblar) en y = 0.
+    """
+    body = ed.raw_body(*mpfb_inputs(values, rows))
+    for modifier in [m for m in body.modifiers if m.type != "ARMATURE"]:
+        body.modifiers.remove(modifier)
+    bpy.context.view_layer.objects.active = body
+    body.select_set(True)
+    bpy.ops.object.shape_key_remove(all=True, apply_mix=True)  # las formas pasan a la malla
+    pose_t.apply_t_pose(body)
+    ground = evaluated_skin(body)[:, 2].min()
+    bend_elbow(body.parent)
+    return [to_godot(v - np.array([0.0, 0.0, ground])) for v in evaluated_skin(body)]
+
+
 def bone_record(head, tail, turn):
     return {"head": to_godot(head), "tail": to_godot(tail), "basis": turn}
 
@@ -206,6 +299,9 @@ def main():
                                             "weights": [weights(b, shape_names) for b in triple]})
     reference["elbow"] = {**ELBOW, "vertices": posed_vertices(every[ELBOW["body"]], rows, offset, bend_elbow)}
     reference["t_pose"] = {name: posed_vertices(every[name], rows, offset, t_pose) for name in T_POSE_BODIES}
+    reference["four_weights"] = four_weights_measure(every[ELBOW["body"]], rows)
+    print("MEDIDA 4 influencias:", json.dumps(reference["four_weights"], ensure_ascii=False))
+    reference["t_rest_elbow"] = {name: t_rest_elbow(every[name], rows) for name in T_REST_BODIES}
     macros = [i for i, _ in ed.macro_sliders(rows)]
     for corner in itertools.product((0.0, 0.5, 1.0), repeat=len(macros)):  # activan las 81 correcciones
         values = {**every["neutro"], **{(i, None): v for i, v in zip(macros, corner)}}
@@ -217,4 +313,5 @@ def main():
           f" {len(reference['bodies'][0]['bones'])} huesos, {len(reference['continuity'])} tríos de continuidad)")
 
 
-main()
+if __name__ == "__main__":
+    main()
