@@ -20,9 +20,7 @@ pruebas/capturas/revision/*
 diseno/referencias/privadas/
 
 # Referencias: solo lo que ya está en git (referencias/cuerpos/); nada nuevo, y nunca un .blend
-referencias/*
-!referencias/cuerpos/
-referencias/cuerpos/*.blend
+referencias/
 
 # Personajes generados por las pruebas
 pruebas/**/salida/
