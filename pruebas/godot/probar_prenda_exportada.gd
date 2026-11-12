@@ -3,7 +3,7 @@ extends SceneTree
 # Necesita ventana (no --headless): dibuja el cuerpo de frente y lee los píxeles, como probar_prenda.gd.
 # Uso: (ulimit -v 4000000; timeout 300 godot --path pruebas/godot -s probar_prenda_exportada.gd 2>&1 | grep -E 'FALLO|RESULTADO|ERROR|medida')
 # Escribe pruebas/fase_3/salida/prenda/visible.glb y oculta.glb (pose A, cuerpo neutro), que usa probar_glb_en_blender.py.
-# Capturas: pruebas/capturas/prenda_exportada/.
+# Capturas: pruebas/capturas/prenda_exportada/, o la carpeta de `-- --salida=<carpeta>`.
 
 const SIZE := 1024  # píxeles de lado
 const VIEW := 2.0  # metros que abarca la imagen
@@ -16,6 +16,16 @@ const EDGE_HALF_WIDTH := 0.08
 var failures := 0
 var viewport: SubViewport
 var root_dir: String
+var captures: String
+
+
+## Carpeta de capturas: la de siempre, o la de `-- --salida=<carpeta>` (ruta absoluta, o relativa a la raíz del proyecto).
+func _capture_folder(default_folder: String) -> String:
+	for arg in OS.get_cmdline_user_args():
+		if arg.begins_with("--salida="):
+			var folder := arg.trim_prefix("--salida=")
+			return folder if folder.is_absolute_path() else root_dir.path_join(folder)
+	return root_dir.path_join(default_folder)
 
 
 func _initialize() -> void:
@@ -34,7 +44,8 @@ func _initialize() -> void:
 	var exporter: GDScript = load(addon.path_join("glb_exporter.gd"))
 	var out := root_dir.path_join("pruebas/fase_3/salida/prenda")
 	DirAccess.make_dir_recursive_absolute(out)
-	DirAccess.make_dir_recursive_absolute(root_dir.path_join("pruebas/capturas/prenda_exportada"))
+	captures = _capture_folder("pruebas/capturas/prenda_exportada")
+	DirAccess.make_dir_recursive_absolute(captures)
 	_build_view()
 
 	for shown in [true, false]:
@@ -76,7 +87,7 @@ func _check_file(path: String, shown: bool) -> void:
 	check(label + "material opaco (alphaMode OPAQUE)", modes == ["OPAQUE"], str(modes))
 	viewport.add_child(scene)
 	var image := await _render()
-	image.save_png(root_dir.path_join("pruebas/capturas/prenda_exportada/%s.png" % path.get_file().get_basename()))
+	image.save_png(captures.path_join(path.get_file().get_basename() + ".png"))
 	_check_vertices(label + "cada vértice de frente cae en un píxel de su color", image, mesh, shown)
 	if shown:
 		_measure_edge(label, image)

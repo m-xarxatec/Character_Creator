@@ -22,7 +22,7 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 5. **Licencias limpias.** Solo CC0, MIT, Apache 2.0 o GPL. Nada de MB-Lab, VRoid ni SMPL. El editor es MIT: no copies código de MPFB2 (GPL), reimplementa desde su documentación. Solo `blender/` es GPL-3.0+. Todo lo de terceros va a `CREDITOS.md`.
 6. **Las ideas nuevas no se construyen:** se apuntan en `IDEAS.md`.
 7. **Simple y corto.** Código, documentos y este archivo: lo mínimo que funcione. Aquí no se repite lo que ya está en otro archivo o se ve leyendo el código; si algo ya no sirve, bórralo.
-8. **Git lo ejecuto yo.** Claude nunca ejecuta comandos `git`: solo me los da escritos. Commits: uno por paso, mensaje corto en español, sin autoría ni `Co-Authored-By`.
+8. **Git lo ejecuto yo.** Claude puede usar git solo de lectura (`status`, `diff`, `log`); nunca comandos que cambien el repositorio. Commits: uno por paso, mensaje corto en español, sin autoría ni `Co-Authored-By`.
 9. **Los límites de las pruebas no se tocan solos.** Cambiar el límite de una prueba requiere propuesta y aprobación, con el motivo y la medida real.
 
 ## Modo ligero (ahorro de tokens)
@@ -34,6 +34,7 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 - Propuesta: `PROPUESTA — Paso X.Y` / Archivos / Qué hace / Cómo se prueba / Riesgos / ¿Apruebas?
 - Al cerrar un paso: ejecuta las pruebas, marca el paso y añade una línea al registro de `PLAN.md`, e informa en 3 líneas (**hecho / cómo se probó / qué sigue**).
 - Al cerrar un paso que cambie el aspecto, la malla, los huesos o la exportación, propón pasar el revisor-visual antes de seguir.
+- Lo visual lo juzgo yo: dame la ruta de las capturas o el comando para abrir el resultado, sin describirlas ni valorarlas, y espera mi decisión.
 
 ## Entorno y comandos
 
@@ -66,7 +67,7 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 | Puntos de anclaje | `socket_hand_r`, `socket_hand_l`, `socket_back`, `socket_hip`: nodos vacíos hijos del hueso |
 | Cuerpo | Adulto, neutro, sin detalle anatómico |
 | Prenda base | Pintada: color por vértice `garment` (1 = prenda), siempre en la malla; el shader la muestra o la oculta (botón) |
-| Estilo | Ilustración (anime 3D): sombra a dos tonos y contorno negro grueso, propio. El shader va en el núcleo, no en el `.glb` |
+| Estilo | Ilustración (anime 3D): sombra de 3 tonos (valor por defecto) y contorno negro grueso, propio. El shader va en el núcleo, no en el `.glb` |
 
 ## Convenciones de código
 

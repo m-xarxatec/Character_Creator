@@ -2,6 +2,7 @@ extends "res://probar_estilo.gd"
 # Maqueta 3.13a-2: normales de elipsoide en la cara, para que el toon no la corte en manchas. Prueba visual, sin pulir.
 # Necesita ventana (no --headless).
 # Uso: (ulimit -v 4000000; timeout 600 godot --path pruebas/godot -s probar_normales_cara.gd 2>&1 | grep -E 'medida|ERROR|GUARDADO')
+# Opcional: `-- --salida=<carpeta>` guarda las capturas en otra carpeta (sin él, en la de siempre).
 # Capturas: pruebas/capturas/normales_cara/ (antes = normales suavizadas del 3.12; mezcla = 50 %; elipsoide = 100 %).
 # Aplanado (aplanado_*.png y aplanado_hoja.png): elipsoide al 100 % con menos fondo por delante (DEPTHS), para que
 # las normales de la cara miren más al frente y el corte de tono se vaya al borde.
@@ -22,7 +23,7 @@ var head_weight: PackedFloat32Array
 func _initialize() -> void:
 	root_dir = ProjectSettings.globalize_path("res://").path_join("../..").simplify_path()
 	var addon := root_dir.path_join("godot/addons/creador")
-	out = root_dir.path_join("pruebas/capturas/normales_cara")
+	out = _capture_folder("pruebas/capturas/normales_cara")
 	DirAccess.make_dir_recursive_absolute(out)
 	shapes = load(addon.path_join("shape_weights.gd"))
 	proportions = load(addon.path_join("proportions.gd"))

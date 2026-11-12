@@ -4,6 +4,7 @@ extends "res://probar_normales_cara.gd"
 # Necesita ventana (no --headless).
 # Antes: (ulimit -v 4000000; timeout 300 blender -b -P blender/cara_anime.py -- pruebas/fase_3/salida/cara_anime/cara_anime.json)
 # Uso: (ulimit -v 4000000; timeout 600 godot --path pruebas/godot -s probar_cara_anime.gd 2>&1 | grep -E 'medida|ERROR|GUARDADO')
+# Opcional: `-- --salida=<carpeta>` guarda las capturas en otra carpeta (sin él, en la de siempre).
 # Capturas: pruebas/capturas/cara_anime/. hoja_ab = cara actual (arriba) contra cara anime (abajo), preset anime_femenino;
 # hoja_extremos = cara anime sobre el cuerpo neutro y con cada macro al mínimo y al máximo (frente arriba, perfil abajo).
 # hoja_nariz = cara anime con nariz_anime a cada valor de NOSE_VALUES (una fila por valor; frente y perfil).
@@ -32,7 +33,7 @@ var by_position := {}
 func _initialize() -> void:
 	root_dir = ProjectSettings.globalize_path("res://").path_join("../..").simplify_path()
 	var addon := root_dir.path_join("godot/addons/creador")
-	out = root_dir.path_join("pruebas/capturas/cara_anime")
+	out = _capture_folder("pruebas/capturas/cara_anime")
 	DirAccess.make_dir_recursive_absolute(out)
 	shapes = load(addon.path_join("shape_weights.gd"))
 	proportions = load(addon.path_join("proportions.gd"))

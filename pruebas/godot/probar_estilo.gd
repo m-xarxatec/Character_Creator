@@ -2,6 +2,7 @@ extends SceneTree
 # Paso 3.12: prueba de estilo. Prueba visual, sin límites: saca capturas y mide cuántas cabezas de alto tiene cada preset.
 # Necesita ventana (no --headless).
 # Uso: (ulimit -v 4000000; timeout 600 godot --path pruebas/godot -s probar_estilo.gd 2>&1 | grep -E 'medida|ERROR|GUARDADO')
+# Opcional: `-- --salida=<carpeta>` guarda las capturas en otra carpeta (sin él, en la de siempre).
 # Presets: pruebas/fase_3/estilo/*.json. Capturas: pruebas/capturas/estilo/ (misma luz y cámara en todas; la cámara
 # encuadra a cada personaje según su altura). El personaje se hornea (mesh_baker.gd) a una malla fija para dibujarlo.
 
@@ -30,10 +31,19 @@ var root_dir: String
 var out: String
 
 
+## Carpeta de capturas: la de siempre, o la de `-- --salida=<carpeta>` (ruta absoluta, o relativa a la raíz del proyecto).
+func _capture_folder(default_folder: String) -> String:
+	for arg in OS.get_cmdline_user_args():
+		if arg.begins_with("--salida="):
+			var folder := arg.trim_prefix("--salida=")
+			return folder if folder.is_absolute_path() else root_dir.path_join(folder)
+	return root_dir.path_join(default_folder)
+
+
 func _initialize() -> void:
 	root_dir = ProjectSettings.globalize_path("res://").path_join("../..").simplify_path()
 	var addon := root_dir.path_join("godot/addons/creador")
-	out = root_dir.path_join("pruebas/capturas/estilo")
+	out = _capture_folder("pruebas/capturas/estilo")
 	DirAccess.make_dir_recursive_absolute(out)
 	shapes = load(addon.path_join("shape_weights.gd"))
 	proportions = load(addon.path_join("proportions.gd"))
