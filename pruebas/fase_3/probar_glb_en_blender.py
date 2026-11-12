@@ -2,6 +2,7 @@
 """Pasos 3.6.5 y 3.6.6: los .glb exportados por el núcleo de Godot se abren bien en Blender y se ve la prenda.
 
 Uso: (ulimit -v 4000000; timeout 300 blender -b -P pruebas/fase_3/probar_glb_en_blender.py 2>&1 | grep -E 'FALLO|RESULTADO|bien')
+Con `-- <ruta.glb>...` prueba solo esos archivos (sin la prenda ni las capturas).
 Antes: pruebas/godot/probar_exportar.gd (escribe pruebas/fase_3/salida/t/ y a/) y
 pruebas/godot/probar_prenda_exportada.gd (escribe pruebas/fase_3/salida/prenda/).
 Capturas de la prenda: pruebas/capturas/prenda_blender/.
@@ -154,11 +155,16 @@ def render(label, name, shown):
           f"{counts[0]} px de piel, {counts[1]} de prenda, {dark} oscuros; medida: {far} a más de 0,2 de los dos")
 
 
-files = sorted(glob.glob(os.path.join(OUT, "t", "*.glb")) + glob.glob(os.path.join(OUT, "a", "*.glb")))
-check("hay 4 .glb que probar", len(files) == 4, len(files))
-for file in files:
-    check_file(file)
-for name, shown in (("visible.glb", True), ("oculta.glb", False)):
-    check_garment(os.path.join(OUT, "prenda", name), shown)
+paths = sys.argv[sys.argv.index("--") + 1:] if "--" in sys.argv else []
+if paths:  # solo los .glb dados (p. ej. los de probar_aleatorios.gd): sin la prenda ni las capturas
+    for file in paths:
+        check_file(os.path.abspath(file))
+else:
+    files = sorted(glob.glob(os.path.join(OUT, "t", "*.glb")) + glob.glob(os.path.join(OUT, "a", "*.glb")))
+    check("hay 4 .glb que probar", len(files) == 4, len(files))
+    for file in files:
+        check_file(file)
+    for name, shown in (("visible.glb", True), ("oculta.glb", False)):
+        check_garment(os.path.join(OUT, "prenda", name), shown)
 print(f"RESULTADO: {len(failures)} fallos" + (f" ({', '.join(failures)})" if failures else ""))
 sys.exit(1 if failures else 0)

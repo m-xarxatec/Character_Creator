@@ -9,6 +9,8 @@ extends SceneTree
 #   blender -b -P pruebas/fase_3/probar_glb_en_blender.py
 #   pruebas/fase_3/probar_importador.sh   (importador del editor en un proyecto vacío)
 
+const Compare := preload("comparar_glb.gd")
+
 const SAME_MM := 0.1
 const SOCKET_DEG := 1.0
 const SCALES := {
@@ -72,30 +74,6 @@ func _set_up(body: String) -> void:
 	proportions.apply(species.skeleton, proportions.scales(values, species.sliders))
 
 
-func _global_rests(skeleton: Skeleton3D) -> Dictionary:
-	var rests := {}
-	for bone in skeleton.get_bone_count():
-		rests[skeleton.get_bone_name(bone)] = skeleton.get_bone_global_rest(bone)
-	return rests
-
-
-## {anclaje: transformación global en reposo}; vacío si alguno no cuelga de un BoneAttachment3D.
-func _sockets(skeleton: Skeleton3D) -> Dictionary:
-	var found := {}
-	for socket: String in socket_names:
-		var node := skeleton.find_child(socket, true, false) as Node3D
-		var holder := node.get_parent() as BoneAttachment3D if node else null
-		if holder == null or skeleton.find_bone(holder.bone_name) < 0:
-			return {}
-		found[socket] = skeleton.get_bone_global_rest(skeleton.find_bone(holder.bone_name)) * node.transform
-	return found
-
-
-func _angle(a: Basis, b: Basis) -> float:
-	var q := (a.orthonormalized().inverse() * b.orthonormalized()).get_rotation_quaternion()
-	return rad_to_deg(2.0 * acos(minf(1.0, absf(q.w))))
-
-
 func _check(body: String, t_variant: bool, path: String) -> void:
 	var label := "%s, pose %s: " % [body, "T" if t_variant else "A"]
 	_set_up(body)
@@ -130,61 +108,24 @@ func _check(body: String, t_variant: bool, path: String) -> void:
 func _compare(label: String, skeleton: Skeleton3D, mesh: MeshInstance3D, memory_skeleton: Skeleton3D,
 		memory_vertices: PackedVector3Array) -> void:
 	# Huesos, por nombre.
-	var rests := _global_rests(skeleton)
-	var memory_rests := _global_rests(memory_skeleton)
-	var mm := 0.0
-	var deg := 0.0
-	var unit := true
-	for bone: String in memory_rests:
-		if not rests.has(bone):
-			mm = INF
-			continue
-		mm = maxf(mm, 1000.0 * rests[bone].origin.distance_to(memory_rests[bone].origin))
-		deg = maxf(deg, _angle(rests[bone].basis, memory_rests[bone].basis))
-	for bone in skeleton.get_bone_count():
-		unit = unit and skeleton.get_bone_rest(bone).basis.get_scale().is_equal_approx(Vector3.ONE) \
-			and skeleton.get_bone_pose_scale(bone).is_equal_approx(Vector3.ONE)
+	var bones: Dictionary = Compare.bone_errors(skeleton, memory_skeleton)
+	var mm: float = Compare.stats(bones["mm"]).x
+	var deg: float = Compare.stats(bones["deg"]).x
 	check(label + "53 huesos iguales que en memoria (< %s mm) y con escala 1" % SAME_MM,
-		rests.size() == 53 and mm < SAME_MM and unit, "máximo %.5f mm, %.4f°" % [mm, deg])
+		bones["count"] == 53 and mm < SAME_MM and bones["unit"], "máximo %.5f mm, %.4f°" % [mm, deg])
 
 	# Anclajes.
-	var sockets := _sockets(skeleton)
-	var memory_sockets := _sockets(memory_skeleton)
-	mm = 0.0
-	deg = 0.0
-	for socket: String in memory_sockets:
-		if sockets.has(socket):
-			mm = maxf(mm, 1000.0 * sockets[socket].origin.distance_to(memory_sockets[socket].origin))
-			deg = maxf(deg, _angle(sockets[socket].basis, memory_sockets[socket].basis))
+	var sockets: Dictionary = Compare.socket_errors(skeleton, memory_skeleton, socket_names)
+	mm = Compare.stats(sockets["mm"]).x
+	deg = Compare.stats(sockets["deg"]).x
 	check(label + "4 anclajes en su sitio (< %s mm, < %s°)" % [SAME_MM, SOCKET_DEG],
-		sockets.size() == 4 and memory_sockets.size() == 4 and mm < SAME_MM and deg < SOCKET_DEG,
+		sockets["found"] == 4 and sockets["memory_found"] == 4 and mm < SAME_MM and deg < SOCKET_DEG,
 		"máximo %.5f mm, %.4f°" % [mm, deg])
 
 	# Malla: cada vértice leído tiene uno igual en memoria (el exportador puede reordenarlos).
 	var arrays := mesh.mesh.surface_get_arrays(0)
 	var vertices: PackedVector3Array = arrays[Mesh.ARRAY_VERTEX]
-	var to_scene := Transform3D.IDENTITY
-	var node: Node3D = mesh
-	while node.get_parent() != null:
-		to_scene = node.transform * to_scene
-		node = node.get_parent()
-	var grid := {}
-	for vertex in memory_vertices:
-		var cell := Vector3i((vertex * 1000.0).floor())
-		if not grid.has(cell):
-			grid[cell] = PackedVector3Array()
-		grid[cell].append(vertex)
-	mm = 0.0
-	for vertex in vertices:
-		var point := to_scene * vertex
-		var nearest := INF
-		var cell := Vector3i((point * 1000.0).floor())
-		for x in range(-1, 2):
-			for y in range(-1, 2):
-				for z in range(-1, 2):
-					for candidate: Vector3 in grid.get(cell + Vector3i(x, y, z), PackedVector3Array()):
-						nearest = minf(nearest, point.distance_to(candidate))
-		mm = maxf(mm, 1000.0 * nearest)
+	mm = Compare.stats(Compare.vertex_errors(mesh, memory_vertices)).x
 	check(label + "malla igual que en memoria (< %s mm)" % SAME_MM, mm < SAME_MM,
 		"máximo %.5f mm; %d vértices leídos, %d en memoria" % [mm, vertices.size(), memory_vertices.size()])
 
