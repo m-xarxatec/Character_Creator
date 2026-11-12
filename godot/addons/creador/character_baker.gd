@@ -6,6 +6,8 @@ extends RefCounted
 ##   var character := CharacterBaker.bake(species.mesh, species.skeleton, true)   # true = pose T; false = pose A
 ## Devuelve: nodo raíz → Skeleton3D → MeshInstance3D. El personaje del editor no cambia.
 ## - Las formas, la escala de Proporción y la pose pasan a la malla (mesh_baker.gd).
+## - La pose de cada variante la fija el exportador, no el editor: reposo (A) o pose T, sea cual sea la pose del editor
+##   (que no cambia). La escala de Proporción de la pose sí se hornea.
 ## - El reposo nuevo es la pose global actual sin escala: todos los huesos con escala 1 y pose = reposo.
 ## - Apoyado en el suelo: el punto más bajo de la malla queda en y = 0.
 ## - La malla no lleva formas; UV, color `garment`, índices, huesos y pesos se copian tal cual.
@@ -17,15 +19,19 @@ const TPose := preload("t_pose.gd")
 
 
 static func bake(mesh: MeshInstance3D, skeleton: Skeleton3D, t_pose: bool) -> Node3D:
-	var rotations: Array[Quaternion] = []
+	var editor_positions: Array[Vector3] = []
+	var editor_rotations: Array[Quaternion] = []
 	for bone in skeleton.get_bone_count():
-		rotations.append(skeleton.get_bone_pose_rotation(bone))
+		editor_positions.append(skeleton.get_bone_pose_position(bone))
+		editor_rotations.append(skeleton.get_bone_pose_rotation(bone))
+	_set_rest_pose(skeleton)
 	if t_pose:
 		TPose.apply(skeleton)
 	var baked: Dictionary = Baker.bake(mesh, skeleton)
 	var globals: Array[Transform3D] = Baker.global_poses(skeleton)
 	for bone in skeleton.get_bone_count():  # el editor queda como estaba
-		skeleton.set_bone_pose_rotation(bone, rotations[bone])
+		skeleton.set_bone_pose_position(bone, editor_positions[bone])
+		skeleton.set_bone_pose_rotation(bone, editor_rotations[bone])
 
 	var vertices: PackedVector3Array = baked["vertices"]
 	var lowest := INF
@@ -48,6 +54,13 @@ static func bake(mesh: MeshInstance3D, skeleton: Skeleton3D, t_pose: bool) -> No
 	new_skeleton.add_child(new_mesh)
 	new_mesh.skeleton = NodePath("..")
 	return root
+
+
+static func _set_rest_pose(skeleton: Skeleton3D) -> void:
+	for bone in skeleton.get_bone_count():
+		var rest := skeleton.get_bone_rest(bone)
+		skeleton.set_bone_pose_position(bone, rest.origin)
+		skeleton.set_bone_pose_rotation(bone, rest.basis.get_rotation_quaternion())
 
 
 static func _skeleton(source: Skeleton3D, globals: Array[Transform3D]) -> Skeleton3D:

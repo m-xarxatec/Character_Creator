@@ -4,7 +4,7 @@ extends SceneTree
 # Escribe pruebas/fase_3/salida/aleatorios/: cuerpo_NN.json (el preset) y t/ y a/ con cuerpo_NN.glb. Después, en Blender:
 #   blender -b -P pruebas/fase_3/probar_glb_en_blender.py -- <ruta a un .glb>...
 # El cuerpo se construye desde el preset ya releído del archivo (así se usa también preset.gd). Por medida: máximo y
-# media de todos los elementos de los 10 cuerpos, por variante. «medida» = sin límite aprobado: no falla.
+# media de todos los elementos de los 10 cuerpos, por variante. «medida» = sin límite aprobado: no falla (hoy no queda ninguna salvo el giro de los huesos).
 
 const Compare := preload("comparar_glb.gd")
 
@@ -14,14 +14,15 @@ const SAME_MM := 0.1  # los de probar_exportar.gd (paso 3.6.5)
 const SOCKET_DEG := 1.0
 const FLOOR_MM := 0.001  # el de probar_personaje_horneado.gd (paso 3.6.3)
 const SUM_EPS := 1e-4
+const INFLUENCE_EPS := 1e-4  # aprobado el 2026-11-12 (medida 0,000031: cuantización de 16 bits de Godot)
+const NORMAL_DEG := 0.1  # aprobado el 2026-11-12, como el horneado del 3.6.1 (medida 0,0074°)
 const MIN_SPREAD_M := 0.1  # no es un límite del código: comprueba que la prueba no compara diez veces el mismo cuerpo
 const VARIANTS := ["t", "a"]
 
 var failures := 0
 var species
-var base: Dictionary
+var updater
 var exporter: GDScript
-var refit: GDScript
 var shapes: GDScript
 var proportions: GDScript
 var preset: GDScript
@@ -36,7 +37,6 @@ func _initialize() -> void:
 	var addon := root_dir.path_join("godot/addons/creador")
 	out = root_dir.path_join("pruebas/fase_3/salida/aleatorios")
 	exporter = load(addon.path_join("glb_exporter.gd"))
-	refit = load(addon.path_join("skeleton_refit.gd"))
 	shapes = load(addon.path_join("shape_weights.gd"))
 	proportions = load(addon.path_join("proportions.gd"))
 	preset = load(addon.path_join("preset.gd"))
@@ -48,7 +48,7 @@ func _initialize() -> void:
 		return
 	root.add_child(species.scene)
 	material.apply(species.mesh)
-	base = refit.capture_base(species.skeleton)
+	updater = load(addon.path_join("character_updater.gd")).new(species)
 	socket_names = species.manifest["bones"]["sockets"]
 	for variant: String in VARIANTS:
 		DirAccess.make_dir_recursive_absolute(out.path_join(variant))
@@ -98,16 +98,9 @@ func _body(index: int, rng: RandomNumberGenerator) -> void:
 
 
 func _set_up(loaded: Dictionary) -> void:
-	var shape_values: Dictionary = shapes.neutral_values(species.sliders)
-	var scale_values: Dictionary = proportions.neutral_values(species.sliders)
-	for key: String in loaded["valores"]:
-		for target: Dictionary in [shape_values, scale_values]:
-			if target.has(key):
-				target[key] = loaded["valores"][key]
-	var weights: Dictionary = shapes.weights(shape_values, shapes.shape_names(species.mesh.mesh))
-	shapes.apply(species.mesh, weights)
-	refit.apply(species.skeleton, species.mesh.skin, species.joints, weights, base)
-	proportions.apply(species.skeleton, proportions.scales(scale_values, species.sliders))
+	var rejected: Array[String] = updater.update(loaded["valores"], false)
+	if not rejected.is_empty():
+		check("update_character aplica todas las claves del preset", false, str(rejected))
 	preset.apply_look(species.mesh, loaded)
 
 
@@ -206,8 +199,8 @@ func _report() -> void:
 		_limit(variant, "malla_mm", "vértices de la malla", "mm", SAME_MM)
 		_limit(variant, "suelo_mm", "punto más bajo", "mm", FLOOR_MM)
 		_limit(variant, "suma_pesos", "suma de pesos (distancia a 1)", "", SUM_EPS)
-		_measure_only(variant, "pesos_huesos", "huesos y pesos, vértice a vértice (mayor diferencia de peso)", "")
-		_measure_only(variant, "normales_deg", "normales", "°")
+		_limit(variant, "pesos_huesos", "huesos y pesos, vértice a vértice (mayor diferencia de peso)", "", INFLUENCE_EPS)
+		_limit(variant, "normales_deg", "normales", "°", NORMAL_DEG)
 
 
 func _limit(variant: String, measure_name: String, label: String, unit: String, limit: float) -> void:
