@@ -1,13 +1,15 @@
-// Estilo ilustración (prueba del paso 3.12; se completa en el 3.10): piel o prenda como body.gdshader (color por
-// vértice `garment` en el rojo, corte en 0,5), con 3 tonos planos de bordes suaves, sombra cálida, luz de contorno
-// (rim) suave y sin brillo. Las tintas multiplican el color: 1 = sin cambio.
-// Contorno: outline.gdshader como next_pass de este material.
+// Material del cuerpo en estilo ilustración (pasos 3.12 y 3.10): piel o prenda según el color por vértice `garment`
+// (en el rojo, corte en 0,5), con 3 tonos planos de bordes suaves, sombra cálida, luz de contorno (rim) suave y sin
+// brillo. Las tintas multiplican el color: 1 = sin cambio.
+// Contorno: outline.gdshader como next_pass de este material (lo monta body_material.gd).
+// `unlit`: sin luces ni rim, color exacto (EMISSION = color); para las pruebas de color de la prenda.
 shader_type spatial;
 render_mode ambient_light_disabled, specular_disabled;
 
-uniform vec3 skin_color : source_color = vec3(1.0, 0.88, 0.81);
+uniform vec3 skin_color : source_color = vec3(0.93, 0.80, 0.70);
 uniform vec3 garment_color : source_color = vec3(0.20, 0.20, 0.23);
 uniform bool show_garment = true;
+uniform bool unlit = false;
 uniform vec3 mid_tint : source_color = vec3(0.97, 0.88, 0.86);
 uniform vec3 shadow_tint : source_color = vec3(0.86, 0.70, 0.70);
 uniform float mid_threshold : hint_range(-1.0, 1.0) = 0.45;
@@ -19,11 +21,17 @@ uniform float rim_width : hint_range(0.0, 1.0) = 0.3;
 
 void fragment() {
 	float garment = show_garment ? step(0.5, COLOR.r) : 0.0;
-	ALBEDO = mix(skin_color, garment_color, garment);
+	vec3 color = mix(skin_color, garment_color, garment);
 	ROUGHNESS = 1.0;
 	SPECULAR = 0.0;
-	float rim = smoothstep(1.0 - rim_width, 1.0, 1.0 - clamp(dot(NORMAL, VIEW), 0.0, 1.0));
-	EMISSION = rim_color * ALBEDO * rim * rim_strength;
+	if (unlit) {
+		ALBEDO = vec3(0.0);
+		EMISSION = color;
+	} else {
+		ALBEDO = color;
+		float rim = smoothstep(1.0 - rim_width, 1.0, 1.0 - clamp(dot(NORMAL, VIEW), 0.0, 1.0));
+		EMISSION = rim_color * color * rim * rim_strength;
+	}
 }
 
 void light() {

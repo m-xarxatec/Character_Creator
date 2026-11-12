@@ -1,16 +1,25 @@
 class_name BodyMaterial
 extends RefCounted
-## Material del cuerpo (body.gdshader) y el interruptor de la prenda base.
+## Material del cuerpo en estilo ilustración: toon.gdshader con el contorno (outline.gdshader) como next_pass.
 ##
 ## Uso:
 ##   BodyMaterial.apply(species.mesh)
 ##   BodyMaterial.set_garment_visible(species.mesh, false)
-## El interruptor es un parámetro del material: el exportador (paso 3.6) lo lee con is_garment_visible() y los colores con get_color().
-## Si la malla no tiene este material, valen DEFAULTS (prenda visible).
+##   BodyMaterial.set_outline_width(species.mesh, 2.0)    # píxeles, de 0 (sin contorno) a 10
+##   BodyMaterial.set_unlit(species.mesh, true)           # sin luces ni contorno: color exacto, para las pruebas de color
+## El interruptor de la prenda, los colores y el grosor son parámetros del material: el exportador (paso 3.6) lee
+## is_garment_visible() y get_color(). Si la malla no tiene este material, valen DEFAULTS (prenda visible).
+## DEFAULTS y OUTLINE_DEFAULTS son los valores por defecto de toon.gdshader y outline.gdshader: apply() los pone
+## todos, y hacen falta aquí porque con --headless Godot no los lee del shader (probar_material.gd comprueba que coinciden).
 
-const SHADER := preload("body.gdshader")
-## Los mismos valores por defecto que body.gdshader. Hacen falta aquí: con --headless, Godot no los lee del shader.
-const DEFAULTS := {"show_garment": true, "skin_color": Color(0.93, 0.80, 0.70), "garment_color": Color(0.20, 0.20, 0.23)}
+const SHADER := preload("toon.gdshader")
+const OUTLINE_SHADER := preload("outline.gdshader")
+const DEFAULTS := {
+	"skin_color": Color(0.93, 0.80, 0.70), "garment_color": Color(0.20, 0.20, 0.23), "show_garment": true, "unlit": false,
+	"mid_tint": Color(0.97, 0.88, 0.86), "shadow_tint": Color(0.86, 0.70, 0.70), "mid_threshold": 0.45,
+	"shadow_threshold": 0.0, "softness": 0.04, "rim_color": Color(1.0, 0.95, 0.92), "rim_strength": 0.25, "rim_width": 0.3}
+const OUTLINE_DEFAULTS := {"outline_color": Color(0.07, 0.05, 0.06), "width_px": 2.5}
+const MAX_OUTLINE_PX := 10.0  # el máximo de width_px en outline.gdshader
 
 
 static func apply(mesh: MeshInstance3D) -> ShaderMaterial:
@@ -18,6 +27,12 @@ static func apply(mesh: MeshInstance3D) -> ShaderMaterial:
 	material.shader = SHADER
 	for name: String in DEFAULTS:
 		material.set_shader_parameter(name, DEFAULTS[name])
+	var outline := ShaderMaterial.new()
+	outline.shader = OUTLINE_SHADER
+	for name: String in OUTLINE_DEFAULTS:
+		outline.set_shader_parameter(name, OUTLINE_DEFAULTS[name])
+	material.next_pass = outline
+	material.set_meta("outline", outline)  # para devolver el contorno al salir de unlit
 	mesh.material_override = material
 	return material
 
@@ -38,6 +53,33 @@ static func get_color(mesh: MeshInstance3D, name: String) -> Color:
 ## name: "skin_color" o "garment_color".
 static func set_color(mesh: MeshInstance3D, name: String, color: Color) -> void:
 	(mesh.material_override as ShaderMaterial).set_shader_parameter(name, color)
+
+
+## Sin luces, sin rim y sin contorno: cada píxel con su color exacto. Al apagarlo vuelve el contorno con su grosor.
+static func set_unlit(mesh: MeshInstance3D, unlit: bool) -> void:
+	var material := mesh.material_override as ShaderMaterial
+	material.set_shader_parameter("unlit", unlit)
+	material.next_pass = null if unlit else material.get_meta("outline")
+
+
+static func is_unlit(mesh: MeshInstance3D) -> bool:
+	return _parameter(mesh, "unlit")
+
+
+## Grosor del contorno en píxeles, recortado a [0, 10]; rechaza NaN e infinito (devuelve false y no cambia nada).
+static func set_outline_width(mesh: MeshInstance3D, pixels: float) -> bool:
+	if not is_finite(pixels):
+		return false
+	((mesh.material_override as ShaderMaterial).get_meta("outline") as ShaderMaterial).set_shader_parameter(
+		"width_px", clampf(pixels, 0.0, MAX_OUTLINE_PX))
+	return true
+
+
+static func get_outline_width(mesh: MeshInstance3D) -> float:
+	var material := mesh.material_override as ShaderMaterial
+	if material == null or material.shader != SHADER or not material.has_meta("outline"):
+		return OUTLINE_DEFAULTS["width_px"]
+	return (material.get_meta("outline") as ShaderMaterial).get_shader_parameter("width_px")
 
 
 static func _parameter(mesh: MeshInstance3D, name: String) -> Variant:

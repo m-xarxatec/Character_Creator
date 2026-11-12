@@ -1,5 +1,5 @@
 extends SceneTree
-# Paso 3.5: prenda base (body.gdshader y body_material.gd).
+# Paso 3.5: prenda base (toon.gdshader con `unlit` y body_material.gd).
 # Necesita ventana (no --headless): dibuja el cuerpo de frente y lee los píxeles.
 # Uso: godot --path pruebas/godot -s probar_prenda.gd 2>&1 | grep -E 'FALLO|RESULTADO|ERROR'
 # Compara cada vértice que mira al frente (piel o prenda claras, lejos del borde) con el píxel donde cae.
@@ -33,6 +33,7 @@ func _initialize() -> void:
 	_build_view()
 	var mesh: MeshInstance3D = species.mesh
 	var body: ShaderMaterial = material.apply(mesh)
+	material.set_unlit(mesh, true)  # color exacto: sin luces ni contorno
 	body.set_shader_parameter("skin_color", SKIN)
 	body.set_shader_parameter("garment_color", GARMENT)
 	check("interruptor: visible al empezar", material.is_garment_visible(mesh))
