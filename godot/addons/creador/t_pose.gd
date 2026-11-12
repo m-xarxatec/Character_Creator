@@ -3,7 +3,7 @@ extends RefCounted
 ## Pose T: pone los brazos en T como pose del esqueleto (el reposo no se toca).
 ##
 ## Uso:
-##   TPose.apply(species.skeleton)   # después de cada reajuste, que pisa la pose; parte del reposo
+##   TPose.apply(species.skeleton)   # después de cada reajuste (que pisa la pose) y de poner la escala (que lee); parte del reposo
 ## Solo giran brazo, antebrazo y mano: quedan en línea recta hacia los lados, con la palma hacia abajo
 ## (el índice delante y el meñique detrás). Los dedos y el anclaje siguen a la mano. La escala no se toca.
 ## Misma lógica que blender/pose_t.py, código propio de este proyecto (no viene de MPFB), portada aquí bajo MIT

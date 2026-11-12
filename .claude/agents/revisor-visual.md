@@ -70,11 +70,12 @@ No hace falta la matriz entera en cada revisión: elige lo que toque el paso, y 
 - Cadera y glúteos al sentarse; cuello al girar la cabeza; dedos al cerrar el puño.
 - Pies apoyados en el suelo, sin hundirse ni flotar.
 
-**Aspecto tipo VRoid**
-- Proporciones de anime agradables, no inquietantes. Señala si la cara cae en el "valle inquietante" (casi humana pero rara).
-- Sombreado toon: bandas limpias, sin manchas ni dientes de sierra, sin "acné" de sombras.
-- Contorno: grosor uniforme, sin roturas en las costuras ni contornos "flotando".
-- Anatomía demasiado marcada para el estilo (costillas, músculos, bultos).
+**Aspecto (meta tipo VRoid): solo capturas, sin valorarlas** — el juicio es del responsable
+- Proporciones y cara: frente, perfil, tres cuartos y primer plano de la cara, de cada preset; con las cabezas de alto medidas.
+- Sombreado toon: las mismas vistas con el toon y con el sombreado normal.
+- Contorno: cámara del juego (unos 45° desde arriba, a distancia de juego) y primeros planos de las costuras y los dedos.
+- Anatomía: torso y brazos con el toon y sin él.
+- Lista las rutas en «PARA DECIDIR (visual)»; no las describas ni las puntúes.
 
 **Texturas y materiales**
 - Costuras visibles, bordes de la prenda (dentados o borrosos), colores que se mezclan.
@@ -179,7 +180,7 @@ Al final de cada informe, puntúa de 1 a 5:
 | --- | --- | --- |
 | Proporciones y silueta | | |
 | Deformación al animar | | |
-| Aspecto tipo VRoid (toon, contorno, cara) | | |
+| Aspecto (toon, contorno, cara) | sin nota: lo juzga el responsable | |
 | Limpieza de malla y texturas | | |
 | Listo para el juego | | |
 

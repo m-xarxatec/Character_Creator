@@ -19,6 +19,11 @@ pruebas/capturas/revision/*
 # Referencias con derechos de autor (solo en local)
 diseno/referencias/privadas/
 
+# Referencias: solo lo que ya está en git (referencias/cuerpos/); nada nuevo, y nunca un .blend
+referencias/*
+!referencias/cuerpos/
+referencias/cuerpos/*.blend
+
 # Personajes generados por las pruebas
 pruebas/**/salida/
 pruebas/godot/personaje.glb*

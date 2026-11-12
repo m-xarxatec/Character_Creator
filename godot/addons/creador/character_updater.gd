@@ -1,7 +1,7 @@
 class_name CharacterUpdater
 extends RefCounted
 ## update_character: lo único que cambia el personaje del editor. Aplica siempre, en este orden:
-## formas → reajuste del esqueleto → pose base → escala de Proporción.
+## formas → reajuste del esqueleto → escala de Proporción → pose base.
 ##
 ## Uso:
 ##   var updater := CharacterUpdater.new(species)           # justo después de cargar la especie (guarda el reposo original)
@@ -11,6 +11,7 @@ extends RefCounted
 ## anteriores (llamarla dos veces seguidas, o venir de otro cuerpo o de la pose T, da lo mismo).
 ## Devuelve las claves que no aplicó, en una lista: desconocidas o con un valor no válido (NaN, infinito).
 ## El reajuste pisa la posición y el giro de la pose (no la escala): por eso la pose base va después de él.
+## La pose T lee la escala de la pose: por eso la pose base va después de la escala y no depende de la llamada anterior.
 
 const Proportions := preload("proportions.gd")
 const ShapeWeights := preload("shape_weights.gd")
@@ -38,7 +39,7 @@ func update(values: Dictionary, pose_t: bool) -> Array[String]:
 	var weights: Dictionary = ShapeWeights.weights(shape_values, ShapeWeights.shape_names(species.mesh.mesh))
 	ShapeWeights.apply(species.mesh, weights)
 	SkeletonRefit.apply(species.skeleton, species.mesh.skin, species.joints, weights, base)
+	Proportions.apply(species.skeleton, Proportions.scales(scale_values, species.sliders))
 	if pose_t:
 		TPose.apply(species.skeleton)
-	Proportions.apply(species.skeleton, Proportions.scales(scale_values, species.sliders))
 	return rejected

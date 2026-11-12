@@ -5,7 +5,7 @@ extends SceneTree
 
 const Compare := preload("comparar_glb.gd")
 
-const SAME_MM := 0.001  # el del suelo del 3.6.3
+const SAME_MM := 0.001  # el del suelo del 3.6.3 (en las comparaciones de _same() se exige 0 exacto: son las mismas operaciones)
 const DIFFERENT_MM := 1.0  # solo para comprobar que la prueba distingue lo distinto (no es un límite del código)
 const COUNT := 3
 const SEED := 39
@@ -97,7 +97,7 @@ func _diff(a: Dictionary, b: Dictionary) -> Dictionary:
 func _same(label: String, a: Dictionary, b: Dictionary) -> void:
 	var d := _diff(a, b)
 	var worst: float = maxf(maxf(d["pose_mm"].x, d["rest_mm"].x), maxf(d["bind_mm"].x, d["vertex_mm"].x))
-	check(label + " (posiciones y malla < %s mm)" % SAME_MM, worst < SAME_MM,
+	check(label + " (posiciones y malla: 0 mm exactos)", worst == 0.0,
 		"pose %.6f / %.6f mm, reposo %.6f, bind %.6f, malla %.6f / %.6f mm" % [d["pose_mm"].x, d["pose_mm"].y, d["rest_mm"].x,
 		d["bind_mm"].x, d["vertex_mm"].x, d["vertex_mm"].y])
 	print("  medida  %s, giros: pose máx. %.6f° / media %.6f°, reposo %.6f°, bind %.6f°" % [label, d["pose_deg"].x, d["pose_deg"].y,

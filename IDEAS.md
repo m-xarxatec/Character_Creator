@@ -7,6 +7,7 @@
 ## Antes del MVP (solo si sobra tiempo, sin desviar el plan)
 
 - Presets de cuerpo: atlético, delgado, robusto, mayor.
+- `probar_rendimiento.gd` debería aceptar rutas relativas al `.glb` (hoy pide la absoluta; con `datos/humana/cuerpo.glb` no lo abre).
 - Botón "aleatorio" con límites razonables.
 - Comparar antes y después (dos maniquíes lado a lado).
 - Medidas reales (altura en cm) junto a los deslizadores.

@@ -43,8 +43,8 @@ Medido en el 3.12: femenino 6,96, masculino 6,94, chibi 5,25 (fuera de rango, 3,
 
 ## 4. Sombreado toon
 
-- **Número de tonos:** PROPUESTA (pendiente de aprobar): **3** (luz, medio y sombra), con bordes suaves de 0,02–0,06. Por qué: es lo que se probó en el 3.12 y con 2 la cara pierde volumen.
-  - ⚠️ **Contradicción:** `CLAUDE.md` (tabla "Estilo") y `PLAN.md` (MVP y paso 3.10) dicen "sombra a dos tonos"; el 3.12 usó tres. Al aprobar este valor hay que corregir uno de los dos lados.
+- **Número de tonos:** **3** por defecto (luz, medio y sombra). Aprobado el 2026-11-11. Por qué: es lo que se probó en el 3.12 y con 2 la cara pierde volumen.
+- **Dureza del borde:** PROPUESTA (pendiente de aprobar): bordes suaves de 0,02–0,06.
 - **Luz de contorno (rim):** PROPUESTA (pendiente de aprobar): suave, fuerza 0,15–0,35, color cálido casi blanco. Por qué: separa la silueta del fondo oscuro sin parecer brillo.
 - **Brillo especular:** ninguno. Por qué: el brillo hace que la piel parezca plástico.
 - **Piel:** PROPUESTA (pendiente de aprobar): tono cálido; la sombra tira a rosado o rojizo, nunca a gris. Por qué: la sombra gris hace que la piel parezca enferma.
