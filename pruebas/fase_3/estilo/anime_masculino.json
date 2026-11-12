@@ -1,7 +1,39 @@
 {
+	"colores": {
+		"garment_color": [
+			0.18,
+			0.2,
+			0.24
+		],
+		"skin_color": [
+			1.0,
+			0.87,
+			0.79
+		]
+	},
+	"especie": "humana",
 	"nombre": "Anime masculino",
-	"valores": {"gender": 1.0, "muscle": 0.3, "weight": 0.35, "head_size": 0.75, "neck_thickness": 0.35, "neck_length": 0.55,
-		"shoulder_width": 0.7, "torso_vshape": 0.6, "waist_width": 0.25, "torso_length": 0.4, "leg_length": 0.9,
-		"arm_muscle": 0.3, "shoulder_muscle": 0.35, "hand_size": 0.4, "foot_size": 0.4},
-	"colores": {"skin_color": [1.0, 0.87, 0.79], "garment_color": [0.18, 0.2, 0.24]}
+	"prenda_visible": true,
+	"valores": {
+		"arm_muscle_l": 0.3,
+		"arm_muscle_r": 0.3,
+		"foot_size_l": 0.4,
+		"foot_size_r": 0.4,
+		"gender": 1.0,
+		"hand_size_l": 0.4,
+		"hand_size_r": 0.4,
+		"head_size": 0.75,
+		"leg_length": 0.9,
+		"muscle": 0.3,
+		"neck_length": 0.55,
+		"neck_thickness": 0.35,
+		"shoulder_muscle_l": 0.35,
+		"shoulder_muscle_r": 0.35,
+		"shoulder_width": 0.7,
+		"torso_length": 0.4,
+		"torso_vshape": 0.6,
+		"waist_width": 0.25,
+		"weight": 0.35
+	},
+	"version": 1
 }

@@ -1,7 +1,40 @@
 {
+	"colores": {
+		"garment_color": [
+			0.22,
+			0.24,
+			0.36
+		],
+		"skin_color": [
+			1.0,
+			0.89,
+			0.83
+		]
+	},
+	"especie": "humana",
 	"nombre": "Anime femenino",
-	"valores": {"gender": 0.0, "muscle": 0.3, "weight": 0.4, "head_size": 0.8, "neck_thickness": 0.1, "neck_length": 0.6,
-		"shoulder_width": 0.35, "waist_width": 0.15, "torso_length": 0.35, "hip_width": 0.55, "leg_length": 0.9,
-		"arm_thickness": 0.3, "thigh": 0.45, "calf": 0.35, "hand_size": 0.2, "foot_size": 0.15, "finger_thickness": 0.3},
-	"colores": {"skin_color": [1.0, 0.89, 0.83], "garment_color": [0.22, 0.24, 0.36]}
+	"prenda_visible": true,
+	"valores": {
+		"arm_thickness": 0.3,
+		"calf": 0.35,
+		"finger_thickness_l": 0.3,
+		"finger_thickness_r": 0.3,
+		"foot_size_l": 0.15,
+		"foot_size_r": 0.15,
+		"gender": 0.0,
+		"hand_size_l": 0.2,
+		"hand_size_r": 0.2,
+		"head_size": 0.8,
+		"hip_width": 0.55,
+		"leg_length": 0.9,
+		"muscle": 0.3,
+		"neck_length": 0.6,
+		"neck_thickness": 0.1,
+		"shoulder_width": 0.35,
+		"thigh": 0.45,
+		"torso_length": 0.35,
+		"waist_width": 0.15,
+		"weight": 0.4
+	},
+	"version": 1
 }

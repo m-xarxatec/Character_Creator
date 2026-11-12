@@ -1,7 +1,36 @@
 {
+	"colores": {
+		"garment_color": [
+			0.1,
+			0.08,
+			0.12
+		],
+		"skin_color": [
+			0.93,
+			0.88,
+			0.9
+		]
+	},
+	"especie": "humana",
 	"nombre": "Chibi oscuro",
-	"valores": {"gender": 0.5, "muscle": 0.2, "weight": 0.5, "head_size": 1.0, "head_width": 0.7, "neck_length": 0.0,
-		"neck_thickness": 0.3, "torso_length": 0.0, "leg_length": 0.0, "arm_length": 0.0, "hand_size": 0.85,
-		"foot_size": 0.9, "finger_length": 0.2},
-	"colores": {"skin_color": [0.93, 0.88, 0.9], "garment_color": [0.1, 0.08, 0.12]}
+	"prenda_visible": true,
+	"valores": {
+		"arm_length": 0.0,
+		"finger_length_l": 0.2,
+		"finger_length_r": 0.2,
+		"foot_size_l": 0.9,
+		"foot_size_r": 0.9,
+		"gender": 0.5,
+		"hand_size_l": 0.85,
+		"hand_size_r": 0.85,
+		"head_size": 1.0,
+		"head_width": 0.7,
+		"leg_length": 0.0,
+		"muscle": 0.2,
+		"neck_length": 0.0,
+		"neck_thickness": 0.3,
+		"torso_length": 0.0,
+		"weight": 0.5
+	},
+	"version": 1
 }

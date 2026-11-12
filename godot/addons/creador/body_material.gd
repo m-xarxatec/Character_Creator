@@ -35,6 +35,11 @@ static func get_color(mesh: MeshInstance3D, name: String) -> Color:
 	return _parameter(mesh, name)
 
 
+## name: "skin_color" o "garment_color".
+static func set_color(mesh: MeshInstance3D, name: String, color: Color) -> void:
+	(mesh.material_override as ShaderMaterial).set_shader_parameter(name, color)
+
+
 static func _parameter(mesh: MeshInstance3D, name: String) -> Variant:
 	var material := mesh.material_override as ShaderMaterial
 	var value: Variant = material.get_shader_parameter(name) if material and material.shader == SHADER else null
