@@ -1,7 +1,7 @@
-# Formato de `datos/` (versión 1)
+# Formato de `datos/` (versión 2)
 
 Una carpeta por especie (`datos/humana/`, …). El núcleo no supone que solo existe la humana.
-Lo genera `blender/exportar_datos.py` (paso 2.3), salvo `deslizadores.csv`, que se escribe a mano.
+Lo genera `blender/exportar_datos.py` (paso 2.3), salvo `deslizadores.csv` y `presets/`, que se escriben aparte.
 Unidades y ejes de Godot: metros, Y arriba, mirando a +Z.
 
 | Archivo | Qué guarda |
@@ -9,7 +9,8 @@ Unidades y ejes de Godot: metros, Y arriba, mirando a +Z.
 | `manifiesto.json` | Versión, especie y lista de archivos con su `sha256` |
 | `cuerpo.glb` | Malla base completa en **pose A**, esqueleto, pesos, color `garment` y formas |
 | `articulaciones.json` | Dónde está cada hueso en el cuerpo base y cuánto lo mueve cada forma |
-| `deslizadores.csv` | La tabla del paso 2.1 |
+| `deslizadores.csv` | La tabla del paso 2.1, con la columna `neutro` y las formas de cara (versión 2) |
+| `presets/anime.json` | Preset de personaje nuevo (paso 3.15), en el formato de `godot/addons/creador/preset.gd` |
 
 Si el formato cambia de forma incompatible, sube `version`.
 Si `datos/` va dentro de un proyecto Godot, `deslizadores.csv` debe importarse como "Keep File (exported as is)": por defecto Godot toma los `.csv` como traducciones.
@@ -18,13 +19,13 @@ Si `datos/` va dentro de un proyecto Godot, `deslizadores.csv` debe importarse c
 
 ```json
 {
-  "version": 1,
+  "version": 2,
   "species": "humana",
   "pose": "A",
   "source": "MakeHuman system assets (CC0) con MPFB 2.0.18",
   "vertex_count": 13380,
   "bones": {"deform": ["Root", "Hips", "…"], "sockets": ["socket_hand_r", "socket_hand_l", "socket_back", "socket_hip"]},
-  "files": {"cuerpo.glb": {"sha256": "…"}, "articulaciones.json": {"sha256": "…"}, "deslizadores.csv": {"sha256": "…"}}
+  "files": {"cuerpo.glb": {"sha256": "…"}, "articulaciones.json": {"sha256": "…"}, "deslizadores.csv": {"sha256": "…"}, "presets/anime.json": {"sha256": "…"}}
 }
 ```
 
@@ -36,7 +37,10 @@ Al cargar, el núcleo comprueba `version` y el `sha256` de cada archivo; si no c
 - 53 huesos humanoides + 4 **huesos de anclaje** sin peso: `socket_hand_r` / `socket_hand_l` (hijos de la mano), `socket_back` (hijo de `UpperChest`) y `socket_hip` (hijo de `Hips`). Al ser huesos, se reajustan como los demás. Al exportar el personaje (paso 3.6) pasan a ser nodos vacíos, como pide `CLAUDE.md`.
 - Color por vértice `garment` (ver más abajo).
 - Formas (*blend shapes*): `<id>_decr` e `<id>_incr`, con `<id>` del CSV. Si `lados` = 2, hay una por lado: `<id>_incr_l`, `<id>_incr_r`.
+  Un deslizador Forma sin `decr` (**de un lado**) tiene una sola forma, que se llama como su `<id>`.
   Los deslizadores Proporción y Por crear no tienen formas.
+- **Formas de cara** (paso 3.14): `cuenca_plana`, `boca_anime`, `mandibula_anime`, `menton_anime` y `nariz_anime`, de un lado
+  (ver más abajo).
 - **Correcciones** de macros combinadas: nombres de formas de macro unidos por `*`, p. ej. `muscle_incr*weight_incr` (ver más abajo).
 
 ### Formas que suman varios targets
@@ -57,12 +61,15 @@ producto de lo que aporta cada macro, así que el músculo se ve distinto según
 - `<id>_decr` = cuerpo con esa macro a 0 − cuerpo neutro.
 - `<id>_incr` = cuerpo con esa macro a 1 − cuerpo neutro.
 
-**Cómo calcula Godot los pesos** (valor del deslizador `v` de 0 a 1; 0,5 = neutro):
+**Cómo calcula Godot los pesos** (valor del deslizador `v` de 0 a 1; `n` = su columna `neutro`, 0,5 en las macros):
 
 ```
-peso(<id>_decr) = max(0, 1 − 2·v)
-peso(<id>_incr) = max(0, 2·v − 1)
+peso(<id>_decr) = max(0, (n − v) / n)          con n = 0,5: max(0, 1 − 2·v)
+peso(<id>_incr) = max(0, (v − n) / (1 − n))    con n = 0,5: max(0, 2·v − 1)
+peso(<id>)      = el de <id>_incr               (forma de un lado; con n = 0, peso = v)
 ```
+
+El neutro **se lee de la tabla**: el código no supone 0,5. En los Proporción, el neutro da escala 1.
 
 - Los deslizadores Forma con targets usan la misma regla con sus formas `_decr` e `_incr`: todos van de 0 a 1 y se manejan igual.
 - Si solo se mueve **una** macro, el resultado es igual al de MakeHuman, porque entre 0 y 0,5 y entre 0,5 y 1 MakeHuman también mezcla en línea recta.
@@ -86,6 +93,25 @@ partes está en su valor neutro (peso 0), la corrección no entra. Hay correccio
   El conversor mide sin ese descarte, así que las formas siguen la mezcla de MakeHuman de forma continua.
 - Godot no necesita saber nada de MakeHuman: le basta con multiplicar.
 - Las macros que no están en la tabla se quedan en su valor por defecto: **edad** 0,5 (adulto joven; el MVP solo hace adultos), **altura** 0,5 (la altura se cambia con la escala del hueso `Root`, que es Proporción), proporciones y etnia.
+
+## Formas de cara (paso 3.14)
+
+Filas de `deslizadores.csv` con zona `Cara`, tipo Forma, `decr` vacío, `incr` = `cara:<forma>` y neutro 0:
+0 = cara de MakeHuman, 1 = la forma entera. **Sin deslizadores visibles en el MVP** (la interfaz no muestra la zona `Cara`).
+
+- Las calcula `blender/cara_anime.py` (zonas en `blender/cara_anime_zonas.json`) deformando la cabeza neutra; el conversor
+  llama a `feature_shapes()`. Son datos **CC0** (ver `README.md`).
+- Se aplican en orden sobre el resultado de la anterior: la suma de las 5 a 1 es la cara entera. `nariz_anime` va la última, para que a 0 deje la nariz de MakeHuman sin escalones.
+- Se miden sobre el cuerpo neutro y se suman tal cual con macros extremas (comprobado en la maqueta del 3.13a-4).
+- No mueven huesos: no salen en `articulaciones.json`.
+- Un preset sin estas claves las deja en 0.
+
+## `presets/`
+
+Presets **completos** (todas las claves de `valores` escritas), que no se aplican encima de otro.
+`anime.json`: cuerpo neutro, las 4 formas de cara a 1, `nariz_anime` a 0, colores por defecto de `BodyMaterial`
+(piel gris) y prenda visible. **El editor lo carga al crear un personaje nuevo** (`SpeciesData.preset_text()`).
+Es la base de los futuros botones de estilo (`realista.json`, `chibi.json`…). Añadir uno es un archivo más en `files`.
 
 ## `articulaciones.json`
 

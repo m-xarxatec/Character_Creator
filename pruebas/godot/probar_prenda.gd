@@ -46,7 +46,7 @@ func _initialize() -> void:
 	var values: Dictionary = shapes.neutral_values(species.sliders)
 	shapes.set_value(values, "hip_width", 1.0, false)
 	shapes.set_value(values, "weight", 1.0, false)
-	shapes.apply(mesh, shapes.weights(values, shapes.shape_names(mesh.mesh)))
+	shapes.apply(mesh, shapes.weights(values, shapes.shape_names(mesh.mesh), shapes.neutral_values(species.sliders)))
 	_check_vertices("caderas anchas y grasa al máximo: la prenda sigue al cuerpo", await _render(), true)
 	shapes.apply(mesh, {})
 

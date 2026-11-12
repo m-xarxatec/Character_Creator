@@ -8,10 +8,13 @@ extends RefCounted
 ##   else: add_child(species.scene)
 ## Comprueba la versión y el sha256 de cada archivo; si algo falla, deja el error y no carga nada.
 ## Abre el .glb con GLTFDocument (en tiempo de ejecución): vale en el editor y dentro de un juego.
+## Personaje nuevo (paso 3.15): el editor carga species.preset_text() con Preset.from_text (presets/anime.json).
 
-const VERSION := 1
+const VERSION := 2
+const NEW_CHARACTER_PRESET := "presets/anime.json"
 
 var error := ""
+var folder: String
 var manifest: Dictionary
 var scene: Node3D
 var skeleton: Skeleton3D
@@ -21,15 +24,16 @@ var sliders: Array[Dictionary]  ## una fila de deslizadores.csv por elemento: {c
 
 
 ## Devuelve el error ("" si todo va bien); también queda en error.
-func load_folder(folder: String) -> String:
-	error = _load(folder)
+func load_folder(species_folder: String) -> String:
+	folder = species_folder
+	error = _load()
 	if error and scene:
 		scene.free()
 		scene = null
 	return error
 
 
-func _load(folder: String) -> String:
+func _load() -> String:
 	manifest = _read_json(folder.path_join("manifiesto.json"))
 	if manifest.is_empty():
 		return "No se puede leer manifiesto.json en " + folder
@@ -67,6 +71,11 @@ func _load_scene(path: String) -> String:
 	if skeleton.get_bone_count() != bones.size() or bones.any(func(b: String) -> bool: return skeleton.find_bone(b) < 0):
 		return "Los huesos de cuerpo.glb no son los del manifiesto"
 	return ""
+
+
+## Texto de un preset de la especie (ruta dentro de su carpeta; por defecto, el de personaje nuevo).
+func preset_text(path := NEW_CHARACTER_PRESET) -> String:
+	return FileAccess.get_file_as_string(folder.path_join(path))
 
 
 static func _read_json(path: String) -> Dictionary:

@@ -35,9 +35,9 @@ func _check_species(species) -> void:
 	var skeleton: Skeleton3D = species.skeleton
 	var mesh: Mesh = species.mesh.mesh
 	check("57 huesos (53 + 4 anclajes)", skeleton.get_bone_count() == 57, str(skeleton.get_bone_count()))
-	check("159 formas", mesh.get_blend_shape_count() == 159, str(mesh.get_blend_shape_count()))
+	check("164 formas (159 + 5 de cara)", mesh.get_blend_shape_count() == 164, str(mesh.get_blend_shape_count()))
 	check("articulaciones.json: 57 huesos", species.joints.size() == 57)
-	check("deslizadores.csv: 40 filas", species.sliders.size() == 40, str(species.sliders.size()))
+	check("deslizadores.csv: 45 filas", species.sliders.size() == 45, str(species.sliders.size()))
 	var arrays := mesh.surface_get_arrays(0)
 	var colors: PackedColorArray = arrays[Mesh.ARRAY_COLOR] if arrays[Mesh.ARRAY_COLOR] else PackedColorArray()
 	var reds := Array(colors).map(func(c: Color) -> float: return c.r)
@@ -83,20 +83,22 @@ func _check_rejects(folder: String) -> void:
 	csv.close()
 	var species = loader.new()
 	species.load_folder(copy)
-	check("rechaza un archivo cambiado (sha256)", species.error.contains("sha256") and species.scene == null, species.error)
+	check("rechaza un archivo cambiado (sha256)", species.error.contains("sha256 de deslizadores.csv") and species.scene == null, species.error)
 	copy = _copy(folder, "version")
 	var path := copy.path_join("manifiesto.json")
 	var manifest: Dictionary = JSON.parse_string(FileAccess.get_file_as_string(path))
-	manifest["version"] = 2
+	manifest["version"] = 1
 	FileAccess.open(path, FileAccess.WRITE).store_string(JSON.stringify(manifest))
 	species = loader.new()
 	species.load_folder(copy)
-	check("rechaza la versión 2", species.error.contains("Versión") and species.scene == null, species.error)
+	check("rechaza la versión 1 (la de antes)", species.error.contains("Versión") and species.scene == null, species.error)
 
 
 func _copy(folder: String, name: String) -> String:
 	var copy := OS.get_user_data_dir().path_join("prueba_carga").path_join(name)
 	DirAccess.make_dir_recursive_absolute(copy)
-	for file in DirAccess.get_files_at(folder):
-		DirAccess.copy_absolute(folder.path_join(file), copy.path_join(file))
+	for sub in ["", "presets"]:
+		DirAccess.make_dir_recursive_absolute(copy.path_join(sub))
+		for file in DirAccess.get_files_at(folder.path_join(sub)):
+			DirAccess.copy_absolute(folder.path_join(sub).path_join(file), copy.path_join(sub).path_join(file))
 	return copy

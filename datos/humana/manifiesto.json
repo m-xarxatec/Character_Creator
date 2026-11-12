@@ -67,15 +67,18 @@
    "sha256": "298864ad48c39fe4f78de17566e6d529951d680d03b44bb74b8f08f46c3346cb"
   },
   "cuerpo.glb": {
-   "sha256": "a25b54335e5e616939c1b343308887b08465a49a677b03356bbb5646027d8b52"
+   "sha256": "a39382b00f94fd04c30bb017b0ad9debe8eb89946dec1653b439ef303e7d7c03"
   },
   "deslizadores.csv": {
-   "sha256": "c0a3e439036bef2db1d44d74d7daf3069a58010f6a0bc0dbef29b16f4d98f60d"
+   "sha256": "e383a20c8bcaf98005c36086e570684fab5178255b127be3d42c3964bfafbfed"
+  },
+  "presets/anime.json": {
+   "sha256": "e2bdadcfae69baba79d812d8df4c5838791101efe355535056d526d11bf4cb62"
   }
  },
  "pose": "A",
  "source": "MakeHuman system assets (CC0) con MPFB 2.0.18",
  "species": "humana",
- "version": 1,
+ "version": 2,
  "vertex_count": 13380
 }

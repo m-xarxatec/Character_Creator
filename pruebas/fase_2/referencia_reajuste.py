@@ -51,18 +51,19 @@ IDENTITY = [[1.0, 0.0, 0.0], [0.0, 1.0, 0.0], [0.0, 0.0, 1.0]]
 
 
 def slots(rows):
-    """[(id, lado)] de cada deslizador Forma; lado None si es uno solo."""
-    return [(r["id"], side) for r in rows if r["tipo"] == "Forma"
+    """[(id, lado)] de cada deslizador Forma de MPFB (sin las formas de cara); lado None si es uno solo."""
+    return [(r["id"], side) for r in rows if r["tipo"] == "Forma" and r not in ed.face_rows(rows)
             for side in (("l", "r") if r["lados"] == "2" else (None,))]
 
 
 def bodies(rows):
     """{nombre: {(id, lado): valor}} de los 6 cuerpos de la prueba."""
-    neutral = {slot: 0.5 for slot in slots(rows)}
+    neutrals = ed.neutral_values(rows)
+    neutral = {slot: neutrals[slot[0]] for slot in slots(rows)}
     rng = np.random.default_rng(0)
 
     def with_values(**values):
-        return {slot: values.get(slot[0], 0.5) for slot in neutral}
+        return {slot: values.get(slot[0], neutral[slot]) for slot in neutral}
 
     return {
         "neutro": neutral,
@@ -77,7 +78,8 @@ def bodies(rows):
 
 def weights(values, shape_names):
     """{forma: peso > 0}, con la misma función que se comparó con MPFB en el paso 2.3."""
-    return {name: w for name, w in sorted(ed.shape_weights(values, shape_names).items()) if w > 0}
+    neutrals = ed.neutral_values(ed.read_sliders(DATA))
+    return {name: w for name, w in sorted(ed.shape_weights(values, shape_names, neutrals).items()) if w > 0}
 
 
 def slot_values(values):

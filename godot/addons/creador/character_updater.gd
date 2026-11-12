@@ -36,7 +36,8 @@ func update(values: Dictionary, pose_t: bool) -> Array[String]:
 		var is_number: bool = typeof(values[key]) == TYPE_FLOAT or typeof(values[key]) == TYPE_INT
 		if not is_number or not ShapeWeights.set_value(target, key, values[key], false):
 			rejected.append(key)
-	var weights: Dictionary = ShapeWeights.weights(shape_values, ShapeWeights.shape_names(species.mesh.mesh))
+	var neutrals: Dictionary = ShapeWeights.neutral_values(species.sliders)
+	var weights: Dictionary = ShapeWeights.weights(shape_values, ShapeWeights.shape_names(species.mesh.mesh), neutrals)
 	ShapeWeights.apply(species.mesh, weights)
 	SkeletonRefit.apply(species.skeleton, species.mesh.skin, species.joints, weights, base)
 	Proportions.apply(species.skeleton, Proportions.scales(scale_values, species.sliders))

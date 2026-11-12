@@ -14,10 +14,12 @@ ROOT = os.path.dirname(os.path.dirname(os.path.dirname(os.path.abspath(__file__)
 sys.path.insert(0, os.path.join(ROOT, "blender"))
 import exportar_glb  # noqa: E402
 import generar_cuerpo as gc  # noqa: E402
+import cara_anime  # noqa: E402
 
 TABLE = os.path.join(ROOT, "datos", "humana", "deslizadores.csv")
-COLUMNS = ["id", "zona", "nombre", "tipo", "decr", "incr", "lados"]
-ZONES = 14
+COLUMNS = ["id", "zona", "nombre", "tipo", "decr", "incr", "lados", "neutro"]
+ZONES = 14  # sin contar «Cara» (paso 3.14: formas de cara, sin deslizadores visibles en el MVP)
+FACE_ZONE = "Cara"
 failures = []
 
 
@@ -59,9 +61,26 @@ def scale_of(row, value):
     return float(match[2]) if all(b in known for b in bones) else None
 
 
+def neutral_ok(row):
+    """Forma y Proporción: neutro de 0 a 1 (con dos sentidos, entre los dos); Por crear: vacío."""
+    if row["tipo"] == "Por crear":
+        return row["neutro"] == ""
+    try:
+        n = float(row["neutro"])
+    except ValueError:
+        return False
+    return 0 <= n < 1 if row["decr"] == "" else 0 < n < 1
+
+
 def check_row(row):
     label = f"{row['id']}:"
-    if row["tipo"] == "Forma":
+    check(f"{label} neutro válido", neutral_ok(row), row["neutro"])
+    if row["tipo"] == "Forma" and row["incr"].startswith("cara:"):
+        steps = {name for name, *_ in cara_anime.STEPS}
+        check(f"{label} forma de cara de un lado, de cara_anime.py, zona {FACE_ZONE}",
+              row["decr"] == "" and row["incr"][len("cara:"):] in steps and row["zona"] == FACE_ZONE
+              and row["lados"] == "1")
+    elif row["tipo"] == "Forma":
         check(f"{label} formas existen", shape_ok(row, row["decr"]) and shape_ok(row, row["incr"]),
               f"{row['decr']} / {row['incr']}")
     elif row["tipo"] == "Proporción":
@@ -79,7 +98,8 @@ check("columnas", reader.fieldnames == COLUMNS, reader.fieldnames)
 ids = [r["id"] for r in rows]
 check("ids únicos", len(ids) == len(set(ids)))
 check("ids en inglés snake_case", all(re.fullmatch(r"[a-z][a-z0-9_]*", i) for i in ids))
-check(f"{ZONES} zonas", len({r["zona"] for r in rows}) == ZONES, sorted({r["zona"] for r in rows}))
+zones = {r["zona"] for r in rows} - {FACE_ZONE}
+check(f"{ZONES} zonas (sin {FACE_ZONE})", len(zones) == ZONES, sorted(zones))
 check("tipos válidos", all(r["tipo"] in ("Forma", "Proporción", "Por crear") for r in rows))
 check("lados 1 o 2", all(r["lados"] in ("1", "2") for r in rows))
 for r in rows:

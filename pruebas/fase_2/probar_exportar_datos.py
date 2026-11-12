@@ -43,12 +43,13 @@ def generate(name):
     shutil.rmtree(folder, ignore_errors=True)
     os.makedirs(folder)
     shutil.copy(SLIDERS, folder)
+    shutil.copytree(os.path.join(os.path.dirname(SLIDERS), "presets"), os.path.join(folder, "presets"))
     return folder, ed.export_species(folder)
 
 
 def weights_for(macros, shape_weights, names):
     """Pesos de todas las formas: los dados, los de cada macro y, en las correcciones, el producto de sus partes."""
-    return ed.shape_weights({(i, None): v for i, v in macros.items()}, names, shape_weights)
+    return ed.shape_weights({(i, None): v for i, v in macros.items()}, names, ed.neutral_values(rows), shape_weights)
 
 
 def mpfb(macros=None, targets=None):
@@ -121,12 +122,12 @@ with open(os.path.join(folder, "articulaciones.json"), encoding="utf-8") as file
     joints = json.load(file)["bones"]
 
 # --- Manifiesto ---
-check("manifiesto: versión 1, humana, pose A",
-      (manifest["version"], manifest["species"], manifest["pose"]) == (1, "humana", "A"))
+check("manifiesto: versión 2, humana, pose A",
+      (manifest["version"], manifest["species"], manifest["pose"]) == (2, "humana", "A"))
 check("manifiesto: 13380 vértices", manifest["vertex_count"] == 13380, manifest["vertex_count"])
 check("manifiesto: 53 huesos de deformación y 4 de anclaje",
       len(manifest["bones"]["deform"]) == 53 and sorted(manifest["bones"]["sockets"]) == sorted(SOCKET_PARENTS))
-check("manifiesto: sha256 de los 3 archivos",
+check(f"manifiesto: sha256 de los {len(ed.FILES)} archivos",
       all(manifest["files"][f]["sha256"] == ed.sha256(os.path.join(folder, f)) for f in ed.FILES))
 
 # --- articulaciones.json ---
@@ -141,12 +142,14 @@ rows = ed.read_sliders(folder)
 expected = [name for name, _, _ in ed.shape_specs(rows)]
 mesh, rig, base, shapes = read_glb(os.path.join(folder, "cuerpo.glb"))
 fixes = [n for n in shapes if "*" in n]
-check("glb: las 78 formas de la tabla", len(expected) == 78 and sorted(set(shapes) - set(fixes)) == sorted(expected))
+face = [r["id"] for r in ed.face_rows(rows)]
+check("glb: las 78 formas de la tabla", len(expected) == 78 and sorted(set(shapes) - set(fixes) - set(face)) == sorted(expected))
+check("glb: las 5 formas de cara (paso 3.14)", len(face) == 5 and set(face) <= set(shapes), face)
 check("glb: correcciones hechas de formas de macro", fixes and all(
     p in expected and p.startswith(tuple(i for i, _ in ed.macro_sliders(rows))) for n in fixes for p in n.split("*")),
     f"{len(fixes)} correcciones, {len(shapes)} formas en total")
 check("glb: nombres _decr / _incr (y _l / _r)",
-      all(p.rsplit("_", 2)[-1] in ("decr", "incr", "l", "r") for n in shapes for p in n.split("*")))
+      all(p.rsplit("_", 2)[-1] in ("decr", "incr", "l", "r") for n in set(shapes) - set(face) for p in n.split("*")))
 colors = mesh.data.color_attributes
 values = np.empty(len(colors[0].data) * 4) if colors else np.zeros(1)
 if colors:

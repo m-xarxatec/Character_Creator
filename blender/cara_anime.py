@@ -1,7 +1,8 @@
 # SPDX-License-Identifier: GPL-3.0-or-later
-"""Maqueta 3.13a-4: cara anime deformando la cabeza neutra de MakeHuman (mismos vertices), con una forma por rasgo.
+"""Cara anime deformando la cabeza neutra de MakeHuman (mismos vertices), con una forma por rasgo.
 
-Uso: blender -b -P blender/cara_anime.py -- pruebas/fase_3/salida/cara_anime/cara_anime.json
+Las formas de datos/ (paso 3.14) salen de aqui: exportar_datos.py llama a feature_shapes() con las filas «cara:<forma>».
+Uso (maqueta 3.13a-4): blender -b -P blender/cara_anime.py -- pruebas/fase_3/salida/cara_anime/cara_anime.json
 Escribe cada forma (desplazamiento de cada vertice movido, ejes de Godot, metros) y los puntos fijos (ojos, nariz).
 Formas: cuenca_plana, boca_anime, mandibula_anime, menton_anime y nariz_anime. Preset «cara anime»: todas a 1, salvo
 nariz_anime a 0 (nariz de MakeHuman). Salida determinista y CC0 (ver README.md).
@@ -95,13 +96,24 @@ def deform(points, edges, zones, steps):
 
 def neutral_head():
     """(puntos de la malla neutra en ejes de Blender, aristas ordenadas, zonas)."""
+    return mesh_head(ed.build_base()[0])
+
+
+def mesh_head(basemesh):
+    """Como neutral_head, con la malla neutra ya creada (ed.build_base)."""
     with open(ZONES, encoding="utf-8") as file:
         zones = json.load(file)
-    basemesh, _ = ed.build_base()
     world = np.array(basemesh.matrix_world)
     points = np.array([v.co[:] for v in basemesh.data.vertices]) @ world[:3, :3].T + world[:3, 3]
     edges = np.array(sorted(tuple(sorted(e.vertices[:])) for e in basemesh.data.edges))
     return points, edges, zones
+
+
+def feature_shapes(basemesh):
+    """{forma: desplazamiento de cada vertice, en el espacio de la malla} de STEPS (paso 3.14, exportar_datos.py)."""
+    deltas = deform(*mesh_head(basemesh), STEPS)
+    to_local = np.linalg.inv(np.array(basemesh.matrix_world)[:3, :3])
+    return {name: delta @ to_local.T for name, delta in deltas.items()}
 
 
 def main():

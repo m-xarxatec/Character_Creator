@@ -11,6 +11,7 @@ const CORRECTIONS := 81
 var failures := 0
 var shapes: GDScript
 var names: PackedStringArray
+var neutrals: Dictionary
 
 
 func _init() -> void:
@@ -22,9 +23,10 @@ func _init() -> void:
 		quit(1)
 		return
 	names = shapes.shape_names(species.mesh.mesh)
+	neutrals = shapes.neutral_values(species.sliders)
 	var reference: Dictionary = JSON.parse_string(
 		FileAccess.get_file_as_string(root.path_join("pruebas/fase_2/salida/referencia_reajuste.json")))
-	check("la referencia usa las 159 formas del .glb", PackedStringArray(reference["shapes"]) == names)
+	check("la referencia usa las %d formas del .glb" % names.size(), PackedStringArray(reference["shapes"]) == names)
 	_check_weights(reference)
 	_check_values(species.sliders)
 	_check_apply(species.mesh)
@@ -58,7 +60,7 @@ func _check_weights(reference: Dictionary) -> void:
 	var complete := true
 	var used := {}
 	for case: Array in cases:
-		var weights: Dictionary = shapes.weights(case[1], names)
+		var weights: Dictionary = shapes.weights(case[1], names, neutrals)
 		complete = complete and weights.size() == names.size()
 		for name in names:
 			var error := absf(weights[name] - case[2].get(name, 0.0))
@@ -71,14 +73,14 @@ func _check_weights(reference: Dictionary) -> void:
 			check("neutro: todos los pesos a 0", weights.values().max() == 0.0)
 	check("pesos = script de Blender en %d casos (< %s)" % [cases.size(), MAX_WEIGHT_ERROR], worst < MAX_WEIGHT_ERROR,
 		"máximo %.9f (%s)" % [worst, where])
-	check("cada caso da un peso a las 159 formas", complete)
+	check("cada caso da un peso a las %d formas" % names.size(), complete)
 	var corrections_used := used.keys().filter(func(n: String) -> bool: return "*" in n).size()
 	check("las %d correcciones entran en algún caso" % CORRECTIONS, corrections_used == CORRECTIONS, str(corrections_used))
 
 
 func _check_values(sliders: Array) -> void:
 	var values: Dictionary = shapes.neutral_values(sliders)
-	check("39 valores (33 Forma, 6 con dos lados)", values.size() == 39, str(values.size()))
+	check("44 valores (38 Forma, 6 con dos lados)", values.size() == 44, str(values.size()))
 	shapes.set_value(values, "arm_muscle_l", 0.8, true)
 	check("con simetría, el izquierdo mueve el derecho", values["arm_muscle_r"] == 0.8)
 	shapes.set_value(values, "arm_muscle_l", 0.3, false)
@@ -112,7 +114,7 @@ func _check_apply(mesh: MeshInstance3D) -> void:
 
 func _check_end_to_end(species, body: Dictionary, neutral: Array) -> void:
 	var mesh: MeshInstance3D = species.mesh
-	var missing: PackedStringArray = shapes.apply(mesh, shapes.weights(body["values"], names))
+	var missing: PackedStringArray = shapes.apply(mesh, shapes.weights(body["values"], names, neutrals))
 	var baked := mesh.bake_mesh_from_current_blend_shape_mix()
 	var base: PackedVector3Array = mesh.mesh.surface_get_arrays(0)[Mesh.ARRAY_VERTEX]
 	var moved: PackedVector3Array = baked.surface_get_arrays(0)[Mesh.ARRAY_VERTEX]

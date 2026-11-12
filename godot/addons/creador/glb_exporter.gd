@@ -6,6 +6,7 @@ extends RefCounted
 ##   var error := GlbExporter.save(species.mesh, species.skeleton, species.manifest["bones"]["sockets"], "user://heroe.glb", true)
 ## - t_pose: true = pose T horneada; false = pose A.
 ## Hornea (character_baker.gd), pasa los anclajes a nodos (sockets.gd) y escribe con GLTFDocument.
+## Normales del estilo (paso 3.16, style_normals.gd): torso suavizado y cara de elipsoide; viajan en el .glb.
 ## En el archivo: Character → Armature → huesos, malla y anclajes (misma estructura que los .glb de Blender).
 ## El personaje del editor no cambia.
 ## Material: StandardMaterial3D con luz, sin brillo (metálico 0, rugosidad 1; paso 3.11a), para que reciba sombra fuera
@@ -20,6 +21,7 @@ const CharacterBaker := preload("character_baker.gd")
 const Sockets := preload("sockets.gd")
 const BodyMaterial := preload("body_material.gd")
 const GarmentTexture := preload("garment_texture.gd")
+const StyleNormals := preload("style_normals.gd")
 const TEXTURE_SIZE := 2048  # 1 píxel ≈ 0,9 mm en el borde de la prenda (medido en el paso 3.6.6)
 
 
@@ -31,13 +33,17 @@ static func build(mesh: MeshInstance3D, skeleton: Skeleton3D, socket_names: Arra
 	if character != null:
 		var exported := character.find_children("*", "MeshInstance3D", true, false)[0] as MeshInstance3D
 		var material := _material(mesh, exported.mesh)
-		exported.mesh = _garment_in_alpha(exported.mesh)
+		exported.mesh = _garment_in_alpha(exported.mesh, exported.skin, exported.get_parent() as Skeleton3D)
 		exported.mesh.surface_set_material(0, material)
 	return character
 
 
-static func _garment_in_alpha(source: Mesh) -> ArrayMesh:
+## Copia de la malla con `garment` en el alfa y las normales del estilo.
+static func _garment_in_alpha(source: Mesh, skin: Skin, skeleton: Skeleton3D) -> ArrayMesh:
 	var arrays := source.surface_get_arrays(0)
+	arrays[Mesh.ARRAY_NORMAL] = StyleNormals.apply(arrays[Mesh.ARRAY_VERTEX], arrays[Mesh.ARRAY_NORMAL],
+		arrays[Mesh.ARRAY_INDEX], StyleNormals.head_weights(arrays, skin, skeleton))
+	arrays[Mesh.ARRAY_TANGENT] = null  # ya no casarían con las normales (sin mapas de normales no hacen falta)
 	var colors: PackedColorArray = arrays[Mesh.ARRAY_COLOR]
 	for i in colors.size():
 		colors[i] = Color(1.0, 1.0, 1.0, colors[i].r)

@@ -28,6 +28,7 @@ func _initialize() -> void:
 	_check_values()
 	_check_errors()
 	_check_style_presets()
+	_check_new_character()
 	species.scene.free()
 	print("RESULTADO: ", "TODO BIEN" if failures == 0 else "%d FALLOS" % failures)
 	quit(1 if failures else 0)
@@ -129,6 +130,25 @@ func _check_values() -> void:
 		"hand_size" in loaded["desconocidas"] and loaded["valores"]["hand_size_l"] == 1.0 and loaded["valores"]["hand_size_r"] == 0.0)
 	check("los dos lados se cargan por separado", loaded["valores"]["hand_size_l"] != loaded["valores"]["hand_size_r"])
 	check("tantos valores como deslizadores Forma y Proporción", loaded["valores"].size() == _neutral().size(), str(loaded["valores"].size()))
+	_check_face_missing(loaded["valores"])
+
+
+## Paso 3.14: un preset sin las claves de cara deja las 5 formas de cara en 0 (cara de MakeHuman).
+func _check_face_missing(values: Dictionary) -> void:
+	var shapes: GDScript = load(root_dir.path_join("godot/addons/creador/shape_weights.gd"))
+	var neutrals: Dictionary = shapes.neutral_values(species.sliders)
+	var names: PackedStringArray = shapes.shape_names(species.mesh.mesh)
+	var shape_values := {}  # solo los Forma, como hace CharacterUpdater
+	for key: String in neutrals:
+		shape_values[key] = values[key]
+	values = shape_values
+	var weights: Dictionary = shapes.weights(values, names, neutrals)
+	var face := ["cuenca_plana", "boca_anime", "mandibula_anime", "menton_anime", "nariz_anime"]
+	var in_mesh := face.all(func(n: String) -> bool: return n in names)
+	var zero := face.all(func(n: String) -> bool: return values[n] == 0.0 and weights[n] == 0.0)
+	check("preset sin claves de cara: las 5 formas de cara existen y quedan en 0", in_mesh and zero)
+	values["cuenca_plana"] = 1.0
+	check("cuenca_plana a 1 → su forma a 1", shapes.weights(values, names, neutrals)["cuenca_plana"] == 1.0)
 
 
 func _expect_error(label: String, data: Variant, contains: String) -> void:
@@ -189,6 +209,29 @@ func _check_style_presets() -> void:
 		check("%s carga sin claves desconocidas; %d valores distintos del neutro" % [preset_name, changed],
 			loaded["error"] == "" and loaded["desconocidas"].is_empty() and changed > 8, loaded["error"])
 		check("%s: los dos lados de cada deslizador de dos lados están escritos" % preset_name, _both_sides(data["valores"]))
+
+
+## Paso 3.15: presets/anime.json, el preset de personaje nuevo: completo, cuerpo neutro, cara anime y piel gris.
+func _check_new_character() -> void:
+	var text: String = species.preset_text()
+	var loaded: Dictionary = preset.from_text(text, "humana", species.sliders)
+	check("anime.json carga sin error ni claves desconocidas", loaded.get("error") == "" and loaded["desconocidas"].is_empty(),
+		str(loaded.get("error")))
+	if loaded.get("error") != "":
+		return
+	var expected := _neutral()
+	for key in ["cuenca_plana", "boca_anime", "mandibula_anime", "menton_anime"]:
+		expected[key] = 1.0
+	expected["nariz_anime"] = 0.0
+	var data: Dictionary = JSON.parse_string(text)
+	check("anime.json: completo (todas las claves escritas)", data["valores"].size() == expected.size(), str(data["valores"].size()))
+	check("anime.json: cuerpo neutro, 4 formas de cara a 1 y nariz_anime a 0", loaded["valores"] == expected)
+	var defaults: Dictionary = material.DEFAULTS
+	check("anime.json: colores por defecto (piel gris) y prenda visible",
+		loaded["colores"]["skin_color"] == defaults["skin_color"] and loaded["colores"]["garment_color"] == defaults["garment_color"]
+		and loaded["prenda_visible"] == defaults["show_garment"])
+	var saved: String = preset.to_text(preset.to_dict(loaded["nombre"], "humana", loaded["valores"], loaded["colores"], loaded["prenda_visible"]))
+	check("anime.json: cargar y guardar da el mismo texto", saved + "\n" == text)
 
 
 func _both_sides(values: Dictionary) -> bool:

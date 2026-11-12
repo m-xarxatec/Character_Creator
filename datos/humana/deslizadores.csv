@@ -1,41 +1,46 @@
-id,zona,nombre,tipo,decr,incr,lados
-height,Global,Altura,Proporción,escala:Root=0.85,escala:Root=1.15,1
-gender,Global,Complexión,Forma,macro:gender=0,macro:gender=1,1
-muscle,Global,Músculo,Forma,macro:muscle=0,macro:muscle=1,1
-weight,Global,Grasa,Forma,macro:weight=0,macro:weight=1,1
-head_size,Cabeza,Tamaño,Proporción,escala:Head=0.8,escala:Head=1.3,1
-head_width,Cabeza,Ancho,Forma,head-scale-horiz-decr,head-scale-horiz-incr,1
-head_height,Cabeza,Alto,Forma,head-scale-vert-decr,head-scale-vert-incr,1
-neck_length,Cuello,Largo,Forma,measure-neck-height-decr,measure-neck-height-incr,1
-neck_thickness,Cuello,Grosor,Forma,measure-neck-circ-decr,measure-neck-circ-incr,1
-shoulder_width,Hombros,Ancho,Forma,measure-shoulder-dist-decr,measure-shoulder-dist-incr,1
-shoulder_height,Hombros,Altura,Por crear,,,1
-shoulder_muscle,Hombros,Músculo,Forma,upperarm-shoulder-muscle-decr,upperarm-shoulder-muscle-incr,2
-torso_length,Torso,Largo,Forma,measure-napetowaist-dist-decr,measure-napetowaist-dist-incr,1
-torso_width,Torso,Ancho,Forma,torso-scale-horiz-decr,torso-scale-horiz-incr,1
-torso_vshape,Torso,Forma en V,Forma,torso-vshape-decr,torso-vshape-incr,1
-back_width,Torso,Espalda ancha,Forma,torso-muscle-dorsi-decr,torso-muscle-dorsi-incr,1
-torso_depth,Torso,Fondo,Forma,torso-scale-depth-decr,torso-scale-depth-incr,1
-breast_volume,Pecho,Volumen,Forma,macro:cupsize=0,macro:cupsize=1,1
-breast_firmness,Pecho,Firmeza,Forma,macro:firmness=0,macro:firmness=1,1
-breast_distance,Pecho,Separación,Forma,breast-dist-decr,breast-dist-incr,1
-breast_height,Pecho,Altura,Forma,breast-trans-down,breast-trans-up,1
-waist_width,Cintura,Ancho,Forma,measure-waist-circ-decr,measure-waist-circ-incr,1
-waist_height,Cintura,Altura,Forma,hip-waist-down,hip-waist-up,1
-hip_width,Caderas,Ancho,Forma,hip-scale-horiz-decr,hip-scale-horiz-incr,1
-hip_depth,Caderas,Profundidad,Forma,hip-scale-depth-decr,hip-scale-depth-incr,1
-buttocks_volume,Glúteos,Volumen,Forma,buttocks-volume-decr,buttocks-volume-incr,1
-buttocks_height,Glúteos,Altura,Por crear,,,1
-buttocks_roundness,Glúteos,Redondez,Por crear,,,1
-arm_length,Brazos,Largo,Forma,measure-upperarm-length-decr+measure-lowerarm-length-decr,measure-upperarm-length-incr+measure-lowerarm-length-incr,1
-arm_thickness,Brazos,Grosor,Forma,measure-upperarm-circ-decr,measure-upperarm-circ-incr,1
-arm_muscle,Brazos,Músculo,Forma,upperarm-muscle-decr+lowerarm-muscle-decr,upperarm-muscle-incr+lowerarm-muscle-incr,2
-hand_size,Manos,Tamaño,Proporción,escala:Hand=0.8,escala:Hand=1.2,2
-hand_position,Manos,Posición,Forma,hand-trans-in,hand-trans-out,2
-finger_length,Dedos,Largo,Forma,hand-fingers-length-decr,hand-fingers-length-incr,2
-finger_thickness,Dedos,Grosor,Forma,hand-fingers-diameter-decr,hand-fingers-diameter-incr,2
-finger_spread,Dedos,Separación,Forma,hand-fingers-distance-decr,hand-fingers-distance-incr,2
-leg_length,Piernas,Largo,Forma,measure-upperleg-height-decr+measure-lowerleg-height-decr,measure-upperleg-height-incr+measure-lowerleg-height-incr,1
-thigh,Piernas,Muslo,Forma,measure-thigh-circ-decr,measure-thigh-circ-incr,1
-calf,Piernas,Pantorrilla,Forma,measure-calf-circ-decr,measure-calf-circ-incr,1
-foot_size,Pies,Tamaño,Proporción,escala:Foot=0.8,escala:Foot=1.2,2
+id,zona,nombre,tipo,decr,incr,lados,neutro
+height,Global,Altura,Proporción,escala:Root=0.85,escala:Root=1.15,1,0.5
+gender,Global,Complexión,Forma,macro:gender=0,macro:gender=1,1,0.5
+muscle,Global,Músculo,Forma,macro:muscle=0,macro:muscle=1,1,0.5
+weight,Global,Grasa,Forma,macro:weight=0,macro:weight=1,1,0.5
+head_size,Cabeza,Tamaño,Proporción,escala:Head=0.8,escala:Head=1.3,1,0.5
+head_width,Cabeza,Ancho,Forma,head-scale-horiz-decr,head-scale-horiz-incr,1,0.5
+head_height,Cabeza,Alto,Forma,head-scale-vert-decr,head-scale-vert-incr,1,0.5
+neck_length,Cuello,Largo,Forma,measure-neck-height-decr,measure-neck-height-incr,1,0.5
+neck_thickness,Cuello,Grosor,Forma,measure-neck-circ-decr,measure-neck-circ-incr,1,0.5
+shoulder_width,Hombros,Ancho,Forma,measure-shoulder-dist-decr,measure-shoulder-dist-incr,1,0.5
+shoulder_height,Hombros,Altura,Por crear,,,1,
+shoulder_muscle,Hombros,Músculo,Forma,upperarm-shoulder-muscle-decr,upperarm-shoulder-muscle-incr,2,0.5
+torso_length,Torso,Largo,Forma,measure-napetowaist-dist-decr,measure-napetowaist-dist-incr,1,0.5
+torso_width,Torso,Ancho,Forma,torso-scale-horiz-decr,torso-scale-horiz-incr,1,0.5
+torso_vshape,Torso,Forma en V,Forma,torso-vshape-decr,torso-vshape-incr,1,0.5
+back_width,Torso,Espalda ancha,Forma,torso-muscle-dorsi-decr,torso-muscle-dorsi-incr,1,0.5
+torso_depth,Torso,Fondo,Forma,torso-scale-depth-decr,torso-scale-depth-incr,1,0.5
+breast_volume,Pecho,Volumen,Forma,macro:cupsize=0,macro:cupsize=1,1,0.5
+breast_firmness,Pecho,Firmeza,Forma,macro:firmness=0,macro:firmness=1,1,0.5
+breast_distance,Pecho,Separación,Forma,breast-dist-decr,breast-dist-incr,1,0.5
+breast_height,Pecho,Altura,Forma,breast-trans-down,breast-trans-up,1,0.5
+waist_width,Cintura,Ancho,Forma,measure-waist-circ-decr,measure-waist-circ-incr,1,0.5
+waist_height,Cintura,Altura,Forma,hip-waist-down,hip-waist-up,1,0.5
+hip_width,Caderas,Ancho,Forma,hip-scale-horiz-decr,hip-scale-horiz-incr,1,0.5
+hip_depth,Caderas,Profundidad,Forma,hip-scale-depth-decr,hip-scale-depth-incr,1,0.5
+buttocks_volume,Glúteos,Volumen,Forma,buttocks-volume-decr,buttocks-volume-incr,1,0.5
+buttocks_height,Glúteos,Altura,Por crear,,,1,
+buttocks_roundness,Glúteos,Redondez,Por crear,,,1,
+arm_length,Brazos,Largo,Forma,measure-upperarm-length-decr+measure-lowerarm-length-decr,measure-upperarm-length-incr+measure-lowerarm-length-incr,1,0.5
+arm_thickness,Brazos,Grosor,Forma,measure-upperarm-circ-decr,measure-upperarm-circ-incr,1,0.5
+arm_muscle,Brazos,Músculo,Forma,upperarm-muscle-decr+lowerarm-muscle-decr,upperarm-muscle-incr+lowerarm-muscle-incr,2,0.5
+hand_size,Manos,Tamaño,Proporción,escala:Hand=0.8,escala:Hand=1.2,2,0.5
+hand_position,Manos,Posición,Forma,hand-trans-in,hand-trans-out,2,0.5
+finger_length,Dedos,Largo,Forma,hand-fingers-length-decr,hand-fingers-length-incr,2,0.5
+finger_thickness,Dedos,Grosor,Forma,hand-fingers-diameter-decr,hand-fingers-diameter-incr,2,0.5
+finger_spread,Dedos,Separación,Forma,hand-fingers-distance-decr,hand-fingers-distance-incr,2,0.5
+leg_length,Piernas,Largo,Forma,measure-upperleg-height-decr+measure-lowerleg-height-decr,measure-upperleg-height-incr+measure-lowerleg-height-incr,1,0.5
+thigh,Piernas,Muslo,Forma,measure-thigh-circ-decr,measure-thigh-circ-incr,1,0.5
+calf,Piernas,Pantorrilla,Forma,measure-calf-circ-decr,measure-calf-circ-incr,1,0.5
+foot_size,Pies,Tamaño,Proporción,escala:Foot=0.8,escala:Foot=1.2,2,0.5
+cuenca_plana,Cara,Cuenca plana,Forma,,cara:cuenca_plana,1,0
+boca_anime,Cara,Boca anime,Forma,,cara:boca_anime,1,0
+mandibula_anime,Cara,Mandíbula anime,Forma,,cara:mandibula_anime,1,0
+menton_anime,Cara,Mentón anime,Forma,,cara:menton_anime,1,0
+nariz_anime,Cara,Nariz anime,Forma,,cara:nariz_anime,1,0

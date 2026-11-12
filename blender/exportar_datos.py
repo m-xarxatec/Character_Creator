@@ -3,6 +3,8 @@
 
 Uso: blender -b -P blender/exportar_datos.py -- datos/humana
 Lee <carpeta>/deslizadores.csv y escribe cuerpo.glb, articulaciones.json y manifiesto.json.
+presets/anime.json (paso 3.15) se escribe aparte, como deslizadores.csv; aqui solo entra en el manifiesto.
+Las formas de cara (filas «cara:<forma>», paso 3.14) salen de blender/cara_anime.py.
 
 Cada forma se mide creando un cuerpo nuevo con MPFB (target o macro al 100 %, con su rig)
 y restandole el cuerpo neutro: asi la malla y los huesos salen tal cual los calcula MPFB.
@@ -29,13 +31,14 @@ from limpiar_malla import SKIN_GROUP, clean_mesh  # noqa: E402
 from poner_rig import add_rig  # noqa: E402
 from prenda_base import paint_base_garment  # noqa: E402
 
-FORMAT_VERSION = 1
+FORMAT_VERSION = 2
+FACE = "cara:"  # fuente de las formas de cara: cara:<forma de cara_anime.py>
 SPECIES = "humana"
 SOURCE = "MakeHuman system assets (CC0) con MPFB 2.0.18"
 SOCKET_LENGTH = 0.05  # metros; el hueso de anclaje apunta hacia arriba
 MIN_DELTA = 1e-6  # metros; por debajo, el hueso no se mueve con esa forma
 CORRECTION_MIN = 0.0005  # metros; una correccion mas pequena no se guarda
-FILES = ("cuerpo.glb", "articulaciones.json", "deslizadores.csv")
+FILES = ("cuerpo.glb", "articulaciones.json", "deslizadores.csv", "presets/anime.json")
 
 
 def neutral_macros():
@@ -47,10 +50,19 @@ def read_sliders(folder):
         return list(csv.DictReader(file))
 
 
+def neutral_values(rows):
+    """{id: valor neutro} de cada deslizador (columna neutro)."""
+    return {r["id"]: float(r["neutro"]) for r in rows if r["neutro"]}
+
+
+def face_rows(rows):
+    return [r for r in rows if r["tipo"] == "Forma" and r["incr"].startswith(FACE)]
+
+
 def shape_specs(rows):
-    """[(nombre de la forma, macros, {target: peso})] de cada deslizador Forma, por sentido y lado."""
+    """[(nombre de la forma, macros, {target: peso})] de cada deslizador Forma de MPFB, por sentido y lado."""
     specs = []
-    for row in (r for r in rows if r["tipo"] == "Forma"):
+    for row in (r for r in rows if r["tipo"] == "Forma" and r not in face_rows(rows)):
         for direction in ("decr", "incr"):
             for side in ("l", "r") if row["lados"] == "2" else (None,):
                 name = f"{row['id']}_{direction}" + (f"_{side}" if side else "")
@@ -213,21 +225,35 @@ def socket_delta(rule, verts_delta, joints_delta):
     return verts_delta[rule[1]]
 
 
-def shape_weights(values, names, fixed=None):
+def shape_weights(values, names, neutrals, fixed=None):
     """{forma: peso} como los calcula Godot (FORMATO.md), para todas las formas de names.
 
-    values: {(id, lado o None): valor de 0 a 1}; fixed: {forma: peso} puestos a mano.
-    _decr = max(0, 1−2v), _incr = max(0, 2v−1); cada correccion, el producto de los pesos de sus partes.
+    values: {(id, lado o None): valor de 0 a 1}; neutrals: neutral_values(); fixed: {forma: peso} puestos a mano.
+    Con neutro n: _decr = max(0, (n−v)/n), _incr = max(0, (v−n)/(1−n)); una forma de un lado (se llama como su id)
+    lleva el peso de _incr; cada correccion, el producto de los pesos de sus partes.
     """
     weights = dict.fromkeys(names, 0.0)
     for (slider, side), v in values.items():
         end = f"_{side}" if side else ""
-        weights[f"{slider}_decr{end}"] = max(0.0, 1 - 2 * v)
-        weights[f"{slider}_incr{end}"] = max(0.0, 2 * v - 1)
+        n = neutrals[slider]
+        incr = max(0.0, (v - n) / (1 - n)) if n < 1 else 0.0
+        if slider + end in weights:
+            weights[slider + end] = incr
+            continue
+        weights[f"{slider}_decr{end}"] = max(0.0, (n - v) / n) if n > 0 else 0.0
+        weights[f"{slider}_incr{end}"] = incr
     weights.update(fixed or {})
     for name in (n for n in names if "*" in n):
         weights[name] = float(np.prod([weights[part] for part in name.split("*")]))
     return weights
+
+
+def face_shapes(basemesh, rows):
+    """{id: (desplazamiento de cada vertice, huesos sin mover)} de las filas «cara:<forma>»: no mueven huesos."""
+    import cara_anime  # aqui y no arriba: cara_anime importa este archivo
+    deltas = cara_anime.feature_shapes(basemesh)
+    still = {b.name: (np.zeros(3), np.zeros(3)) for b in basemesh.parent.data.bones}
+    return {r["id"]: (deltas[r["incr"][len(FACE):]], still) for r in face_rows(rows)}
 
 
 def add_shape_keys(basemesh, shapes):
@@ -295,8 +321,10 @@ def write_json(path, data):
 def export_species(folder):
     """Escribe los datos de la especie en folder. Devuelve el manifiesto."""
     folder = os.path.abspath(folder)
-    _, shapes = measure_shapes(read_sliders(folder))
+    rows = read_sliders(folder)
+    _, shapes = measure_shapes(rows)
     basemesh, socket_rules = build_base()
+    shapes.update(face_shapes(basemesh, rows))
     add_shape_keys(basemesh, shapes)
     export_glb(basemesh, [], os.path.join(folder, "cuerpo.glb"), morph=True, deform_only=False)
     write_json(os.path.join(folder, "articulaciones.json"), joints_json(basemesh.parent, shapes, socket_rules))

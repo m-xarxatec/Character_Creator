@@ -9,7 +9,7 @@ extends "res://probar_normales_cara.gd"
 # hoja_extremos = cara anime sobre el cuerpo neutro y con cada macro al mínimo y al máximo (frente arriba, perfil abajo).
 # hoja_nariz = cara anime con nariz_anime a cada valor de NOSE_VALUES (una fila por valor; frente y perfil).
 # En hoja_ab y hoja_extremos, nariz_anime = 0 (su valor por defecto).
-# Todas con las normales de elipsoide de la maqueta 2 (EXPORT_DEPTH) y el ojo anclado a un vértice fijo.
+# Todas con las normales del núcleo (StyleNormals.FACE_DEPTH) y el ojo anclado a un vértice fijo.
 #
 # El desplazamiento se suma a la malla en reposo, como haría una forma (aquí, después de hornear, girado y escalado
 # con los huesos de cada vértice: da lo mismo). Los vértices se emparejan con los de Blender por su posición neutra.
@@ -191,7 +191,7 @@ func _eye(body: Dictionary, side: float) -> Decal:
 
 
 func _toon_normals(body: Dictionary) -> PackedVector3Array:
-	return _face_normals(body["vertices"], _smooth_normals(body["vertices"], body["normals"], SMOOTH_STEPS), 1.0, EXPORT_DEPTH)
+	return _face_normals(body["vertices"], _smooth_normals(body["vertices"], body["normals"], SMOOTH_STEPS), 1.0, _style().FACE_DEPTH)
 
 
 ## Lo que sobresale la punta de la nariz del borde de su zona, en mm.

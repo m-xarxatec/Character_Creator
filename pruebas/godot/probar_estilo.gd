@@ -82,7 +82,7 @@ func _bake(values: Dictionary, extra_scales: Dictionary) -> Dictionary:
 		for target: Dictionary in [shape_values, scale_values]:
 			if target.has(key) or target.has(key + "_l"):
 				shapes.set_value(target, key if target.has(key) else key + "_l", values[key], true)
-	var weights: Dictionary = shapes.weights(shape_values, shapes.shape_names(species.mesh.mesh))
+	var weights: Dictionary = shapes.weights(shape_values, shapes.shape_names(species.mesh.mesh), shapes.neutral_values(species.sliders))
 	shapes.apply(species.mesh, weights)
 	refit.apply(species.skeleton, species.mesh.skin, species.joints, weights, base)
 	var scales: Dictionary = proportions.scales(scale_values, species.sliders)
@@ -139,43 +139,10 @@ func _head_mask() -> PackedByteArray:
 
 
 ## Promedia cada normal con las de sus vecinos (soldando los vértices repetidos en las costuras UV), steps veces.
+## Normales suavizadas del núcleo (StyleNormals.smooth, paso 3.16).
 func _smooth_normals(vertices: PackedVector3Array, normals: PackedVector3Array, steps: int) -> PackedVector3Array:
 	var indices: PackedInt32Array = species.mesh.mesh.surface_get_arrays(0)[Mesh.ARRAY_INDEX]
-	var weld := {}
-	var id := PackedInt32Array()
-	id.resize(vertices.size())
-	for i in vertices.size():
-		var key := Vector3i((vertices[i] * 100000.0).round())
-		if not weld.has(key):
-			weld[key] = weld.size()
-		id[i] = weld[key]
-	var neighbors: Array[Dictionary] = []
-	neighbors.resize(weld.size())
-	for n in neighbors.size():
-		neighbors[n] = {}
-	for t in range(0, indices.size(), 3):
-		for e in 3:
-			var a := id[indices[t + e]]
-			var b := id[indices[t + (e + 1) % 3]]
-			neighbors[a][b] = true
-			neighbors[b][a] = true
-	var current := PackedVector3Array()
-	current.resize(weld.size())
-	for i in vertices.size():
-		current[id[i]] = normals[i]
-	for step in steps:
-		var next := current.duplicate()
-		for n in current.size():
-			var sum := current[n]
-			for m: int in neighbors[n]:
-				sum += current[m]
-			next[n] = sum.normalized()
-		current = next
-	var result := PackedVector3Array()
-	result.resize(vertices.size())
-	for i in vertices.size():
-		result[i] = current[id[i]]
-	return result
+	return load(root_dir.path_join("godot/addons/creador/style_normals.gd")).smooth(vertices, normals, indices, steps)
 
 
 func _static_mesh(vertices: PackedVector3Array, normals: PackedVector3Array) -> ArrayMesh:

@@ -5,8 +5,9 @@ extends "res://probar_estilo.gd"
 # Opcional: `-- --salida=<carpeta>` guarda las capturas en otra carpeta (sin él, en la de siempre).
 # Capturas: pruebas/capturas/normales_cara/ (antes = normales suavizadas del 3.12; mezcla = 50 %; elipsoide = 100 %).
 # Aplanado (aplanado_*.png y aplanado_hoja.png): elipsoide al 100 % con menos fondo por delante (DEPTHS), para que
-# las normales de la cara miren más al frente y el corte de tono se vaya al borde.
-# Escribe pruebas/fase_3/salida/normales/cara.glb (pose T, con las normales al 100 %) y cara_normales.json (lo enviado).
+# las normales de la cara miren más al frente y el corte de tono se vaya al borde. aplanado_anime_*: lo mismo con la
+# cara anime (formas de cara de presets/anime.json; paso 3.16, para revisar el 0,6).
+# Escribe pruebas/fase_3/salida/normales/cara.glb (pose T, con las normales del núcleo, GlbExporter) y cara_normales.json (lo enviado).
 # Después: probar_normales_leidas.gd, pruebas/fase_3/probar_normales_importador.sh y probar_normales_en_blender.py.
 #
 # Normal de elipsoide: la de un elipsoide con el centro y el tamaño de la caja de la cabeza. Se mezcla con la normal
@@ -15,7 +16,6 @@ extends "res://probar_estilo.gd"
 const PRESET := "anime_femenino"
 const BLENDS := {"antes": 0.0, "mezcla": 0.5, "elipsoide": 1.0}
 const DEPTHS := {"aplanado_100": 1.0, "aplanado_060": 0.6, "aplanado_035": 0.35}  # fondo del elipsoide por delante
-const EXPORT_DEPTH := 0.6  # el que va en cara.glb
 
 var head_weight: PackedFloat32Array
 
@@ -42,53 +42,24 @@ func _initialize() -> void:
 	_build_view()
 	await _captures()
 	await _flatten_captures()
-	_export(load(addon.path_join("glb_exporter.gd")))
+	_export(load(addon.path_join("glb_exporter.gd")))  # antes de la cara anime: cara.glb sigue siendo el del 3.13a-2
+	await _flatten_captures("aplanado_anime", _anime_face())
 	quit(0)
 
 
-## Peso del hueso Head en cada vértice (0 a 1).
+## Peso del hueso Head y normales de elipsoide: las del núcleo (StyleNormals, paso 3.16).
 func _head_weight() -> PackedFloat32Array:
 	var arrays: Array = species.mesh.mesh.surface_get_arrays(0)
-	var bones: PackedInt32Array = arrays[Mesh.ARRAY_BONES]
-	var weights: PackedFloat32Array = arrays[Mesh.ARRAY_WEIGHTS]
-	var skin: Skin = species.mesh.skin
-	var head := -1
-	for i in skin.get_bind_count():
-		var bone := skin.get_bind_bone(i)
-		var name: String = species.skeleton.get_bone_name(bone) if bone >= 0 else String(skin.get_bind_name(i))
-		if name == "Head":
-			head = i
-	var result := PackedFloat32Array()
-	result.resize(weights.size() / 4)
-	for v in result.size():
-		for k in 4:
-			if bones[4 * v + k] == head:
-				result[v] += weights[4 * v + k]
-	return result
+	return _style().head_weights(arrays, species.mesh.skin, species.skeleton)
 
 
-## Mezcla cada normal con la del elipsoide de la cabeza: amount × peso de Head.
-## depth < 1 quita fondo al elipsoide solo por delante: las normales de la cara miran más al frente.
+## Mezcla cada normal con la del elipsoide de la cabeza: amount × peso de Head; depth < 1 quita fondo por delante.
 func _face_normals(vertices: PackedVector3Array, normals: PackedVector3Array, amount: float, depth := 1.0) -> PackedVector3Array:
-	var box := AABB()
-	var first := true
-	for i in vertices.size():
-		if head_weight[i] > 0.5:
-			box = AABB(vertices[i], Vector3.ZERO) if first else box.expand(vertices[i])
-			first = false
-	var center := box.get_center()
-	var radii := box.size / 2.0
-	var result := normals.duplicate()
-	for i in vertices.size():
-		var w := head_weight[i] * amount
-		if w > 0.0:
-			var offset := vertices[i] - center
-			var r := radii
-			if offset.z > 0.0:
-				r.z *= depth
-			var ellipsoid := (offset / (r * r)).normalized()
-			result[i] = normals[i].lerp(ellipsoid, w).normalized()
-	return result
+	return _style().face(vertices, normals, head_weight, amount, depth)
+
+
+func _style() -> GDScript:
+	return load(root_dir.path_join("godot/addons/creador/style_normals.gd"))
 
 
 func _captures() -> void:
@@ -115,9 +86,12 @@ func _captures() -> void:
 
 
 ## A/B del aplanado: una fila por valor de DEPTHS, de frente, en tres cuartos y con la cámara del juego.
-func _flatten_captures() -> void:
+## prefix "aplanado_anime" + face: lo mismo con la cara anime (paso 3.16).
+func _flatten_captures(prefix := "aplanado", face := {}) -> void:
 	var preset := _load_preset(PRESET)
-	var body := _bake(preset["valores"], {})
+	var values: Dictionary = preset["valores"].duplicate()
+	values.merge(face, true)
+	var body := _bake(values, {})
 	var colors := _colors(preset)
 	var smooth := _smooth_normals(body["vertices"], body["normals"], SMOOTH_STEPS)
 	var head: float = body["height"] - body["chin"]
@@ -128,14 +102,24 @@ func _flatten_captures() -> void:
 		for view: String in ["frente", "tres_cuartos"]:
 			var model := _model(body, normals, _toon_material(colors))
 			_ortho((body["head_center"] as Vector3).rotated(Vector3.UP, deg_to_rad(VIEWS[view])), head * 1.5)
-			row.append(await _shot(model, VIEWS[view], CLOSE_TILE, "%s_%s" % [name, view]))
+			row.append(await _shot(model, VIEWS[view], CLOSE_TILE, "%s_%s" % [name.replace("aplanado", prefix), view]))
 			model.free()
 		var game := _model(body, normals, _toon_material(colors))
 		_game_camera(Vector3(0.0, body["height"] / 2.0, 0.0))
-		row.append(await _shot(game, -25.0, GAME_TILE, name + "_juego"))
+		row.append(await _shot(game, -25.0, GAME_TILE, name.replace("aplanado", prefix) + "_juego"))
 		game.free()
 		rows.append(row)
-	_save(_sheet(rows), "aplanado_hoja")
+	_save(_sheet(rows), prefix + "_hoja")
+
+
+## Valores de las formas de cara (zona Cara) del preset de personaje nuevo (presets/anime.json).
+func _anime_face() -> Dictionary:
+	var values: Dictionary = JSON.parse_string(species.preset_text())["valores"]
+	var face := {}
+	for row: Dictionary in species.sliders:
+		if row["zona"] == "Cara":
+			face[row["id"]] = values[row["id"]]
+	return face
 
 
 ## Exporta el personaje del preset (pose T) con las normales de elipsoide en la malla, y guarda lo enviado en un JSON.
@@ -149,13 +133,7 @@ func _export(exporter: GDScript) -> void:
 	if vertices.size() != head_weight.size():
 		print("ERROR: la malla exportada tiene otro número de vértices")
 		return
-	var normals := _face_normals(vertices, _smooth_normals(vertices, arrays[Mesh.ARRAY_NORMAL], SMOOTH_STEPS), 1.0, EXPORT_DEPTH)
-	arrays[Mesh.ARRAY_NORMAL] = normals
-	arrays[Mesh.ARRAY_TANGENT] = null
-	var mesh := ArrayMesh.new()
-	mesh.add_surface_from_arrays(Mesh.PRIMITIVE_TRIANGLES, arrays)
-	mesh.surface_set_material(0, instance.mesh.surface_get_material(0))
-	instance.mesh = mesh
+	var normals: PackedVector3Array = arrays[Mesh.ARRAY_NORMAL]  # las del núcleo: GlbExporter las pone (paso 3.16)
 	exporter._add_armature_node(character)
 	exporter._set_owner(character, character)
 	var document := GLTFDocument.new()

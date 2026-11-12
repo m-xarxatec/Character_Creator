@@ -71,6 +71,8 @@ Medido en el 3.12: femenino 6,96, masculino 6,94, chibi 5,25 (fuera de rango, 3,
 | Grosor del contorno (px) | `width_px` | 2,5 | Aprobado el 2026-11-12 |
 | Tono medio (× color base) | `mid_shade` | 0,9 | Aprobado el 2026-11-12 |
 | Sombra (× color base) | `shadow_shade` | 0,73 | Aprobado el 2026-11-12 |
+| Normales del torso (pasadas de suavizado) | `StyleNormals.SMOOTH_STEPS` | 10 | Elegido en el 3.12 |
+| Normales de la cara (fondo del elipsoide por delante) | `StyleNormals.FACE_DEPTH` | 0,6 | Elegido en el 3.13a-2; se revisa sobre la cara anime (`aplanado_anime_hoja.png`, 3.16) |
 
 ---
 

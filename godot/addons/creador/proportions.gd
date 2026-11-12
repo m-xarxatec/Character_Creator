@@ -6,17 +6,18 @@ extends RefCounted
 ##   var values := Proportions.neutral_values(species.sliders)   # {"height": 0.5, "hand_size_l": 0.5, …}
 ##   ShapeWeights.set_value(values, "hand_size_l", 0.8, true)     # mismo recorte, simetría y rechazo de NaN
 ##   Proportions.apply(species.skeleton, Proportions.scales(values, species.sliders))
-## En el CSV, decr e incr son "escala:Hueso=x". Valor 0 → x de decr, 0,5 → 1, 1 → x de incr (en línea recta por tramos).
+## En el CSV, decr e incr son "escala:Hueso=x". Valor 0 → x de decr, el neutro (columna neutro) → 1, 1 → x de incr
+## (en línea recta por tramos).
 ## Con dos lados, _l es el hueso Left… y _r el Right…. La escala va en la pose, no en el reposo.
 
 
-## Todos los deslizadores Proporción en su valor neutro.
+## Todos los deslizadores Proporción en su valor neutro (columna neutro del CSV).
 static func neutral_values(sliders: Array) -> Dictionary:
 	var values := {}
 	for row: Dictionary in sliders:
 		if row["tipo"] == "Proporción":
 			for side: String in (["_l", "_r"] if row["lados"] == "2" else [""]):
-				values[row["id"] + side] = 0.5
+				values[row["id"] + side] = float(row["neutro"])
 	return values
 
 
@@ -29,8 +30,9 @@ static func scales(values: Dictionary, sliders: Array) -> Dictionary:
 		var low := _parse(row["decr"])
 		var high := _parse(row["incr"])
 		for side: String in (["_l", "_r"] if row["lados"] == "2" else [""]):
-			var v: float = values.get(row["id"] + side, 0.5)
-			var scale := lerpf(low[1], 1.0, 2.0 * v) if v < 0.5 else lerpf(1.0, high[1], 2.0 * v - 1.0)
+			var n := float(row["neutro"])
+			var v: float = values.get(row["id"] + side, n)
+			var scale := lerpf(low[1], 1.0, v / n) if v < n else lerpf(1.0, high[1], (v - n) / (1.0 - n))
 			result[_bone(low[0], side)] = scale
 	return result
 
