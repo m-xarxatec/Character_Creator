@@ -15,8 +15,8 @@ extends RefCounted
 const SHADER := preload("toon.gdshader")
 const OUTLINE_SHADER := preload("outline.gdshader")
 const DEFAULTS := {
-	"skin_color": Color(0.93, 0.80, 0.70), "garment_color": Color(0.20, 0.20, 0.23), "show_garment": true, "unlit": false,
-	"mid_tint": Color(0.97, 0.88, 0.86), "shadow_tint": Color(0.86, 0.70, 0.70), "mid_threshold": 0.45,
+	"skin_color": Color(0.80, 0.80, 0.80), "garment_color": Color(0.20, 0.20, 0.23), "show_garment": true, "unlit": false,
+	"mid_shade": 0.9, "shadow_shade": 0.73, "mid_threshold": 0.45,
 	"shadow_threshold": 0.0, "softness": 0.04, "rim_color": Color(1.0, 0.95, 0.92), "rim_strength": 0.25, "rim_width": 0.3}
 const OUTLINE_DEFAULTS := {"outline_color": Color(0.07, 0.05, 0.06), "width_px": 2.5}
 const MAX_OUTLINE_PX := 10.0  # el máximo de width_px en outline.gdshader

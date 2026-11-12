@@ -1,8 +1,8 @@
 extends SceneTree
-# Paso 3.10a: el material del cuerpo (body_material.gd con toon.gdshader y outline.gdshader). Sin ventana.
+# Pasos 3.10a y 3.10c: el material del cuerpo (body_material.gd con toon.gdshader y outline.gdshader). Sin ventana.
 # Uso: (ulimit -v 4000000; timeout 120 godot --headless --path pruebas/godot -s probar_material.gd 2>&1 | grep -E 'FALLO|RESULTADO|ERROR')
-# Falta (se completa cuando se elijan los valores en la hoja del 3.10c): comparar DEFAULTS con la tabla de GUIA_ESTILO.md.
-# Aquí DEFAULTS solo se compara con los `uniform` de los .gdshader, para que el código y los shaders no se separen.
+# DEFAULTS se compara con los `uniform` de los .gdshader (que el código y los shaders no se separen) y con la tabla
+# «Valores por defecto» de diseno/GUIA_ESTILO.md (que el código y la guía no se separen).
 
 var failures := 0
 var material: GDScript
@@ -22,6 +22,7 @@ func _initialize() -> void:
 	_check_without_material()
 	_check_material(material.apply(species.mesh))
 	_check_defaults_match_shaders()
+	_check_defaults_match_guide()
 	_check_no_specular()
 	_check_garment()
 	_check_colors()
@@ -81,6 +82,23 @@ func _compare_uniforms(file: String, defaults: Dictionary) -> void:
 		if not defaults.has(name):
 			wrong.append(name)
 	check("%s: sus %d uniform coinciden con los valores por defecto del código" % [file, found.size()], wrong.is_empty(), str(wrong))
+
+
+## Cada fila de la tabla de la guía (| Qué | `código` | valor | Estado |) tiene el mismo valor en el código.
+func _check_defaults_match_guide() -> void:
+	var defaults: Dictionary = material.DEFAULTS.merged(material.OUTLINE_DEFAULTS)
+	var text := FileAccess.get_file_as_string(root_dir.path_join("diseno/GUIA_ESTILO.md"))
+	var regex := RegEx.create_from_string("(?m)^\\|[^|]*\\|\\s*`(\\w+)`\\s*\\|([^|]+)\\|")
+	var rows := regex.search_all(text)
+	var wrong: Array[String] = []
+	for row in rows:
+		var name := row.get_string(1)
+		var parts := row.get_string(2).replace(",", ".").split("/")
+		var value: Variant = Color(float(parts[0]), float(parts[1]), float(parts[2])) if parts.size() == 3 else float(parts[0])
+		if not defaults.has(name) or not _equal(value, defaults[name]):
+			wrong.append(name)
+	check("guía: las %d filas de «Valores por defecto» coinciden con el código" % rows.size(),
+		rows.size() == 7 and wrong.is_empty(), str(wrong))
 
 
 func _parse(type: String, value: String) -> Variant:

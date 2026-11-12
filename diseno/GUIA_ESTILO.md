@@ -44,19 +44,33 @@ Medido en el 3.12: femenino 6,96, masculino 6,94, chibi 5,25 (fuera de rango, 3,
 ## 4. Sombreado toon
 
 - **Número de tonos:** **3** por defecto (luz, medio y sombra). Aprobado el 2026-11-11. Por qué: es lo que se probó en el 3.12 y con 2 la cara pierde volumen.
-- **Dureza del borde:** PROPUESTA (pendiente de aprobar): bordes suaves de 0,02–0,06.
-- **Luz de contorno (rim):** PROPUESTA (pendiente de aprobar): suave, fuerza 0,15–0,35, color cálido casi blanco. Por qué: separa la silueta del fondo oscuro sin parecer brillo.
+- **Dureza del borde:** 0,04 por defecto, editable. Aprobado el 2026-11-12 (hoja del 3.10c).
+- **Luz de contorno (rim):** suave; fuerza 0,25 y ancho 0,3 por defecto, editables. Aprobado el 2026-11-12 (hoja del 3.10c). Color: PROPUESTA (pendiente de aprobar): cálido casi blanco. Por qué: separa la silueta del fondo oscuro sin parecer brillo.
 - **Brillo especular:** ninguno. Por qué: el brillo hace que la piel parezca plástico.
-- **Piel:** PROPUESTA (pendiente de aprobar): tono cálido; la sombra tira a rosado o rojizo, nunca a gris. Por qué: la sombra gris hace que la piel parezca enferma.
+- **Piel:** el color lo elige quien usa el editor (cualquiera); por defecto, gris neutro. La sombra no es un color fijo: sale del color base, más oscuro, para que cualquier color se vea bien. Aprobado el 2026-11-12. Cuánto más oscuro: PROPUESTA (pendiente de aprobar): medio ×0,90 y sombra ×0,73 (la misma luminosidad que las tintas rosadas de antes).
 
 ---
 
 ## 5. Contorno
 
 - **Grosor:** regulable desde 0 (sin contorno) hasta muy grueso. PROPUESTA (pendiente de aprobar): rango 0–10 px.
-- **Por defecto:** PROPUESTA (pendiente de aprobar): 2 px a distancia de juego (hoy el shader usa 2,5). Por qué: con más grosor los dedos de manos y pies hacen grumos.
+- **Por defecto:** 2,5 px, editable. Aprobado el 2026-11-12 (hoja del 3.10c).
 - **Color:** PROPUESTA (pendiente de aprobar): casi negro y algo cálido, no negro puro.
 - Sin roturas en las costuras ni contornos "flotando" separados de la malla.
+
+### Valores por defecto
+
+`probar_material.gd` comprueba que el código (`BodyMaterial`) tiene estos valores. Todos se cambian en el editor.
+
+| Qué | Código | Por defecto | Estado |
+| --- | --- | --- | --- |
+| Color de piel | `skin_color` | 0,80 / 0,80 / 0,80 | Gris neutro: aprobado el 2026-11-12. El 0,80: PROPUESTA (pendiente de aprobar) |
+| Dureza del borde | `softness` | 0,04 | Aprobado el 2026-11-12 |
+| Rim: fuerza | `rim_strength` | 0,25 | Aprobado el 2026-11-12 |
+| Rim: ancho | `rim_width` | 0,3 | Aprobado el 2026-11-12 |
+| Grosor del contorno (px) | `width_px` | 2,5 | Aprobado el 2026-11-12 |
+| Tono medio (× color base) | `mid_shade` | 0,9 | PROPUESTA (pendiente de aprobar) |
+| Sombra (× color base) | `shadow_shade` | 0,73 | PROPUESTA (pendiente de aprobar) |
 
 ---
 

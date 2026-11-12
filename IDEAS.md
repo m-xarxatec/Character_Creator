@@ -28,7 +28,7 @@
 - **Pelo:** peinados como piezas; melenas y coletas que se mueven con `SpringBoneSimulator3D`; más adelante, un pincel de pelo como el de VRoid.
 - **Ropa:** prendas que siguen al cuerpo (anclaje tipo `.mhclo`), capas, ocultar la piel que queda bajo la ropa.
 - **Accesorios:** cascos, gafas o armas en los puntos de anclaje.
-- **Materiales:** color de piel (decidido: después del MVP), texturas, estilo pixel art. (El estilo ilustración con contorno ya está en `PLAN.md`.)
+- **Materiales:** texturas de piel, estilo pixel art. (El color de piel pasó al MVP el 2026-11-12, solo el color: paso 4.7 de `PLAN.md`.) (El estilo ilustración con contorno ya está en `PLAN.md`.)
 - **Exportar:** VRM 1.0, niveles de detalle (LOD).
 - **Selector de polígonos al exportar:** Low-poly (proxy741), Ligero (proxy ~1.600), Medio (reducción automática de la base), Completo (base). Opción de sombreado plano. Mismos huesos y anclajes; pesos heredados de la base; textura de prenda horneada por nivel; pruebas de deformación por nivel.
 
