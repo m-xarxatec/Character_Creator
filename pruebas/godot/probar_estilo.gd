@@ -198,14 +198,14 @@ func _colors(preset: Dictionary) -> Array[Color]:
 		Color(c["garment_color"][0], c["garment_color"][1], c["garment_color"][2])]
 
 
+## El material del núcleo (BodyMaterial: toon con contorno), con los dos colores del preset (la piel por defecto no interviene).
 func _toon_material(colors: Array[Color]) -> ShaderMaterial:
-	var material := ShaderMaterial.new()
-	material.shader = load(root_dir.path_join("godot/addons/creador/toon.gdshader"))
-	material.set_shader_parameter("skin_color", colors[0])
-	material.set_shader_parameter("garment_color", colors[1])
-	var outline := ShaderMaterial.new()
-	outline.shader = load(root_dir.path_join("godot/addons/creador/outline.gdshader"))
-	material.next_pass = outline
+	var body_material: GDScript = load(root_dir.path_join("godot/addons/creador/body_material.gd"))
+	var holder := MeshInstance3D.new()
+	var material: ShaderMaterial = body_material.apply(holder)
+	body_material.set_color(holder, "skin_color", colors[0])
+	body_material.set_color(holder, "garment_color", colors[1])
+	holder.free()
 	return material
 
 

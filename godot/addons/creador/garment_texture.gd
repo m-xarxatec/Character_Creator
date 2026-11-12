@@ -4,7 +4,7 @@ extends RefCounted
 ##
 ## Uso:
 ##   var image := GarmentTexture.bake(array_mesh, 2048, skin_color, garment_color)
-## Cada píxel dentro de un triángulo interpola el color `garment` (rojo) y corta en 0,5, como body.gdshader.
+## Cada píxel dentro de un triángulo interpola el color `garment` (rojo) y corta en 0,5, como toon.gdshader.
 ## Fuera de los triángulos: color piel, y la prenda se alarga PADDING píxeles para que no salgan rayas en las costuras UV.
 ## Todo en CPU: vale sin tarjeta gráfica y con --headless.
 

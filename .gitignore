@@ -19,7 +19,7 @@ pruebas/capturas/revision/*
 # Referencias con derechos de autor (solo en local)
 diseno/referencias/privadas/
 
-# Referencias: solo lo que ya está en git (referencias/cuerpos/); nada nuevo, y nunca un .blend
+# Referencias de inspiración: solo en local, nada de referencias/ entra en git
 referencias/
 
 # Personajes generados por las pruebas

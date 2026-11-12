@@ -8,7 +8,7 @@ extends RefCounted
 ## Hornea (character_baker.gd), pasa los anclajes a nodos (sockets.gd) y escribe con GLTFDocument.
 ## En el archivo: Character → Armature → huesos, malla y anclajes (misma estructura que los .glb de Blender).
 ## El personaje del editor no cambia.
-## Material: StandardMaterial3D sin luces (como body.gdshader hasta el paso 3.10) con la prenda horneada en una textura
+## Material: StandardMaterial3D sin luces (como `toon.gdshader` con `unlit`; el material con luz llega en el 3.11) con la prenda horneada en una textura
 ## (garment_texture.gd), para que se vea fuera del editor. Con la prenda oculta, sin textura: todo color piel.
 ## Color por vértice: en el archivo, `garment` va en el alfa y el RGB es blanco. La norma glTF multiplica el material
 ## por el color por vértice (Blender lo hace): con `garment` en el RGB, la piel saldría negra.
