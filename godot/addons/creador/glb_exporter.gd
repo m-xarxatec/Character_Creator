@@ -8,8 +8,9 @@ extends RefCounted
 ## Hornea (character_baker.gd), pasa los anclajes a nodos (sockets.gd) y escribe con GLTFDocument.
 ## En el archivo: Character → Armature → huesos, malla y anclajes (misma estructura que los .glb de Blender).
 ## El personaje del editor no cambia.
-## Material: StandardMaterial3D sin luces (como `toon.gdshader` con `unlit`; el material con luz llega en el 3.11) con la prenda horneada en una textura
-## (garment_texture.gd), para que se vea fuera del editor. Con la prenda oculta, sin textura: todo color piel.
+## Material: StandardMaterial3D con luz, sin brillo (metálico 0, rugosidad 1; paso 3.11a), para que reciba sombra fuera
+## del editor, con la prenda horneada en una textura (garment_texture.gd). Con la prenda oculta, sin textura: todo color piel.
+## El estilo toon no viaja en el .glb: en Godot lo pone el núcleo.
 ## Color por vértice: en el archivo, `garment` va en el alfa y el RGB es blanco. La norma glTF multiplica el material
 ## por el color por vértice (Blender lo hace): con `garment` en el RGB, la piel saldría negra.
 
@@ -47,7 +48,8 @@ static func _garment_in_alpha(source: Mesh) -> ArrayMesh:
 static func _material(editor_mesh: MeshInstance3D, mesh: Mesh) -> StandardMaterial3D:
 	var material := StandardMaterial3D.new()
 	material.resource_name = "cuerpo"
-	material.shading_mode = BaseMaterial3D.SHADING_MODE_UNSHADED
+	material.metallic = 0.0  # PBR sin brillo
+	material.roughness = 1.0
 	var skin := BodyMaterial.get_color(editor_mesh, "skin_color")
 	if BodyMaterial.is_garment_visible(editor_mesh):
 		var image := GarmentTexture.bake(mesh, TEXTURE_SIZE, skin, BodyMaterial.get_color(editor_mesh, "garment_color"))

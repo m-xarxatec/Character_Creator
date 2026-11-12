@@ -8,8 +8,10 @@ pruebas/godot/probar_prenda_exportada.gd (escribe pruebas/fase_3/salida/prenda/)
 Capturas de la prenda: pruebas/capturas/prenda_blender/.
 """
 import glob
+import json
 import math
 import os
+import struct
 import sys
 
 import bpy
@@ -75,6 +77,9 @@ def check_garment(path, shown):
     if not shown:
         check(label + "prenda oculta: material sin textura y color por vértice blanco", not images and not tinted,
               [n.type for n in nodes])
+        # Sin textura, Workbench dibuja el color de visor, que el importador deja en gris (el color base va a un nodo
+        # Mix con el color por vértice): se pone el `baseColorFactor` del .glb.
+        material.diffuse_color = base_color(path)
         render(label, os.path.basename(path), False)
         return
     check(label + "material con una textura de 2048 px y color por vértice blanco",
@@ -107,13 +112,23 @@ def check_garment(path, shown):
     render(label, os.path.basename(path), True)
 
 
+def base_color(path):
+    """`baseColorFactor` del primer material, leído del JSON del .glb (lineal, como `diffuse_color`)."""
+    with open(path, "rb") as file:
+        data = file.read()
+    length = struct.unpack("<I", data[12:16])[0]
+    material = json.loads(data[20:20 + length])["materials"][0]
+    return material.get("pbrMetallicRoughness", {}).get("baseColorFactor", [1.0, 1.0, 1.0, 1.0])
+
+
 SKIN = (0.9, 0.6, 0.5)  # los de probar_prenda_exportada.gd
 GARMENT = (0.1, 0.2, 0.6)
 DARK = 0.3  # la prenda más oscura tiene un canal a 0,6
 
 
 def render(label, name, shown):
-    """Captura de frente con Cycles (el material completo, como lo ve quien abre el archivo) y cuenta los colores."""
+    """Captura de frente con Workbench (luz plana, color de la textura: los colores salen tal cual, sin luces;
+    el material ya tiene luz desde el 3.11a) y cuenta los colores."""
     scene = bpy.context.scene
     camera = bpy.data.objects.new("camara", bpy.data.cameras.new("camara"))
     scene.collection.objects.link(camera)
@@ -122,9 +137,9 @@ def render(label, name, shown):
     camera.location = (0.0, -3.0, 0.9)  # el personaje mira a -Y en Blender (+Z en glTF)
     camera.rotation_euler = (math.radians(90), 0.0, 0.0)
     scene.camera = camera
-    scene.render.engine = "CYCLES"
-    scene.cycles.device = "CPU"
-    scene.cycles.samples = 4
+    scene.render.engine = "BLENDER_WORKBENCH"
+    scene.display.shading.light = "FLAT"
+    scene.display.shading.color_type = "TEXTURE" if shown else "MATERIAL"  # sin textura, TEXTURE dibuja gris
     scene.view_settings.view_transform = "Standard"  # sin AgX: los colores salen tal cual
     scene.render.resolution_x = scene.render.resolution_y = 512
     scene.render.film_transparent = True
@@ -143,8 +158,8 @@ def render(label, name, shown):
     pixels = pixels.reshape(-1, 4)
     body = pixels[pixels[:, 3] > 0.99][:, :3]
     # Cada píxel, al color más cercano. Lo que se busca es la piel teñida de negro por el color por vértice: 0 píxeles
-    # oscuros (todos los canales < DARK). Los que quedan lejos de los dos colores (ruido de Cycles con 4 muestras y
-    # mezcla en el borde de la prenda) solo se miden.
+    # oscuros (todos los canales < DARK). Los que quedan lejos de los dos colores (mezcla en el borde de la prenda)
+    # solo se miden.
     distance = numpy.stack([numpy.abs(body - numpy.array(c)).max(axis=1) for c in (SKIN, GARMENT)])
     nearest = distance.argmin(axis=0)
     far = int((distance.min(axis=0) > 0.2).sum())

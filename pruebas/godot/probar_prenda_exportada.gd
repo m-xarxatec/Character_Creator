@@ -1,5 +1,6 @@
 extends SceneTree
-# Paso 3.6.6: la prenda base se ve en el .glb exportado, leído sin el addon (solo GLTFDocument).
+# Pasos 3.6.6 y 3.11a: la prenda base se ve en el .glb exportado, leído sin el addon (solo GLTFDocument), con material con luz.
+# Falla si el material es sin luces. Los colores se miden quitando las luces a la copia cargada; además, captura con luz.
 # Necesita ventana (no --headless): dibuja el cuerpo de frente y lee los píxeles, como probar_prenda.gd.
 # Uso: (ulimit -v 4000000; timeout 300 godot --path pruebas/godot -s probar_prenda_exportada.gd 2>&1 | grep -E 'FALLO|RESULTADO|ERROR|medida')
 # Escribe pruebas/fase_3/salida/prenda/visible.glb y oculta.glb (pose A, cuerpo neutro), que usa probar_glb_en_blender.py.
@@ -78,14 +79,22 @@ func _check_file(path: String, shown: bool) -> void:
 	var standard := mesh.get_active_material(0) as StandardMaterial3D
 	var texture := standard.albedo_texture if standard else null
 	var size := texture.get_size() if texture else Vector2.ZERO
-	check(label + "material sin luces, sin color por vértice, %s" % ("textura de 2048 px" if shown else "sin textura"),
-		standard != null and standard.shading_mode == BaseMaterial3D.SHADING_MODE_UNSHADED
+	check(label + "material con luz, sin color por vértice, %s" % ("textura de 2048 px" if shown else "sin textura"),
+		standard != null and standard.shading_mode == BaseMaterial3D.SHADING_MODE_PER_PIXEL
 		and not standard.vertex_color_use_as_albedo and (size == Vector2(2048, 2048) if shown else texture == null),
 		"textura %s, color %s" % [size, standard.albedo_color if standard else null])
+	_check_lit_json(label, state.json)
 	# El alfa del color por vértice guarda `garment`: el material debe ser opaco (sin alphaMode = OPAQUE en glTF).
 	var modes: Array = state.json["materials"].map(func(m: Dictionary) -> String: return m.get("alphaMode", "OPAQUE"))
 	check(label + "material opaco (alphaMode OPAQUE)", modes == ["OPAQUE"], str(modes))
 	viewport.add_child(scene)
+	var light := DirectionalLight3D.new()  # captura con luz, para mirarla a ojo
+	light.rotation_degrees = Vector3(-40.0, 30.0, 0.0)
+	viewport.add_child(light)
+	(await _render()).save_png(captures.path_join(path.get_file().get_basename() + "_con_luz.png"))
+	light.free()
+	if standard != null:  # para medir colores exactos: sin luces, solo en esta copia ya cargada
+		standard.shading_mode = BaseMaterial3D.SHADING_MODE_UNSHADED
 	var image := await _render()
 	image.save_png(captures.path_join(path.get_file().get_basename() + ".png"))
 	_check_vertices(label + "cada vértice de frente cae en un píxel de su color", image, mesh, shown)
@@ -93,6 +102,18 @@ func _check_file(path: String, shown: bool) -> void:
 		_measure_edge(label, image)
 	scene.queue_free()
 	await process_frame
+
+
+## En el JSON del .glb: sin KHR_materials_unlit, metálico 0 y rugosidad 1 (en glTF, si faltan, valen 1).
+func _check_lit_json(label: String, json: Dictionary) -> void:
+	var material: Dictionary = json["materials"][0]
+	var pbr: Dictionary = material.get("pbrMetallicRoughness", {})
+	var used: Array = json.get("extensionsUsed", [])
+	check(label + "glTF con luz: sin KHR_materials_unlit, metálico 0 y rugosidad 1",
+		not used.has("KHR_materials_unlit") and not material.get("extensions", {}).has("KHR_materials_unlit")
+		and pbr.get("metallicFactor", 1.0) == 0.0 and pbr.get("roughnessFactor", 1.0) == 1.0,
+		"extensiones %s, metálico %s, rugosidad %s" % [used, pbr.get("metallicFactor", 1.0), pbr.get("roughnessFactor", 1.0)])
+	print("  medida %sKHR_materials_specular: %s" % [label, "sí" if used.has("KHR_materials_specular") else "no"])
 
 
 func _build_view() -> void:

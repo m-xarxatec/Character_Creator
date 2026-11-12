@@ -47,7 +47,7 @@ Medido en el 3.12: femenino 6,96, masculino 6,94, chibi 5,25 (fuera de rango, 3,
 - **Dureza del borde:** 0,04 por defecto, editable. Aprobado el 2026-11-12 (hoja del 3.10c).
 - **Luz de contorno (rim):** suave; fuerza 0,25 y ancho 0,3 por defecto, editables. Aprobado el 2026-11-12 (hoja del 3.10c). Color: PROPUESTA (pendiente de aprobar): cálido casi blanco. Por qué: separa la silueta del fondo oscuro sin parecer brillo.
 - **Brillo especular:** ninguno. Por qué: el brillo hace que la piel parezca plástico.
-- **Piel:** el color lo elige quien usa el editor (cualquiera); por defecto, gris neutro. La sombra no es un color fijo: sale del color base, más oscuro, para que cualquier color se vea bien. Aprobado el 2026-11-12. Cuánto más oscuro: PROPUESTA (pendiente de aprobar): medio ×0,90 y sombra ×0,73 (la misma luminosidad que las tintas rosadas de antes).
+- **Piel:** el color lo elige quien usa el editor (cualquiera); por defecto, gris neutro. La sombra no es un color fijo: sale del color base, más oscuro, para que cualquier color se vea bien. Aprobado el 2026-11-12. Cuánto más oscuro: medio ×0,90 y sombra ×0,73 por defecto, editables (la misma luminosidad que las tintas rosadas de antes). Aprobado el 2026-11-12.
 
 ---
 
@@ -64,13 +64,13 @@ Medido en el 3.12: femenino 6,96, masculino 6,94, chibi 5,25 (fuera de rango, 3,
 
 | Qué | Código | Por defecto | Estado |
 | --- | --- | --- | --- |
-| Color de piel | `skin_color` | 0,80 / 0,80 / 0,80 | Gris neutro: aprobado el 2026-11-12. El 0,80: PROPUESTA (pendiente de aprobar) |
+| Color de piel | `skin_color` | 0,80 / 0,80 / 0,80 | Gris neutro 0,80: aprobado el 2026-11-12 |
 | Dureza del borde | `softness` | 0,04 | Aprobado el 2026-11-12 |
 | Rim: fuerza | `rim_strength` | 0,25 | Aprobado el 2026-11-12 |
 | Rim: ancho | `rim_width` | 0,3 | Aprobado el 2026-11-12 |
 | Grosor del contorno (px) | `width_px` | 2,5 | Aprobado el 2026-11-12 |
-| Tono medio (× color base) | `mid_shade` | 0,9 | PROPUESTA (pendiente de aprobar) |
-| Sombra (× color base) | `shadow_shade` | 0,73 | PROPUESTA (pendiente de aprobar) |
+| Tono medio (× color base) | `mid_shade` | 0,9 | Aprobado el 2026-11-12 |
+| Sombra (× color base) | `shadow_shade` | 0,73 | Aprobado el 2026-11-12 |
 
 ---
 
