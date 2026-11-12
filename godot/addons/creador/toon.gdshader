@@ -1,5 +1,5 @@
 // Material del cuerpo en estilo ilustración (pasos 3.12 y 3.10): piel o prenda según el color por vértice `garment`
-// (en el rojo, corte en 0,5), con 3 tonos planos de bordes suaves, sombra cálida, luz de contorno (rim) suave y sin
+// (en el rojo o en el alfa, corte en 0,5), con 3 tonos planos de bordes suaves, sombra cálida, luz de contorno (rim) suave y sin
 // brillo. El medio y la sombra salen del color base, más oscuro (lo multiplican: 1 = sin cambio), así que valen
 // para cualquier color.
 // Contorno: outline.gdshader como next_pass de este material (lo monta body_material.gd).
@@ -21,7 +21,9 @@ uniform float rim_strength : hint_range(0.0, 1.0) = 0.25;
 uniform float rim_width : hint_range(0.0, 1.0) = 0.3;
 
 void fragment() {
-	float garment = show_garment ? step(0.5, COLOR.r) : 0.0;
+	// `garment` está en el rojo en el editor (alfa 1) y en el alfa en el .glb (RGB blanco, para que la norma glTF no
+	// tiña el material; ver glb_exporter.gd). El menor de los dos vale en ambos casos sin interruptor.
+	float garment = show_garment ? step(0.5, min(COLOR.r, COLOR.a)) : 0.0;
 	vec3 color = mix(skin_color, garment_color, garment);
 	ROUGHNESS = 1.0;
 	SPECULAR = 0.0;

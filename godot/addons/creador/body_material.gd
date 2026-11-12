@@ -7,6 +7,7 @@ extends RefCounted
 ##   BodyMaterial.set_garment_visible(species.mesh, false)
 ##   BodyMaterial.set_outline_width(species.mesh, 2.0)    # píxeles, de 0 (sin contorno) a 10
 ##   BodyMaterial.set_unlit(species.mesh, true)           # sin luces ni contorno: color exacto, para las pruebas de color
+##   var copy := BodyMaterial.standalone(species.mesh)    # para un juego sin el addon (shaders incrustados)
 ## El interruptor de la prenda, los colores y el grosor son parámetros del material: el exportador (paso 3.6) lee
 ## is_garment_visible() y get_color(). Si la malla no tiene este material, valen DEFAULTS (prenda visible).
 ## DEFAULTS y OUTLINE_DEFAULTS son los valores por defecto de toon.gdshader y outline.gdshader: apply() los pone
@@ -80,6 +81,28 @@ static func get_outline_width(mesh: MeshInstance3D) -> float:
 	if material == null or material.shader != SHADER or not material.has_meta("outline"):
 		return OUTLINE_DEFAULTS["width_px"]
 	return (material.get_meta("outline") as ShaderMaterial).get_shader_parameter("width_px")
+
+
+## Copia para un juego sin el addon (el exportador la guarda como .tres): los dos shaders van incrustados, sin ruta,
+## con los valores de la malla y con luces (sin `unlit`). Si la malla no tiene este material, valen los valores por defecto.
+static func standalone(mesh: MeshInstance3D) -> ShaderMaterial:
+	var material := ShaderMaterial.new()
+	material.shader = _embedded(SHADER)
+	for name: String in DEFAULTS:
+		material.set_shader_parameter(name, _parameter(mesh, name))
+	material.set_shader_parameter("unlit", false)
+	var outline := ShaderMaterial.new()
+	outline.shader = _embedded(OUTLINE_SHADER)
+	outline.set_shader_parameter("outline_color", OUTLINE_DEFAULTS["outline_color"])
+	outline.set_shader_parameter("width_px", get_outline_width(mesh))
+	material.next_pass = outline
+	return material
+
+
+static func _embedded(shader: Shader) -> Shader:
+	var copy := Shader.new()
+	copy.code = shader.code
+	return copy
 
 
 static func _parameter(mesh: MeshInstance3D, name: String) -> Variant:

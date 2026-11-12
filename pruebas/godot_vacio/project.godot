@@ -1,0 +1,8 @@
+; Proyecto vacío, sin el addon: prueba que el .tres exportado funciona solo (paso 3.11b).
+
+config_version=5
+
+[application]
+
+config/name="Proyecto vacío"
+config/features=PackedStringArray("4.7")

@@ -10,7 +10,9 @@ extends RefCounted
 ## El personaje del editor no cambia.
 ## Material: StandardMaterial3D con luz, sin brillo (metálico 0, rugosidad 1; paso 3.11a), para que reciba sombra fuera
 ## del editor, con la prenda horneada en una textura (garment_texture.gd). Con la prenda oculta, sin textura: todo color piel.
-## El estilo toon no viaja en el .glb: en Godot lo pone el núcleo.
+## El estilo toon no viaja en el .glb: al lado se guarda heroe.tres (paso 3.11b), el material toon con el contorno y
+## los shaders incrustados (BodyMaterial.standalone()), que funciona sin el addon. En el juego:
+##   malla.material_override = load("res://heroe.tres")
 ## Color por vértice: en el archivo, `garment` va en el alfa y el RGB es blanco. La norma glTF multiplica el material
 ## por el color por vértice (Blender lo hace): con `garment` en el RGB, la piel saldría negra.
 
@@ -70,6 +72,8 @@ static func save(mesh: MeshInstance3D, skeleton: Skeleton3D, socket_names: Array
 	var error := document.append_from_scene(character, state)
 	if error == OK:
 		error = document.write_to_filesystem(state, path)
+	if error == OK:
+		error = ResourceSaver.save(BodyMaterial.standalone(mesh), path.get_basename() + ".tres")
 	character.free()
 	return error
 

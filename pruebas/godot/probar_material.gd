@@ -1,5 +1,5 @@
 extends SceneTree
-# Pasos 3.10a y 3.10c: el material del cuerpo (body_material.gd con toon.gdshader y outline.gdshader). Sin ventana.
+# Pasos 3.10a, 3.10c y 3.11b: el material del cuerpo (body_material.gd con toon.gdshader y outline.gdshader). Sin ventana.
 # Uso: (ulimit -v 4000000; timeout 120 godot --headless --path pruebas/godot -s probar_material.gd 2>&1 | grep -E 'FALLO|RESULTADO|ERROR')
 # DEFAULTS se compara con los `uniform` de los .gdshader (que el código y los shaders no se separen) y con la tabla
 # «Valores por defecto» de diseno/GUIA_ESTILO.md (que el código y la guía no se separen).
@@ -28,6 +28,8 @@ func _initialize() -> void:
 	_check_colors()
 	_check_outline_width()
 	_check_unlit()
+	_check_standalone()
+	_check_editor_alpha()
 	species.scene.free()
 	print("RESULTADO: ", "TODO BIEN" if failures == 0 else "%d FALLOS" % failures)
 	quit(1 if failures else 0)
@@ -168,3 +170,36 @@ func _check_unlit() -> void:
 	material.set_unlit(species.mesh, true)
 	check("unlit no cambia colores ni prenda", material.get_color(species.mesh, "skin_color") != Color.BLACK and material.is_garment_visible(species.mesh))
 	material.set_unlit(species.mesh, false)
+
+
+## Paso 3.11b: la copia para el juego lleva los valores de la malla, con luces, y los shaders incrustados (sin ruta).
+func _check_standalone() -> void:
+	material.set_color(species.mesh, "skin_color", Color(0.9, 0.6, 0.5))
+	material.set_garment_visible(species.mesh, false)
+	material.set_unlit(species.mesh, true)
+	var copy: ShaderMaterial = material.standalone(species.mesh)
+	var outline := copy.next_pass as ShaderMaterial
+	check("copia: valores de la malla (piel, prenda oculta, grosor 6) y con luces",
+		copy.get_shader_parameter("skin_color") == Color(0.9, 0.6, 0.5) and copy.get_shader_parameter("show_garment") == false
+		and copy.get_shader_parameter("unlit") == false and outline != null and outline.get_shader_parameter("width_px") == 6.0)
+	check("copia: shaders incrustados (sin ruta) con el mismo código que los del addon",
+		copy.shader.resource_path == "" and copy.shader.code == material.SHADER.code
+		and outline.shader.resource_path == "" and outline.shader.code == material.OUTLINE_SHADER.code)
+	var path := "user://probar_material_copia.tres"
+	var saved := ResourceSaver.save(copy, path)
+	var text := FileAccess.get_file_as_string(path)
+	check("copia guardada en .tres: sin ninguna ruta res:// y con los dos shaders dentro",
+		saved == OK and not text.contains("res://") and text.count("shader_type spatial") == 2, "error %d" % saved)
+	DirAccess.remove_absolute(ProjectSettings.globalize_path(path))
+	material.set_unlit(species.mesh, false)
+	material.set_garment_visible(species.mesh, true)
+
+
+## Paso 3.11b: toon.gdshader lee la prenda con min(rojo, alfa); en el editor el alfa vale 1, así que manda el rojo.
+func _check_editor_alpha() -> void:
+	var colors: PackedColorArray = species.mesh.mesh.surface_get_arrays(0)[Mesh.ARRAY_COLOR]
+	var lowest := 1.0
+	for color in colors:
+		lowest = minf(lowest, color.a)
+	check("malla del editor: alfa 1 en todos los vértices (min(rojo, alfa) = rojo)", colors.size() > 0 and lowest == 1.0,
+		"%d vértices, alfa mínimo %s" % [colors.size(), lowest])
