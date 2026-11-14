@@ -2,11 +2,14 @@ extends Control
 # Paso 4.1: ventana del editor con las pestañas de diseno/maqueta-pestana-cuerpo.html; solo Cuerpo está activa.
 # Abrir: (ulimit -v 4000000; timeout 120 godot --path godot)
 # Las pestañas se crean aquí (no en main.tscn) para que la prueba pueda cargar este script desde otro proyecto.
+# Cuerpo: la vista 3D (body_view.gd) a la izquierda y el panel de deslizadores (4.3) a la derecha.
 
+const BodyView := preload("body_view.gd")
 const TAB_NAMES := ["Cuerpo", "Cara y ojos", "Pelo", "Ropa", "Accesorios", "Exportar"]
 const ACTIVE_TAB := 0
 
 var tabs: TabContainer
+var body_view: SubViewportContainer
 
 
 func _ready() -> void:
@@ -15,9 +18,22 @@ func _ready() -> void:
 	tabs.set_anchors_and_offsets_preset(Control.PRESET_FULL_RECT)
 	add_child(tabs)
 	for tab_name in TAB_NAMES:
-		var page := Control.new()
+		var page: Control = _body_page() if tab_name == "Cuerpo" else Control.new()
 		page.name = tab_name
 		tabs.add_child(page)
 	for i in TAB_NAMES.size():
 		tabs.set_tab_disabled(i, i != ACTIVE_TAB)
 	tabs.current_tab = ACTIVE_TAB
+
+
+func _body_page() -> Control:
+	var page := HBoxContainer.new()
+	body_view = BodyView.new()
+	body_view.size_flags_horizontal = Control.SIZE_EXPAND_FILL
+	body_view.size_flags_stretch_ratio = 2.0
+	page.add_child(body_view)
+	var panel := PanelContainer.new()
+	panel.name = "Deslizadores"
+	panel.size_flags_horizontal = Control.SIZE_EXPAND_FILL
+	page.add_child(panel)
+	return page

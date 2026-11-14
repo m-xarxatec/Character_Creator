@@ -3,7 +3,7 @@
 > Paso a paso. Un paso cada vez y siempre con aprobación (ver `CLAUDE.md`).
 > Lo que no es del MVP va a `IDEAS.md`.
 
-**Estado actual:** Fase 4 · 4.1 hecho; siguiente: 4.2
+**Estado actual:** Fase 4 · 4.1 y 4.2 hechos; siguiente: 4.3
 **Leyenda:** `[ ]` pendiente · `[~]` en curso · `[x]` hecho
 
 ---
@@ -144,7 +144,7 @@ Pasos formales que salen de la decisión (pendientes; cada uno con su propuesta)
 Según `diseno/maqueta-pestana-cuerpo.html`.
 
 - [x] 4.1 Ventana con pestañas (solo Cuerpo activa).
-- [ ] 4.2 Vista 3D con cámara orbital y maniquí en vivo.
+- [x] 4.2 Vista 3D con cámara orbital y maniquí en vivo.
 - [ ] 4.3 Zonas y deslizadores con etiqueta de tipo.
 - [ ] 4.4 Simetría, deshacer y rehacer, y "restablecer zona". Aviso al activar la simetría si los lados difieren: lista de deslizadores distintos y botones Mantener como está (por defecto) / Igualar a la izquierda / Igualar a la derecha. Igualar cuenta como un solo cambio para Deshacer. Si los lados son iguales, no se muestra el aviso.
 - [ ] 4.5 Botones Probar huesos y Exportar .glb conectados al núcleo, y botón para quitar o poner la prenda base.
@@ -257,3 +257,4 @@ Según `diseno/maqueta-pestana-cuerpo.html`.
 | 2026-11-14 | ajustes de cierre de la Fase 3 | Aprobado por el responsable: `probar_normales_estilo.gd` pasa su límite `SAME_DEG` de 0,001° a 0,1° (medida real 0,000000°; motivo: mismo criterio del proyecto para normales, como el horneado del 3.6.1 y `probar_aleatorios`; un cambio real del cálculo mueve las normales varios grados, así que lo detecta igual y no salta por ruido). Aplanado de la cara: se mantiene 0,6 (**decidido** con `aplanado_anime_hoja.png`). El 4.6 incluye la vista en vivo con las normales de estilo, recalculadas al soltar el deslizador (el grosor del contorno ya está en el 4.7). `IDEAS.md`: deslizador de separación de los ojos (pestaña Cara). Pasa `probar_normales_estilo` |
 | 2026-11-14 | cierre de la Fase 3 | Revisor de cierre: **APTO CON RESERVAS** (todas las pruebas sin FALLO; `.glb` del preset anime cumple las reglas, se abre en el proyecto vacío con su `.tres` y en Blender, y se anima en pose T). Capturas en `pruebas/capturas/revision/2026-11-14_cierre_fase3/` aprobadas por el responsable. Reservas: borde dentado de la prenda con el material del `.glb` sin el `.tres`, dedos en el muslo al sentarse (5.10), `probar_exportar_datos.py` tarda 525 s con otras pruebas en marcha, capturas viejas de `estilo/`, `normales_cara/` y `cara_anime/`, 762 caras de la cabeza con la normal contraria (solo luz), `TANGENT` en el `.glb`. Fila en `HISTORIAL.md` |
 | 2026-11-14 | 4.1 | `godot/project.godot` (GameMolde, escena principal `res://app/main.tscn`; el núcleo queda dentro como `addons/creador/`). `godot/app/main.gd` crea un `TabContainer` con las 6 pestañas de la maqueta (Cuerpo, Cara y ojos, Pelo, Ropa, Accesorios, Exportar); solo Cuerpo activa. Las pestañas se crean en el script para que la prueba lo cargue desde otro proyecto. Prueba nueva `probar_ventana.gd` (sin ventana): 6 pestañas en orden, solo Cuerpo activa, se abre en Cuerpo y ningún archivo del núcleo nombra `app/`. El proyecto arranca sin errores (`--headless --quit-after 5`) |
+| 2026-11-14 | 4.2 | `godot/app/body_view.gd`: vista 3D en un `SubViewport` (fondo gris, luz direccional, luz ambiente); carga `datos/humana` (dos carpetas por encima del script: vale para el MVP, no para distribuir) con el preset de personaje nuevo, `BodyMaterial.apply` + `Preset.apply_look`, pose A (reposo); `set_values()` llama a `CharacterUpdater.update` (lo usará el 4.3). `godot/app/orbit_camera.gd`: arrastrar con el botón izquierdo gira, la rueda acerca y aleja (1–5 m), ángulo vertical −10° a 60°, mira a 1 m de altura. La app carga el núcleo con `preload` relativo (sin `class_name`, para que las pruebas la carguen desde otro proyecto). Pestaña Cuerpo: vista a la izquierda (2/3) y panel vacío para los deslizadores. El estilo de las normales en vivo queda para el 4.6. Prueba nueva `probar_vista.gd` (sin ventana): carga sin error (695 ms), cámara de frente, giro de 90°, límites de ángulo y zoom, `head_size` a 1 da escala 1,3 y volver al preset deja el esqueleto igual. Pasan `probar_vista` y `probar_ventana`; el proyecto arranca sin errores. `IDEAS.md`: estética de la ventana después del MVP |

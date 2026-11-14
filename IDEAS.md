@@ -72,6 +72,10 @@
 
 ---
 
+## Después del MVP: interfaz
+
+- Estética de la ventana del editor (tema, colores, tipografía, espaciado), según la maqueta. Hoy son los controles de Godot por defecto.
+
 ## Pack "Universal Base Characters" de Quaternius (CC0)
 
 El zip está en `referencias/` (git no lo guarda). Versión gratis: 2 cuerpos estilizados en pose T con ropa interior pintada, 8 peinados, cejas y barba. Mismo esqueleto que sus animaciones.
