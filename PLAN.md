@@ -3,7 +3,7 @@
 > Paso a paso. Un paso cada vez y siempre con aprobación (ver `CLAUDE.md`).
 > Lo que no es del MVP va a `IDEAS.md`.
 
-**Estado actual:** Fase 3 cerrada; siguiente: 4.1
+**Estado actual:** Fase 4 · 4.1 hecho; siguiente: 4.2
 **Leyenda:** `[ ]` pendiente · `[~]` en curso · `[x]` hecho
 
 ---
@@ -143,7 +143,7 @@ Pasos formales que salen de la decisión (pendientes; cada uno con su propuesta)
 
 Según `diseno/maqueta-pestana-cuerpo.html`.
 
-- [ ] 4.1 Ventana con pestañas (solo Cuerpo activa).
+- [x] 4.1 Ventana con pestañas (solo Cuerpo activa).
 - [ ] 4.2 Vista 3D con cámara orbital y maniquí en vivo.
 - [ ] 4.3 Zonas y deslizadores con etiqueta de tipo.
 - [ ] 4.4 Simetría, deshacer y rehacer, y "restablecer zona". Aviso al activar la simetría si los lados difieren: lista de deslizadores distintos y botones Mantener como está (por defecto) / Igualar a la izquierda / Igualar a la derecha. Igualar cuenta como un solo cambio para Deshacer. Si los lados son iguales, no se muestra el aviso.
@@ -256,3 +256,4 @@ Según `diseno/maqueta-pestana-cuerpo.html`.
 | 2026-11-12 | 3.16 | `godot/addons/creador/style_normals.gd` (`StyleNormals`): `smooth` (10 pasadas), `face` (elipsoide, aplanado 0,6), `head_weights` y `apply`, portados de las maquetas sin cambiar el cálculo. `GlbExporter` las pone en la malla exportada (sin tangentes): viajan en el `.glb`. La vista en vivo del editor aún no las lleva (haría falta hornear). Las maquetas llaman al núcleo: con ventana y `--salida`, `estilo` 45/45, `normales_cara` 23/23 y `cara_anime` 29/29 PNG idénticas (porte exacto); `prenda_exportada` 4/4. `cara.glb` sale ahora del exportador (mismo cuerpo; normales a 0,007° de las de antes, la compresión de Godot) y pasan las tres pruebas de normales: Godot máx. 0,0074° / media 0,0005°, importador igual, Blender máx. 0,79° / media 0,0009° (límite 1°). Prueba nueva `probar_normales_estilo.gd` (sin ventana, preset `anime.json`): exportadas = `StyleNormals.apply` de la malla horneada, 0,000000° (comparadas ya guardadas: Godot comprime las normales); cambian de media 34,8° en la cabeza y 13,3° en el resto. Hoja A/B del aplanado sobre la cara anime: `pruebas/capturas/normales_cara/aplanado_anime_hoja.png` (filas 1,0 / 0,6 / 0,35). `GUIA_ESTILO.md`: los dos valores. Pasan `probar_exportar`, `probar_anclajes`, `probar_personaje_horneado`, `probar_glb` (t y a), `probar_glb_en_blender`, `probar_importador.sh`, `probar_prenda` y las de carga, presets, formas, update y material |
 | 2026-11-14 | ajustes de cierre de la Fase 3 | Aprobado por el responsable: `probar_normales_estilo.gd` pasa su límite `SAME_DEG` de 0,001° a 0,1° (medida real 0,000000°; motivo: mismo criterio del proyecto para normales, como el horneado del 3.6.1 y `probar_aleatorios`; un cambio real del cálculo mueve las normales varios grados, así que lo detecta igual y no salta por ruido). Aplanado de la cara: se mantiene 0,6 (**decidido** con `aplanado_anime_hoja.png`). El 4.6 incluye la vista en vivo con las normales de estilo, recalculadas al soltar el deslizador (el grosor del contorno ya está en el 4.7). `IDEAS.md`: deslizador de separación de los ojos (pestaña Cara). Pasa `probar_normales_estilo` |
 | 2026-11-14 | cierre de la Fase 3 | Revisor de cierre: **APTO CON RESERVAS** (todas las pruebas sin FALLO; `.glb` del preset anime cumple las reglas, se abre en el proyecto vacío con su `.tres` y en Blender, y se anima en pose T). Capturas en `pruebas/capturas/revision/2026-11-14_cierre_fase3/` aprobadas por el responsable. Reservas: borde dentado de la prenda con el material del `.glb` sin el `.tres`, dedos en el muslo al sentarse (5.10), `probar_exportar_datos.py` tarda 525 s con otras pruebas en marcha, capturas viejas de `estilo/`, `normales_cara/` y `cara_anime/`, 762 caras de la cabeza con la normal contraria (solo luz), `TANGENT` en el `.glb`. Fila en `HISTORIAL.md` |
+| 2026-11-14 | 4.1 | `godot/project.godot` (GameMolde, escena principal `res://app/main.tscn`; el núcleo queda dentro como `addons/creador/`). `godot/app/main.gd` crea un `TabContainer` con las 6 pestañas de la maqueta (Cuerpo, Cara y ojos, Pelo, Ropa, Accesorios, Exportar); solo Cuerpo activa. Las pestañas se crean en el script para que la prueba lo cargue desde otro proyecto. Prueba nueva `probar_ventana.gd` (sin ventana): 6 pestañas en orden, solo Cuerpo activa, se abre en Cuerpo y ningún archivo del núcleo nombra `app/`. El proyecto arranca sin errores (`--headless --quit-after 5`) |
