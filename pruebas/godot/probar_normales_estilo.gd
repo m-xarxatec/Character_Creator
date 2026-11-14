@@ -6,7 +6,7 @@ extends SceneTree
 # Que el porte desde las maquetas es exacto lo prueban sus capturas (probar_estilo y probar_normales_cara con --salida,
 # idénticas píxel a píxel); que llegan al leer el .glb, probar_exportar y las tres pruebas de normales del 3.13a-2.
 
-const SAME_DEG := 0.001
+const SAME_DEG := 0.1  # criterio del proyecto para normales (como el 3.6.1 y probar_aleatorios)
 const MIN_CHANGE_DEG := 1.0  # media del cambio en la cabeza y en el resto: si no, no se han aplicado
 
 var failures := 0

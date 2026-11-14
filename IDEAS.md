@@ -37,6 +37,7 @@
 ## Después del MVP: pestaña Cara
 
 - Deslizadores por rasgo (mentón, nariz, pómulos, mandíbula, ojos, boca…), como los creadores de personajes de los juegos. Valorar reutilizar las formas de cara de MakeHuman sobre la cabeza anime (mismos vértices).
+- Deslizador de separación de los ojos con las formas CC0 de MakeHuman que mueven los ojos; el ancla de la calcomanía es un vértice fijo, así que el ojo lo sigue. En el preset anime los ojos se ven algo separados.
 - Los ojos de calcomanía se deforman en tres cuartos y de perfil: hará falta otro sistema de ojos.
 - Un deslizador por rasgo a partir de las formas de la cara anime (`cuenca_plana`, `boca_anime`, `mandibula_anime`, `menton_anime`, `nariz_anime`): cada una, una fila de la tabla del 2.1.
 - Esas formas aplastan las bolsas interiores de la boca y los ojos (hasta 58 mm): hay que resolverlo antes de abrir la boca (expresiones, visemas).
