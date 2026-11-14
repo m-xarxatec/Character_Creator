@@ -5,3 +5,4 @@ Una fila por revisión del agente `revisor-visual` (notas de 1 a 5, sección 6.8
 | Fecha | Paso | Proporciones y silueta | Deformación al animar | Aspecto tipo VRoid | Limpieza de malla y texturas | Listo para el juego | Veredicto |
 | --- | --- | --- | --- | --- | --- | --- | --- |
 | 2026-11-12 | 3.6.x, 3.12, 3.13a-4 (estado de la Fase 3) | 3 | 3 | 2 | 4 | 3 | APTO CON RESERVAS |
+| 2026-11-14 | Cierre de la Fase 3 (3.7–3.11, 3.14–3.17) | 3 | 3 | — (lo juzga el responsable) | 4 | 4 | APTO CON RESERVAS |
