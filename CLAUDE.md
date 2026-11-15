@@ -42,6 +42,7 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 - Blender 5.2.2 fijo (snap retenido con `snap refresh --hold`): sin actualizaciones automáticas; cambiar de versión solo con un paso del PLAN.
 - Sin dependencias nuevas sin aprobación.
 - Lanzar siempre Godot y Blender con límite de tiempo y memoria: `(ulimit -v 4000000; timeout 120 ...)`.
+- Abrir el editor para probarlo a mano: `(ulimit -v 4000000; timeout 900 godot --path godot)` (con 120 s se cierra a medio probar).
 - Crear un personaje: `blender -b -P blender/generar_cuerpo.py -- cuerpo.json salida.glb`
 - Pruebas de Blender (una por archivo `pruebas/fase_*/probar_*.py`): `blender -b -P <archivo> 2>&1 | grep -E 'FALLO|RESULTADO'`
 - Pruebas de Godot: proyecto `pruebas/godot/`, `godot --headless --path pruebas/godot -s <script>.gd`

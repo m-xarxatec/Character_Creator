@@ -75,6 +75,7 @@
 ## Después del MVP: interfaz
 
 - Estética de la ventana del editor (tema, colores, tipografía, espaciado), según la maqueta. Hoy son los controles de Godot por defecto.
+- Cuando el editor esté como queremos: un comando en el PATH que lo abra con una sola orden.
 
 ## Pack "Universal Base Characters" de Quaternius (CC0)
 
