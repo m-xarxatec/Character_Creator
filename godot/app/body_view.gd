@@ -1,12 +1,13 @@
 extends SubViewportContainer
 # Paso 4.2: vista 3D del maniquí en vivo (pestaña Cuerpo). Carga datos/humana con el preset de personaje nuevo,
-# lo pinta con BodyMaterial y lo muestra en pose A (el reposo). Los deslizadores (4.3) llaman a set_values().
+# lo pinta con BodyMaterial y lo muestra en pose A (el reposo). Los deslizadores (slider_panel.gd) llaman a set_value().
 # datos/ está fuera del proyecto: se busca dos carpetas por encima de este script (vale para el MVP, no para distribuir).
 
 const SpeciesData := preload("../addons/creador/species_data.gd")
 const CharacterUpdater := preload("../addons/creador/character_updater.gd")
 const Preset := preload("../addons/creador/preset.gd")
 const BodyMaterial := preload("../addons/creador/body_material.gd")
+const ShapeWeights := preload("../addons/creador/shape_weights.gd")
 const OrbitCamera := preload("orbit_camera.gd")
 
 const SPECIES := "humana"
@@ -39,6 +40,14 @@ func _ready() -> void:
 func set_values(new_values: Dictionary) -> Array[String]:
 	values = new_values
 	return updater.update(values, false)
+
+
+## Un deslizador (recortado a [0, 1]; sin simetría hasta el paso 4.4). false si la clave no existe o el valor no vale.
+func set_value(key: String, value: float) -> bool:
+	if not ShapeWeights.set_value(values, key, value, false):
+		return false
+	updater.update(values, false)
+	return true
 
 
 func _add_world(viewport: SubViewport) -> void:
