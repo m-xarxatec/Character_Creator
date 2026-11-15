@@ -1,5 +1,6 @@
 extends SceneTree
-# Paso 4.3: panel de deslizadores (godot/app/slider_panel.gd) dentro de la ventana (main.gd), conectado a la vista. Sin ventana.
+# Pasos 4.3 y 4.4: panel de deslizadores (godot/app/slider_panel.gd) dentro de la ventana (main.gd), conectado al editor
+# y a la vista: zonas, filas, etiquetas, barras en vivo, simetría con su aviso, Deshacer, Rehacer, Ctrl+Z y Restablecer zona. Sin ventana.
 # Uso: (ulimit -v 4000000; timeout 120 godot --headless --path pruebas/godot -s probar_panel.gd 2>&1 | grep -E 'FALLO|RESULTADO|ERROR')
 
 const ZONES := ["Global", "Cabeza", "Cuello", "Hombros", "Torso", "Pecho", "Cintura", "Caderas", "Glúteos", "Brazos",
@@ -22,6 +23,8 @@ func _initialize() -> void:
 		_check_layout(main.slider_panel)
 		_check_values(main.slider_panel, main.body_view)
 		_check_live(main.slider_panel, main.body_view)
+		_check_symmetry(main.slider_panel, main.body_view)
+		_check_history(main.slider_panel, main.body_view)
 	main.free()
 	print("RESULTADO: ", "TODO BIEN" if failures == 0 else "%d FALLOS" % failures)
 	quit(1 if failures else 0)
@@ -39,8 +42,13 @@ func _check_layout(panel) -> void:
 	check("empieza desplegada la primera zona", _open_zones(panel) == ["Global"], str(_open_zones(panel)))
 	panel.zone_buttons["Cabeza"].pressed.emit()
 	check("elegir Cabeza la despliega y pliega Global", _open_zones(panel) == ["Cabeza"], str(_open_zones(panel)))
-	check("Cabeza: Tamaño, Ancho y Alto", panel.zone_boxes["Cabeza"].get_child_count() == 3)
-	check("Hombros: 4 filas (Músculo con dos lados)", panel.zone_boxes["Hombros"].get_child_count() == 4)
+	check("Cabeza: Tamaño, Ancho y Alto", _rows(panel, "Cabeza") == 3)
+	check("Hombros: 4 filas (Músculo con dos lados)", _rows(panel, "Hombros") == 4)
+	check("cada zona acaba con su botón Restablecer zona", panel.zones.all(func(zone: String) -> bool:
+			return panel.zone_boxes[zone].get_child(-1) == panel.reset_buttons[zone]))
+	check("la rueda no mueve ninguna barra", panel.sliders.values().all(func(slider: HSlider) -> bool: return not slider.scrollable))
+	check("empieza con Simetría marcada y sin Deshacer ni Rehacer", panel.symmetry_box.button_pressed
+			and panel.undo_button.disabled and panel.redo_button.disabled)
 	var wrong := []
 	for key: String in TYPES:
 		if panel.badges[key].text != TYPES[key]:
@@ -70,11 +78,7 @@ func _check_live(panel, view) -> void:
 	var before := _blend_values(view.species.mesh)
 	panel.sliders["muscle"].value = 1.0
 	check("mover Global › Músculo cambia las formas de la malla", _blend_values(view.species.mesh) != before)
-	panel.sliders["hand_size_l"].value = 1.0
-	var left := skeleton.get_bone_pose_scale(skeleton.find_bone("LeftHand"))
-	var right := skeleton.get_bone_pose_scale(skeleton.find_bone("RightHand"))
-	check("mano izq. a 1: escala 1,2 solo en la izquierda (sin simetría hasta el 4.4)",
-			left.is_equal_approx(Vector3.ONE * 1.2) and right.is_equal_approx(Vector3.ONE), "%s / %s" % [left, right])
+	check("Deshacer se activa tras un cambio", not panel.undo_button.disabled)
 
 
 func _open_zones(panel) -> Array:
@@ -86,3 +90,76 @@ func _blend_values(mesh: MeshInstance3D) -> Array:
 	for i in mesh.mesh.get_blend_shape_count():
 		weights.append(mesh.get_blend_shape_value(i))
 	return weights
+
+
+func _rows(panel, zone: String) -> int:
+	return panel.zone_boxes[zone].get_children().filter(func(child: Node) -> bool: return child is HBoxContainer).size()
+
+
+func _scale(view, bone: String) -> Vector3:
+	return view.species.skeleton.get_bone_pose_scale(view.species.skeleton.find_bone(bone))
+
+
+func _check_symmetry(panel, view) -> void:
+	panel.sliders["hand_size_l"].value = 1.0
+	check("con simetría, mover la mano izq. mueve la barra der.", panel.sliders["hand_size_r"].value == 1.0)
+	check("y las dos manos escalan 1,2", _scale(view, "RightHand").is_equal_approx(Vector3.ONE * 1.2))
+	panel.symmetry_box.button_pressed = false
+	check("desmarcar Simetría la apaga en el editor", not panel.editor.symmetry)
+	panel.sliders["hand_size_l"].value = 0.0
+	check("sin simetría, la mano izq. a 0 no mueve la der.", panel.sliders["hand_size_r"].value == 1.0
+			and _scale(view, "LeftHand").is_equal_approx(Vector3.ONE * 0.8) and _scale(view, "RightHand").is_equal_approx(Vector3.ONE * 1.2))
+	panel.symmetry_box.button_pressed = true
+	var dialog: AcceptDialog = panel.symmetry_dialog
+	check("al marcarla con lados distintos sale el aviso", dialog.visible)
+	check("el aviso lista Manos › Tamaño: izq. 0,00 / der. 1,00", dialog.dialog_text.contains("Manos › Tamaño: izq. 0,00 / der. 1,00"),
+			dialog.dialog_text.replace("\n", " | "))
+	dialog.custom_action.emit("_r")
+	check("Igualar a la derecha: la barra izq. pasa a 1,0 y se cierra el aviso", panel.sliders["hand_size_l"].value == 1.0
+			and not dialog.visible and _scale(view, "LeftHand").is_equal_approx(Vector3.ONE * 1.2))
+	check("y la simetría queda activada", panel.editor.symmetry)
+	panel.undo_button.pressed.emit()
+	check("Deshacer devuelve la barra izq. a 0", panel.sliders["hand_size_l"].value == 0.0)
+	panel.symmetry_box.button_pressed = false
+	panel.symmetry_box.button_pressed = true
+	dialog.confirmed.emit()
+	check("Mantener como está: no cambia nada y activa la simetría", panel.sliders["hand_size_l"].value == 0.0
+			and panel.sliders["hand_size_r"].value == 1.0 and panel.editor.symmetry and not dialog.visible)
+	panel.editor.match_side("_l")
+	panel.symmetry_box.button_pressed = false
+	panel.symmetry_box.button_pressed = true
+	check("con los lados iguales no sale el aviso", not dialog.visible and panel.editor.symmetry)
+
+
+func _check_history(panel, view) -> void:
+	panel.reset_buttons["Cabeza"].pressed.emit()
+	check("Restablecer Cabeza: barra Tamaño a 0,5 y cabeza a escala 1", panel.sliders["head_size"].value == 0.5
+			and _scale(view, "Head").is_equal_approx(Vector3.ONE))
+	panel.undo_button.pressed.emit()
+	check("Deshacer: vuelve a 1 y la cabeza a 1,3", panel.sliders["head_size"].value == 1.0
+			and _scale(view, "Head").is_equal_approx(Vector3.ONE * 1.3))
+	check("Rehacer se activa", not panel.redo_button.disabled)
+	panel.redo_button.pressed.emit()
+	check("Rehacer: otra vez 0,5", panel.sliders["head_size"].value == 0.5)
+	_press_keys(KEY_Z, false)
+	check("Ctrl+Z deshace", panel.sliders["head_size"].value == 1.0, str(panel.sliders["head_size"].value))
+	_press_keys(KEY_Z, true)
+	check("Ctrl+Mayús+Z rehace", panel.sliders["head_size"].value == 0.5, str(panel.sliders["head_size"].value))
+	_press_keys(KEY_Z, false)
+	_press_keys(KEY_Y, false)
+	check("Ctrl+Y rehace", panel.sliders["head_size"].value == 0.5, str(panel.sliders["head_size"].value))
+	var steps: int = panel.editor._undo.size()
+	panel.editor.begin_change()  # lo que hace el panel al pulsar la barra con el ratón
+	for value in [0.6, 0.7, 0.8]:
+		panel.sliders["head_size"].value = value
+	panel.sliders["head_size"].drag_ended.emit(true)
+	check("un arrastre de la barra es un solo cambio", panel.editor._undo.size() == steps + 1, str(panel.editor._undo.size() - steps))
+
+
+func _press_keys(key: Key, shift: bool) -> void:
+	var event := InputEventKey.new()
+	event.keycode = key
+	event.ctrl_pressed = true
+	event.shift_pressed = shift
+	event.pressed = true
+	root.push_input(event)
