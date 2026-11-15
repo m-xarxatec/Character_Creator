@@ -1,12 +1,14 @@
 extends SubViewportContainer
 # Paso 4.2: vista 3D del maniquí en vivo (pestaña Cuerpo). Carga datos/humana con el preset de personaje nuevo,
 # lo pinta con BodyMaterial y lo muestra en pose A (el reposo). El editor (body_editor.gd) llama a set_values().
+# Paso 4.5: set_pose_t() (Probar huesos) y export_glb() (los usa body_actions.gd).
 # datos/ está fuera del proyecto: se busca dos carpetas por encima de este script (vale para el MVP, no para distribuir).
 
 const SpeciesData := preload("../addons/creador/species_data.gd")
 const CharacterUpdater := preload("../addons/creador/character_updater.gd")
 const Preset := preload("../addons/creador/preset.gd")
 const BodyMaterial := preload("../addons/creador/body_material.gd")
+const GlbExporter := preload("../addons/creador/glb_exporter.gd")
 const OrbitCamera := preload("orbit_camera.gd")
 
 const SPECIES := "humana"
@@ -17,6 +19,7 @@ var load_ms := 0
 var species  # SpeciesData
 var updater  # CharacterUpdater
 var values: Dictionary
+var pose_t := false
 var camera: Camera3D
 
 
@@ -38,7 +41,19 @@ func _ready() -> void:
 ## Valores de Forma y Proporción juntos, como en el preset. Devuelve las claves que no aplicó.
 func set_values(new_values: Dictionary) -> Array[String]:
 	values = new_values
-	return updater.update(values, false)
+	return updater.update(values, pose_t)
+
+
+## Probar huesos (paso 4.5): true = pose T; false = reposo (pose A).
+func set_pose_t(on: bool) -> void:
+	pose_t = on
+	set_values(values)
+
+
+## Exporta en pose T, sea cual sea la pose de la vista (el exportador la fija), con el .tres al lado.
+func export_glb(path: String) -> Error:
+	var sockets: Array = species.manifest["bones"]["sockets"]
+	return GlbExporter.save(species.mesh, species.skeleton, sockets, path, true)
 
 
 func _add_world(viewport: SubViewport) -> void:

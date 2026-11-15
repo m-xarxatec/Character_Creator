@@ -3,17 +3,19 @@ extends Control
 # Abrir: (ulimit -v 4000000; timeout 900 godot --path godot)
 # Las pestañas se crean aquí (no en main.tscn) para que la prueba pueda cargar este script desde otro proyecto.
 # Cuerpo: la vista 3D (body_view.gd) a la izquierda y el panel de deslizadores (slider_panel.gd) a la derecha; los dos
-# siguen al editor (body_editor.gd). Ctrl+Z deshace; Ctrl+Mayús+Z o Ctrl+Y rehacen (acciones ui_undo y ui_redo de Godot).
+# siguen al editor (body_editor.gd). Debajo, la barra de body_actions.gd (paso 4.5). Ctrl+Z deshace; Ctrl+Mayús+Z o Ctrl+Y rehacen (acciones ui_undo y ui_redo de Godot).
 
 const BodyView := preload("body_view.gd")
 const SliderPanel := preload("slider_panel.gd")
 const BodyEditor := preload("body_editor.gd")
+const BodyActions := preload("body_actions.gd")
 const TAB_NAMES := ["Cuerpo", "Cara y ojos", "Pelo", "Ropa", "Accesorios", "Exportar"]
 const ACTIVE_TAB := 0
 
 var tabs: TabContainer
 var body_view: SubViewportContainer
 var slider_panel: ScrollContainer
+var body_actions: HBoxContainer
 var editor  # BodyEditor (null si la especie no cargó)
 
 
@@ -33,6 +35,7 @@ func _ready() -> void:
 		editor = BodyEditor.new(body_view.species.sliders, body_view.values)
 		editor.changed.connect(func() -> void: body_view.set_values(editor.values))
 		slider_panel.setup(editor)
+		body_actions.setup(body_view)
 
 
 func _unhandled_key_input(event: InputEvent) -> void:
@@ -45,7 +48,10 @@ func _unhandled_key_input(event: InputEvent) -> void:
 
 
 func _body_page() -> Control:
+	var column := VBoxContainer.new()
 	var page := HBoxContainer.new()
+	page.size_flags_vertical = Control.SIZE_EXPAND_FILL
+	column.add_child(page)
 	body_view = BodyView.new()
 	body_view.size_flags_horizontal = Control.SIZE_EXPAND_FILL
 	body_view.size_flags_stretch_ratio = 2.0
@@ -54,4 +60,7 @@ func _body_page() -> Control:
 	slider_panel.name = "Deslizadores"
 	slider_panel.size_flags_horizontal = Control.SIZE_EXPAND_FILL
 	page.add_child(slider_panel)
-	return page
+	body_actions = BodyActions.new()
+	body_actions.name = "Acciones"
+	column.add_child(body_actions)
+	return column
