@@ -1,6 +1,7 @@
 extends HBoxContainer
 # Paso 4.5: barra inferior de la pestaña Cuerpo (como en diseno/maqueta-pestana-cuerpo.html).
 # - Probar huesos: alterna el maniquí entre el reposo (pose A) y la pose T, la que se exporta. El banco es la Fase 5.
+# - Animación (paso 5.1): lista con «Sin animación», los clips de datos/animaciones (en bucle) y las poses fijas (5.2).
 # - Exportar .glb: elige dónde guardar y exporta en pose T (GlbExporter); el .tres va al lado. Avisa con la ruta o el error.
 # - Prenda base: muestra u oculta la prenda (BodyMaterial); el .glb sale como se ve. No entra en Deshacer.
 # Uso: var bar := BodyActions.new(); bar.setup(body_view)
@@ -9,6 +10,7 @@ const BodyMaterial := preload("../addons/creador/body_material.gd")
 
 var view: SubViewportContainer  # BodyView
 var bones_button: Button
+var animation_list: OptionButton
 var export_button: Button
 var garment_check: CheckBox
 var file_dialog: FileDialog
@@ -19,6 +21,7 @@ func setup(body_view: SubViewportContainer) -> void:
 	view = body_view
 	bones_button = _button("Probar huesos", func() -> void: set_pose_t(not view.pose_t))
 	bones_button.toggle_mode = true
+	_add_animation_list()
 	export_button = _button("Exportar .glb", func() -> void: file_dialog.popup_centered_ratio(0.6))
 	garment_check = CheckBox.new()
 	garment_check.text = "Prenda base"
@@ -31,6 +34,24 @@ func setup(body_view: SubViewportContainer) -> void:
 func set_pose_t(on: bool) -> void:
 	bones_button.set_pressed_no_signal(on)
 	view.set_pose_t(on)
+
+
+## Elige una fila de la lista: 0 = sin animación; las demás, los clips y las poses en su orden.
+func set_animation(index: int) -> void:
+	animation_list.select(index)
+	view.set_animation("" if index == 0 else view.animations.entries()[index - 1]["id"])
+
+
+func _add_animation_list() -> void:
+	animation_list = OptionButton.new()
+	animation_list.add_item("Sin animación")
+	if view.animations != null:
+		for entry: Dictionary in view.animations.entries():
+			animation_list.add_item(entry["nombre"])
+	animation_list.disabled = view.animations == null
+	animation_list.tooltip_text = view.animation_error
+	animation_list.item_selected.connect(set_animation)
+	add_child(animation_list)
 
 
 ## Exporta y avisa. Devuelve el error de GlbExporter.

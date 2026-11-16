@@ -12,6 +12,8 @@
 - Comparar antes y después (dos maniquíes lado a lado).
 - Medidas reales (altura en cm) junto a los deslizadores.
 - Atajos de teclado.
+- Pies al suelo al animar (IK de pies): sin él, con las rodillas dobladas los pies flotan según las proporciones (medido en el 5.1: hasta 168 mm al sentarse).
+- `datos/animaciones/UAL1_Standard.glb` trae 43 animaciones (7,6 MB) y se usan 5: recortarlo antes de distribuir.
 
 ---
 
@@ -71,6 +73,11 @@
 - **Decisión pendiente:** ¿la regla 5 admite CC-BY? Si se admite, el autor va a `CREDITOS.md` como el resto.
 
 ---
+
+## Después del MVP: animaciones y suelo
+
+- Más clips en la lista Animación, y una opción para cargar animaciones propias (un `.glb` con esqueleto humanoide).
+- Suelo o rejilla en la vista 3D, y opciones para anclar los pies al suelo al animar (ver «Pies al suelo» más arriba).
 
 ## Después del MVP: interfaz
 

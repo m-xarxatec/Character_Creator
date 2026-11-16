@@ -138,6 +138,29 @@ cubos siempre igual, así que basta con guardar la posición base y cuánto la m
 - Los anclajes también se guardan aquí: la mano, entre la muñeca y el nudillo del dedo corazón; la espalda y la cadera, en un vértice fijo de la piel + 2 cm.
 - Los deslizadores Proporción se aplican después, escalando el hueso por igual en todas direcciones.
 
+## `animaciones/` (paso 5.1)
+
+Carpeta aparte de las especies: un juego de animaciones vale para todas las que comparten esqueleto.
+`humanoide.json` (versión 1 propia) y su `.glb`, que se abre tal cual (sin importador de Godot):
+
+```json
+{
+  "version": 1,
+  "file": "UAL1_Standard.glb",
+  "sha256": "…",
+  "hips": "Hips",
+  "clips": [{"id": "caminar", "nombre": "Caminar", "animation": "Walk_Loop"}],
+  "bones": {"Hips": "pelvis", "LeftUpperArm": "upperarm_l"}
+}
+```
+
+- `clips`: lo que ofrece el editor, en ese orden. Añadir un clip = añadir una línea (`animation` es su nombre en el `.glb`).
+- `bones`: hueso del personaje → hueso del `.glb`. Los que no estén en el personaje se ignoran.
+- `poses` (paso 5.2): poses fijas, `{"id", "nombre", "bones": {hueso: [x, y, z]}}`. Giros en grados sobre los ejes del
+  personaje (X a su izquierda, Y arriba, Z al frente), desde la pose T; el giro de un hueso arrastra a sus hijos y se
+  suma al de ellos. `feet`: los huesos que se apoyan en el suelo (`static_pose.gd` baja la cadera hasta que tocan).
+- El reposo del `.glb` debe ser una **pose T**: es la referencia (`pose_retarget.gd`). `hips` es el único hueso que se desplaza.
+
 ## Pesos de los huesos
 
 Se quitan los pesos del lado contrario a más de 5 cm del centro, antes del recorte a 4 influencias
