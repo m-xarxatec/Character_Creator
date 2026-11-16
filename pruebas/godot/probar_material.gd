@@ -26,6 +26,7 @@ func _initialize() -> void:
 	_check_no_specular()
 	_check_garment()
 	_check_colors()
+	_check_finish()
 	_check_outline_width()
 	_check_unlit()
 	_check_standalone()
@@ -142,6 +143,31 @@ func _check_colors() -> void:
 	check("colores: ida y vuelta de piel y prenda (y sin tocar la prenda ni el contorno)",
 		material.get_color(species.mesh, "skin_color") == skin and material.get_color(species.mesh, "garment_color") == garment
 		and material.is_garment_visible(species.mesh) and material.get_outline_width(species.mesh) == material.OUTLINE_DEFAULTS["width_px"])
+
+
+## Paso 4.7: acabado (borde, rim y contorno) con set_finish / get_finish.
+func _check_finish() -> void:
+	var defaults: Dictionary = material.default_finish()
+	check("acabado: sin tocar, el de por defecto", material.get_finish(species.mesh) == defaults, str(material.get_finish(species.mesh)))
+	var shaders := FileAccess.get_file_as_string(root_dir.path_join("godot/addons/creador/toon.gdshader")) \
+		+ FileAccess.get_file_as_string(root_dir.path_join("godot/addons/creador/outline.gdshader"))
+	for name: String in material.FINISH:
+		var low: float = material.FINISH[name][0]
+		var high: float = material.FINISH[name][1]
+		check("acabado '%s': el rango es el hint_range del shader" % name,
+			shaders.contains("uniform float %s : hint_range(%.1f, %.1f)" % [name, low, high]), "%s a %s" % [low, high])
+		var middle := (low + high) / 2.0
+		check("acabado '%s': ida y vuelta" % name, material.set_finish(species.mesh, name, middle)
+			and is_equal_approx(material.get_finish(species.mesh)[name], middle))
+		material.set_finish(species.mesh, name, high + 5.0)
+		var top: float = material.get_finish(species.mesh)[name]
+		material.set_finish(species.mesh, name, low - 5.0)
+		check("acabado '%s': se recorta a su rango" % name, top == high and material.get_finish(species.mesh)[name] == low)
+		check("acabado '%s': NaN e infinito se rechazan y no cambian nada" % name, not material.set_finish(species.mesh, name, NAN)
+			and not material.set_finish(species.mesh, name, INF) and material.get_finish(species.mesh)[name] == low)
+		material.set_finish(species.mesh, name, defaults[name])
+	check("acabado: clave desconocida rechazada", not material.set_finish(species.mesh, "skin_color", 0.5))
+	check("acabado: vuelve al de por defecto", material.get_finish(species.mesh) == defaults)
 
 
 func _check_outline_width() -> void:

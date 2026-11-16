@@ -1,4 +1,10 @@
 {
+	"acabado": {
+		"rim_strength": 0.25,
+		"rim_width": 0.3,
+		"softness": 0.04,
+		"width_px": 2.5
+	},
 	"colores": {
 		"garment_color": [
 			0.2,
@@ -66,5 +72,5 @@
 		"waist_width": 0.5,
 		"weight": 0.5
 	},
-	"version": 1
+	"version": 2
 }

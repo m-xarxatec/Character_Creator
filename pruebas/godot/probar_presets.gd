@@ -1,5 +1,5 @@
 extends SceneTree
-# Paso 3.7: presets en JSON (preset.gd). Sin ventana.
+# Paso 3.7: presets en JSON (preset.gd). Paso 4.7: versión 2, con el acabado. Sin ventana.
 # Uso: godot --headless --path pruebas/godot -s probar_presets.gd 2>&1 | grep -E 'FALLO|RESULTADO|ERROR'
 
 const MAX_ROUNDING := 0.0000501  # 4 decimales: el error de redondeo es de 0,00005 como mucho
@@ -25,6 +25,7 @@ func _initialize() -> void:
 	_check_round_trip()
 	_check_text()
 	_check_look()
+	_check_finish()
 	_check_values()
 	_check_errors()
 	_check_style_presets()
@@ -103,7 +104,7 @@ func _check_text() -> void:
 	var loaded: Dictionary = preset.from_text(text, "humana", species.sliders)
 	var again: String = preset.to_text(preset.to_dict(loaded["nombre"], "humana", loaded["valores"], loaded["colores"], loaded["prenda_visible"]))
 	check("cargar y volver a guardar da el mismo texto", again == text)
-	check("el texto es legible: 'version' al final, una clave por línea", text.count("\n") > values.size() and text.contains("\"version\": 1"))
+	check("el texto es legible: 'version' al final, una clave por línea", text.count("\n") > values.size() and text.contains("\"version\": 2"))
 
 
 func _check_look() -> void:
@@ -116,6 +117,35 @@ func _check_look() -> void:
 	loaded["prenda_visible"] = true
 	preset.apply_look(species.mesh, loaded)
 	check("apply_look: prenda visible", material.is_garment_visible(species.mesh))
+
+
+## Paso 4.7: el acabado viaja en el preset (versión 2) y la versión 1 se sigue leyendo.
+func _check_finish() -> void:
+	var defaults: Dictionary = material.default_finish()
+	check("sin acabado, to_dict guarda el de por defecto", _valid_dict()["acabado"] == defaults, str(_valid_dict()["acabado"]))
+	var finish := {"softness": 0.1234, "rim_strength": 0.6, "rim_width": 0.7, "width_px": 4.5}
+	var colors := {"skin_color": Color(0.9, 0.8, 0.7), "garment_color": Color(0.1, 0.2, 0.3)}
+	var text: String = preset.to_text(preset.to_dict("Acabado", "humana", _neutral(), colors, true, finish))
+	var loaded: Dictionary = preset.from_text(text, "humana", species.sliders)
+	check("acabado: ida y vuelta", loaded["error"] == "" and loaded["acabado"] == finish, str(loaded.get("acabado")))
+	material.apply(species.mesh)
+	preset.apply_look(species.mesh, loaded)
+	check("apply_look: pone el acabado en el material", material.get_finish(species.mesh) == finish, str(material.get_finish(species.mesh)))
+	loaded = _load(_with("acabado", {"rim_width": 7, "width_px": -2}))
+	var expected := defaults.duplicate()
+	expected["rim_width"] = 1.0
+	expected["width_px"] = 0.0
+	check("acabado: lo que falta toma el valor por defecto y lo de fuera de rango se recorta", loaded["acabado"] == expected, str(loaded.get("acabado")))
+	var old := _without("acabado")
+	old["version"] = 1
+	loaded = _load(old)
+	check("versión 1 (sin acabado): carga con el acabado por defecto", loaded["error"] == "" and loaded["acabado"] == defaults, loaded["error"])
+	check("y el preset de la versión 1 no cambia al cargarlo", old["version"] == 1 and not old.has("acabado"))
+	_expect_error("versión 1 con acabado", _with("version", 1), "versión")
+	_expect_error("acabado que no es objeto", _with("acabado", [0.5]), "tipo de campo")
+	_expect_error("acabado desconocido", _with("acabado", {"brillo": 0.5}), "acabado desconocido")
+	_expect_error("acabado con texto", _with("acabado", {"softness": "duro"}), "'softness'")
+	_expect_error("acabado NaN", _with("acabado", {"rim_width": NAN}), "'rim_width'")
 
 
 func _check_values() -> void:
@@ -169,7 +199,7 @@ func _without(field: String) -> Dictionary:
 
 
 func _check_errors() -> void:
-	_expect_error("versión 2", _with("version", 2), "versión")
+	_expect_error("versión 3", _with("version", 3), "versión")
 	_expect_error("versión que no es número", _with("version", "1"), "versión")
 	_expect_error("otra especie", _with("especie", "elfa"), "especie")
 	for field: String in preset.FIELDS:
@@ -230,7 +260,9 @@ func _check_new_character() -> void:
 	check("anime.json: colores por defecto (piel gris) y prenda visible",
 		loaded["colores"]["skin_color"] == defaults["skin_color"] and loaded["colores"]["garment_color"] == defaults["garment_color"]
 		and loaded["prenda_visible"] == defaults["show_garment"])
-	var saved: String = preset.to_text(preset.to_dict(loaded["nombre"], "humana", loaded["valores"], loaded["colores"], loaded["prenda_visible"]))
+	check("anime.json: versión 2 y acabado por defecto", data["version"] == 2 and loaded["acabado"] == material.default_finish())
+	var saved: String = preset.to_text(preset.to_dict(loaded["nombre"], "humana", loaded["valores"], loaded["colores"],
+		loaded["prenda_visible"], loaded["acabado"]))
 	check("anime.json: cargar y guardar da el mismo texto", saved + "\n" == text)
 
 

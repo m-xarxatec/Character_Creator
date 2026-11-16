@@ -6,6 +6,8 @@ extends RefCounted
 ##   BodyMaterial.apply(species.mesh)
 ##   BodyMaterial.set_garment_visible(species.mesh, false)
 ##   BodyMaterial.set_outline_width(species.mesh, 2.0)    # píxeles, de 0 (sin contorno) a 10
+##   BodyMaterial.set_finish(species.mesh, "rim_width", 0.4)   # acabado (paso 4.7): las claves de FINISH
+##   var finish := BodyMaterial.get_finish(species.mesh)       # {softness, rim_strength, rim_width, width_px}
 ##   BodyMaterial.set_unlit(species.mesh, true)           # sin luces ni contorno: color exacto, para las pruebas de color
 ##   var copy := BodyMaterial.standalone(species.mesh)    # para un juego sin el addon (shaders incrustados)
 ## El interruptor de la prenda, los colores y el grosor son parámetros del material: el exportador (paso 3.6) lee
@@ -21,6 +23,8 @@ const DEFAULTS := {
 	"shadow_threshold": 0.0, "softness": 0.04, "rim_color": Color(1.0, 0.95, 0.92), "rim_strength": 0.25, "rim_width": 0.3}
 const OUTLINE_DEFAULTS := {"outline_color": Color(0.07, 0.05, 0.06), "width_px": 2.5}
 const MAX_OUTLINE_PX := 10.0  # el máximo de width_px en outline.gdshader
+## Acabado: borde entre tonos, rim (fuerza y ancho) y grosor del contorno, con su rango (el hint_range de los shaders).
+const FINISH := {"softness": [0.0, 0.5], "rim_strength": [0.0, 1.0], "rim_width": [0.0, 1.0], "width_px": [0.0, MAX_OUTLINE_PX]}
 
 
 static func apply(mesh: MeshInstance3D) -> ShaderMaterial:
@@ -81,6 +85,33 @@ static func get_outline_width(mesh: MeshInstance3D) -> float:
 	if material == null or material.shader != SHADER or not material.has_meta("outline"):
 		return OUTLINE_DEFAULTS["width_px"]
 	return (material.get_meta("outline") as ShaderMaterial).get_shader_parameter("width_px")
+
+
+## Un valor del acabado (clave de FINISH), recortado a su rango. Rechaza la clave desconocida, NaN e infinito
+## (devuelve false y no cambia nada).
+static func set_finish(mesh: MeshInstance3D, name: String, value: float) -> bool:
+	if not FINISH.has(name) or not is_finite(value):
+		return false
+	if name == "width_px":
+		return set_outline_width(mesh, value)
+	(mesh.material_override as ShaderMaterial).set_shader_parameter(name, clampf(value, FINISH[name][0], FINISH[name][1]))
+	return true
+
+
+## Los valores del acabado de la malla: {clave de FINISH: valor}.
+static func get_finish(mesh: MeshInstance3D) -> Dictionary:
+	var finish := {}
+	for name: String in FINISH:
+		finish[name] = get_outline_width(mesh) if name == "width_px" else _parameter(mesh, name)
+	return finish
+
+
+## El acabado por defecto (el de los shaders).
+static func default_finish() -> Dictionary:
+	var finish := {}
+	for name: String in FINISH:
+		finish[name] = OUTLINE_DEFAULTS[name] if name == "width_px" else DEFAULTS[name]
+	return finish
 
 
 ## Copia para un juego sin el addon (el exportador la guarda como .tres): los dos shaders van incrustados, sin ruta,

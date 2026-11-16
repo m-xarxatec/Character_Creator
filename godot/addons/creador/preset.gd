@@ -1,21 +1,27 @@
 class_name Preset
 
-## Preset de un personaje: valores de los deslizadores, colores y prenda, en un Dictionary o en texto JSON.
+## Preset de un personaje: valores de los deslizadores, colores, prenda y acabado, en un Dictionary o en texto JSON.
 ## No decide carpetas ni nombres de archivo.
 ##
 ## Uso:
-##   var data := Preset.to_dict("Mi preset", "humana", values, colors, true)   # values: Forma y Proporción juntos
+##   var data := Preset.to_dict("Mi preset", "humana", values, colors, true, BodyMaterial.get_finish(species.mesh))
+##   # values: Forma y Proporción juntos; sin el último argumento, el acabado por defecto
 ##   var text := Preset.to_text(data)                                           # claves ordenadas: mismo valor, mismo texto
 ##   var loaded := Preset.from_text(text, "humana", species.sliders)
 ##   if loaded["error"]: push_error(loaded["error"])
 ##   else: Preset.apply_look(species.mesh, loaded)
-## Cargado: {error, nombre, valores, colores: {skin_color: Color, …}, prenda_visible, desconocidas}.
+## Cargado: {error, nombre, valores, colores: {skin_color: Color, …}, prenda_visible, acabado: {softness: 0.04, …},
+## desconocidas}.
 ##
-## Formato (version 1: la del formato del preset, no la del manifiesto de datos/):
-##   {"version": 1, "especie": "humana", "nombre": "…", "prenda_visible": true,
+## Formato (version 2: la del formato del preset, no la del manifiesto de datos/):
+##   {"version": 2, "especie": "humana", "nombre": "…", "prenda_visible": true,
 ##    "valores": {"gender": 0.5, "hand_size_l": 0.5, "hand_size_r": 0.5, …},
-##    "colores": {"skin_color": [r, g, b], "garment_color": [r, g, b]}}
-## Carga estricta: los seis campos son obligatorios y no hay otros; los deslizadores de dos lados llevan _l y _r.
+##    "colores": {"skin_color": [r, g, b], "garment_color": [r, g, b]},
+##    "acabado": {"softness": 0.04, "rim_strength": 0.25, "rim_width": 0.3, "width_px": 2.5}}
+## Carga estricta: los siete campos son obligatorios y no hay otros; los deslizadores de dos lados llevan _l y _r.
+## "acabado" (paso 4.7; claves y rangos en BodyMaterial.FINISH): el que falta toma su valor por defecto, el de fuera
+## de rango se recorta y el desconocido es un error.
+## La versión 1 (sin "acabado") se sigue leyendo: carga con el acabado por defecto. Siempre se guarda la 2.
 ## Números a 4 decimales. De "valores": el que falta toma su valor neutro, el desconocido se ignora y se lista en
 ## "desconocidas" (así un preset viejo sigue cargando cuando se añaden formas) y el de fuera de [0, 1] se recorta.
 ## Si algo más falla, error y nada más.
@@ -24,13 +30,14 @@ const BodyMaterial := preload("body_material.gd")
 const Proportions := preload("proportions.gd")
 const ShapeWeights := preload("shape_weights.gd")
 
-const VERSION := 1
-const FIELDS := ["version", "especie", "nombre", "valores", "colores", "prenda_visible"]
+const VERSION := 2
+const FIELDS := ["version", "especie", "nombre", "valores", "colores", "prenda_visible", "acabado"]
 const COLORS := ["skin_color", "garment_color"]
 const DECIMALS := 0.0001
 
 
-static func to_dict(preset_name: String, species_id: String, values: Dictionary, colors: Dictionary, garment_visible: bool) -> Dictionary:
+static func to_dict(preset_name: String, species_id: String, values: Dictionary, colors: Dictionary, garment_visible: bool,
+		finish := {}) -> Dictionary:
 	var rounded := {}
 	for key: String in values:
 		rounded[key] = snappedf(values[key], DECIMALS)
@@ -38,8 +45,11 @@ static func to_dict(preset_name: String, species_id: String, values: Dictionary,
 	for color_name: String in colors:
 		var c: Color = colors[color_name]
 		rgb[color_name] = [snappedf(c.r, DECIMALS), snappedf(c.g, DECIMALS), snappedf(c.b, DECIMALS)]
+	var rounded_finish: Dictionary = BodyMaterial.default_finish()
+	for key: String in rounded_finish:
+		rounded_finish[key] = snappedf(finish.get(key, rounded_finish[key]), DECIMALS)
 	return {"version": VERSION, "especie": species_id, "nombre": preset_name, "valores": rounded, "colores": rgb,
-		"prenda_visible": garment_visible}
+		"prenda_visible": garment_visible, "acabado": rounded_finish}
 
 
 static func to_text(data: Dictionary) -> String:
@@ -56,6 +66,7 @@ static func from_text(text: String, species_id: String, sliders: Array) -> Dicti
 
 
 static func from_dict(data: Dictionary, species_id: String, sliders: Array) -> Dictionary:
+	data = _migrate(data)
 	for field: String in FIELDS:
 		if not data.has(field):
 			return _fail("falta el campo '%s'" % field)
@@ -67,7 +78,8 @@ static func from_dict(data: Dictionary, species_id: String, sliders: Array) -> D
 	if typeof(data["especie"]) != TYPE_STRING or data["especie"] != species_id:
 		return _fail("especie %s; se esperaba '%s'" % [data["especie"], species_id])
 	if typeof(data["nombre"]) != TYPE_STRING or typeof(data["prenda_visible"]) != TYPE_BOOL \
-			or typeof(data["valores"]) != TYPE_DICTIONARY or typeof(data["colores"]) != TYPE_DICTIONARY:
+			or typeof(data["valores"]) != TYPE_DICTIONARY or typeof(data["colores"]) != TYPE_DICTIONARY \
+			or typeof(data["acabado"]) != TYPE_DICTIONARY:
 		return _fail("tipo de campo no válido")
 	var values := _load_values(data["valores"], sliders)
 	if values.has("error"):
@@ -75,15 +87,43 @@ static func from_dict(data: Dictionary, species_id: String, sliders: Array) -> D
 	var colors := _load_colors(data["colores"])
 	if colors.has("error"):
 		return colors
+	var finish := _load_finish(data["acabado"])
+	if finish.has("error"):
+		return finish
 	return {"error": "", "nombre": data["nombre"], "valores": values["valores"], "desconocidas": values["desconocidas"],
-		"colores": colors["colores"], "prenda_visible": data["prenda_visible"]}
+		"colores": colors["colores"], "prenda_visible": data["prenda_visible"], "acabado": finish["acabado"]}
 
 
-## Pone los colores y el interruptor de la prenda en el material del cuerpo (BodyMaterial.apply ya hecho).
+## Pone los colores, el interruptor de la prenda y el acabado en el material del cuerpo (BodyMaterial.apply ya hecho).
 static func apply_look(mesh: MeshInstance3D, loaded: Dictionary) -> void:
 	for color_name: String in loaded["colores"]:
 		BodyMaterial.set_color(mesh, color_name, loaded["colores"][color_name])
 	BodyMaterial.set_garment_visible(mesh, loaded["prenda_visible"])
+	var finish: Dictionary = loaded.get("acabado", {})
+	for key: String in finish:
+		BodyMaterial.set_finish(mesh, key, finish[key])
+
+
+## Un preset de la versión 1 pasa a la 2: se le añade "acabado" vacío (valores por defecto). El original no cambia.
+static func _migrate(data: Dictionary) -> Dictionary:
+	if not _is_number(data.get("version")) or data["version"] != 1 or data.has("acabado"):
+		return data
+	var migrated := data.duplicate()
+	migrated["version"] = VERSION
+	migrated["acabado"] = {}
+	return migrated
+
+
+static func _load_finish(source: Dictionary) -> Dictionary:
+	var finish: Dictionary = BodyMaterial.default_finish()
+	for key: Variant in source:
+		if not finish.has(key):
+			return _fail("acabado desconocido '%s'" % key)
+		if not _is_number(source[key]) or not is_finite(source[key]):
+			return _fail("acabado no válido en '%s'" % key)
+		var limits: Array = BodyMaterial.FINISH[key]
+		finish[key] = clampf(source[key], limits[0], limits[1])
+	return {"acabado": finish}
 
 
 static func _load_values(source: Dictionary, sliders: Array) -> Dictionary:

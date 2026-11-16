@@ -3,12 +3,13 @@ extends Control
 # Abrir: (ulimit -v 4000000; timeout 900 godot --path godot)
 # Las pestañas se crean aquí (no en main.tscn) para que la prueba pueda cargar este script desde otro proyecto.
 # Cuerpo: la vista 3D (body_view.gd) a la izquierda y el panel de deslizadores (slider_panel.gd) a la derecha; los dos
-# siguen al editor (body_editor.gd). Debajo, la barra de body_actions.gd (paso 4.5). Ctrl+Z deshace; Ctrl+Mayús+Z o Ctrl+Y rehacen (acciones ui_undo y ui_redo de Godot).
+# siguen al editor (body_editor.gd). Bajo los deslizadores, el panel Acabado (finish_panel.gd, paso 4.7b). Debajo, la barra de body_actions.gd (paso 4.5). Ctrl+Z deshace; Ctrl+Mayús+Z o Ctrl+Y rehacen (acciones ui_undo y ui_redo de Godot).
 
 const BodyView := preload("body_view.gd")
 const SliderPanel := preload("slider_panel.gd")
 const BodyEditor := preload("body_editor.gd")
 const BodyActions := preload("body_actions.gd")
+const FinishPanel := preload("finish_panel.gd")
 const TAB_NAMES := ["Cuerpo", "Cara y ojos", "Pelo", "Ropa", "Accesorios", "Exportar"]
 const ACTIVE_TAB := 0
 
@@ -16,6 +17,7 @@ var tabs: TabContainer
 var body_view: SubViewportContainer
 var slider_panel: ScrollContainer
 var body_actions: HBoxContainer
+var finish_panel: VBoxContainer
 var editor  # BodyEditor (null si la especie no cargó)
 
 
@@ -36,6 +38,7 @@ func _ready() -> void:
 		editor.changed.connect(func() -> void: body_view.set_values(editor.values))
 		slider_panel.setup(editor)
 		body_actions.setup(body_view)
+		finish_panel.setup(body_view)
 
 
 func _unhandled_key_input(event: InputEvent) -> void:
@@ -58,8 +61,15 @@ func _body_page() -> Control:
 	page.add_child(body_view)
 	slider_panel = SliderPanel.new()
 	slider_panel.name = "Deslizadores"
-	slider_panel.size_flags_horizontal = Control.SIZE_EXPAND_FILL
-	page.add_child(slider_panel)
+	slider_panel.size_flags_vertical = Control.SIZE_EXPAND_FILL
+	finish_panel = FinishPanel.new()
+	finish_panel.name = "Acabado"
+	var side := VBoxContainer.new()
+	side.size_flags_horizontal = Control.SIZE_EXPAND_FILL
+	side.add_child(slider_panel)
+	side.add_child(HSeparator.new())
+	side.add_child(finish_panel)
+	page.add_child(side)
 	body_actions = BodyActions.new()
 	body_actions.name = "Acciones"
 	column.add_child(body_actions)

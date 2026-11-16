@@ -11,7 +11,7 @@ extends RefCounted
 ## - face: la normal de un elipsoide con el centro y el tamaño de la caja de la cabeza (vértices con peso de Head > 0,5),
 ##   mezclada con la de la malla según el peso de Head (en el cuello pasa poco a poco a la de siempre). `depth` < 1 quita
 ##   fondo al elipsoide solo por delante: la cara mira más al frente.
-## Lo usa GlbExporter: viajan en el .glb. En el editor, la vista en vivo no las lleva todavía (haría falta hornear).
+## Lo usan GlbExporter (viajan en el .glb) y la vista en vivo del editor (paso 4.6).
 
 const SMOOTH_STEPS := 10  # elegido en el 3.12 (anatomia.png)
 const FACE_DEPTH := 0.6  # elegido en el 3.13a-2 (aplanado_hoja.png)
