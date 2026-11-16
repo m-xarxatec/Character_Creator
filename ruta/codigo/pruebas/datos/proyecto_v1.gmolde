@@ -1,0 +1,55 @@
+{
+	"formato": "gamemolde-proyecto",
+	"version": 1,
+	"programa": "0.2.0",
+	"nombre": "Heroína de prueba",
+	"miniatura": "",
+	"personajes": [
+		{
+			"id": "p1",
+			"preset": {
+				"version": 2,
+				"especie": "humana",
+				"nombre": "Heroína de prueba",
+				"prenda_visible": true,
+				"valores": {"gender": 0.2, "muscle": 0.65, "hand_size_l": 0.5, "hand_size_r": 0.7},
+				"colores": {"skin_color": [0.8, 0.62, 0.5], "garment_color": [0.2, 0.2, 0.23]},
+				"acabado": {"mid_shade": 0.9, "rim_strength": 0.25, "rim_width": 0.3, "shadow_shade": 0.73, "softness": 0.04, "width_px": 2.5}
+			},
+			"piezas": [
+				{
+					"pack": "base",
+					"pieza": "coleta_01",
+					"sha256": "0000000000000000000000000000000000000000000000000000000000000000",
+					"ranura": "pelo",
+					"hueso": "Head",
+					"transform": [0, 0.05, -0.02, 0, 0, 0, 1, 1],
+					"colores": {"principal": [0.2, 0.1, 0.1]},
+					"parametros": {}
+				}
+			],
+			"pose": {
+				"huesos": {
+					"LeftUpperArm": [0, 0, 0.382683, 0.92388],
+					"Spine": [0.087156, 0, 0, 0.996195]
+				},
+				"cadera": [0, -0.05, 0]
+			},
+			"capas": {},
+			"posicion": [0, 0, 0],
+			"giro_y": 15
+		}
+	],
+	"escena": {
+		"fondo": {"tipo": "color", "color": [0.32, 0.33, 0.36], "transparente": true},
+		"luces": [
+			{"tipo": "direccional", "color": [1, 1, 1], "energia": 1, "giro": [-40, 30], "animacion": null},
+			{"tipo": "omni", "color": [1, 0.4, 0.2], "energia": 2.5, "posicion": [1, 1.5, 1], "animacion": {"tipo": "pulso", "velocidad": 1, "amplitud": 0.5}}
+		],
+		"camaras": [
+			{"nombre": "Frente", "objetivo": [0, 1, 0], "giro": [0, 10], "distancia": 3.2, "fov": 35, "ortografica": false},
+			{"nombre": "Perfil", "objetivo": [0, 1, 0], "giro": [90, 0], "distancia": 4, "fov": 20, "ortografica": true}
+		],
+		"camara_activa": 1
+	}
+}
