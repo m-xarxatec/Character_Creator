@@ -7,6 +7,7 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 ## Dónde está cada cosa (léelo allí, no lo copies aquí)
 
 - `PLAN.md` — pasos, estado actual y registro de lo hecho y decidido.
+- `REGISTRO.md` — registro de las Fases 0 a 3 (búscalo con `grep`, no lo leas entero).
 - `IDEAS.md` — lo que no es del MVP.
 - `README.md` — qué es, para qué sirve cada carpeta y licencias.
 - `CREDITOS.md` — material de terceros.
