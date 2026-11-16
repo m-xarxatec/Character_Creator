@@ -20,7 +20,15 @@
 | 3.7 Decisiones | `DECISIONES.md` | D1 a D31 |
 | 3.8 Guía para modelos | `GUIA_MODELOS.md` y `propuesta_CLAUDE.md` | Completo; el diff no está aplicado |
 
+## Extra: borradores del código difícil (`ruta/codigo/`)
+
+Además de los entregables, quedó escrita la parte de nivel fuerte de seis pasos, cada una con su prueba: `WorldPose` (A3), IK de dos huesos (10.10), formato `.gmolde` (10.1), largo y grosor de hueso (16.1), generador de cuernos (13.5) y transferencia de formas a la ropa (12.1). **Sin ejecutar.** Empezar por `ruta/codigo/README.md`: dice cómo lanzar las seis pruebas sin mover nada, qué hacer con cada tipo de fallo y qué le falta a cada pieza.
+
+Con esto, A3 pasa de nivel fuerte a **medio** (colocar, probar y añadir el caso con la especie real).
+
 ## Lo que queda por hacer (no se pudo en esta sesión)
+
+0. **Lanzar las seis pruebas de `ruta/codigo/`** en la máquina con Godot y corregir los errores de escritura que salgan. Es lo primero.
 
 1. **Medir.** Lanzar en la máquina Linux los comandos M1 a M6 de `RENDIMIENTO.md` §1.3 y guardar el resultado en `ruta/medidas/`. M2 a M4 piden crear antes `pruebas/godot/probar_medidas.gd` (paso simple, con propuesta).
 2. **Resolver los «NO VERIFICADO».** Cada uno tiene su comprobación en una ficha. Los que más pesan: los cuatro de A2c (leer `datos/` desde un `.pck`), `SpringBoneSimulator3D` en 4.7 (11.3) y el selector de archivos en Android (15.5).

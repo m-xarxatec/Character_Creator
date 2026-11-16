@@ -8,7 +8,7 @@ extends RefCounted
 ##   var bound := ShapeTransfer.bind(body_vertices, body_normals, body_indices, garment_vertices, garment_normals, 0.05)
 ##   var deltas := ShapeTransfer.transfer_shapes(bound, garment_vertices, body_vertices, body_indices, body_shapes)
 ##   var skin := ShapeTransfer.transfer_weights(bound, body_indices, body_bones, body_weights)
-##   var mask := ShapeTransfer.covered(body_vertices, body_normals, garment_vertices, garment_indices, 0.03)
+##   var mask := ShapeTransfer.covered(body_vertices, body_normals, garment_vertices, garment_normals, garment_indices, 0.03)
 ## Todo son listas (PackedVector3Array…) en reposo y en el mismo espacio; no hay nodos.
 ## - bind: ata cada vértice de la prenda a un punto de un triángulo del cuerpo y guarda dónde está respecto a él
 ##   (cuánto a lo largo de dos direcciones del triángulo y cuánto por encima).
@@ -88,12 +88,12 @@ static func bind(body_vertices: PackedVector3Array, body_normals: PackedVector3A
 			offsets.append(Vector3.ZERO)
 			signs.append(1.0)
 			continue
-		var a := body_vertices[body_indices[3 * best]]
-		var b := body_vertices[body_indices[3 * best + 1]]
-		var c := body_vertices[body_indices[3 * best + 2]]
+		var first := body_vertices[body_indices[3 * best]]
+		var second := body_vertices[body_indices[3 * best + 1]]
+		var third := body_vertices[body_indices[3 * best + 2]]
 		var sign_value := _sign(body_vertices, body_normals, body_indices, best)
-		var frame := _frame(a, b, c, sign_value)
-		var from_surface := point - (a * best_weights.x + b * best_weights.y + c * best_weights.z)
+		var frame := _frame(first, second, third, sign_value)
+		var from_surface := point - (first * best_weights.x + second * best_weights.y + third * best_weights.z)
 		triangles.append(best)
 		weights.append(best_weights)
 		offsets.append(Vector3(from_surface.dot(frame.x), from_surface.dot(frame.y), from_surface.dot(frame.z)))
@@ -166,12 +166,19 @@ static func transfer_weights(bound: Dictionary, body_indices: PackedInt32Array, 
 				for k in range(4 * vertex, 4 * vertex + 4):
 					if body_weights[k] > 0.0:
 						mixed[body_bones[k]] = mixed.get(body_bones[k], 0.0) + bary[g][corner] * body_weights[k]
-		var order := mixed.keys()
-		order.sort_custom(func(first: int, second: int) -> bool:
-			return mixed[first] > mixed[second] or (mixed[first] == mixed[second] and first < second))
+		var order: Array[int] = []  # los 4 huesos de más peso, de mayor a menor (a igual peso, el de índice menor)
+		for k in 4:
+			var chosen := -1
+			for bone: int in mixed:
+				if bone in order:
+					continue
+				if chosen < 0 or mixed[bone] > mixed[chosen] or (mixed[bone] == mixed[chosen] and bone < chosen):
+					chosen = bone
+			if chosen >= 0:
+				order.append(chosen)
 		var total := 0.0
-		for k in mini(4, order.size()):
-			total += mixed[order[k]]
+		for bone in order:
+			total += mixed[bone]
 		for k in 4:
 			if k < order.size() and total > 0.0:
 				bones.append(order[k])
@@ -185,8 +192,10 @@ static func transfer_weights(bound: Dictionary, body_indices: PackedInt32Array, 
 ## Qué vértices del cuerpo tapa la prenda: 1 si un rayo desde el vértice, hacia fuera por su normal, toca la prenda
 ## a menos de max_distance; 0 si no. Sirve para la máscara de piel oculta (12.3) y para contar piel que asoma.
 ## Es lento (cada vértice del cuerpo contra los triángulos cercanos de la prenda): solo para la herramienta y las pruebas.
+## Solo cuentan los triángulos de la prenda que miran hacia el mismo lado que la piel: la cara interior del brazo no queda
+## «tapada» por la camiseta del costado que tiene enfrente.
 static func covered(body_vertices: PackedVector3Array, body_normals: PackedVector3Array, garment_vertices: PackedVector3Array,
-		garment_indices: PackedInt32Array, max_distance: float) -> PackedByteArray:
+		garment_normals: PackedVector3Array, garment_indices: PackedInt32Array, max_distance: float) -> PackedByteArray:
 	var cell := maxf(max_distance, 0.01)
 	var grid := _grid(garment_vertices, garment_indices, cell)
 	var mask := PackedByteArray()
@@ -195,8 +204,8 @@ static func covered(body_vertices: PackedVector3Array, body_normals: PackedVecto
 		var from := body_vertices[i]
 		var direction := body_normals[i].normalized()
 		var checked := {}
-		for step in 2:  # la celda del vértice y la del final del rayo, con sus vecinas
-			var home := Vector3i(((from + direction * (max_distance * step)) / cell).floor())
+		for hop in 2:  # la celda del vértice y la del final del rayo, con sus vecinas
+			var home := Vector3i(((from + direction * (max_distance * hop)) / cell).floor())
 			for x in range(-1, 2):
 				for y in range(-1, 2):
 					for z in range(-1, 2):
@@ -205,6 +214,8 @@ static func covered(body_vertices: PackedVector3Array, body_normals: PackedVecto
 							if mask[i] == 1 or checked.has(triangle):
 								continue
 							checked[triangle] = true
+							if _facing(garment_vertices, garment_normals, garment_indices, triangle).dot(direction) <= MIN_FACING:
+								continue
 							var hit: Variant = Geometry3D.ray_intersects_triangle(from, direction,
 								garment_vertices[garment_indices[3 * triangle]], garment_vertices[garment_indices[3 * triangle + 1]],
 								garment_vertices[garment_indices[3 * triangle + 2]])
@@ -216,8 +227,9 @@ static func covered(body_vertices: PackedVector3Array, body_normals: PackedVecto
 ## Cuántos vértices del cuerpo que la prenda tapaba en reposo (mask) dejan de estar tapados con el cuerpo y la prenda movidos.
 ## Es la medida de «piel que asoma» de la Fase 12: debe dar 0.
 static func poking(mask: PackedByteArray, moved_body: PackedVector3Array, moved_normals: PackedVector3Array,
-		moved_garment: PackedVector3Array, garment_indices: PackedInt32Array, max_distance: float) -> int:
-	var now := covered(moved_body, moved_normals, moved_garment, garment_indices, max_distance)
+		moved_garment: PackedVector3Array, garment_normals: PackedVector3Array, garment_indices: PackedInt32Array,
+		max_distance: float) -> int:
+	var now := covered(moved_body, moved_normals, moved_garment, garment_normals, garment_indices, max_distance)
 	var count := 0
 	for i in mask.size():
 		if mask[i] == 1 and now[i] == 0:

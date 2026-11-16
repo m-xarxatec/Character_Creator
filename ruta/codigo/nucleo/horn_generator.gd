@@ -58,7 +58,7 @@ static func build_arrays(params: Dictionary) -> Dictionary:
 	var p := clamped(params)
 	var segments: int = p["segmentos"]
 	var sides: int = p["lados"]
-	var step: float = p["largo"] / segments
+	var advance: float = p["largo"] / segments
 	var bend := deg_to_rad(p["curva"]) / segments
 
 	# 1. Línea central con un marco que no se retuerce (transporte paralelo): tangente, normal y binormal.
@@ -77,7 +77,7 @@ static func build_arrays(params: Dictionary) -> Dictionary:
 		var spin := deg_to_rad(p["espiral"]) * t
 		var axis := (normal * cos(spin) + binormal * sin(spin)).normalized()  # perpendicular a la tangente
 		var turn := Basis(axis, bend)
-		position += tangent * step  # avanza con la tangente de este punto y después gira
+		position += tangent * advance  # avanza con la tangente de este punto y después gira
 		tangent = (turn * tangent).normalized()
 		normal = (turn * normal).normalized()
 
@@ -93,7 +93,7 @@ static func build_arrays(params: Dictionary) -> Dictionary:
 	for k in segments:
 		var before := radii[maxi(k - 1, 0)]
 		var after := radii[k + 1]
-		var slope := (after - before) / (step * (2.0 if k > 0 else 1.0))  # cuánto cambia el radio al avanzar
+		var slope := (after - before) / (advance * (2.0 if k > 0 else 1.0))  # cuánto cambia el radio al avanzar
 		var binormal := tangents[k].cross(sideways[k])
 		for j in sides:
 			var angle := TAU * j / sides

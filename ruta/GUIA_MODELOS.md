@@ -60,7 +60,7 @@ Reparto de las fichas existentes (lo dice el apartado 2 de cada una):
 
 - **Simple:** A1, 4.4a, 4.5a, 4.7b, 5.4, 5.5, 5.6, 5.11, 5.12, 5.14, 6.3, 7.2, 7.3b, 7.4, 8.1 (lanzar y tabular), 8.4.
 - **Medio:** A2, A4, 4.4b, 4.4c, 4.5b, 4.6, 4.7 (resto), 5.2, 5.3, 5.8, 5.9, 5.10 (implementar con la ficha), 5.13, 6.2, 7.1, 7.3a, 8.2, 8.3.
-- **Fuerte:** A3, 5.1, 5.7, 6.1, 8.5 (preparación), y cualquier cambio al diseño del 5.10.
+- **Fuerte:** A3 (pasa a medio si se parte del borrador de `ruta/codigo/`), 5.1, 5.7, 6.1, 8.5 (preparación), y cualquier cambio al diseño del 5.10.
 
 Si esta lista y el apartado 2 de una ficha no coinciden, **manda la ficha**.
 
