@@ -40,7 +40,7 @@ func _initialize() -> void:
 	reference = JSON.parse_string(
 		FileAccess.get_file_as_string(root_dir.path_join("pruebas/fase_2/salida/referencia_reajuste.json")))
 	species = load(addon.path_join("species_data.gd")).new()
-	if species.load_folder(root_dir.path_join("datos/humana")):
+	if species.load_folder(root_dir.path_join("godot/datos/humana")):
 		print("ERROR: ", species.error)
 		quit(1)
 		return

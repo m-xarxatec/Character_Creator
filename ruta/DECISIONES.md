@@ -4,6 +4,18 @@
 > **«Supuesto»** = ya elegí la opción más prudente para poder seguir escribiendo; se puede cambiar.
 > Los documentos de `ruta/` citan estas entradas por su código (D1, D2…).
 
+## Tomadas al juntar las ramas (2026-11-16, Linux)
+
+El responsable delegó las decisiones técnicas. Las de 4.4 a 5.2 ya estaban resueltas en el código (ver el registro de `PLAN.md`).
+
+- **D4 a)** y **D5 a)**: A1 y A2 entran en `PLAN.md` antes del 5.3. A2 cuesta menos cuanto antes se haga.
+- **D10 a)**: el 5.3 exige 53 huesos, todos del perfil; los 3 que faltan llegan con la cara.
+- **D12**: se queda la biblioteca entera (7,3 MB, ya subida); el responsable prefiere no subir más peso por ahora.
+- **D27 a)**, pero como paso **7.0** (la Fase 4 ya está cerrada).
+- **A3 (`WorldPose`)**: no entra ahora. El 5.1 y el 5.2 se resolvieron con `pose_retarget.gd` y `static_pose.gd`, con sus pruebas. El borrador sigue en `ruta/codigo/` para la Fase 10 (estudio y proyecto).
+- **A4**: no se rehace. El 4.4 y el 4.7 guardan los valores en `body_editor.gd` y el acabado en el material; el diccionario de estado único se retoma con el formato de proyecto (Fase 10).
+- Fichas borradas por ya hechas: 4.4 a 4.7, 5.1, 5.2 y A4.
+
 ## Las 3 más urgentes
 
 1. **D5** — mover `datos/` a `godot/datos/`. Condiciona A2, el 5.1, los builds y Android. Cuanto más tarde, más archivos que cambiar.

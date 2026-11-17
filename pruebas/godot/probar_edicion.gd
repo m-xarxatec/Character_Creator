@@ -11,7 +11,7 @@ var changes := 0  # avisos changed del editor
 func _initialize() -> void:
 	var root_dir := ProjectSettings.globalize_path("res://").path_join("../..").simplify_path()
 	var species = load(root_dir.path_join("godot/addons/creador/species_data.gd")).new()
-	species.load_folder(root_dir.path_join("datos/humana"))
+	species.load_folder(root_dir.path_join("godot/datos/humana"))
 	check("carga datos/humana", species.error == "", species.error)
 	if species.error == "":
 		var preset = load(root_dir.path_join("godot/addons/creador/preset.gd"))

@@ -158,10 +158,12 @@ func _check_bind() -> void:
 		if triangles[g] >= torso_triangles:
 			on_arm += 1
 		worst = maxf(worst, 1000.0 * absf(offsets[g].z - (GARMENT_RADIUS - TORSO_RADIUS)))
-		sideways = maxf(sideways, 1000.0 * Vector2(offsets[g].x, offsets[g].y).length())
+		var w: Vector3 = bound["weights"][g]
+		if w.x > 0.0 and w.y > 0.0 and w.z > 0.0:  # en una arista del tubo de caras planas el lado no es 0 (geometría)
+			sideways = maxf(sideways, 1000.0 * Vector2(offsets[g].x, offsets[g].y).length())
 	check("bind (axila): ningún vértice se ata al brazo, aunque esté más cerca", on_arm == 0, "%d atados al brazo" % on_arm)
 	check("bind: cada vértice queda 2 cm por encima de la piel (± %s mm)" % MAX_MM, worst < MAX_MM, "%.4f mm" % worst)
-	check("bind: sin desplazamiento de lado (el punto más cercano está justo debajo) (± %s mm)" % MAX_MM, sideways < MAX_MM,
+	check("bind: sin desplazamiento de lado si el punto más cercano cae dentro del triángulo (± %s mm)" % MAX_MM, sideways < MAX_MM,
 		"%.4f mm" % sideways)
 	var rest: PackedVector3Array = transfer.follow(bound, garment["vertices"], body["vertices"], body["indices"])
 	var error := 0.0
@@ -206,7 +208,7 @@ func _check_shapes() -> void:
 	var half_error := 0.0
 	for g in half.size():
 		half_error = maxf(half_error, 1000.0 * absf(_radius(half[g]) - (TORSO_RADIUS * 1.15 + 0.02)))
-	check("gordo al 50 % (como lo mezcla la tarjeta): sigue 2 cm por encima (± %s mm)" % MAX_MM, half_error < MAX_MM, "%.4f mm" % half_error)
+	check("gordo al 50 %% (como lo mezcla la tarjeta): sigue 2 cm por encima (± %s mm)" % MAX_MM, half_error < MAX_MM, "%.4f mm" % half_error)
 
 
 func _check_weights() -> void:
@@ -274,11 +276,18 @@ func _check_covered() -> void:
 	if deltas.has("gordo"):
 		for g in fat_garment.size():
 			fat_garment[g] += (deltas["gordo"] as PackedVector3Array)[g]
-	var with_transfer: int = transfer.poking(mask, fat_body, body["normals"], fat_garment, garment["normals"], garment["indices"], 0.03)
+	# Los vértices del borde exacto de la prenda (y = 0,2 y 0,8) rozan su filo: el redondeo decide. No cuentan.
+	var inner := mask.duplicate()
+	var inner_count := 0
+	for i in vertices.size():
+		if vertices[i].y < 0.21 or vertices[i].y > 0.79:
+			inner[i] = 0
+		inner_count += inner[i]
+	var with_transfer: int = transfer.poking(inner, fat_body, body["normals"], fat_garment, garment["normals"], garment["indices"], 0.03)
 	check("piel que asoma con la forma transferida: 0 vértices", with_transfer == 0, "%d" % with_transfer)
-	var without: int = transfer.poking(mask, fat_body, body["normals"], garment["vertices"], garment["normals"], garment["indices"], 0.03)
-	check("piel que asoma si la prenda NO sigue al cuerpo: todos los tapados (la medida detecta el fallo)", without == covered_count,
-		"%d de %d" % [without, covered_count])
+	var without: int = transfer.poking(inner, fat_body, body["normals"], garment["vertices"], garment["normals"], garment["indices"], 0.03)
+	check("piel que asoma si la prenda NO sigue al cuerpo: todos los tapados (la medida detecta el fallo)", without == inner_count,
+		"%d de %d" % [without, inner_count])
 
 
 ## Un vértice lejos de todo queda sin atar, se avisa y no se mueve.

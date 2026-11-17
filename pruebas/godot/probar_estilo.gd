@@ -51,7 +51,7 @@ func _initialize() -> void:
 	baker = load(addon.path_join("mesh_baker.gd"))
 	garment_texture = load(addon.path_join("garment_texture.gd"))
 	species = load(addon.path_join("species_data.gd")).new()
-	if species.load_folder(root_dir.path_join("datos/humana")):
+	if species.load_folder(root_dir.path_join("godot/datos/humana")):
 		print("ERROR: ", species.error)
 		quit(1)
 		return

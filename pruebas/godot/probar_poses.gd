@@ -26,7 +26,7 @@ func _initialize() -> void:
 	var root_dir := ProjectSettings.globalize_path("res://").path_join("../..").simplify_path()
 	var addon := root_dir.path_join("godot/addons/creador")
 	species = load(addon.path_join("species_data.gd")).new()
-	if species.load_folder(root_dir.path_join("datos/humana")):
+	if species.load_folder(root_dir.path_join("godot/datos/humana")):
 		print("ERROR: ", species.error)
 		quit(1)
 		return
@@ -35,7 +35,7 @@ func _initialize() -> void:
 	updater = load(addon.path_join("character_updater.gd")).new(species)
 	pose = load(addon.path_join("static_pose.gd"))
 	animations = load(addon.path_join("animation_set.gd")).new()
-	var error: String = animations.load_file(root_dir.path_join("datos/animaciones/humanoide.json"))
+	var error: String = animations.load_file(root_dir.path_join("godot/datos/animaciones/humanoide.json"))
 	check("el juego de animaciones carga", error == "", error)
 	if error == "":
 		root.add_child(animations.scene)

@@ -18,7 +18,7 @@ func _init() -> void:
 	var root := ProjectSettings.globalize_path("res://").path_join("../..").simplify_path()
 	shapes = load(root.path_join("godot/addons/creador/shape_weights.gd"))
 	var species = load(root.path_join("godot/addons/creador/species_data.gd")).new()
-	if species.load_folder(root.path_join("datos/humana")):
+	if species.load_folder(root.path_join("godot/datos/humana")):
 		print("ERROR: ", species.error)
 		quit(1)
 		return

@@ -19,7 +19,7 @@ Un programa libre para crear personajes 3D moviendo deslizadores, y guardarlos l
 | `diseno/` | Dibujo de cómo se verá el programa. Ábrelo con el navegador. |
 | `referencias/` | Imágenes de inspiración (cuerpos y personajes). |
 | `blender/` | Scripts que preparan el cuerpo base con Blender. |
-| `datos/` | El cuerpo base ya preparado, listo para el programa. |
+| `godot/datos/` | El cuerpo base ya preparado y las animaciones de prueba; viaja dentro del programa. |
 | `godot/` | El programa en sí. |
 | `pruebas/` | Personajes de prueba y sus resultados. |
 
@@ -39,4 +39,4 @@ Un programa libre para crear personajes 3D moviendo deslizadores, y guardarlos l
 - El programa: **MIT** (ver `LICENSE`). Puedes usarlo en tu juego, también si es comercial.
 - Las formas de la cara anime (los desplazamientos por vértice que escribe `blender/cara_anime.py`) y sus zonas (`blender/cara_anime_zonas.json`): **CC0**, como la malla de MakeHuman. Son datos de salida del script, no código GPL.
 - Los scripts de `blender/`: GPL-3.0 o posterior.
-- Los datos del cuerpo (`datos/`): CC0, de MakeHuman.
+- Los datos del cuerpo (`godot/datos/`): CC0, de MakeHuman.

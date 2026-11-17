@@ -15,7 +15,7 @@ var bones: Dictionary
 func _init() -> void:
 	var root := ProjectSettings.globalize_path("res://").path_join("../..").simplify_path()
 	refit = load(root.path_join("godot/addons/creador/bone_refit.gd"))
-	bones = _read(root.path_join("datos/humana/articulaciones.json"))["bones"]
+	bones = _read(root.path_join("godot/datos/humana/articulaciones.json"))["bones"]
 	var reference := _read(root.path_join("pruebas/fase_2/salida/referencia_reajuste.json"))
 	check("6 cuerpos de referencia", reference["bodies"].size() == 6)
 	for body: Dictionary in reference["bodies"]:

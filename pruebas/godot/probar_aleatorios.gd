@@ -42,7 +42,7 @@ func _initialize() -> void:
 	preset = load(addon.path_join("preset.gd"))
 	material = load(addon.path_join("body_material.gd"))
 	species = load(addon.path_join("species_data.gd")).new()
-	if species.load_folder(root_dir.path_join("datos/humana")):
+	if species.load_folder(root_dir.path_join("godot/datos/humana")):
 		print("ERROR: ", species.error)
 		quit(1)
 		return

@@ -1,7 +1,7 @@
 # SPDX-License-Identifier: GPL-3.0-or-later
 """Genera los datos de una especie para Godot (paso 2.3), segun datos/FORMATO.md.
 
-Uso: blender -b -P blender/exportar_datos.py -- datos/humana
+Uso: blender -b -P blender/exportar_datos.py -- godot/datos/humana
 Lee <carpeta>/deslizadores.csv y escribe cuerpo.glb, articulaciones.json y manifiesto.json.
 presets/anime.json (paso 3.15) se escribe aparte, como deslizadores.csv; aqui solo entra en el manifiesto.
 Las formas de cara (filas «cara:<forma>», paso 3.14) salen de blender/cara_anime.py.

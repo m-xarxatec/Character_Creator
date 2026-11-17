@@ -24,7 +24,7 @@ var reference: Dictionary
 func _initialize() -> void:
 	var root_dir := ProjectSettings.globalize_path("res://").path_join("../..").simplify_path()
 	addon = root_dir.path_join("godot/addons/creador")
-	data_folder = root_dir.path_join("datos/humana")
+	data_folder = root_dir.path_join("godot/datos/humana")
 	refit = load(addon.path_join("skeleton_refit.gd"))
 	baker = load(addon.path_join("mesh_baker.gd"))
 	shapes = load(addon.path_join("shape_weights.gd"))

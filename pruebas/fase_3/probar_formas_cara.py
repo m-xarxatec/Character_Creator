@@ -19,7 +19,7 @@ sys.path.insert(0, os.path.join(ROOT, "blender"))
 import cara_anime as ca  # noqa: E402
 import exportar_datos as ed  # noqa: E402
 
-DATA = os.path.join(ROOT, "datos", "humana")
+DATA = os.path.join(ROOT, "godot", "datos", "humana")
 MAQUETA = os.path.join(ROOT, "pruebas", "fase_3", "salida", "cara_anime", "cara_anime.json")
 MAX_MM = 0.01  # la maqueta guarda micras (1 µm por eje) y el .glb, 32 bits
 failures = []

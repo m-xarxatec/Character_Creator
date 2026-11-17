@@ -21,7 +21,7 @@ from exportar_glb import humanoid_names  # noqa: E402
 import poner_rig  # noqa: E402
 
 OUT = os.path.join(ROOT, "pruebas", "fase_2", "salida")
-SLIDERS = os.path.join(ROOT, "datos", "humana", "deslizadores.csv")
+SLIDERS = os.path.join(ROOT, "godot", "datos", "humana", "deslizadores.csv")
 SOCKET_PARENTS = {"socket_hand_r": "RightHand", "socket_hand_l": "LeftHand",
                   "socket_back": "UpperChest", "socket_hip": "Hips"}
 EXACT_MM = 0.1  # mezclar formas sueltas o una macro sola debe dar lo mismo que MPFB

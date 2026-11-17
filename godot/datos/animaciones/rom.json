@@ -1,0 +1,20 @@
+{
+  "version": 1,
+  "segundos": 2.0,
+  "movimientos": [
+    {"id": "hombro_arriba", "nombre": "Hombro: subir", "hueso": "UpperArm", "lados": 2, "eje": [0, 0, 1], "desde": -80, "hasta": 90},
+    {"id": "hombro_delante", "nombre": "Hombro: adelante", "hueso": "UpperArm", "lados": 2, "eje": [0, 1, 0], "desde": 40, "hasta": -110},
+    {"id": "hombro_torsion", "nombre": "Hombro: torsión", "hueso": "UpperArm", "lados": 2, "eje": [1, 0, 0], "desde": -70, "hasta": 70},
+    {"id": "codo", "nombre": "Codo", "hueso": "LowerArm", "lados": 2, "eje": [0, 1, 0], "desde": 0, "hasta": -140},
+    {"id": "antebrazo_torsion", "nombre": "Antebrazo: torsión", "hueso": "LowerArm", "lados": 2, "eje": [1, 0, 0], "desde": -80, "hasta": 80},
+    {"id": "muneca", "nombre": "Muñeca", "hueso": "Hand", "lados": 2, "eje": [0, 0, 1], "desde": -70, "hasta": 70},
+    {"id": "cadera_delante", "nombre": "Cadera: adelante", "hueso": "UpperLeg", "lados": 2, "eje": [1, 0, 0], "desde": -110, "hasta": 30},
+    {"id": "cadera_lado", "nombre": "Cadera: abrir", "hueso": "UpperLeg", "lados": 2, "eje": [0, 0, 1], "desde": -20, "hasta": 60},
+    {"id": "rodilla", "nombre": "Rodilla", "hueso": "LowerLeg", "lados": 2, "eje": [1, 0, 0], "desde": 0, "hasta": 140},
+    {"id": "tobillo", "nombre": "Tobillo", "hueso": "Foot", "lados": 2, "eje": [1, 0, 0], "desde": -40, "hasta": 30},
+    {"id": "tronco_delante", "nombre": "Tronco: inclinar", "hueso": "Spine", "lados": 1, "eje": [1, 0, 0], "desde": -20, "hasta": 45},
+    {"id": "tronco_giro", "nombre": "Tronco: girar", "hueso": "Spine", "lados": 1, "eje": [0, 1, 0], "desde": -45, "hasta": 45},
+    {"id": "cuello_giro", "nombre": "Cuello: girar", "hueso": "Neck", "lados": 1, "eje": [0, 1, 0], "desde": -70, "hasta": 70},
+    {"id": "cabeza_asentir", "nombre": "Cabeza: asentir", "hueso": "Head", "lados": 1, "eje": [1, 0, 0], "desde": -40, "hasta": 40}
+  ]
+}

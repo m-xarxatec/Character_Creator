@@ -1,10 +1,14 @@
 extends HBoxContainer
 # Paso 4.5: barra inferior de la pestaña Cuerpo (como en diseno/maqueta-pestana-cuerpo.html).
 # - Probar huesos: alterna el maniquí entre el reposo (pose A) y la pose T, la que se exporta. El banco es la Fase 5.
-# - Animación (paso 5.1): lista con «Sin animación», los clips de datos/animaciones (en bucle) y las poses fijas (5.2).
+# - Animación (paso 5.1): lista con «Sin animación», los clips de datos/animaciones (en bucle), las poses fijas (5.2) y,
+#   al final, «Rango de movimiento» (5.9).
 # - Exportar .glb: elige dónde guardar y exporta en pose T (GlbExporter); el .tres va al lado. Avisa con la ruta o el error.
 # - Prenda base: muestra u oculta la prenda (BodyMaterial); el .glb sale como se ve. No entra en Deshacer.
+# Paso 5.4: test_changed avisa al cambiar Probar huesos o la lista Animación (main.gd enseña el informe).
 # Uso: var bar := BodyActions.new(); bar.setup(body_view)
+
+signal test_changed
 
 const BodyMaterial := preload("../addons/creador/body_material.gd")
 
@@ -34,12 +38,15 @@ func setup(body_view: SubViewportContainer) -> void:
 func set_pose_t(on: bool) -> void:
 	bones_button.set_pressed_no_signal(on)
 	view.set_pose_t(on)
+	test_changed.emit()
 
 
 ## Elige una fila de la lista: 0 = sin animación; las demás, los clips y las poses en su orden.
 func set_animation(index: int) -> void:
 	animation_list.select(index)
-	view.set_animation("" if index == 0 else view.animations.entries()[index - 1]["id"])
+	var entries: Array = view.animations.entries() if view.animations != null else []
+	view.set_animation("" if index == 0 else (view.ROM_ID if index > entries.size() else entries[index - 1]["id"]))
+	test_changed.emit()
 
 
 func _add_animation_list() -> void:
@@ -48,6 +55,8 @@ func _add_animation_list() -> void:
 	if view.animations != null:
 		for entry: Dictionary in view.animations.entries():
 			animation_list.add_item(entry["nombre"])
+		if view.rom != null:
+			animation_list.add_item("Rango de movimiento")
 	animation_list.disabled = view.animations == null
 	animation_list.tooltip_text = view.animation_error
 	animation_list.item_selected.connect(set_animation)

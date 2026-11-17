@@ -33,7 +33,7 @@ import pose_t  # noqa: E402
 import poner_rig  # noqa: E402
 from bl_ext.blender_org.mpfb.services import HumanService, TargetService  # noqa: E402
 
-DATA = os.path.join(ROOT, "datos", "humana")
+DATA = os.path.join(ROOT, "godot", "datos", "humana")
 OUT = os.path.join(ROOT, "pruebas", "fase_2", "salida", "referencia_reajuste.json")
 CONTINUITY = (0.49985, 0.5, 0.50015)
 WITH_VERTICES = ("atletico", "extremo")  # prueba de punta a punta del paso 3.2

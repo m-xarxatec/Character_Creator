@@ -16,7 +16,7 @@ import exportar_glb  # noqa: E402
 import generar_cuerpo as gc  # noqa: E402
 import cara_anime  # noqa: E402
 
-TABLE = os.path.join(ROOT, "datos", "humana", "deslizadores.csv")
+TABLE = os.path.join(ROOT, "godot", "datos", "humana", "deslizadores.csv")
 COLUMNS = ["id", "zona", "nombre", "tipo", "decr", "incr", "lados", "neutro"]
 ZONES = 14  # sin contar «Cara» (paso 3.14: formas de cara, sin deslizadores visibles en el MVP)
 FACE_ZONE = "Cara"

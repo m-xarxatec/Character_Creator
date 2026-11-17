@@ -25,7 +25,7 @@ func _initialize() -> void:
 	exporter = load(addon.path_join("glb_exporter.gd"))
 	baker = load(addon.path_join("mesh_baker.gd"))
 	species = load(addon.path_join("species_data.gd")).new()
-	if species.load_folder(root_dir.path_join("datos/humana")):
+	if species.load_folder(root_dir.path_join("godot/datos/humana")):
 		print("ERROR: ", species.error)
 		quit(1)
 		return

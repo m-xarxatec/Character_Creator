@@ -13,7 +13,7 @@ var loader: GDScript
 func _init() -> void:
 	var root := ProjectSettings.globalize_path("res://").path_join("../..").simplify_path()
 	loader = load(root.path_join("godot/addons/creador/species_data.gd"))
-	var folder := root.path_join("datos/humana")
+	var folder := root.path_join("godot/datos/humana")
 	var species = loader.new()
 	species.load_folder(folder)
 	check("carga datos/humana sin errores", species.error == "", species.error)

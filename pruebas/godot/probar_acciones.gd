@@ -89,7 +89,8 @@ func _check_animation(bar, view) -> void:
 	var skeleton: Skeleton3D = view.species.skeleton
 	var before := _poses(skeleton)
 	check("las animaciones cargan", view.animation_error == "", view.animation_error)
-	check("la lista tiene «Sin animación», los 5 clips y las 3 poses", bar.animation_list.item_count == 9 and not bar.animation_list.disabled)
+	check("la lista tiene «Sin animación», los 5 clips, las 3 poses y el rango de movimiento", bar.animation_list.item_count == 10
+		and bar.animation_list.get_item_text(9) == "Rango de movimiento" and not bar.animation_list.disabled)
 	bar.animation_list.select(2)
 	bar.animation_list.emit_signal("item_selected", 2)
 	var start := _poses(skeleton)

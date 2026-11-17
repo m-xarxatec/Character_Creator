@@ -5,7 +5,9 @@ extends SubViewportContainer
 # Paso 4.6: se ve con las normales del estilo (style_view.gd); se recalculan al dejar quietas las formas RESTYLE_WAIT s.
 # Paso 5.1: set_animation() reproduce un clip de datos/animaciones (AnimationSet) sobre el maniquí (PoseRetarget).
 # Paso 5.2: set_animation() también pone las poses fijas del mismo archivo (StaticPose).
-# datos/ está fuera del proyecto: se busca dos carpetas por encima de este script (vale para el MVP, no para distribuir).
+# Paso 5.4: check_report() revisa el personaje que se exporta (CharacterChecks) y su malla en la pose o el clip en marcha
+# (MeshChecks, sobre una copia horneada en pose T; un clip se mide en REPORT_INSTANTS momentos y queda el peor).
+# Paso 5.9: set_animation(ROM_ID) recorre el rango de movimiento (rom.gd): cada fotograma vuelve a la pose T y gira.
 
 const SpeciesData := preload("../addons/creador/species_data.gd")
 const CharacterUpdater := preload("../addons/creador/character_updater.gd")
@@ -17,11 +19,19 @@ const PoseRetarget := preload("../addons/creador/pose_retarget.gd")
 const StaticPose := preload("../addons/creador/static_pose.gd")
 const OrbitCamera := preload("orbit_camera.gd")
 const StyleView := preload("style_view.gd")
+const Rom := preload("rom.gd")
+const CharacterBaker := preload("../addons/creador/character_baker.gd")
+const Sockets := preload("../addons/creador/sockets.gd")
+const CharacterChecks := preload("../addons/creador/character_checks.gd")
+const MeshChecks := preload("../addons/creador/mesh_checks.gd")
 
 const SPECIES := "humana"
+const DATA_RES := "res://datos"
 const ANIMATIONS := "humanoide"
+const ROM_ID := "rango_de_movimiento"
 const BACKGROUND := Color(0.32, 0.33, 0.36)
 const RESTYLE_WAIT := 0.3  # segundos sin cambios antes de recalcular las normales del estilo
+const REPORT_INSTANTS := 4  # momentos de un clip que mide el informe
 
 var error := ""
 var load_ms := 0
@@ -33,24 +43,29 @@ var animations  # AnimationSet; null si no cargó (animation_error dice por qué
 var animation_error := ""
 var retarget  # PoseRetarget
 var clip := ""  # id del clip o de la pose fija en marcha; "" = sin animación
-var pose_turns := {}  # giros de la pose fija; vacío si clip es una animación
+var pose_turns := {}  # giros de la pose fija (o del instante del rango de movimiento); vacío si clip es una animación
+var rom  # Rom; null si no cargó
+var rom_time := 0.0
+var t_rotations: Array[Quaternion] = []  # pose T del esqueleto vivo, para volver a ella antes de cada giro del rango
+var t_positions: Array[Vector3] = []
 var camera: Camera3D
 var style: MeshInstance3D  # StyleView
 var restyle_timer: Timer
+var viewport: SubViewport
 
 
 func _ready() -> void:
 	stretch = true
-	var viewport := SubViewport.new()
+	viewport = SubViewport.new()
 	add_child(viewport)
-	_add_world(viewport)
+	_add_world()
 	restyle_timer = Timer.new()
 	restyle_timer.one_shot = true
 	restyle_timer.wait_time = RESTYLE_WAIT
 	restyle_timer.timeout.connect(func() -> void: style.refresh())
 	add_child(restyle_timer)
 	var start := Time.get_ticks_msec()
-	error = _load_character(viewport)
+	error = _load_character()
 	load_ms = Time.get_ticks_msec() - start
 	if error:
 		push_error(error)
@@ -63,6 +78,8 @@ func _ready() -> void:
 func set_values(new_values: Dictionary) -> Array[String]:
 	values = new_values
 	var rejected: Array[String] = updater.update(values, pose_t or clip != "")  # la animación parte de la pose T
+	if clip == ROM_ID:
+		_save_t_pose()
 	if not pose_turns.is_empty():
 		StaticPose.apply(species.skeleton, pose_turns, animations.hips, animations.feet)
 	elif clip != "":
@@ -86,7 +103,10 @@ func set_pose_t(on: bool) -> void:
 ## Devuelve false si no existe.
 func set_animation(id: String) -> bool:
 	var turns: Dictionary = {} if id == "" or animations == null else animations.pose_turns(id)
-	if id != "" and turns.is_empty() and (animations == null or not animations.play(id)):
+	if id == ROM_ID and rom != null:
+		rom_time = 0.0
+		turns = rom.turns_at(0.0)
+	elif id != "" and turns.is_empty() and (animations == null or not animations.play(id)):
 		return false
 	clip = id
 	pose_turns = turns
@@ -95,7 +115,14 @@ func set_animation(id: String) -> bool:
 
 
 func _process(delta: float) -> void:
-	if clip != "" and pose_turns.is_empty():
+	if clip == ROM_ID:
+		rom_time += delta
+		pose_turns = rom.turns_at(rom_time)
+		for bone in t_rotations.size():
+			species.skeleton.set_bone_pose_rotation(bone, t_rotations[bone])
+			species.skeleton.set_bone_pose_position(bone, t_positions[bone])
+		StaticPose.apply(species.skeleton, pose_turns, animations.hips, animations.feet)
+	elif clip != "" and pose_turns.is_empty():
 		animations.advance(delta)
 		retarget.apply()
 
@@ -106,7 +133,58 @@ func export_glb(path: String) -> Error:
 	return GlbExporter.save(species.mesh, species.skeleton, sockets, path, true)
 
 
-func _add_world(viewport: SubViewport) -> void:
+## Informe del banco de pruebas (paso 5.4): comprobaciones del personaje que se exporta y, si hay una pose fija o un
+## clip, las medidas de malla en esa pose. Tarda (hornea): llamarlo al pedir el informe, no en cada fotograma.
+func check_report() -> Array[Dictionary]:
+	var baked: Node3D = CharacterBaker.bake(species.mesh, species.skeleton, true)
+	var character: Node3D = Sockets.to_nodes(baked, species.manifest["bones"]["sockets"])
+	baked.free()
+	if character == null:
+		return [{"id": "anclajes", "nivel": "error", "texto": "No se pudo hornear el personaje", "huesos": PackedStringArray()}]
+	var results: Array[Dictionary] = CharacterChecks.run(character, species.manifest)
+	if clip != "":
+		character.visible = false
+		viewport.add_child(character)  # StaticPose lee poses globales: dentro del árbol están al día
+		results.append_array(_pose_report(character))
+	character.free()
+	return results
+
+
+func _pose_report(character: Node3D) -> Array[Dictionary]:
+	var skeleton: Skeleton3D = character.find_children("*", "Skeleton3D", true, false)[0]
+	var mesh: MeshInstance3D = character.find_children("*", "MeshInstance3D", true, false)[0]
+	if not pose_turns.is_empty():
+		StaticPose.apply(skeleton, pose_turns, animations.hips, animations.feet)
+		return MeshChecks.run(mesh, skeleton)
+	var copy := PoseRetarget.new(animations.skeleton, skeleton, animations.bones, animations.hips)
+	copy.capture()
+	var now: float = animations.player.current_animation_position
+	var samples: Array[Dictionary] = []
+	for i in REPORT_INSTANTS:
+		animations.seek(animations.length() * i / REPORT_INSTANTS)
+		copy.apply()
+		samples.append_array(MeshChecks.run(mesh, skeleton))
+	animations.seek(now)
+	retarget.apply()
+	return _worst_findings(samples)
+
+
+## De varias mediciones: cada hallazgo (medida y huesos) una vez, con su peor valor; y, de cada medida sin hallazgos,
+## su «bien» de mayor valor.
+static func _worst_findings(samples: Array[Dictionary]) -> Array[Dictionary]:
+	var found := {}
+	for result in samples:
+		var key: String = result["id"] + ("|" + ",".join(result["huesos"]) if result["nivel"] != "bien" else "")
+		if not found.has(key) or result["valor"] > found[key]["valor"]:
+			found[key] = result
+	var results: Array[Dictionary] = []
+	for key: String in found:
+		if key.contains("|") or not found.keys().any(func(k: String) -> bool: return k.begins_with(key + "|")):
+			results.append(found[key])
+	return results
+
+
+func _add_world() -> void:
 	var environment := Environment.new()
 	environment.background_mode = Environment.BG_COLOR
 	environment.background_color = BACKGROUND
@@ -123,7 +201,7 @@ func _add_world(viewport: SubViewport) -> void:
 	viewport.add_child(camera)
 
 
-func _load_character(viewport: SubViewport) -> String:
+func _load_character() -> String:
 	var folder := _data_folder()
 	species = SpeciesData.new()
 	if species.load_folder(folder):
@@ -139,12 +217,12 @@ func _load_character(viewport: SubViewport) -> String:
 	style = StyleView.new()
 	style.setup(species.mesh, species.skeleton)
 	style.refresh()
-	_load_animations(viewport, folder.path_join("../animaciones").path_join(ANIMATIONS + ".json").simplify_path())
+	_load_animations(folder.path_join("../animaciones").path_join(ANIMATIONS + ".json").simplify_path())
 	return ""
 
 
 # Sin animaciones el editor sigue funcionando: solo se queda sin la lista de clips.
-func _load_animations(viewport: SubViewport, path: String) -> void:
+func _load_animations(path: String) -> void:
 	var loaded := AnimationSet.new()
 	animation_error = loaded.load_file(path)
 	if animation_error:
@@ -153,8 +231,27 @@ func _load_animations(viewport: SubViewport, path: String) -> void:
 	animations = loaded
 	viewport.add_child(animations.scene)
 	retarget = PoseRetarget.new(animations.skeleton, species.skeleton, animations.bones, animations.hips)
+	var loaded_rom := Rom.new()
+	var rom_error := loaded_rom.load_file(path.get_base_dir().path_join("rom.json"))
+	if rom_error:
+		push_warning(rom_error)
+	else:
+		rom = loaded_rom
 
 
+func _save_t_pose() -> void:
+	t_rotations.clear()
+	t_positions.clear()
+	for bone in species.skeleton.get_bone_count():
+		t_rotations.append(species.skeleton.get_bone_pose_rotation(bone))
+		t_positions.append(species.skeleton.get_bone_pose_position(bone))
+
+
+# Paso A2: primero res://datos (dentro del proyecto y del .pck); si no está (las pruebas cargan este script desde
+# otro proyecto), la carpeta datos/ junto a app/.
 func _data_folder() -> String:
+	var packed := DATA_RES.path_join(SPECIES)
+	if FileAccess.file_exists(packed.path_join("manifiesto.json")):
+		return packed
 	var app_folder := ProjectSettings.globalize_path(get_script().resource_path.get_base_dir())
-	return app_folder.path_join("../../datos").path_join(SPECIES).simplify_path()
+	return app_folder.path_join("../datos").path_join(SPECIES).simplify_path()

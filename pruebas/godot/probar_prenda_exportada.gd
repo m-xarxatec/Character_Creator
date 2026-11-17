@@ -33,7 +33,7 @@ func _initialize() -> void:
 	root_dir = ProjectSettings.globalize_path("res://").path_join("../..").simplify_path()
 	var addon := root_dir.path_join("godot/addons/creador")
 	var species = load(addon.path_join("species_data.gd")).new()
-	if species.load_folder(root_dir.path_join("datos/humana")):
+	if species.load_folder(root_dir.path_join("godot/datos/humana")):
 		print("ERROR: ", species.error)
 		quit(1)
 		return

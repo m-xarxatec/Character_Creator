@@ -26,9 +26,12 @@ Además de los entregables, quedó escrita la parte de nivel fuerte de seis paso
 
 Con esto, A3 pasa de nivel fuerte a **medio** (colocar, probar y añadir el caso con la especie real).
 
-## Lo que queda por hacer (no se pudo en esta sesión)
+## Al juntar con la máquina Linux (2026-11-16)
 
-0. **Lanzar las seis pruebas de `ruta/codigo/`** en la máquina con Godot y corregir los errores de escritura que salgan. Es lo primero.
+- Las 6 pruebas de `ruta/codigo/` pasan en Godot 4.7.2 y las 6 detectan el fallo de su cabecera. Arreglos, solo en `probar_transferencia.gd`: un `%` sin escapar; el «desplazamiento de lado» se mide solo si el punto cae dentro del triángulo (en una arista del tubo de caras planas es 1,96 mm por geometría); la «piel que asoma» no cuenta el borde exacto de la prenda (y = 0,2 y 0,8), donde decide el redondeo.
+- Decisiones y fichas borradas: `DECISIONES.md`, apartado «Tomadas al juntar las ramas». Las fichas que siguen pueden citar `WorldPose` o fichas borradas: se revisan al empezar su paso.
+
+## Lo que queda por hacer (no se pudo en esta sesión)
 
 1. **Medir.** Lanzar en la máquina Linux los comandos M1 a M6 de `RENDIMIENTO.md` §1.3 y guardar el resultado en `ruta/medidas/`. M2 a M4 piden crear antes `pruebas/godot/probar_medidas.gd` (paso simple, con propuesta).
 2. **Resolver los «NO VERIFICADO».** Cada uno tiene su comprobación en una ficha. Los que más pesan: los cuatro de A2c (leer `datos/` desde un `.pck`), `SpringBoneSimulator3D` en 4.7 (11.3) y el selector de archivos en Android (15.5).
