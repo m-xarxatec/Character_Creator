@@ -13,12 +13,15 @@ extends RefCounted
 ## - La malla no lleva formas; UV, color `garment`, índices, huesos y pesos se copian tal cual.
 ##   Tangentes: no se pasan, pero Godot guarda unas igualmente al crear la superficie (sin uso: no hay mapas de normales).
 ## Los anclajes siguen siendo huesos (pasan a nodos vacíos en el paso 3.6.4).
+## - profile_axes (prototipo del paso 5.7b, solo con pose T; por defecto no): cada hueso del perfil humanoide de Godot
+##   sale con el giro de reposo global del perfil, que es lo que escribe «Overwrite Axis» al importar. La malla no
+##   cambia (las bind poses son la inversa del reposo nuevo) y los anclajes, que no son del perfil, tampoco.
 
 const Baker := preload("mesh_baker.gd")
 const TPose := preload("t_pose.gd")
 
 
-static func bake(mesh: MeshInstance3D, skeleton: Skeleton3D, t_pose: bool) -> Node3D:
+static func bake(mesh: MeshInstance3D, skeleton: Skeleton3D, t_pose: bool, profile_axes := false) -> Node3D:
 	var editor_positions: Array[Vector3] = []
 	var editor_rotations: Array[Quaternion] = []
 	for bone in skeleton.get_bone_count():
@@ -42,6 +45,11 @@ static func bake(mesh: MeshInstance3D, skeleton: Skeleton3D, t_pose: bool) -> No
 		vertices[i] += to_ground
 	for bone in globals.size():  # sin escala y apoyado en el suelo
 		globals[bone] = Transform3D(globals[bone].basis.orthonormalized(), globals[bone].origin + to_ground)
+	if profile_axes and t_pose:
+		var bases := profile_global_bases()
+		for bone in globals.size():
+			if bases.has(skeleton.get_bone_name(bone)):
+				globals[bone] = Transform3D(bases[skeleton.get_bone_name(bone)], globals[bone].origin)
 
 	var root := Node3D.new()
 	root.name = "Character"
@@ -54,6 +62,21 @@ static func bake(mesh: MeshInstance3D, skeleton: Skeleton3D, t_pose: bool) -> No
 	new_skeleton.add_child(new_mesh)
 	new_mesh.skeleton = NodePath("..")
 	return root
+
+
+## {nombre de hueso: Basis} con el giro de reposo global de cada hueso de SkeletonProfileHumanoid
+## (el de su pose de referencia encadenado con los de sus padres).
+static func profile_global_bases() -> Dictionary:
+	var profile := SkeletonProfileHumanoid.new()
+	var bases := {}
+	for i in profile.bone_size:
+		var basis := Basis.IDENTITY
+		var bone := i
+		while bone >= 0:
+			basis = profile.get_reference_pose(bone).basis * basis
+			bone = profile.find_bone(profile.get_bone_parent(bone))
+		bases[String(profile.get_bone_name(i))] = basis.orthonormalized()  # encadenar acumula error: sin esto la escala no es 1
+	return bases
 
 
 static func _set_rest_pose(skeleton: Skeleton3D) -> void:
