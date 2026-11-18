@@ -59,13 +59,20 @@ func _check_rows() -> void:
 
 func _check_window(main: Control) -> void:
 	var bar = main.body_actions
-	check("al empezar no hay informe", not main.report_panel.visible and main.slider_panel.visible)
+	var section = main.report_section
+	check("al empezar: informe plegado, cabecera «pulsa…» y deslizadores visibles", not main.report_panel.visible
+		and main.slider_panel.visible and section.header.text.contains(section.IDLE)
+		and section.header.text.contains("Informe de deformación"))
 	var start := Time.get_ticks_msec()
 	bar.set_pose_t(true)
 	print("  MEDIDA informe en pose T: %d ms" % (Time.get_ticks_msec() - start))
 	var errors: Array = main.report_panel.rows.filter(func(r: Dictionary) -> bool: return r["nivel"] == "error")
-	check("Probar huesos enseña el informe, y el neutro no tiene errores", main.report_panel.visible
-		and not main.slider_panel.visible and main.report_panel.rows.size() >= 8 and errors.is_empty(), str(errors))
+	check("Probar huesos calcula el informe (cabecera con el resumen), y el neutro no tiene errores",
+		main.report_panel.rows.size() >= 8 and errors.is_empty()
+		and section.header.text.contains(main.report_panel.summary.text), str(errors))
+	check("los deslizadores siguen visibles al probar huesos (paso P.2)", main.slider_panel.visible)
+	section.header.toggled.emit(true)
+	check("desplegar enseña las filas", main.report_panel.visible and section.header.text.begins_with("▾"))
 
 	var one := {}
 	for row: Dictionary in main.body_view.species.sliders:
@@ -93,6 +100,7 @@ func _check_window(main: Control) -> void:
 	var button: Button = main.report_panel.zone_buttons[0]
 	var zone := button.text
 	button.pressed.emit()
-	check("pulsar la zona sale de la prueba y abre %s" % zone, not main.report_panel.visible and main.slider_panel.visible
+	check("pulsar la zona sale de la prueba y abre %s" % zone, section.header.text.contains(section.IDLE)
+		and main.report_panel.rows.is_empty() and main.slider_panel.visible
 		and not main.body_view.pose_t and main.body_view.clip == "" and main.slider_panel.open_zone == zone
 		and not bar.bones_button.button_pressed and bar.animation_list.selected == 0)

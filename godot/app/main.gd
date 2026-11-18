@@ -5,15 +5,16 @@ extends Control
 # Las pestañas se crean aquí (no en main.tscn) para que la prueba pueda cargar este script desde otro proyecto.
 # Cuerpo: la vista 3D (body_view.gd) a la izquierda y el panel de deslizadores (slider_panel.gd) a la derecha; los dos
 # siguen al editor (body_editor.gd). Bajo los deslizadores, el panel Acabado (finish_panel.gd, paso 4.7b). Debajo, la barra de body_actions.gd (paso 4.5; Guardar y Abrir preset, paso 7.0). Ctrl+Z deshace; Ctrl+Mayús+Z o Ctrl+Y rehacen (acciones ui_undo y ui_redo de Godot).
-# Paso 5.4: con Probar huesos o una animación, el informe (report_panel.gd) ocupa el sitio de los deslizadores; su botón
-# de zona sale de la prueba y abre esa zona.
+# Paso 5.4: con Probar huesos o una animación se calcula el informe (report_panel.gd); su botón de zona sale de la
+# prueba y abre esa zona. Paso P.2: el informe va en un desplegable bajo la vista (report_section.gd), plegado al
+# empezar; los deslizadores no se ocultan nunca.
 
 const BodyView := preload("body_view.gd")
 const SliderPanel := preload("slider_panel.gd")
 const BodyEditor := preload("body_editor.gd")
 const BodyActions := preload("body_actions.gd")
 const FinishPanel := preload("finish_panel.gd")
-const ReportPanel := preload("report_panel.gd")
+const ReportSection := preload("report_section.gd")
 const LicensesDialog := preload("licenses_dialog.gd")
 const TAB_NAMES := ["Cuerpo", "Cara y ojos", "Pelo", "Ropa", "Accesorios", "Exportar"]
 const ACTIVE_TAB := 0
@@ -23,7 +24,8 @@ var body_view: SubViewportContainer
 var slider_panel: ScrollContainer
 var body_actions: HBoxContainer
 var finish_panel: VBoxContainer
-var report_panel: ScrollContainer
+var report_panel: ScrollContainer  # ReportPanel, dentro de report_section
+var report_section: VBoxContainer
 var editor  # BodyEditor (null si la especie no cargó)
 var licenses: AcceptDialog  # paso 7.3b
 
@@ -78,13 +80,12 @@ func _self_test() -> void:
 	get_tree().quit(0 if problem == "" else 1)
 
 
-## Enseña el informe mientras se prueban los huesos (Probar huesos o una animación); si no, los deslizadores.
+## Calcula el informe mientras se prueban los huesos (Probar huesos o una animación); si no, lo vacía.
 func update_report() -> void:
-	var testing: bool = body_view.pose_t or body_view.clip != ""
-	report_panel.visible = testing
-	slider_panel.visible = not testing
-	if testing:
-		report_panel.show_results(body_view.check_report())
+	if body_view.pose_t or body_view.clip != "":
+		report_section.show_results(body_view.check_report())
+	else:
+		report_section.clear()
 
 
 func _on_zone_chosen(zone: String) -> void:
@@ -107,10 +108,17 @@ func _body_page() -> Control:
 	var page := HBoxContainer.new()
 	page.size_flags_vertical = Control.SIZE_EXPAND_FILL
 	column.add_child(page)
+	var left := VBoxContainer.new()
+	left.size_flags_horizontal = Control.SIZE_EXPAND_FILL
+	left.size_flags_stretch_ratio = 2.0
+	page.add_child(left)
 	body_view = BodyView.new()
-	body_view.size_flags_horizontal = Control.SIZE_EXPAND_FILL
-	body_view.size_flags_stretch_ratio = 2.0
-	page.add_child(body_view)
+	body_view.size_flags_vertical = Control.SIZE_EXPAND_FILL
+	left.add_child(body_view)
+	report_section = ReportSection.new()
+	report_section.name = "InformeDeformacion"
+	report_panel = report_section.panel
+	left.add_child(report_section)
 	slider_panel = SliderPanel.new()
 	slider_panel.name = "Deslizadores"
 	slider_panel.size_flags_vertical = Control.SIZE_EXPAND_FILL
@@ -119,11 +127,6 @@ func _body_page() -> Control:
 	var side := VBoxContainer.new()
 	side.size_flags_horizontal = Control.SIZE_EXPAND_FILL
 	side.add_child(slider_panel)
-	report_panel = ReportPanel.new()
-	report_panel.name = "Informe"
-	report_panel.size_flags_vertical = Control.SIZE_EXPAND_FILL
-	report_panel.visible = false
-	side.add_child(report_panel)
 	side.add_child(HSeparator.new())
 	side.add_child(finish_panel)
 	page.add_child(side)
