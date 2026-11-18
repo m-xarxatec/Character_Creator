@@ -9,6 +9,8 @@ extends SceneTree
 #   --vistas=frente,tres_cuartos,lado,espalda   también primeros planos: cara, hombro, codo, cadera, mano
 #   --espada                             espada de prueba en socket_hand_r (godot/app/test_sword.gd, paso 5.6)
 #   --mano=<0..1>                        valor de hand_size_r
+#   --rom                                paso 5.9: una hoja por movimiento de rom.json (rom_<id>.png, variante T); filas: pose T,
+#                                        extremo «desde» y extremo «hasta»; columnas: frente, tres cuartos, lado y primer plano
 #   --preset=<archivo.json>              otro preset para colores, prenda y acabado (y para --cuerpo=anime)
 #   vista «juego»: cámara de tercera persona, detrás y por encima (fov 50°, a 3,5 alturas de cadera)
 # Hoja: <salida>/<cuerpo>_<pose>.png (una fila por variante, una columna por vista, con su nombre escrito).
@@ -68,6 +70,10 @@ func _initialize() -> void:
 	updater.update(_values(options.get("cuerpo", "anime")), false)
 	var out := _absolute(options.get("salida", "pruebas/capturas/banco"))
 	DirAccess.make_dir_recursive_absolute(out)
+	if options.has("rom"):
+		await _rom_sheets(out)
+		quit()
+		return
 	var variants: PackedStringArray = options.get("variantes", "t,a").split(",")
 	var views: PackedStringArray = options.get("vistas", "frente,tres_cuartos,lado,espalda").split(",")
 	for pose: String in options.get("poses", "reposo").split(","):
@@ -83,19 +89,54 @@ func _initialize() -> void:
 			await process_frame
 			_pose(character, pose)
 			for column in views.size():
-				_aim(character, views[column])
-				caption.text = "%s · %s · %s" % [variants[row].to_upper(), pose, views[column]]
-				for f in 3:
-					await process_frame
-				await RenderingServer.frame_post_draw
-				var image := view.get_texture().get_image()
-				image.convert(Image.FORMAT_RGBA8)
-				sheet.blit_rect(image, Rect2i(Vector2i.ZERO, TILE), Vector2i(column * TILE.x, row * TILE.y))
+				var text := "%s · %s · %s" % [variants[row].to_upper(), pose, views[column]]
+				await _shoot(character, views[column], text, sheet, Vector2i(column, row))
 			character.free()
 		var path := out.path_join("%s_%s.png" % [options.get("cuerpo", "anime"), pose.replace("@", "_")])
 		sheet.save_png(path)
 		print("GUARDADO ", path)
 	quit()
+
+
+## Paso 5.9: una hoja por movimiento del rango de movimiento, sobre la variante T.
+func _rom_sheets(out: String) -> void:
+	var rom = load(root_dir.path_join("godot/app/rom.gd")).new()
+	var error: String = rom.load_file(root_dir.path_join("godot/datos/animaciones/rom.json"))
+	if error:
+		print("ERROR: ", error)
+		return
+	for move: Dictionary in rom.moves:
+		var bone: String = ("Left" if int(move["lados"]) == 2 else "") + move["hueso"]
+		var views := ["frente", "tres_cuartos", "lado", "hueso:" + bone]
+		var rows := [["pose T", 0.0], ["desde %d°" % move["desde"], 0.25], ["hasta %d°" % move["hasta"], 0.75]]
+		var sheet := Image.create(TILE.x * views.size(), TILE.y * rows.size(), false, Image.FORMAT_RGBA8)
+		for row in rows.size():
+			var character: Node3D = exporter.build(species.mesh, species.skeleton, species.manifest["bones"]["sockets"], true)
+			var mesh: MeshInstance3D = character.find_children("*", "MeshInstance3D", true, false)[0]
+			mesh.material_override = material_script.standalone(species.mesh)
+			view.add_child(character)
+			await process_frame
+			var skeleton: Skeleton3D = character.find_children("*", "Skeleton3D", true, false)[0]
+			static_pose.apply(skeleton, rom.turns(move["id"], rows[row][1]), animations.hips, [])
+			for column in views.size():
+				var text := "%s · %s · %s" % [move["id"], rows[row][0], views[column].trim_prefix("hueso:")]
+				await _shoot(character, views[column], text, sheet, Vector2i(column, row))
+			character.free()
+		var path := out.path_join("rom_%s.png" % move["id"])
+		sheet.save_png(path)
+		print("GUARDADO ", path)
+
+
+## Encuadra, espera al dibujo y pega la captura en su casilla de la hoja.
+func _shoot(character: Node3D, view_name: String, text: String, sheet: Image, cell: Vector2i) -> void:
+	_aim(character, view_name)
+	caption.text = text
+	for f in 3:
+		await process_frame
+	await RenderingServer.frame_post_draw
+	var image := view.get_texture().get_image()
+	image.convert(Image.FORMAT_RGBA8)
+	sheet.blit_rect(image, Rect2i(Vector2i.ZERO, TILE), cell * TILE)
 
 
 func _absolute(path: String) -> String:
@@ -179,8 +220,8 @@ func _aim(character: Node3D, name: String) -> void:
 		camera.look_at_from_position(Vector3(0, hips.y * 2.6, -hips.y * 3.5), hips + Vector3(0, hips.y * 0.4, 0))
 		return
 	camera.fov = 35.0
-	if CLOSE_UPS.has(name):
-		var bone: Vector3 = skeleton.get_bone_global_pose(skeleton.find_bone(CLOSE_UPS[name])).origin
+	if CLOSE_UPS.has(name) or name.begins_with("hueso:"):  # «hueso:<nombre>»: primer plano de cualquier hueso
+		var bone: Vector3 = skeleton.get_bone_global_pose(skeleton.find_bone(CLOSE_UPS.get(name, name.trim_prefix("hueso:")))).origin
 		camera.look_at_from_position(bone + Vector3(0.15, 0.1, 0.6) * box.size.y / 1.7, bone)
 		return
 	var height := box.size.y
