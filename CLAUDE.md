@@ -2,7 +2,7 @@
 
 This file provides guidance to Claude Code (claude.ai/code) when working with code in this repository.
 
-**GameMolde** (nombre provisional): editor libre de personajes 3D hecho con Godot, al estilo de VRoid. Todo en español.
+**GameMolde**: editor libre de personajes 3D hecho con Godot, al estilo de VRoid. Todo en español.
 
 ## Dónde está cada cosa (léelo allí, no lo copies aquí)
 
@@ -45,6 +45,7 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 
 - Godot 4.7.2 estable (no .NET), GDScript: `godot`. Blender 5.2.2 LTS + MPFB 2.0.18 (`bl_ext.blender_org.mpfb`), sin ventana: `blender -b -P script.py -- args`.
 - Blender 5.2.2 fijo (snap retenido con `snap refresh --hold`): sin actualizaciones automáticas; cambiar de versión solo con un paso del PLAN.
+- Renderizador fijado en `project.godot`: Forward+ en PC y Mobile en Android. No cambiarlo sin un paso del PLAN.
 - Sin dependencias nuevas sin aprobación.
 - Lanzar siempre Godot y Blender con límite de tiempo y memoria: `(ulimit -v 4000000; timeout 120 ...)`.
 - Abrir el editor para probarlo a mano: `(ulimit -v 4000000; timeout 900 godot --path godot)` (con 120 s se cierra a medio probar).

@@ -5,12 +5,11 @@
 
 | Paso | Qué decidir | Dónde mirar |
 | --- | --- | --- |
-| 5.4 | ¿Se entiende el informe? ¿Orden y colores? (todo a 1 sentado da 37 filas, casi todas cruces de dedos) | `(ulimit -v 4000000; timeout 900 godot --path godot)` → Probar huesos; luego todo a 1 y «Sentarse» |
-| 5.10 | Umbrales [aviso, error]. Propuesta: sección 20/35 %, cruce 10/30 mm, estiramiento ×3/×6, degenerados 1/1 (hoy 15/30, 5/15, 1,5/2,5, 1/1) | Medidas en el registro de `PLAN.md` (5.10) |
-| 5.5 | Pose de exportación: T horneada o A | `pruebas/capturas/pose_exportacion/` (24 hojas, arriba T, abajo A) y su `medidas.md` |
-| 5.6 | ¿La espada sigue bien a la mano? (la hoja va a lo largo de +Y del anclaje y en reposo apunta hacia arriba) | `pruebas/capturas/espada/` |
-| 5.11 | Qué capturas pasan a `pruebas/capturas/aprobadas/` y el límite (ruido medido 0,000 % → propuesta 0,1 %) | `pruebas/capturas/referencia/vuelta_1/` |
-| 5.12 | Preguntas de la ficha `ruta/pasos/5.12_legibilidad.md` §8 | `pruebas/capturas/legibilidad/*_x4.png` |
-| 5.13 | Renderizador para PC y para Android (Mobile = Forward+ al píxel y algo más rápido; Compatibility 0,14–0,65 % distinto y 7 veces más lento) | `pruebas/capturas/renderizadores/` y registro (5.13) |
-| 5.14 | Qué valores de `GUIA_ESTILO.md` §7 apruebas (móvil: el cuerpo no cabe en triángulos ni textura) | `pruebas/capturas/revision/2026-11-16_presupuesto/presupuesto.md` |
-| commits | Hacerlos al volver; también subir los `.uid` que creó Godot | `git status` |
+| 5.15 / 5.11 | Las capturas de referencia cambian con la pose T nueva (1,6–3,8 %). ¿Pasan las nuevas a `aprobadas/`? | `pruebas/capturas/referencia/vuelta_2/` (y `dif/`); el hombro: `pruebas/capturas/hombro_natural/hombro_natural.png` |
+| 6.3 | ¿Se ven bien las formas nuevas al moverse? ¿Aceptas los 2 cruces justificados (manos con brazos delante; muslo–pecho en sentadilla con glúteo redondo)? Propongo pasar el revisor-visual | `pruebas/capturas/formas_propias_banco/` (una carpeta por cuerpo) y registro (6.3) |
+| 7.0 | Pruébalo a mano: Guardar preset…, cambia algo, Abrir preset… | `(ulimit -v 4000000; timeout 900 godot --path godot)` |
+| 7.1 | Abre el build y compáralo con el editor: ¿alguna diferencia de color, contorno o letra? | `build/linux/gamemolde.x86_64` frente a `godot --path godot` |
+| 7.2 | ¿Qué 3 o 4 capturas van al README y en qué orden? ¿Grabas un vídeo de 30–60 s (mover deslizadores, probar huesos, exportar, abrir en Godot)? | `pruebas/capturas/readme_candidatas/` |
+| 7.4 | **Aplazado (2026-11-18): antes se pule el programa.** Cuando toque, publicar como versión preliminar (D29): `git tag v0.1.0 && git push origin v0.1.0` y `gh release create v0.1.0 build/GameMolde-0.1.0-linux.zip build/GameMolde-0.1.0-linux.zip.sha256 --title "GameMolde 0.1.0" --notes-file build/NOTAS_0.1.0.md --prerelease`. Después, que lo pruebe otra persona sin ayuda | `build/NOTAS_0.1.0.md` |
+| foto | `trapecios_extendidos.png` está en la raíz y no en git: no la subas en el commit, o muévela a `referencias/` | — |
+| commits | Hacerlos al volver (uno por paso, como siempre); también subir los `.uid` que creó Godot. `cuerpo.glb` cambió (va por LFS) | `git status` |

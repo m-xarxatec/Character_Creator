@@ -32,6 +32,8 @@
 - **Accesorios:** cascos, gafas o armas en los puntos de anclaje.
 - **Materiales:** texturas de piel, estilo pixel art. (El color de piel pasó al MVP el 2026-11-12, solo el color: paso 4.7 de `PLAN.md`.) (El estilo ilustración con contorno ya está en `PLAN.md`.)
 - **Exportar:** VRM 1.0, niveles de detalle (LOD).
+- **Hombro con el brazo sobre la cabeza:** la piel se hunde 21 mm (neutro) y 43 mm (extremo) al «Atacar» (5.8); la clavícula al 25 % (5.15) arregla la pose T, no esto. Haría falta una forma correctora guiada por el ángulo del brazo (o pesos mejores en el hombro), y que el juego la use.
+- **`alisado` con género y firmeza:** sus correcciones (6.2) cubren músculo, grasa y pecho; sexo y firmeza no se midieron.
 - **Selector de polígonos al exportar:** Low-poly (proxy741), Ligero (proxy ~1.600), Medio (reducción automática de la base), Completo (base). Opción de sombreado plano. Mismos huesos y anclajes; pesos heredados de la base; textura de prenda horneada por nivel; pruebas de deformación por nivel.
 
 ---
