@@ -4,7 +4,7 @@ extends Control
 # Autoprueba (paso A2): (ulimit -v 4000000; timeout 120 godot --headless --path godot -- --autoprueba)
 # Las pestañas se crean aquí (no en main.tscn) para que la prueba pueda cargar este script desde otro proyecto.
 # Cuerpo: la vista 3D (body_view.gd) a la izquierda y el panel de deslizadores (slider_panel.gd) a la derecha; los dos
-# siguen al editor (body_editor.gd). Bajo los deslizadores, el panel Acabado (finish_panel.gd, paso 4.7b). Debajo, la barra de body_actions.gd (paso 4.5). Ctrl+Z deshace; Ctrl+Mayús+Z o Ctrl+Y rehacen (acciones ui_undo y ui_redo de Godot).
+# siguen al editor (body_editor.gd). Bajo los deslizadores, el panel Acabado (finish_panel.gd, paso 4.7b). Debajo, la barra de body_actions.gd (paso 4.5; Guardar y Abrir preset, paso 7.0). Ctrl+Z deshace; Ctrl+Mayús+Z o Ctrl+Y rehacen (acciones ui_undo y ui_redo de Godot).
 # Paso 5.4: con Probar huesos o una animación, el informe (report_panel.gd) ocupa el sitio de los deslizadores; su botón
 # de zona sale de la prueba y abre esa zona.
 
@@ -14,6 +14,7 @@ const BodyEditor := preload("body_editor.gd")
 const BodyActions := preload("body_actions.gd")
 const FinishPanel := preload("finish_panel.gd")
 const ReportPanel := preload("report_panel.gd")
+const LicensesDialog := preload("licenses_dialog.gd")
 const TAB_NAMES := ["Cuerpo", "Cara y ojos", "Pelo", "Ropa", "Accesorios", "Exportar"]
 const ACTIVE_TAB := 0
 
@@ -24,6 +25,7 @@ var body_actions: HBoxContainer
 var finish_panel: VBoxContainer
 var report_panel: ScrollContainer
 var editor  # BodyEditor (null si la especie no cargó)
+var licenses: AcceptDialog  # paso 7.3b
 
 
 func _ready() -> void:
@@ -42,10 +44,17 @@ func _ready() -> void:
 		editor = BodyEditor.new(body_view.species.sliders, body_view.values)
 		editor.changed.connect(func() -> void: body_view.set_values(editor.values))
 		slider_panel.setup(editor)
-		body_actions.setup(body_view)
+		body_actions.setup(body_view, editor)
 		finish_panel.setup(body_view)
 		body_actions.test_changed.connect(update_report)
+		body_actions.look_changed.connect(finish_panel.refresh)
 		report_panel.zone_chosen.connect(_on_zone_chosen)
+	licenses = LicensesDialog.new()
+	add_child(licenses)
+	var licenses_button := Button.new()
+	licenses_button.text = "Licencias"
+	licenses_button.pressed.connect(func() -> void: licenses.popup_centered_ratio(0.7))
+	body_actions.add_child(licenses_button)
 	if "--autoprueba" in OS.get_cmdline_user_args():
 		_self_test()
 
@@ -63,6 +72,8 @@ func _self_test() -> void:
 			problem = "exportar dio %s" % error_string(err)
 		elif not FileAccess.file_exists(path) or not FileAccess.file_exists(path.get_basename() + ".tres"):
 			problem = "no se escribieron autoprueba.glb y autoprueba.tres"
+		elif not FileAccess.file_exists(LicensesDialog.CREDITS) or not FileAccess.file_exists(LicensesDialog.PROGRAM_LICENSE):
+			problem = "faltan las licencias (paso 7.3b)"
 	print("AUTOPRUEBA: ", "TODO BIEN" if problem == "" else "FALLO " + problem)
 	get_tree().quit(0 if problem == "" else 1)
 

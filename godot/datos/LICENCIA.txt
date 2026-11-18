@@ -1,0 +1,5 @@
+Datos de GameMolde (godot/datos/): el cuerpo base preparado, sus formas y las animaciones de prueba.
+El cuerpo y sus formas salen de los MakeHuman system assets (CC0, MakeHuman Community).
+Las formas propias (cara anime y las de la Fase 6: hombros, glúteos y alisado) las calculan scripts del proyecto
+sobre esa malla y también son CC0. Las animaciones son la Universal Animation Library de Quaternius (CC0).
+CC0 1.0: https://creativecommons.org/publicdomain/zero/1.0/
