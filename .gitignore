@@ -5,6 +5,9 @@
 *.blend1
 __pycache__/
 
+# Builds (paso 7.1)
+build/
+
 # Descargas y temporales
 *.zip
 *.tmp
