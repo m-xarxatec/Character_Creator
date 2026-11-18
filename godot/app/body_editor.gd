@@ -77,6 +77,11 @@ func redo() -> bool:
 	return true
 
 
+## Pone todos los valores de golpe (abrir un preset, paso 7.0). Un solo cambio para Deshacer.
+func load_values(new_values: Dictionary) -> void:
+	_replace(new_values.duplicate())
+
+
 ## Todos los deslizadores de la zona a su neutro (columna neutro de la tabla). Un solo cambio.
 func reset_zone(zone: String) -> void:
 	var edited := values.duplicate()

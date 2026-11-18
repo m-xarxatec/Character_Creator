@@ -6,11 +6,15 @@ extends HBoxContainer
 # - Exportar .glb: elige dónde guardar y exporta en pose T (GlbExporter); el .tres va al lado. Avisa con la ruta o el error.
 # - Prenda base: muestra u oculta la prenda (BodyMaterial); el .glb sale como se ve. No entra en Deshacer.
 # Paso 5.4: test_changed avisa al cambiar Probar huesos o la lista Animación (main.gd enseña el informe).
-# Uso: var bar := BodyActions.new(); bar.setup(body_view)
+# Paso 7.0: Guardar preset… y Abrir preset… (preset_file.gd). Abrir se deshace con Ctrl+Z (solo los valores);
+#   look_changed avisa de que cambiaron colores y acabado (main.gd refresca el panel Acabado).
+# Uso: var bar := BodyActions.new(); bar.setup(body_view, editor)
 
 signal test_changed
+signal look_changed
 
 const BodyMaterial := preload("../addons/creador/body_material.gd")
+const PresetFile := preload("preset_file.gd")
 
 var view: SubViewportContainer  # BodyView
 var bones_button: Button
@@ -18,11 +22,15 @@ var animation_list: OptionButton
 var export_button: Button
 var garment_check: CheckBox
 var file_dialog: FileDialog
+var save_dialog: FileDialog
+var open_dialog: FileDialog
 var message: AcceptDialog
+var editor  # BodyEditor
 
 
-func setup(body_view: SubViewportContainer) -> void:
+func setup(body_view: SubViewportContainer, body_editor = null) -> void:
 	view = body_view
+	editor = body_editor
 	bones_button = _button("Probar huesos", func() -> void: set_pose_t(not view.pose_t))
 	bones_button.toggle_mode = true
 	_add_animation_list()
@@ -33,6 +41,49 @@ func setup(body_view: SubViewportContainer) -> void:
 	garment_check.toggled.connect(func(on: bool) -> void: BodyMaterial.set_garment_visible(view.species.mesh, on))
 	add_child(garment_check)
 	_add_dialogs()
+	if editor != null:
+		save_dialog = _preset_dialog(FileDialog.FILE_MODE_SAVE_FILE, save_preset)
+		open_dialog = _preset_dialog(FileDialog.FILE_MODE_OPEN_FILE, open_preset)
+		_button("Guardar preset…", func() -> void: save_dialog.popup_centered_ratio(0.6))
+		_button("Abrir preset…", func() -> void: open_dialog.popup_centered_ratio(0.6))
+
+
+## Guarda el personaje como preset y avisa. Devuelve el error.
+func save_preset(path: String) -> Error:
+	var error := PresetFile.save(path, view, editor.values)
+	_tell("Guardar preset", "Guardado:\n%s" % path if error == OK else "No se pudo guardar\n%s\n(%s)" % [path, error_string(error)])
+	return error
+
+
+## Abre un preset; si falla, avisa y no cambia nada. Devuelve el error ("" si fue bien).
+func open_preset(path: String) -> String:
+	var loaded := PresetFile.read(path, view)
+	if loaded["error"] != "":
+		_tell("Abrir preset", "No se pudo abrir\n%s\n%s" % [path, loaded["error"]])
+		return loaded["error"]
+	PresetFile.apply(loaded, view, editor)
+	garment_check.set_pressed_no_signal(BodyMaterial.is_garment_visible(view.species.mesh))
+	look_changed.emit()
+	if not loaded["desconocidas"].is_empty():
+		_tell("Abrir preset", "Abierto. Se ignoraron estas claves desconocidas:\n%s" % ", ".join(loaded["desconocidas"]))
+	return ""
+
+
+func _tell(title: String, text: String) -> void:
+	message.title = title
+	message.dialog_text = text
+	message.popup_centered()
+
+
+func _preset_dialog(mode: FileDialog.FileMode, action: Callable) -> FileDialog:
+	var dialog := FileDialog.new()
+	dialog.file_mode = mode
+	dialog.access = FileDialog.ACCESS_FILESYSTEM
+	dialog.filters = PackedStringArray(["*.json ; Preset de personaje"])
+	dialog.current_file = "personaje.json"
+	dialog.file_selected.connect(action)
+	add_child(dialog)
+	return dialog
 
 
 func set_pose_t(on: bool) -> void:
@@ -69,10 +120,9 @@ func export_to(path: String) -> Error:
 	export_button.text = "Exportar .glb"
 	export_button.disabled = false
 	if error == OK:
-		message.dialog_text = "Guardado:\n%s\n%s" % [path, path.get_basename() + ".tres"]
+		_tell("Exportar .glb", "Guardado:\n%s\n%s" % [path, path.get_basename() + ".tres"])
 	else:
-		message.dialog_text = "No se pudo exportar a\n%s\n(error %d: %s)" % [path, error, error_string(error)]
-	message.popup_centered()
+		_tell("Exportar .glb", "No se pudo exportar a\n%s\n(error %d: %s)" % [path, error, error_string(error)])
 	return error
 
 
