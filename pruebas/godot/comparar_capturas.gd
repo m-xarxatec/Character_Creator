@@ -8,7 +8,7 @@ extends SceneTree
 # Que detecta el fallo: CHANNEL_TOLERANCE := 4 -> falla «todos los canales +5».
 
 const CHANNEL_TOLERANCE := 8
-const DEFAULT_LIMIT := 0.5  # %; PROVISIONAL (D26): se fija con el ruido medido
+const DEFAULT_LIMIT := 0.1  # %; ruido medido 0,000 %. Aprobado el 2026-11-18
 
 var failures := 0
 

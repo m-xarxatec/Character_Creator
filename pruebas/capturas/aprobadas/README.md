@@ -6,6 +6,8 @@ Estas imágenes **sí van en git**.
 
 ## Nombre
 
+Las del 5.11 conservan el nombre de `capturas_de_referencia.sh` (se comparan por nombre) y su origen va en `ORIGEN.md`. Las sueltas:
+
 `<fecha>_<preset>_<pose>_<camara>.png`, por ejemplo `2026-11-11_chibi_reposo-t_juego.png`.
 
 ## Archivo `.json` al lado (mismo nombre)

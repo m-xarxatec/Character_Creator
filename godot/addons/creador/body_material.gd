@@ -127,6 +127,7 @@ static func standalone(mesh: MeshInstance3D) -> ShaderMaterial:
 	outline.set_shader_parameter("outline_color", OUTLINE_DEFAULTS["outline_color"])
 	outline.set_shader_parameter("width_px", get_outline_width(mesh))
 	material.next_pass = outline
+	material.set_meta("outline", outline)  # como apply(): set_unlit la necesita para devolver el contorno
 	return material
 
 

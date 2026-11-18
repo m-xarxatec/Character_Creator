@@ -14,8 +14,8 @@ extends RefCounted
 
 const MeshBaker := preload("mesh_baker.gd")
 
-## Umbrales [aviso, error]. PROVISIONALES (D26): se fijan con las medidas reales y la aprobación del responsable.
-const LIMITS := {"seccion": [15.0, 30.0], "cruce": [5.0, 15.0], "estiramiento": [1.5, 2.5], "degenerados": [1.0, 1.0]}
+## Umbrales [aviso, error], aprobados el 2026-11-18 con las medidas del 5.9 y el 5.10.
+const LIMITS := {"seccion": [20.0, 35.0], "cruce": [10.0, 30.0], "estiramiento": [3.0, 6.0], "degenerados": [1.0, 1.0]}
 const RING_WEIGHT := 0.25  # un vértice es del anillo de una articulación si pesa esto o más en los dos huesos
 const MIN_RING := 8
 const MIN_CAPSULE := 20  # vértices propios para que un hueso tenga cápsula
