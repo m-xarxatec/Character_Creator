@@ -5,6 +5,7 @@ extends RefCounted
 ## Uso:
 ##   var error := GlbExporter.save(species.mesh, species.skeleton, species.manifest["bones"]["sockets"], "user://heroe.glb", true)
 ## - t_pose: true = pose T horneada; false = pose A.
+## Sin congelar la ventana (paso P.1): job = prepare(…) → compute(job) en un hilo → write(finish(job), job["toon"], ruta).
 ## Hornea (character_baker.gd), pasa los anclajes a nodos (sockets.gd) y escribe con GLTFDocument.
 ## Normales del estilo (paso 3.16, style_normals.gd): torso suavizado y cara de elipsoide; viajan en el .glb.
 ## En el archivo: Character → Armature → huesos, malla y anclajes (misma estructura que los .glb de Blender).
@@ -28,48 +29,74 @@ const TEXTURE_SIZE := 2048  # 1 píxel ≈ 0,9 mm en el borde de la prenda (medi
 ## El personaje que se exporta, en memoria (quien llama lo libera). null si no se puede (ver Sockets.error).
 ## En pose T, los huesos salen con los ejes del perfil humanoide (D11, paso 5.16): un juego lo anima sin «Overwrite Axis».
 static func build(mesh: MeshInstance3D, skeleton: Skeleton3D, socket_names: Array, t_pose: bool) -> Node3D:
+	var job := prepare(mesh, skeleton, socket_names, t_pose)
+	compute(job)
+	return finish(job)
+
+
+## Paso P.1: exportar en tres partes, para que lo pesado (compute, ~1,3 s) vaya en un hilo.
+## prepare: hilo principal. Hornea y lee del editor todo lo que hace falta; lo que cambie después no entra.
+static func prepare(mesh: MeshInstance3D, skeleton: Skeleton3D, socket_names: Array, t_pose: bool) -> Dictionary:
 	var baked: Node3D = CharacterBaker.bake(mesh, skeleton, t_pose, t_pose)
 	var character: Node3D = Sockets.to_nodes(baked, socket_names)
 	baked.free()
+	var job := {"character": character, "toon": BodyMaterial.standalone(mesh),
+		"skin": BodyMaterial.get_color(mesh, "skin_color"), "garment": BodyMaterial.get_color(mesh, "garment_color"),
+		"garment_visible": BodyMaterial.is_garment_visible(mesh)}
 	if character != null:
 		var exported := character.find_children("*", "MeshInstance3D", true, false)[0] as MeshInstance3D
-		var material := _material(mesh, exported.mesh)
-		exported.mesh = _garment_in_alpha(exported.mesh, exported.skin, exported.get_parent() as Skeleton3D)
-		exported.mesh.surface_set_material(0, material)
-	return character
+		job["arrays"] = exported.mesh.surface_get_arrays(0)
+		job["head"] = StyleNormals.head_weights(job["arrays"], exported.skin, exported.get_parent() as Skeleton3D)
+	return job
 
 
-## Copia de la malla con `garment` en el alfa y las normales del estilo.
-static func _garment_in_alpha(source: Mesh, skin: Skin, skeleton: Skeleton3D) -> ArrayMesh:
-	var arrays := source.surface_get_arrays(0)
+## compute: cualquier hilo. Solo arrays e Image: normales del estilo, `garment` al alfa y la textura de la prenda.
+static func compute(job: Dictionary) -> void:
+	if job["character"] == null:
+		return
+	var arrays: Array = job["arrays"]
 	arrays[Mesh.ARRAY_NORMAL] = StyleNormals.apply(arrays[Mesh.ARRAY_VERTEX], arrays[Mesh.ARRAY_NORMAL],
-		arrays[Mesh.ARRAY_INDEX], StyleNormals.head_weights(arrays, skin, skeleton))
+		arrays[Mesh.ARRAY_INDEX], job["head"])
 	arrays[Mesh.ARRAY_TANGENT] = null  # ya no casarían con las normales (sin mapas de normales no hacen falta)
 	var colors: PackedColorArray = arrays[Mesh.ARRAY_COLOR]
+	if job["garment_visible"]:  # la textura lee `garment` en el rojo: antes de pasarlo al alfa
+		job["image"] = GarmentTexture.bake_arrays(arrays[Mesh.ARRAY_TEX_UV], colors, arrays[Mesh.ARRAY_INDEX],
+			TEXTURE_SIZE, job["skin"], job["garment"])
 	for i in colors.size():
 		colors[i] = Color(1.0, 1.0, 1.0, colors[i].r)
 	arrays[Mesh.ARRAY_COLOR] = colors
-	var mesh := ArrayMesh.new()
-	mesh.add_surface_from_arrays(Mesh.PRIMITIVE_TRIANGLES, arrays)
-	return mesh
 
 
-static func _material(editor_mesh: MeshInstance3D, mesh: Mesh) -> StandardMaterial3D:
+## finish: hilo principal. Crea la malla y el material; devuelve el personaje (null si no se pudo).
+static func finish(job: Dictionary) -> Node3D:
+	var character: Node3D = job["character"]
+	if character != null:
+		var exported := character.find_children("*", "MeshInstance3D", true, false)[0] as MeshInstance3D
+		var mesh := ArrayMesh.new()
+		mesh.add_surface_from_arrays(Mesh.PRIMITIVE_TRIANGLES, job["arrays"])
+		mesh.surface_set_material(0, _material(job))
+		exported.mesh = mesh
+	return character
+
+
+static func _material(job: Dictionary) -> StandardMaterial3D:
 	var material := StandardMaterial3D.new()
 	material.resource_name = "cuerpo"
 	material.metallic = 0.0  # PBR sin brillo
 	material.roughness = 1.0
-	var skin := BodyMaterial.get_color(editor_mesh, "skin_color")
-	if BodyMaterial.is_garment_visible(editor_mesh):
-		var image := GarmentTexture.bake(mesh, TEXTURE_SIZE, skin, BodyMaterial.get_color(editor_mesh, "garment_color"))
-		material.albedo_texture = ImageTexture.create_from_image(image)
+	if job.has("image"):
+		material.albedo_texture = ImageTexture.create_from_image(job["image"])
 	else:
-		material.albedo_color = skin
+		material.albedo_color = job["skin"]
 	return material
 
 
 static func save(mesh: MeshInstance3D, skeleton: Skeleton3D, socket_names: Array, path: String, t_pose: bool) -> Error:
-	var character := build(mesh, skeleton, socket_names, t_pose)
+	return write(build(mesh, skeleton, socket_names, t_pose), BodyMaterial.standalone(mesh), path)
+
+
+## write: hilo principal. Escribe el .glb y, al lado, el material toon (.tres). Libera el personaje.
+static func write(character: Node3D, toon: ShaderMaterial, path: String) -> Error:
 	if character == null:
 		return ERR_INVALID_DATA
 	_add_armature_node(character)
@@ -80,7 +107,7 @@ static func save(mesh: MeshInstance3D, skeleton: Skeleton3D, socket_names: Array
 	if error == OK:
 		error = document.write_to_filesystem(state, path)
 	if error == OK:
-		error = ResourceSaver.save(BodyMaterial.standalone(mesh), path.get_basename() + ".tres")
+		error = ResourceSaver.save(toon, path.get_basename() + ".tres")
 	character.free()
 	return error
 

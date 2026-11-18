@@ -7,6 +7,8 @@ extends SubViewportContainer
 # Paso 5.2: set_animation() también pone las poses fijas del mismo archivo (StaticPose).
 # Paso 5.4: check_report() revisa el personaje que se exporta (CharacterChecks) y su malla en la pose o el clip en marcha
 # (MeshChecks, sobre una copia horneada en pose T; un clip se mide en REPORT_INSTANTS momentos y queda el peor).
+# Paso P.3: frame_character() encuadra el personaje entero (al cargar, RESTYLE_WAIT s después de mover un deslizador, al cambiar la pose o
+# la animación y al cambiar el tamaño de la vista); no en cada fotograma.
 # Paso 5.9: set_animation(ROM_ID) recorre el rango de movimiento (rom.gd): cada fotograma vuelve a la pose T y gira.
 
 const SpeciesData := preload("../addons/creador/species_data.gd")
@@ -24,6 +26,7 @@ const CharacterBaker := preload("../addons/creador/character_baker.gd")
 const Sockets := preload("../addons/creador/sockets.gd")
 const CharacterChecks := preload("../addons/creador/character_checks.gd")
 const MeshChecks := preload("../addons/creador/mesh_checks.gd")
+const CharacterBox := preload("character_box.gd")
 
 const SPECIES := "humana"
 const DATA_RES := "res://datos"
@@ -51,6 +54,8 @@ var t_positions: Array[Vector3] = []
 var camera: Camera3D
 var style: MeshInstance3D  # StyleView
 var restyle_timer: Timer
+var frame_timer: Timer  # paso P.3: encuadrar al dejar quietos los deslizadores
+var character_box  # CharacterBox
 var viewport: SubViewport
 
 
@@ -64,9 +69,18 @@ func _ready() -> void:
 	restyle_timer.wait_time = RESTYLE_WAIT
 	restyle_timer.timeout.connect(func() -> void: style.refresh())
 	add_child(restyle_timer)
+	frame_timer = Timer.new()
+	frame_timer.one_shot = true
+	frame_timer.wait_time = RESTYLE_WAIT
+	frame_timer.timeout.connect(frame_character)
+	add_child(frame_timer)
 	var start := Time.get_ticks_msec()
 	error = _load_character()
 	load_ms = Time.get_ticks_msec() - start
+	if error == "":
+		frame_character()
+		camera.snap()
+		viewport.size_changed.connect(frame_character)
 	if error:
 		push_error(error)
 		var label := Label.new()
@@ -85,6 +99,7 @@ func set_values(new_values: Dictionary) -> Array[String]:
 	elif clip != "":
 		retarget.capture()
 		retarget.apply()
+	frame_timer.start()
 	if style != null:
 		if style.show_if_current():
 			restyle_timer.stop()
@@ -97,6 +112,7 @@ func set_values(new_values: Dictionary) -> Array[String]:
 func set_pose_t(on: bool) -> void:
 	pose_t = on
 	set_values(values)
+	frame_character()
 
 
 ## Reproduce en bucle un clip o pone una pose fija (animations.entries()); "" los quita y vuelve a la pose de antes.
@@ -111,6 +127,7 @@ func set_animation(id: String) -> bool:
 	clip = id
 	pose_turns = turns
 	set_values(values)
+	frame_character()
 	return true
 
 
@@ -129,8 +146,19 @@ func _process(delta: float) -> void:
 
 ## Exporta en pose T, sea cual sea la pose de la vista (el exportador la fija), con el .tres al lado.
 func export_glb(path: String) -> Error:
-	var sockets: Array = species.manifest["bones"]["sockets"]
-	return GlbExporter.save(species.mesh, species.skeleton, sockets, path, true)
+	var job := start_export()
+	GlbExporter.compute(job)
+	return finish_export(job, path)
+
+
+## Paso P.1: exportar en partes (body_actions.gd hace GlbExporter.compute en un hilo entre las dos).
+## start_export lee el personaje tal como está ahora; lo que cambie después no entra en el archivo.
+func start_export() -> Dictionary:
+	return GlbExporter.prepare(species.mesh, species.skeleton, species.manifest["bones"]["sockets"], true)
+
+
+func finish_export(job: Dictionary, path: String) -> Error:
+	return GlbExporter.write(GlbExporter.finish(job), job["toon"], path)
 
 
 ## Informe del banco de pruebas (paso 5.4): comprobaciones del personaje que se exporta y, si hay una pose fija o un
@@ -182,6 +210,18 @@ static func _worst_findings(samples: Array[Dictionary]) -> Array[Dictionary]:
 		if key.contains("|") or not found.keys().any(func(k: String) -> bool: return k.begins_with(key + "|")):
 			results.append(found[key])
 	return results
+
+
+## Encuadra el personaje en la pose de ahora (caja de una muestra de vértices, character_box.gd).
+func frame_character() -> void:
+	if species == null or species.mesh == null:
+		return
+	if character_box == null:
+		character_box = CharacterBox.new(species.mesh)
+	var to_world: Transform3D = species.mesh.global_transform if species.mesh.is_inside_tree() else Transform3D.IDENTITY
+	var box: AABB = to_world * character_box.measure(species.mesh, species.skeleton)
+	var size := Vector2(viewport.size)
+	camera.frame(box, size.x / size.y if size.y > 0 else 1.0)
 
 
 func _add_world() -> void:

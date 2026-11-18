@@ -3,7 +3,7 @@
 > Paso a paso. Un paso cada vez y siempre con aprobación (ver `CLAUDE.md`).
 > Lo que no es del MVP va a `IDEAS.md`.
 
-**Estado actual:** MVP preparado: build de Linux, README, licencias y paquete 0.1.0 listos. Nombre definitivo: GameMolde (D28). Publicar queda aplazado: primero se pule. Falta lo tuyo: mirar capturas (6.3 y referencia nueva), abrir el build a mano (7.1), elegir capturas y grabar el vídeo (7.2). Lista: `ruta/PENDIENTES.md`
+**Estado actual:** MVP preparado: build de Linux, README, licencias y paquete 0.1.0 listos. Nombre definitivo: GameMolde (D28). Publicar queda aplazado: se pule (fase «Pulido»: P.1 hecho; P.2 y P.3 esperan tu juicio). Falta lo tuyo: mirar capturas (6.3 y referencia nueva), abrir el build a mano (7.1), elegir capturas y grabar el vídeo (7.2). Lista: `ruta/PENDIENTES.md`
 **Fichas:** cada paso pendiente tiene la suya en `ruta/pasos/` (traspaso del 2026-11-16; decisiones en `ruta/DECISIONES.md`).
 **Leyenda:** `[ ]` pendiente · `[~]` en curso · `[x]` hecho
 
@@ -204,6 +204,22 @@ Según `diseno/maqueta-pestana-cuerpo.html`.
 
 ---
 
+## Pulido (antes de publicar la 0.1.0)
+
+> Pedido por el responsable el 2026-11-18. Ordenado por lo que más se nota al usarlo. Fichas `ruta/pasos/P.*`.
+
+- [x] P.1 Exportar sin congelar la ventana (lo pesado, en un hilo).
+- [~] P.2 El informe de deformación deja de tapar los deslizadores: pasa a un desplegable propio con nombre claro, fuera de los deslizadores (pedido por el responsable).
+- [~] P.3 Encuadre: el personaje entero en la vista al animar y al cambiar la altura.
+- [ ] P.4 Atajos (Ctrl+S, Ctrl+O, Ctrl+E) y aviso de cambios sin guardar al cerrar.
+- [ ] P.5 Textos claros: «Rim» con nombre en español, decimales con coma en el informe, recordar la última carpeta.
+- [ ] P.6 Paquete más ligero: `UAL1_Standard.glb` solo con las animaciones que se usan.
+- [ ] P.7 Icono propio de la ventana (lo eliges tú).
+
+**Hecho cuando:** nada de la lista se nota al usarlo y pasan todas las pruebas.
+
+---
+
 ## Registro
 
 > Las filas de las Fases 0 a 3 están en `REGISTRO.md`.
@@ -247,3 +263,6 @@ Según `diseno/maqueta-pestana-cuerpo.html`.
 | 2026-11-18 | 7.3 | **7.3a** (lista del §5): 1 bien (terceros: solo Quaternius); 2 faltaba Godot → fila nueva; 3 bien (CC0, GPL, MIT); 4 bien (0 archivos de `referencias/` en git); 5 bien (MPFB solo en comentarios y en el texto de origen de los datos); 6 bien (todos los `blender/*.py` dicen GPL); 7 no aplica (fuente de Godot); 8 ruta de Quaternius corregida; 9 el README ahora dice que los personajes exportados son del usuario; 10 nombre pendiente (D28); 11 con el 7.3b. `godot/datos/LICENCIA.txt` nuevo. **7.3b:** `godot/app/licenses_dialog.gd` (programa, `CREDITOS`, licencia de Godot y sus bibliotecas con `Engine.get_license_text/get_copyright_info/get_license_info`), botón «Licencias» al final de la barra, copias `godot/LICENCIA_PROGRAMA.txt` y `godot/CREDITOS.txt` (filtro `datos/*, *.txt`), la autoprueba comprueba que están. Prueba nueva `probar_licencias.gd` (`--path godot`): las 5 palabras, 89.684 caracteres, copias exactas, 4 filas de créditos con licencia admitida; detecta una copia vieja |
 | 2026-11-18 | 7.2 (en curso) | README reescrito con las 7 secciones de la ficha (sin «en construcción», con Git LFS, BoneMap sin Overwrite Axis, anclajes con ejemplo, tabla del `.glb`, licencias y «los personajes que exportas son tuyos»). Prueba nueva `pruebas/fase_7/probar_readme.sh` (rutas, imágenes, palabras clave); detecta una ruta rota. Capturas candidatas en `pruebas/capturas/readme_candidatas/` (ventana del editor, con y sin animación, y dos hojas del personaje). Falta: que elijas 3 o 4 capturas (van a `docs/capturas/`) y el vídeo |
 | 2026-11-18 | 7.4 (en curso) | `pruebas/fase_7/empaquetar.sh 0.1.0`: `build/GameMolde-0.1.0-linux.zip` (39,3 MB: programa, LICENSE, CREDITOS.md y LEEME.md) y su `.sha256`; descomprimido en una carpeta vacía, `AUTOPRUEBA: TODO BIEN`. Notas en `build/NOTAS_0.1.0.md`. Falta: publicar (git y gh son tuyos) y la prueba con una persona ajena |
+| 2026-11-18 | P.1 | Fase nueva «Pulido» en el PLAN (lista P.1–P.7, pedida por el responsable). Ficha `ruta/pasos/P.1_exportar_sin_congelar.md`. **Medido:** exportar 1,47 s = hornear 0,10 + normales del estilo y textura de la prenda 1,29 + escribir 0,08. `GlbExporter` en partes: `prepare` (hilo principal: hornea y lee del editor colores, prenda y material toon), `compute` (cualquier hilo: solo arrays e `Image`), `finish` y `write` (hilo principal); `build` y `save` con las mismas firmas. `GarmentTexture.bake_arrays` (no toca el servidor de render). `BodyView.start_export`/`finish_export`; `export_glb` (autoprueba) sin hilo. `BodyActions` exporta con un `Thread` y espera fotograma a fotograma; `_exit_tree` espera al hilo. Prueba nueva `probar_exportar_hilo.gd`: hueco mayor entre fotogramas 118 ms (límite 300 ms PROVISIONAL; antes 1465 ms), `.glb` idéntico byte a byte al exportado sin hilo aunque se mueva un deslizador mientras tanto, `.tres` igual salvo los id aleatorios de Godot. Detecta el fallo (`compute` en el hilo principal: 1465 ms) |
+| 2026-11-18 | P.2 | Pedido por el responsable: el informe de deformación ya no tapa los deslizadores. Ficha `ruta/pasos/P.2_informe_desplegable.md`. `godot/app/report_section.gd`: barra plegable «Informe de deformación — <resumen>» bajo la vista 3D, plegada al empezar, con el color del peor nivel; desplegada enseña las filas (180 px, con desplazamiento). `main.gd`: `update_report` rellena o vacía la sección y no oculta nada. `probar_informe.gd` actualizado (deslizadores siempre visibles, cabecera, desplegar); detecta el fallo (ocultar los deslizadores: 2 fallos). Capturas nuevas con `pruebas/godot/capturar_ventana.gd` en `pruebas/capturas/ventana/`. Falta: tu juicio |
+| 2026-11-18 | P.3 | Ficha `ruta/pasos/P.3_encuadre.md`. `orbit_camera.gd`: `frame(caja, aspecto)` (cabe la altura y el radio horizontal, margen ×1,15 + medio radio), movimiento suave en `_process`, `snap()`, zoom de la rueda relativo al encuadre, `MAX_DISTANCE` 5 → 8 m. `godot/app/character_box.gd`: caja con 1 de cada 16 vértices y los extremos en reposo, formas activas y pose de ahora (como `MeshBaker`; hornear todo tardaba 110 ms, esto < 1 ms). `body_view.gd`: `frame_character()` al cargar, 0,3 s después de mover un deslizador (temporizador propio), al cambiar Probar huesos o la animación y al cambiar el tamaño de la vista. Prueba nueva `probar_encuadre.gd` (el editor dentro de un `SubViewport` de 1280 × 720: sin ventana la de Godot mide 64 × 64): todos los vértices horneados dentro de la vista y ocupando ≥ 60 % (PROVISIONAL); **medido** 78–84 % en los 5 casos (inicio, altura 1 en T, altura 0, Caminar, informe desplegado). Detecta el fallo (sin encuadrar: 4 fallos). Con P.1–P.3 pasan las pruebas sin ventana, `probar_datos`, `probar_licencias`, `probar_exportar` + `probar_glb` (T y A), `probar_importador.sh`, `probar_overwrite_axis.sh`, `probar_glb_en_blender.py` y la autoprueba. Falta: tu juicio (moverlo a mano) |

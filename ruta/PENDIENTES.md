@@ -11,5 +11,7 @@
 | 7.1 | Abre el build y compáralo con el editor: ¿alguna diferencia de color, contorno o letra? | `build/linux/gamemolde.x86_64` frente a `godot --path godot` |
 | 7.2 | ¿Qué 3 o 4 capturas van al README y en qué orden? ¿Grabas un vídeo de 30–60 s (mover deslizadores, probar huesos, exportar, abrir en Godot)? | `pruebas/capturas/readme_candidatas/` |
 | 7.4 | **Aplazado (2026-11-18): antes se pule el programa.** Cuando toque, publicar como versión preliminar (D29): `git tag v0.1.0 && git push origin v0.1.0` y `gh release create v0.1.0 build/GameMolde-0.1.0-linux.zip build/GameMolde-0.1.0-linux.zip.sha256 --title "GameMolde 0.1.0" --notes-file build/NOTAS_0.1.0.md --prerelease`. Después, que lo pruebe otra persona sin ayuda | `build/NOTAS_0.1.0.md` |
+| P.2 | ¿Te gusta el informe de deformación como barra plegable bajo la vista (color del resumen, altura al desplegar)? | `pruebas/capturas/ventana/` (1 inicio, 2 probar huesos, 3 desplegado) |
+| P.3 | ¿Se mueve bien la cámara al cambiar la altura, probar huesos, animar o desplegar el informe? | `(ulimit -v 4000000; timeout 900 godot --path godot)` y `pruebas/capturas/ventana/` |
 | foto | `trapecios_extendidos.png` está en la raíz y no en git: no la subas en el commit, o muévela a `referencias/` | — |
 | commits | Hacerlos al volver (uno por paso, como siempre); también subir los `.uid` que creó Godot. `cuerpo.glb` cambió (va por LFS) | `git status` |

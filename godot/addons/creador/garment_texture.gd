@@ -15,9 +15,12 @@ enum { EMPTY, SKIN, GARMENT }
 
 static func bake(mesh: Mesh, size: int, skin: Color, garment: Color) -> Image:
 	var arrays := mesh.surface_get_arrays(0)
-	var uvs: PackedVector2Array = arrays[Mesh.ARRAY_TEX_UV]
-	var colors: PackedColorArray = arrays[Mesh.ARRAY_COLOR]
-	var indices: PackedInt32Array = arrays[Mesh.ARRAY_INDEX]
+	return bake_arrays(arrays[Mesh.ARRAY_TEX_UV], arrays[Mesh.ARRAY_COLOR], arrays[Mesh.ARRAY_INDEX], size, skin, garment)
+
+
+## Lo mismo con los arrays ya leídos: no toca el servidor de render, vale en un hilo (paso P.1).
+static func bake_arrays(uvs: PackedVector2Array, colors: PackedColorArray, indices: PackedInt32Array, size: int,
+		skin: Color, garment: Color) -> Image:
 	var labels := PackedByteArray()
 	labels.resize(size * size)
 	for t in range(0, indices.size(), 3):

@@ -8,6 +8,7 @@ extends HBoxContainer
 # Paso 5.4: test_changed avisa al cambiar Probar huesos o la lista Animación (main.gd enseña el informe).
 # Paso 7.0: Guardar preset… y Abrir preset… (preset_file.gd). Abrir se deshace con Ctrl+Z (solo los valores);
 #   look_changed avisa de que cambiaron colores y acabado (main.gd refresca el panel Acabado).
+# Paso P.1: exportar no congela la ventana: lo pesado (GlbExporter.compute) va en un hilo.
 # Uso: var bar := BodyActions.new(); bar.setup(body_view, editor)
 
 signal test_changed
@@ -15,6 +16,7 @@ signal look_changed
 
 const BodyMaterial := preload("../addons/creador/body_material.gd")
 const PresetFile := preload("preset_file.gd")
+const GlbExporter := preload("../addons/creador/glb_exporter.gd")
 
 var view: SubViewportContainer  # BodyView
 var bones_button: Button
@@ -26,6 +28,7 @@ var save_dialog: FileDialog
 var open_dialog: FileDialog
 var message: AcceptDialog
 var editor  # BodyEditor
+var export_thread: Thread  # paso P.1: el hilo de exportar mientras trabaja
 
 
 func setup(body_view: SubViewportContainer, body_editor = null) -> void:
@@ -117,22 +120,46 @@ func _add_animation_list() -> void:
 ## Exporta y avisa. Devuelve el error de GlbExporter.
 func export_to(path: String) -> Error:
 	var error: Error = view.export_glb(path)
+	_export_done(path, error)
+	return error
+
+
+## Exporta con lo pesado en un hilo: la ventana sigue viva y el botón dice «Exportando…».
+func _on_file_selected(path: String) -> void:
+	if export_running():
+		return
+	export_button.text = "Exportando…"
+	export_button.disabled = true
+	var job: Dictionary = view.start_export()
+	var tree := get_tree()
+	export_thread = Thread.new()
+	export_thread.start(GlbExporter.compute.bind(job))
+	while export_thread != null and export_thread.is_alive():
+		await tree.process_frame
+	if export_thread == null:  # se cerró la ventana mientras tanto (_exit_tree ya esperó al hilo)
+		return
+	export_thread.wait_to_finish()
+	export_thread = null
+	_export_done(path, view.finish_export(job, path))
+
+
+func export_running() -> bool:
+	return export_thread != null
+
+
+func _exit_tree() -> void:
+	if export_thread != null:
+		export_thread.wait_to_finish()
+		export_thread = null
+
+
+func _export_done(path: String, error: Error) -> void:
 	export_button.text = "Exportar .glb"
 	export_button.disabled = false
 	if error == OK:
 		_tell("Exportar .glb", "Guardado:\n%s\n%s" % [path, path.get_basename() + ".tres"])
 	else:
 		_tell("Exportar .glb", "No se pudo exportar a\n%s\n(error %d: %s)" % [path, error, error_string(error)])
-	return error
-
-
-## Muestra «Exportando…» antes de exportar (exportar tarda ~1,5 s y bloquea la ventana).
-func _on_file_selected(path: String) -> void:
-	export_button.text = "Exportando…"
-	export_button.disabled = true
-	await get_tree().process_frame
-	await get_tree().process_frame
-	export_to(path)
 
 
 func _button(text: String, action: Callable) -> Button:
