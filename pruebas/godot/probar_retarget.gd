@@ -50,7 +50,7 @@ func _initialize() -> void:
 			for i in joints[name].size():
 				far = maxf(far, 1000.0 * joints[name][i].distance_to(joints["t_con"][i]))
 			print("  MEDIDA %s: articulaciones contra t_con, máx. %.3f mm" % [name, far])
-			if name.begins_with("t_perfil") and not name.ends_with("_sin_mapa"):
+			if (name.begins_with("t_perfil") or name == "t_sin") and not name.ends_with("_sin_mapa"):  # t_sin: paso 5.16
 				check("%s se anima como t_con (< %s mm)" % [name, MAX_JOINT_MM], far < MAX_JOINT_MM, "%.3f mm" % far)
 	print("RESULTADO: ", "TODO BIEN" if failures == 0 else "%d FALLOS" % failures)
 	quit(1 if failures else 0)

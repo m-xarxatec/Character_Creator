@@ -26,8 +26,9 @@ const TEXTURE_SIZE := 2048  # 1 píxel ≈ 0,9 mm en el borde de la prenda (medi
 
 
 ## El personaje que se exporta, en memoria (quien llama lo libera). null si no se puede (ver Sockets.error).
+## En pose T, los huesos salen con los ejes del perfil humanoide (D11, paso 5.16): un juego lo anima sin «Overwrite Axis».
 static func build(mesh: MeshInstance3D, skeleton: Skeleton3D, socket_names: Array, t_pose: bool) -> Node3D:
-	var baked: Node3D = CharacterBaker.bake(mesh, skeleton, t_pose)
+	var baked: Node3D = CharacterBaker.bake(mesh, skeleton, t_pose, t_pose)
 	var character: Node3D = Sockets.to_nodes(baked, socket_names)
 	baked.free()
 	if character != null:

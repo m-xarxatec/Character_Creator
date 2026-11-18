@@ -13,7 +13,7 @@ extends RefCounted
 ## - La malla no lleva formas; UV, color `garment`, índices, huesos y pesos se copian tal cual.
 ##   Tangentes: no se pasan, pero Godot guarda unas igualmente al crear la superficie (sin uso: no hay mapas de normales).
 ## Los anclajes siguen siendo huesos (pasan a nodos vacíos en el paso 3.6.4).
-## - profile_axes (prototipo del paso 5.7b, solo con pose T; por defecto no): cada hueso del perfil humanoide de Godot
+## - profile_axes (paso 5.7b; solo con pose T; lo usa GlbExporter desde el 5.16): cada hueso del perfil humanoide de Godot
 ##   sale con el giro de reposo global del perfil, que es lo que escribe «Overwrite Axis» al importar. La malla no
 ##   cambia (las bind poses son la inversa del reposo nuevo) y los anclajes, que no son del perfil, tampoco.
 
