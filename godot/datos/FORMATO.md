@@ -1,4 +1,4 @@
-# Formato de `datos/` (versión 2)
+# Formato de `datos/` (versión 3)
 
 Una carpeta por especie (`datos/humana/`, …). El núcleo no supone que solo existe la humana.
 Lo genera `blender/exportar_datos.py` (paso 2.3), salvo `deslizadores.csv` y `presets/`, que se escriben aparte.
@@ -9,7 +9,7 @@ Unidades y ejes de Godot: metros, Y arriba, mirando a +Z.
 | `manifiesto.json` | Versión, especie y lista de archivos con su `sha256` |
 | `cuerpo.glb` | Malla base completa en **pose A**, esqueleto, pesos, color `garment` y formas |
 | `articulaciones.json` | Dónde está cada hueso en el cuerpo base y cuánto lo mueve cada forma |
-| `deslizadores.csv` | La tabla del paso 2.1, con la columna `neutro` y las formas de cara (versión 2) |
+| `deslizadores.csv` | La tabla del paso 2.1, con la columna `neutro`, las formas de cara (versión 2) y las propias (versión 3) |
 | `presets/anime.json` | Preset de personaje nuevo (paso 3.15), en el formato de `godot/addons/creador/preset.gd` |
 
 Si el formato cambia de forma incompatible, sube `version`.
@@ -19,7 +19,7 @@ Si `datos/` va dentro de un proyecto Godot, `deslizadores.csv` debe importarse c
 
 ```json
 {
-  "version": 2,
+  "version": 3,
   "species": "humana",
   "pose": "A",
   "source": "MakeHuman system assets (CC0) con MPFB 2.0.18",
@@ -38,9 +38,10 @@ Al cargar, el núcleo comprueba `version` y el `sha256` de cada archivo; si no c
 - Color por vértice `garment` (ver más abajo).
 - Formas (*blend shapes*): `<id>_decr` e `<id>_incr`, con `<id>` del CSV. Si `lados` = 2, hay una por lado: `<id>_incr_l`, `<id>_incr_r`.
   Un deslizador Forma sin `decr` (**de un lado**) tiene una sola forma, que se llama como su `<id>`.
-  Los deslizadores Proporción y Por crear no tienen formas.
+  Los deslizadores Proporción y Por crear no tienen formas (desde la versión 3 no queda ninguno Por crear).
 - **Formas de cara** (paso 3.14): `cuenca_plana`, `boca_anime`, `mandibula_anime`, `menton_anime` y `nariz_anime`, de un lado
   (ver más abajo).
+- **Formas propias** (paso 6.1): `shoulder_height_*`, `buttocks_height_*`, `buttocks_roundness_*` y `alisado` (ver más abajo).
 - **Correcciones** de macros combinadas: nombres de formas de macro unidos por `*`, p. ej. `muscle_incr*weight_incr` (ver más abajo).
 
 ### Formas que suman varios targets
@@ -106,10 +107,23 @@ Filas de `deslizadores.csv` con zona `Cara`, tipo Forma, `decr` vacío, `incr` =
 - No mueven huesos: no salen en `articulaciones.json`.
 - Un preset sin estas claves las deja en 0.
 
+## Formas propias (pasos 6.1 y 6.2)
+
+Filas de tipo Forma con `incr` = `propia:<forma>` (y `decr` = `propia:<forma>` si tienen dos sentidos).
+
+- Las calcula `blender/formas_propias.py` (zonas en `blender/formas_propias_zonas.json`) deformando el cuerpo neutro;
+  el conversor llama a `own_shapes()`. Son datos **CC0** (script propio sobre malla CC0).
+- `shoulder_height` (±3 cm) es la única que **mueve huesos**: la cola del hombro y todo el brazo (sale en `articulaciones.json`).
+- `alisado` (zona `Base`, de un lado, neutro 0, oculta en la interfaz) quita el relieve de pecho y entrepierna. Lleva
+  **correcciones** `alisado*<esquina>` sobre músculo, grasa y pecho (`muscle`, `weight`, `breast_volume`), calculadas
+  como las de las macros: el alisado se mide también sobre cada esquina, así que sigue al cuerpo. Sin ellas, el
+  alisado fijo del neutro hundía el pezón de los cuerpos que ya lo traen más plano. Su peso es el producto de sus partes.
+- El preset `anime.json` lleva `alisado` = 1 («sin detalle anatómico» desde el primer momento). Un preset sin la clave la deja en 0.
+
 ## `presets/`
 
 Presets **completos** (todas las claves de `valores` escritas), que no se aplican encima de otro.
-`anime.json`: cuerpo neutro, las 4 formas de cara a 1, `nariz_anime` a 0, colores por defecto de `BodyMaterial`
+`anime.json`: cuerpo neutro, las 4 formas de cara a 1, `nariz_anime` a 0, `alisado` a 1, colores por defecto de `BodyMaterial`
 (piel gris) y prenda visible. **El editor lo carga al crear un personaje nuevo** (`SpeciesData.preset_text()`).
 Es la base de los futuros botones de estilo (`realista.json`, `chibi.json`…). Añadir uno es un archivo más en `files`.
 

@@ -122,8 +122,8 @@ with open(os.path.join(folder, "articulaciones.json"), encoding="utf-8") as file
     joints = json.load(file)["bones"]
 
 # --- Manifiesto ---
-check("manifiesto: versión 2, humana, pose A",
-      (manifest["version"], manifest["species"], manifest["pose"]) == (2, "humana", "A"))
+check("manifiesto: versión 3, humana, pose A",
+      (manifest["version"], manifest["species"], manifest["pose"]) == (3, "humana", "A"))
 check("manifiesto: 13380 vértices", manifest["vertex_count"] == 13380, manifest["vertex_count"])
 check("manifiesto: 53 huesos de deformación y 4 de anclaje",
       len(manifest["bones"]["deform"]) == 53 and sorted(manifest["bones"]["sockets"]) == sorted(SOCKET_PARENTS))
@@ -141,15 +141,23 @@ check("anclaje de cadera en la cadera (no en la mano)", 0.05 < hip[0] < 0.25 and
 rows = ed.read_sliders(folder)
 expected = [name for name, _, _ in ed.shape_specs(rows)]
 mesh, rig, base, shapes = read_glb(os.path.join(folder, "cuerpo.glb"))
-fixes = [n for n in shapes if "*" in n]
+smoothing = [n for n in shapes if n.startswith("alisado*")]
+fixes = [n for n in shapes if "*" in n and n not in smoothing]
 face = [r["id"] for r in ed.face_rows(rows)]
-check("glb: las 78 formas de la tabla", len(expected) == 78 and sorted(set(shapes) - set(fixes) - set(face)) == sorted(expected))
+own = [f"{r['id']}_{d}" if r["decr"] else r["id"] for r in ed.own_rows(rows) for d in ("decr", "incr") if r[d]]
+check("glb: las 78 formas de la tabla",
+      len(expected) == 78 and sorted(set(shapes) - set(fixes) - set(smoothing) - set(face) - set(own)) == sorted(expected))
 check("glb: las 5 formas de cara (paso 3.14)", len(face) == 5 and set(face) <= set(shapes), face)
+check("glb: las 7 formas propias (paso 6.2)", len(own) == 7 and set(own) <= set(shapes), own)
+macro_ids = tuple(i for i, _ in ed.macro_sliders(rows))
 check("glb: correcciones hechas de formas de macro", fixes and all(
-    p in expected and p.startswith(tuple(i for i, _ in ed.macro_sliders(rows))) for n in fixes for p in n.split("*")),
+    p in expected and p.startswith(macro_ids) for n in fixes for p in n.split("*")),
     f"{len(fixes)} correcciones, {len(shapes)} formas en total")
-check("glb: nombres _decr / _incr (y _l / _r)",
-      all(p.rsplit("_", 2)[-1] in ("decr", "incr", "l", "r") for n in set(shapes) - set(face) for p in n.split("*")))
+check("glb: correcciones de alisado sobre músculo, grasa y pecho", smoothing and all(
+    p in expected and p.startswith(ed.SMOOTHING_SLIDERS) for n in smoothing for p in n.split("*")[1:]),
+    f"{len(smoothing)} correcciones")
+check("glb: nombres _decr / _incr (y _l / _r)", all(p.rsplit("_", 2)[-1] in ("decr", "incr", "l", "r")
+      for n in set(shapes) - set(face) - {"alisado"} for p in n.split("*") if p != "alisado"))
 colors = mesh.data.color_attributes
 values = np.empty(len(colors[0].data) * 4) if colors else np.zeros(1)
 if colors:

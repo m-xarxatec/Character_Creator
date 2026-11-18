@@ -35,9 +35,10 @@ func _check_species(species) -> void:
 	var skeleton: Skeleton3D = species.skeleton
 	var mesh: Mesh = species.mesh.mesh
 	check("57 huesos (53 + 4 anclajes)", skeleton.get_bone_count() == 57, str(skeleton.get_bone_count()))
-	check("164 formas (159 + 5 de cara)", mesh.get_blend_shape_count() == 164, str(mesh.get_blend_shape_count()))
+	check("192 formas (159 + 5 de cara + 7 propias + 21 correcciones de alisado)", mesh.get_blend_shape_count() == 192,
+		str(mesh.get_blend_shape_count()))
 	check("articulaciones.json: 57 huesos", species.joints.size() == 57)
-	check("deslizadores.csv: 45 filas", species.sliders.size() == 45, str(species.sliders.size()))
+	check("deslizadores.csv: 46 filas", species.sliders.size() == 46, str(species.sliders.size()))
 	var arrays := mesh.surface_get_arrays(0)
 	var colors: PackedColorArray = arrays[Mesh.ARRAY_COLOR] if arrays[Mesh.ARRAY_COLOR] else PackedColorArray()
 	var reds := Array(colors).map(func(c: Color) -> float: return c.r)
@@ -87,11 +88,11 @@ func _check_rejects(folder: String) -> void:
 	copy = _copy(folder, "version")
 	var path := copy.path_join("manifiesto.json")
 	var manifest: Dictionary = JSON.parse_string(FileAccess.get_file_as_string(path))
-	manifest["version"] = 1
+	manifest["version"] = 2
 	FileAccess.open(path, FileAccess.WRITE).store_string(JSON.stringify(manifest))
 	species = loader.new()
 	species.load_folder(copy)
-	check("rechaza la versión 1 (la de antes)", species.error.contains("Versión") and species.scene == null, species.error)
+	check("rechaza la versión 2 (la de antes)", species.error.contains("Versión") and species.scene == null, species.error)
 
 
 func _copy(folder: String, name: String) -> String:

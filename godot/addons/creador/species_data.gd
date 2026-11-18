@@ -10,7 +10,7 @@ extends RefCounted
 ## Abre el .glb con GLTFDocument (en tiempo de ejecución): vale en el editor y dentro de un juego.
 ## Personaje nuevo (paso 3.15): el editor carga species.preset_text() con Preset.from_text (presets/anime.json).
 
-const VERSION := 2
+const VERSION := 3
 const NEW_CHARACTER_PRESET := "presets/anime.json"
 
 var error := ""

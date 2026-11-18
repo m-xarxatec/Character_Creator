@@ -9,7 +9,7 @@ head_height,Cabeza,Alto,Forma,head-scale-vert-decr,head-scale-vert-incr,1,0.5
 neck_length,Cuello,Largo,Forma,measure-neck-height-decr,measure-neck-height-incr,1,0.5
 neck_thickness,Cuello,Grosor,Forma,measure-neck-circ-decr,measure-neck-circ-incr,1,0.5
 shoulder_width,Hombros,Ancho,Forma,measure-shoulder-dist-decr,measure-shoulder-dist-incr,1,0.5
-shoulder_height,Hombros,Altura,Por crear,,,1,
+shoulder_height,Hombros,Altura,Forma,propia:shoulder_height_decr,propia:shoulder_height_incr,1,0.5
 shoulder_muscle,Hombros,Músculo,Forma,upperarm-shoulder-muscle-decr,upperarm-shoulder-muscle-incr,2,0.5
 torso_length,Torso,Largo,Forma,measure-napetowaist-dist-decr,measure-napetowaist-dist-incr,1,0.5
 torso_width,Torso,Ancho,Forma,torso-scale-horiz-decr,torso-scale-horiz-incr,1,0.5
@@ -25,8 +25,8 @@ waist_height,Cintura,Altura,Forma,hip-waist-down,hip-waist-up,1,0.5
 hip_width,Caderas,Ancho,Forma,hip-scale-horiz-decr,hip-scale-horiz-incr,1,0.5
 hip_depth,Caderas,Profundidad,Forma,hip-scale-depth-decr,hip-scale-depth-incr,1,0.5
 buttocks_volume,Glúteos,Volumen,Forma,buttocks-volume-decr,buttocks-volume-incr,1,0.5
-buttocks_height,Glúteos,Altura,Por crear,,,1,
-buttocks_roundness,Glúteos,Redondez,Por crear,,,1,
+buttocks_height,Glúteos,Altura,Forma,propia:buttocks_height_decr,propia:buttocks_height_incr,1,0.5
+buttocks_roundness,Glúteos,Redondez,Forma,propia:buttocks_roundness_decr,propia:buttocks_roundness_incr,1,0.5
 arm_length,Brazos,Largo,Forma,measure-upperarm-length-decr+measure-lowerarm-length-decr,measure-upperarm-length-incr+measure-lowerarm-length-incr,1,0.5
 arm_thickness,Brazos,Grosor,Forma,measure-upperarm-circ-decr,measure-upperarm-circ-incr,1,0.5
 arm_muscle,Brazos,Músculo,Forma,upperarm-muscle-decr+lowerarm-muscle-decr,upperarm-muscle-incr+lowerarm-muscle-incr,2,0.5
@@ -44,3 +44,4 @@ boca_anime,Cara,Boca anime,Forma,,cara:boca_anime,1,0
 mandibula_anime,Cara,Mandíbula anime,Forma,,cara:mandibula_anime,1,0
 menton_anime,Cara,Mentón anime,Forma,,cara:menton_anime,1,0
 nariz_anime,Cara,Nariz anime,Forma,,cara:nariz_anime,1,0
+alisado,Base,Alisado,Forma,,propia:alisado,1,0

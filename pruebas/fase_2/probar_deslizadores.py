@@ -15,11 +15,14 @@ sys.path.insert(0, os.path.join(ROOT, "blender"))
 import exportar_glb  # noqa: E402
 import generar_cuerpo as gc  # noqa: E402
 import cara_anime  # noqa: E402
+import exportar_datos as ed  # noqa: E402
+import formas_propias  # noqa: E402
 
 TABLE = os.path.join(ROOT, "godot", "datos", "humana", "deslizadores.csv")
 COLUMNS = ["id", "zona", "nombre", "tipo", "decr", "incr", "lados", "neutro"]
-ZONES = 14  # sin contar «Cara» (paso 3.14: formas de cara, sin deslizadores visibles en el MVP)
+ZONES = 14  # sin contar «Cara» ni «Base» (pasos 3.14 y 6.2: sin deslizadores visibles en el MVP)
 FACE_ZONE = "Cara"
+HIDDEN_ZONES = {FACE_ZONE, "Base"}
 failures = []
 
 
@@ -80,6 +83,10 @@ def check_row(row):
         check(f"{label} forma de cara de un lado, de cara_anime.py, zona {FACE_ZONE}",
               row["decr"] == "" and row["incr"][len("cara:"):] in steps and row["zona"] == FACE_ZONE
               and row["lados"] == "1")
+    elif row["tipo"] == "Forma" and row["incr"].startswith(ed.OWN):
+        sources = [s[len(ed.OWN):] for s in (row["decr"], row["incr"]) if s]
+        check(f"{label} forma propia de formas_propias.py", all(s in formas_propias.SHAPES for s in sources)
+              and all(s.startswith(ed.OWN) for s in (row["decr"], row["incr"]) if s), f"{row['decr']} / {row['incr']}")
     elif row["tipo"] == "Forma":
         check(f"{label} formas existen", shape_ok(row, row["decr"]) and shape_ok(row, row["incr"]),
               f"{row['decr']} / {row['incr']}")
@@ -98,8 +105,8 @@ check("columnas", reader.fieldnames == COLUMNS, reader.fieldnames)
 ids = [r["id"] for r in rows]
 check("ids únicos", len(ids) == len(set(ids)))
 check("ids en inglés snake_case", all(re.fullmatch(r"[a-z][a-z0-9_]*", i) for i in ids))
-zones = {r["zona"] for r in rows} - {FACE_ZONE}
-check(f"{ZONES} zonas (sin {FACE_ZONE})", len(zones) == ZONES, sorted(zones))
+zones = {r["zona"] for r in rows} - HIDDEN_ZONES
+check(f"{ZONES} zonas (sin {', '.join(sorted(HIDDEN_ZONES))})", len(zones) == ZONES, sorted(zones))
 check("tipos válidos", all(r["tipo"] in ("Forma", "Proporción", "Por crear") for r in rows))
 check("lados 1 o 2", all(r["lados"] in ("1", "2") for r in rows))
 for r in rows:

@@ -9,7 +9,7 @@ extends ScrollContainer
 # Uso: panel.setup(editor)
 
 const SymmetryDialog := preload("symmetry_dialog.gd")
-const HIDDEN_ZONES := ["Cara"]  # sin deslizadores visibles en el MVP (paso 3.14)
+const HIDDEN_ZONES := ["Cara", "Base"]  # sin deslizadores visibles en el MVP (pasos 3.14 y 6.2)
 const SIDES := {"_l": " (izq.)", "_r": " (der.)"}
 const TO_CREATE := "Por crear"
 const TYPE_COLORS := {  # fondo y texto de la etiqueta, del tema oscuro de la maqueta

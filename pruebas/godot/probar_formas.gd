@@ -6,7 +6,8 @@ extends SceneTree
 
 const MAX_WEIGHT_ERROR := 1e-6
 const MAX_MM := 0.1
-const CORRECTIONS := 81
+const CORRECTIONS := 102  # 81 de macros + 21 de alisado (paso 6.2)
+const MACRO_CORRECTIONS := 81  # las de alisado no salen en la referencia: MPFB no tiene las formas propias
 
 var failures := 0
 var shapes: GDScript
@@ -74,13 +75,14 @@ func _check_weights(reference: Dictionary) -> void:
 	check("pesos = script de Blender en %d casos (< %s)" % [cases.size(), MAX_WEIGHT_ERROR], worst < MAX_WEIGHT_ERROR,
 		"máximo %.9f (%s)" % [worst, where])
 	check("cada caso da un peso a las %d formas" % names.size(), complete)
-	var corrections_used := used.keys().filter(func(n: String) -> bool: return "*" in n).size()
-	check("las %d correcciones entran en algún caso" % CORRECTIONS, corrections_used == CORRECTIONS, str(corrections_used))
+	var corrections_used := used.keys().filter(func(n: String) -> bool: return "*" in n and not n.begins_with("alisado")).size()
+	check("las %d correcciones de macros entran en algún caso" % MACRO_CORRECTIONS, corrections_used == MACRO_CORRECTIONS,
+		str(corrections_used))
 
 
 func _check_values(sliders: Array) -> void:
 	var values: Dictionary = shapes.neutral_values(sliders)
-	check("44 valores (38 Forma, 6 con dos lados)", values.size() == 44, str(values.size()))
+	check("48 valores (42 Forma, 6 con dos lados)", values.size() == 48, str(values.size()))
 	shapes.set_value(values, "arm_muscle_l", 0.8, true)
 	check("con simetría, el izquierdo mueve el derecho", values["arm_muscle_r"] == 0.8)
 	shapes.set_value(values, "arm_muscle_l", 0.3, false)

@@ -4,7 +4,8 @@
 Uso: blender -b -P blender/exportar_datos.py -- godot/datos/humana
 Lee <carpeta>/deslizadores.csv y escribe cuerpo.glb, articulaciones.json y manifiesto.json.
 presets/anime.json (paso 3.15) se escribe aparte, como deslizadores.csv; aqui solo entra en el manifiesto.
-Las formas de cara (filas «cara:<forma>», paso 3.14) salen de blender/cara_anime.py.
+Las formas de cara (filas «cara:<forma>», paso 3.14) salen de blender/cara_anime.py y las propias (filas
+«propia:<forma>», paso 6.2), de blender/formas_propias.py, con las correcciones de «alisado» (ver own_shapes).
 
 Cada forma se mide creando un cuerpo nuevo con MPFB (target o macro al 100 %, con su rig)
 y restandole el cuerpo neutro: asi la malla y los huesos salen tal cual los calcula MPFB.
@@ -31,8 +32,10 @@ from limpiar_malla import SKIN_GROUP, clean_mesh  # noqa: E402
 from poner_rig import add_rig  # noqa: E402
 from prenda_base import paint_base_garment  # noqa: E402
 
-FORMAT_VERSION = 2
+FORMAT_VERSION = 3
 FACE = "cara:"  # fuente de las formas de cara: cara:<forma de cara_anime.py>
+OWN = "propia:"  # fuente de las formas propias: propia:<forma de formas_propias.py>
+SMOOTHING_SLIDERS = ("muscle", "weight", "breast_volume")  # macros que cambian pecho y entrepierna (ver own_shapes)
 SPECIES = "humana"
 SOURCE = "MakeHuman system assets (CC0) con MPFB 2.0.18"
 SOCKET_LENGTH = 0.05  # metros; el hueso de anclaje apunta hacia arriba
@@ -59,10 +62,14 @@ def face_rows(rows):
     return [r for r in rows if r["tipo"] == "Forma" and r["incr"].startswith(FACE)]
 
 
+def own_rows(rows):
+    return [r for r in rows if r["tipo"] == "Forma" and r["incr"].startswith(OWN)]
+
+
 def shape_specs(rows):
     """[(nombre de la forma, macros, {target: peso})] de cada deslizador Forma de MPFB, por sentido y lado."""
     specs = []
-    for row in (r for r in rows if r["tipo"] == "Forma" and r not in face_rows(rows)):
+    for row in (r for r in rows if r["tipo"] == "Forma" and r not in face_rows(rows) and r not in own_rows(rows)):
         for direction in ("decr", "incr"):
             for side in ("l", "r") if row["lados"] == "2" else (None,):
                 name = f"{row['id']}_{direction}" + (f"_{side}" if side else "")
@@ -124,14 +131,14 @@ def _skin_count(basemesh):
 
 
 def measure_shapes(rows):
-    """{forma: (desplazamiento de cada vertice, {hueso: (d_cabeza, d_cola)})} respecto al cuerpo neutro.
-
-    Primero las formas de la tabla y despues las correcciones de las macros combinadas.
+    """(vertices neutros, {forma: (desplazamiento de cada vertice, {hueso: (d_cabeza, d_cola)})}, cuerpos de las esquinas)
+    respecto al cuerpo neutro. Primero las formas de la tabla y despues las correcciones de las macros combinadas.
     """
     neutral = sample(raw_body(neutral_macros(), {}))
     shapes = {name: _minus(sample(raw_body(macros, targets)), neutral) for name, macros, targets in shape_specs(rows)}
-    shapes.update(corrections(corner_bodies(macro_sliders(rows))))
-    return neutral[0], shapes
+    bodies = corner_bodies(macro_sliders(rows))
+    shapes.update(corrections(bodies))
+    return neutral[0], shapes, bodies
 
 
 def _minus(a, b):
@@ -168,13 +175,13 @@ def corner_bodies(sliders):
     return bodies
 
 
-def corrections(bodies):
-    """Lo que cada esquina de 2 o mas macros anade a la suma de sus partes (inclusion-exclusion).
+def corrections(bodies, smallest=2):
+    """Lo que cada esquina de `smallest` o mas macros anade a la suma de sus partes (inclusion-exclusion).
 
     Nombre: formas unidas por '*', p. ej. 'muscle_incr*weight_incr'; su peso es el producto de sus pesos.
     """
     shapes = {}
-    for corner in (c for c in bodies if len(c) >= 2):
+    for corner in (c for c in bodies if len(c) >= smallest):
         terms = [((-1) ** (len(corner) - size), bodies[part])
                  for size in range(len(corner) + 1) for part in itertools.combinations(corner, size)]
         verts, joints = _combine(terms)
@@ -256,6 +263,38 @@ def face_shapes(basemesh, rows):
     return {r["id"]: (deltas[r["incr"][len(FACE):]], still) for r in face_rows(rows)}
 
 
+def own_shapes(basemesh, rows, bodies):
+    """{forma: (desplazamiento, huesos)} de las filas «propia:<forma>» (dos sentidos: <id>_decr e <id>_incr;
+    un lado: <id>), mas las correcciones de alisado.
+
+    El alisado fijo del neutro hundia el pezon de cuerpos que ya lo traen mas plano (10 triangulos invertidos, 6.1):
+    se calcula tambien sobre cada esquina de SMOOTHING_SLIDERS y se guarda lo que cada una anade, como las
+    correcciones de las macros, con el nombre «alisado*<esquina>». Asi el alisado sigue al cuerpo.
+    """
+    import formas_propias as fp  # aqui y no arriba: formas_propias importa este archivo
+    made = fp.own_shapes(basemesh)
+    shapes = {}
+    for row in own_rows(rows):
+        for direction in ("decr", "incr"):
+            if row[direction]:
+                name = f"{row['id']}_{direction}" if row["decr"] else row["id"]
+                shapes[name] = made[row[direction][len(OWN):]]
+    if fp.SMOOTHING in shapes:
+        shapes.update(smoothing_corrections(fp.mesh_arrays(basemesh)[1], bodies))
+    return shapes
+
+
+def smoothing_corrections(edges, bodies):
+    """{«alisado*<esquina>»: (desplazamiento, huesos quietos)} de las esquinas de SMOOTHING_SLIDERS en bodies."""
+    import formas_propias as fp
+    corners = {c: body for c, body in bodies.items() if all(i in SMOOTHING_SLIDERS for i, _ in c)}
+    neutral, joints = corners[()]
+    mirror, zones = fp.mirror_map(neutral), fp.load_zones()
+    still = {bone: (np.zeros(3), np.zeros(3)) for bone in joints}
+    smoothed = {c: (fp.smoothing(body[0], edges, zones, mirror), still) for c, body in corners.items()}
+    return {f"{fp.SMOOTHING}*{name}": shape for name, shape in corrections(smoothed, smallest=1).items()}
+
+
 def add_shape_keys(basemesh, shapes):
     base = np.empty(len(basemesh.data.vertices) * 3)
     basemesh.data.vertices.foreach_get("co", base)
@@ -322,9 +361,10 @@ def export_species(folder):
     """Escribe los datos de la especie en folder. Devuelve el manifiesto."""
     folder = os.path.abspath(folder)
     rows = read_sliders(folder)
-    _, shapes = measure_shapes(rows)
+    _, shapes, bodies = measure_shapes(rows)
     basemesh, socket_rules = build_base()
     shapes.update(face_shapes(basemesh, rows))
+    shapes.update(own_shapes(basemesh, rows, bodies))
     add_shape_keys(basemesh, shapes)
     export_glb(basemesh, [], os.path.join(folder, "cuerpo.glb"), morph=True, deform_only=False)
     write_json(os.path.join(folder, "articulaciones.json"), joints_json(basemesh.parent, shapes, socket_rules))

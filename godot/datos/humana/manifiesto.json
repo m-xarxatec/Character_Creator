@@ -64,21 +64,21 @@
  },
  "files": {
   "articulaciones.json": {
-   "sha256": "298864ad48c39fe4f78de17566e6d529951d680d03b44bb74b8f08f46c3346cb"
+   "sha256": "cb4088677a396768390123d7fea94c0b10a7d3ee77afab7adcb6881195c9cdfc"
   },
   "cuerpo.glb": {
-   "sha256": "a39382b00f94fd04c30bb017b0ad9debe8eb89946dec1653b439ef303e7d7c03"
+   "sha256": "e1c9175a757bdeb4aa127e0f6a07cedebb197c839098582406beabdb6cbb85e4"
   },
   "deslizadores.csv": {
-   "sha256": "e383a20c8bcaf98005c36086e570684fab5178255b127be3d42c3964bfafbfed"
+   "sha256": "9672498333b14c25d79335ac1fc5676a669f996cee57c025cc68c13cb10c3218"
   },
   "presets/anime.json": {
-   "sha256": "fd6edc9b7d01c034eaf7d7e9a7fcd68ed33d01cc119c5908b13e51683a6ac5ba"
+   "sha256": "2c436fc31e0666e3847ce6347afe48ca426b1a0251a2d5ea5ceafb3e7ed7ae0e"
   }
  },
  "pose": "A",
  "source": "MakeHuman system assets (CC0) con MPFB 2.0.18",
  "species": "humana",
- "version": 2,
+ "version": 3,
  "vertex_count": 13380
 }

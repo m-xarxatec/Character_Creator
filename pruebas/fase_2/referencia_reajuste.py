@@ -51,8 +51,8 @@ IDENTITY = [[1.0, 0.0, 0.0], [0.0, 1.0, 0.0], [0.0, 0.0, 1.0]]
 
 
 def slots(rows):
-    """[(id, lado)] de cada deslizador Forma de MPFB (sin las formas de cara); lado None si es uno solo."""
-    return [(r["id"], side) for r in rows if r["tipo"] == "Forma" and r not in ed.face_rows(rows)
+    """[(id, lado)] de cada deslizador Forma de MPFB (sin las de cara ni las propias, que MPFB no tiene); lado None si es uno solo."""
+    return [(r["id"], side) for r in rows if r["tipo"] == "Forma" and r not in ed.face_rows(rows) and r not in ed.own_rows(rows)
             for side in (("l", "r") if r["lados"] == "2" else (None,))]
 
 

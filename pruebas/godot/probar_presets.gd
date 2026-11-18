@@ -253,9 +253,10 @@ func _check_new_character() -> void:
 	for key in ["cuenca_plana", "boca_anime", "mandibula_anime", "menton_anime"]:
 		expected[key] = 1.0
 	expected["nariz_anime"] = 0.0
+	expected["alisado"] = 1.0
 	var data: Dictionary = JSON.parse_string(text)
 	check("anime.json: completo (todas las claves escritas)", data["valores"].size() == expected.size(), str(data["valores"].size()))
-	check("anime.json: cuerpo neutro, 4 formas de cara a 1 y nariz_anime a 0", loaded["valores"] == expected)
+	check("anime.json: cuerpo neutro, 4 formas de cara a 1, nariz_anime a 0 y alisado a 1", loaded["valores"] == expected)
 	var defaults: Dictionary = material.DEFAULTS
 	check("anime.json: colores por defecto (piel gris) y prenda visible",
 		loaded["colores"]["skin_color"] == defaults["skin_color"] and loaded["colores"]["garment_color"] == defaults["garment_color"]

@@ -6,8 +6,8 @@ extends SceneTree
 const ZONES := ["Global", "Cabeza", "Cuello", "Hombros", "Torso", "Pecho", "Cintura", "Caderas", "Glúteos", "Brazos",
 		"Manos", "Dedos", "Piernas", "Pies"]  # las de deslizadores.csv, en su orden, sin Cara
 const ROWS := 48  # 40 deslizadores sin Cara, 8 de ellos con dos lados
-const TO_CREATE := ["shoulder_height", "buttocks_height", "buttocks_roundness"]
-const TYPES := {"height": "Proporción", "gender": "Forma", "shoulder_height": "Por crear", "hand_size_l": "Proporción",
+const TO_CREATE := []  # desde el 6.2 no queda ningún Por crear
+const TYPES := {"height": "Proporción", "gender": "Forma", "shoulder_height": "Forma", "hand_size_l": "Proporción",
 		"finger_spread_r": "Forma"}
 
 var failures := 0
@@ -58,7 +58,7 @@ func _check_layout(panel) -> void:
 	for key: String in panel.sliders:
 		if not panel.sliders[key].editable:
 			locked.append(key)
-	check("solo los Por crear desactivados", locked == TO_CREATE, str(locked))
+	check("ninguna fila desactivada (no queda ningún Por crear)", locked == TO_CREATE, str(locked))
 
 
 func _check_values(panel, view) -> void:
