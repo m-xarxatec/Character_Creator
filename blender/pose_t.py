@@ -2,13 +2,16 @@
 """Pasa el personaje de la pose A de MakeHuman a pose T y la deja como pose de reposo.
 
 Solo se mueven los brazos: brazo, antebrazo y mano quedan en linea recta hacia los lados,
-con la palma hacia abajo. En Blender el personaje mira a -Y y Z es arriba.
+con la palma hacia abajo. La clavicula hace CLAVICLE_SHARE de la subida del brazo (paso 5.15; sin ella el trapecio
+se estira y el hombro parece hundido). En Blender el personaje mira a -Y y Z es arriba.
+Misma logica que godot/addons/creador/t_pose.gd (la paridad la mide pruebas/godot/probar_pose_t.gd).
 """
 import bpy
-from mathutils import Matrix, Vector
+from mathutils import Matrix, Quaternion, Vector
 
 SIDES = (("_l", 1.0), ("_r", -1.0))  # sufijo del hueso y hacia donde apunta el brazo en X
 FORWARD = Vector((0.0, -1.0, 0.0))
+CLAVICLE_SHARE = 0.25  # elegido por el responsable el 2026-11-18
 
 
 def apply_t_pose(basemesh):
@@ -21,6 +24,8 @@ def apply_t_pose(basemesh):
 def _straighten_arm(rig, suffix, target):
     pose = rig.pose.bones
     upper, lower, hand = pose["upperarm" + suffix], pose["lowerarm" + suffix], pose["hand" + suffix]
+    lift = (upper.tail - upper.head).normalized().rotation_difference(target)
+    _turn(pose["clavicle" + suffix], Quaternion().slerp(lift, CLAVICLE_SHARE))
     _aim(upper, lambda: upper.tail - upper.head, target)
     _aim(lower, lambda: lower.tail - lower.head, target)
     _aim(hand, lambda: pose["middle_01" + suffix].head - hand.head, target)
@@ -30,7 +35,12 @@ def _straighten_arm(rig, suffix, target):
 
 def _aim(pose_bone, current, target):
     """Gira el hueso (y sus hijos) alrededor de su cabeza para que el vector current() apunte a target."""
-    rotation = current().normalized().rotation_difference(target).to_matrix().to_4x4()
+    _turn(pose_bone, current().normalized().rotation_difference(target))
+
+
+def _turn(pose_bone, quaternion):
+    """Gira el hueso (y sus hijos) con quaternion alrededor de su cabeza."""
+    rotation = quaternion.to_matrix().to_4x4()
     pivot = Matrix.Translation(pose_bone.head)
     pose_bone.matrix = pivot @ rotation @ pivot.inverted() @ pose_bone.matrix
     bpy.context.view_layer.update()

@@ -8,6 +8,7 @@ const MAX_DEG := 1.0
 const RIGID_MM := 0.01
 const BLENDER_MM := 0.05  # medido: máx. 0,0063 mm. Aprobado el 2026-11-11
 const REPEAT_MM := 0.01  # medido: 0,0028 mm leyendo la pose; 0 desde que parte del reposo. Aprobado el 2026-11-11
+const CLAVICLE_DEG := 0.1  # PROVISIONAL (paso 5.15)
 const SIDES := {"Left": Vector3.RIGHT, "Right": Vector3.LEFT}
 const ARM := ["UpperArm", "LowerArm", "Hand"]
 const NEXT := {"Shoulder": "UpperArm", "UpperArm": "LowerArm", "LowerArm": "Hand", "Hand": "MiddleProximal"}
@@ -94,6 +95,7 @@ func _check_body(body: String) -> void:
 
 	var worst := 0.0
 	var palm := 0.0
+	var clavicle := 0.0
 	var arms := {}
 	var fingers_same := true
 	for side: String in SIDES:
@@ -103,12 +105,19 @@ func _check_body(body: String) -> void:
 			worst = maxf(worst, rad_to_deg(direction.angle_to(target)))
 		var across := after[_bone(side + "IndexProximal")].origin - after[_bone(side + "LittleProximal")].origin
 		palm = maxf(palm, rad_to_deg((across - target * across.dot(target)).angle_to(Vector3.BACK)))
-		arms.merge(_branch(side + "UpperArm"))
+		var lift := (before[_bone(side + "LowerArm")].origin - before[_bone(side + "UpperArm")].origin).angle_to(target)
+		var shoulder := _bone(side + "Shoulder")
+		var turned := (after[shoulder].basis.get_rotation_quaternion()
+			* before[shoulder].basis.get_rotation_quaternion().inverse()).get_angle()
+		clavicle = maxf(clavicle, absf(rad_to_deg(turned - t_pose.CLAVICLE_SHARE * lift)))
+		arms.merge(_branch(side + "Shoulder"))
 		for bone: int in _branch(side + "Hand"):
 			if bone != _bone(side + "Hand"):
 				fingers_same = fingers_same and skeleton.get_bone_pose(bone) == before_local[bone]
 	check(body + ": brazo, antebrazo y mano horizontales (< %s°)" % MAX_DEG, worst < MAX_DEG, "máximo %.4f°" % worst)
 	check(body + ": palma hacia abajo, índice delante (< %s°)" % MAX_DEG, palm < MAX_DEG, "máximo %.4f°" % palm)
+	check(body + ": la clavícula hace el %d %% de la subida del brazo (± %s°)" % [roundi(100 * t_pose.CLAVICLE_SHARE), CLAVICLE_DEG],
+		clavicle < CLAVICLE_DEG, "máximo %.4f°" % clavicle)
 	var others_same := true
 	for bone in skeleton.get_bone_count():
 		if not arms.has(bone):

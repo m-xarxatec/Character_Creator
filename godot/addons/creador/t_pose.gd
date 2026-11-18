@@ -4,32 +4,39 @@ extends RefCounted
 ##
 ## Uso:
 ##   TPose.apply(species.skeleton)   # después de cada reajuste (que pisa la pose) y de poner la escala (que lee); parte del reposo
-## Solo giran brazo, antebrazo y mano: quedan en línea recta hacia los lados, con la palma hacia abajo
+## Giran clavícula, brazo, antebrazo y mano: el brazo queda en línea recta hacia los lados, con la palma hacia abajo
 ## (el índice delante y el meñique detrás). Los dedos y el anclaje siguen a la mano. La escala no se toca.
+## La clavícula hace CLAVICLE_SHARE de la subida del brazo (paso 5.15, ritmo escapulohumeral): sin ella el trapecio
+## se estira y el hombro parece hundido. El brazo hace el resto.
 ## Misma lógica que blender/pose_t.py, código propio de este proyecto (no viene de MPFB), portada aquí bajo MIT
 ## con permiso del autor (2026-11-11).
 
 const Refit := preload("bone_refit.gd")
 const SIDES := {"Left": Vector3.RIGHT, "Right": Vector3.LEFT}  # hacia dónde apunta cada brazo
 const FORWARD := Vector3.BACK  # el personaje mira a +Z
+const CLAVICLE_SHARE := 0.25  # elegido por el responsable el 2026-11-18 entre 0, 15, 25 y 33 %
 
 
-static func apply(skeleton: Skeleton3D) -> void:
+## share: parte de la subida que hace la clavícula (otro valor solo para comparar, en las pruebas).
+static func apply(skeleton: Skeleton3D, share := CLAVICLE_SHARE) -> void:
 	var globals := _rest_globals(skeleton)
 	for side: String in SIDES:
 		var target: Vector3 = SIDES[side]
+		var shoulder := skeleton.find_bone(side + "Shoulder")
 		var upper := skeleton.find_bone(side + "UpperArm")
 		var lower := skeleton.find_bone(side + "LowerArm")
 		var hand := skeleton.find_bone(side + "Hand")
 		var middle := skeleton.find_bone(side + "MiddleProximal")
 		var index := skeleton.find_bone(side + "IndexProximal")
 		var little := skeleton.find_bone(side + "LittleProximal")
+		var lift: Basis = Refit.arc(globals[lower].origin - globals[upper].origin, target)
+		_turn(skeleton, globals, shoulder, Basis(Quaternion.IDENTITY.slerp(lift.get_rotation_quaternion(), share)))
 		_aim(skeleton, globals, upper, globals[lower].origin - globals[upper].origin, target)
 		_aim(skeleton, globals, lower, globals[hand].origin - globals[lower].origin, target)
 		_aim(skeleton, globals, hand, globals[middle].origin - globals[hand].origin, target)
 		var across := globals[index].origin - globals[little].origin
 		_aim(skeleton, globals, hand, across - target * across.dot(target), FORWARD)  # gira solo sobre el brazo
-		for bone: int in [upper, lower, hand]:
+		for bone: int in [shoulder, upper, lower, hand]:
 			var local := globals[skeleton.get_bone_parent(bone)].affine_inverse() * globals[bone]
 			skeleton.set_bone_pose_rotation(bone, local.basis.get_rotation_quaternion())
 
@@ -48,9 +55,13 @@ static func _rest_globals(skeleton: Skeleton3D) -> Array[Transform3D]:
 
 ## Gira el hueso y sus descendientes alrededor de su cabeza para que current apunte a target.
 static func _aim(skeleton: Skeleton3D, globals: Array[Transform3D], bone: int, current: Vector3, target: Vector3) -> void:
+	_turn(skeleton, globals, bone, Refit.arc(current, target))
+
+
+## Gira el hueso y sus descendientes con basis alrededor de su cabeza.
+static func _turn(skeleton: Skeleton3D, globals: Array[Transform3D], bone: int, basis: Basis) -> void:
 	var pivot := globals[bone].origin
-	var turn := Transform3D(Basis.IDENTITY, pivot) * Transform3D(Refit.arc(current, target), Vector3.ZERO) \
-		* Transform3D(Basis.IDENTITY, -pivot)
+	var turn := Transform3D(Basis.IDENTITY, pivot) * Transform3D(basis, Vector3.ZERO) * Transform3D(Basis.IDENTITY, -pivot)
 	var pending: Array[int] = [bone]
 	while not pending.is_empty():
 		var current_bone: int = pending.pop_back()
