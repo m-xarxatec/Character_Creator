@@ -2,9 +2,9 @@ extends SceneTree
 # Paso IU.1a: tokens y tema de la interfaz (godot/app/tema/). Sin ventana. Comprobaciones de diseno/GUIA_INTERFAZ.md §8:
 # (1) claro y oscuro con las mismas claves; (2) contrastes WCAG ≥ 4,5 del texto y ≥ 3 del agarrador (D43);
 # (3) estilo para cada control de la guía §5.2 y todas las variaciones; (4) ninguna letra por debajo de 12 px.
-# (5) IU.1b: sin colores ni estilos a mano fuera de tema/; (6) IU.1c: botón de tema; (7) IU.2: iconos.
+# (5) IU.1b: sin colores ni estilos a mano fuera de tema/; (6) IU.1c: botón de tema; (7) IU.2: iconos; (8) casillas.
 # Uso: (ulimit -v 4000000; timeout 120 godot --headless --path pruebas/godot -s probar_tema.gd 2>&1 | grep -E 'FALLO|MEDIDA|RESULTADO|ERROR')
-# Que detecta el fallo: poner texto_3 a #B0B0B0 en tokens.gd -> falla la (2).
+# Que detecta el fallo: poner texto_3 a #B0B0B0 en tokens.gd -> falla la (2); quitar los iconos de CheckBox -> falla la (8).
 
 const TEXT_MIN := 4.5
 const GRABBER_MIN := 3.0
@@ -58,6 +58,11 @@ func _initialize() -> void:
 		var grabber := contrast(c["acento"], c["panel"])
 		check("(2) %s: agarrador del deslizador ≥ %.0f:1 (D43)" % [mode, GRABBER_MIN], grabber >= GRABBER_MIN, "%.2f" % grabber)
 		var theme: Theme = Builder.build(dark)
+		# (8) Casillas: el borde de la vacía y el relleno de la marcada se ven sobre el panel (como el agarrador).
+		var edge: Color = theme.get_icon("unchecked", "CheckBox").get_image().get_pixel(1, 9)
+		var fill: Color = theme.get_icon("checked", "CheckBox").get_image().get_pixel(4, 4)
+		var boxes := minf(contrast(edge, c["panel"]), contrast(fill, c["panel"]))
+		check("(8) %s: casillas ≥ %.0f:1 sobre el panel" % [mode, GRABBER_MIN], boxes >= GRABBER_MIN, "%.2f" % boxes)
 		var missing: Array[String] = []
 		for type: String in STYLES:
 			for style: String in STYLES[type]:

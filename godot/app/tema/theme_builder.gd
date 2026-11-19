@@ -18,6 +18,9 @@ const VARIATIONS := {
 const GRABBER_SVG := "<svg xmlns=\"http://www.w3.org/2000/svg\" width=\"%d\" height=\"%d\"><circle cx=\"%f\" cy=\"%f\" r=\"%f\" fill=\"#%s\" stroke=\"#%s\" stroke-width=\"2\"/></svg>"
 const GRABBER_SIZE := 18
 const GRABBER_HOVER_SIZE := 20
+## Casilla (CheckBox): las de Godot apenas se ven en oscuro; se dibujan con los tokens. Marcada: acento con ✓ blanco.
+const CHECK_SVG := "<svg xmlns=\"http://www.w3.org/2000/svg\" width=\"18\" height=\"18\" opacity=\"%s\"><rect x=\"1.5\" y=\"1.5\" width=\"15\" height=\"15\" rx=\"4\" fill=\"#%s\" stroke=\"#%s\" stroke-width=\"1.5\"/>%s</svg>"
+const CHECK_MARK := "<path d=\"M5 9.5l2.8 2.8L13 6.5\" fill=\"none\" stroke=\"#ffffff\" stroke-width=\"2\" stroke-linecap=\"round\" stroke-linejoin=\"round\"/>"
 ## Nivel del informe → token de su color (cabecera del informe y cuadrado de cada fila).
 const LEVELS := {"NivelBien": "exito", "NivelAviso": "aviso", "NivelError": "error"}
 ## Insignia de tipo → tokens de fondo y de letra.
@@ -125,6 +128,12 @@ static func _buttons(theme: Theme, c: Dictionary) -> void:
 		var empty := StyleBoxEmpty.new()
 		_set_boxes(theme, type, {"normal": empty, "hover": empty, "pressed": empty, "hover_pressed": empty,
 			"disabled": empty})
+	for state: String in ["", "_disabled"]:
+		var alpha := "1" if state == "" else "0.45"
+		theme.set_icon("checked" + state, "CheckBox", _svg(CHECK_SVG % [alpha, c["acento"].to_html(false),
+			c["acento"].to_html(false), CHECK_MARK]))
+		theme.set_icon("unchecked" + state, "CheckBox", _svg(CHECK_SVG % [alpha, c["panel_2"].to_html(false),
+			c["texto_3"].to_html(false), ""]))
 	theme.set_constant("h_separation", "Button", Tokens.ESPACIO[1])
 
 
@@ -196,7 +205,10 @@ static func _slider(theme: Theme, c: Dictionary) -> void:
 
 static func _grabber(px: int, c: Dictionary) -> ImageTexture:
 	var half := px / 2.0
-	var svg := GRABBER_SVG % [px, px, half, half, half - 1.5, Color.WHITE.to_html(false), c["acento"].to_html(false)]
+	return _svg(GRABBER_SVG % [px, px, half, half, half - 1.5, Color.WHITE.to_html(false), c["acento"].to_html(false)])
+
+
+static func _svg(svg: String) -> ImageTexture:
 	var image := Image.new()
 	image.load_svg_from_string(svg, 1.0)
 	return ImageTexture.create_from_image(image)
