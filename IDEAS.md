@@ -13,14 +13,13 @@
 - Medidas reales (altura en cm) junto a los deslizadores.
 - Atajos de teclado.
 - Pies al suelo al animar (IK de pies): sin él, con las rodillas dobladas los pies flotan según las proporciones (medido en el 5.1: hasta 168 mm al sentarse).
-- `datos/animaciones/UAL1_Standard.glb` trae 43 animaciones (7,6 MB) y se usan 5: recortarlo antes de distribuir.
 
 ---
 
 ## Después del MVP: más deslizadores
 
 - Ir añadiendo filas a la tabla del paso 2.1 hasta cubrir cada detalle del cuerpo (MakeHuman trae unas 800 formas listas: orejas, nariz, mandíbula, dedos, pies…).
-- Deslizador **Edad** (de adulto joven a mayor; nunca menores): la macro `age` de MakeHuman, con sus correcciones.
+- Deslizador **Edad** (primera parte, de joven a mayor): la macro `age` de MakeHuman, con sus correcciones.
 - **Futuro: edades de 5 a 60 años, como Anny.** Deslizador Edad completo y plantillas prehechas por edad que después se ajustan con los deslizadores. D42 aprobada el 2026-11-19 (ver X.17 en `propuestas/expansion_v2.md`).
 
 ---

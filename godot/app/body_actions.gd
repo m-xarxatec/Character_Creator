@@ -9,6 +9,9 @@ extends HBoxContainer
 # Paso 7.0: Guardar preset… y Abrir preset… (preset_file.gd). Abrir se deshace con Ctrl+Z (solo los valores);
 #   look_changed avisa de que cambiaron colores y acabado (main.gd refresca el panel Acabado).
 # Paso P.1: exportar no congela la ventana: lo pesado (GlbExporter.compute) va en un hilo.
+# Paso P.4: atajos Ctrl+S, Ctrl+O y Ctrl+E (Cmd en Mac) en los botones; has_changes() dice si lo que entraría en el
+#   preset es distinto de lo último guardado o abierto (exportar no cuenta). save_and_quit() guarda y cierra (main.gd).
+# Paso P.5c: los tres diálogos de archivo se abren en la última carpeta usada (settings_file.gd).
 # Uso: var bar := BodyActions.new(); bar.setup(body_view, editor)
 
 signal test_changed
@@ -17,6 +20,8 @@ signal look_changed
 const BodyMaterial := preload("../addons/creador/body_material.gd")
 const PresetFile := preload("preset_file.gd")
 const GlbExporter := preload("../addons/creador/glb_exporter.gd")
+const SettingsFile := preload("settings_file.gd")
+const ThemeBuilder := preload("tema/theme_builder.gd")  # paso IU.2: iconos
 
 var view: SubViewportContainer  # BodyView
 var bones_button: Button
@@ -29,15 +34,23 @@ var open_dialog: FileDialog
 var message: AcceptDialog
 var editor  # BodyEditor
 var export_thread: Thread  # paso P.1: el hilo de exportar mientras trabaja
+var save_button: Button
+var open_button: Button
+var saved_text := ""  # paso P.4: el preset de lo último guardado o abierto (sin nombre)
+var quit_after_save := false  # paso P.4: «Guardar…» del aviso al cerrar
+var current_path := ""  # paso IU.4: el preset guardado o abierto ("" = personaje nuevo)
 
 
 func setup(body_view: SubViewportContainer, body_editor = null) -> void:
 	view = body_view
 	editor = body_editor
 	bones_button = _button("Probar huesos", func() -> void: set_pose_t(not view.pose_t))
+	bones_button.icon = ThemeBuilder.icon("vistas")
 	bones_button.toggle_mode = true
 	_add_animation_list()
-	export_button = _button("Exportar .glb", func() -> void: file_dialog.popup_centered_ratio(0.6))
+	export_button = _button("Exportar .glb", func() -> void: popup_file_dialog(file_dialog))
+	export_button.shortcut = _shortcut(KEY_E)
+	export_button.icon = ThemeBuilder.icon("exportar")
 	garment_check = CheckBox.new()
 	garment_check.text = "Prenda base"
 	garment_check.button_pressed = BodyMaterial.is_garment_visible(view.species.mesh)
@@ -47,13 +60,68 @@ func setup(body_view: SubViewportContainer, body_editor = null) -> void:
 	if editor != null:
 		save_dialog = _preset_dialog(FileDialog.FILE_MODE_SAVE_FILE, save_preset)
 		open_dialog = _preset_dialog(FileDialog.FILE_MODE_OPEN_FILE, open_preset)
-		_button("Guardar preset…", func() -> void: save_dialog.popup_centered_ratio(0.6))
-		_button("Abrir preset…", func() -> void: open_dialog.popup_centered_ratio(0.6))
+		save_dialog.canceled.connect(func() -> void: quit_after_save = false)
+		save_button = _button("Guardar preset…", func() -> void: popup_file_dialog(save_dialog))
+		save_button.shortcut = _shortcut(KEY_S)
+		save_button.icon = ThemeBuilder.icon("guardar")
+		open_button = _button("Abrir preset…", func() -> void: popup_file_dialog(open_dialog))
+		open_button.shortcut = _shortcut(KEY_O)
+		open_button.icon = ThemeBuilder.icon("abrir")
+		saved_text = _current_text()
+
+
+## Paso P.4: ¿hay cambios sin guardar? (valores, colores, prenda o acabado; el nombre no cuenta)
+func has_changes() -> bool:
+	return editor != null and _current_text() != saved_text
+
+
+## Paso IU.4: nombre del archivo para la barra de arriba.
+func file_name() -> String:
+	return current_path.get_file() if current_path != "" else "Personaje nuevo"
+
+
+## Paso P.4: abre Guardar preset y, si se guarda bien, cierra el programa.
+func save_and_quit() -> void:
+	quit_after_save = true
+	popup_file_dialog(save_dialog)
+
+
+## Paso P.5c: abre un diálogo de archivo en la última carpeta usada (si sigue existiendo).
+func popup_file_dialog(dialog: FileDialog) -> void:
+	var folder := SettingsFile.get_folder()
+	if folder != "":
+		dialog.current_dir = folder
+	dialog.popup_centered_ratio(0.6)
+
+
+func _remember_folder(path: String) -> void:
+	SettingsFile.set_folder(path.get_base_dir())
+
+
+func _current_text() -> String:
+	return PresetFile.to_text("", view, editor.values)
+
+
+## Atajo con Ctrl (Cmd en Mac). En el botón: sale en su ayuda y no funciona si el botón está desactivado.
+func _shortcut(key: Key) -> Shortcut:
+	var event := InputEventKey.new()
+	event.keycode = key
+	event.command_or_control_autoremap = true
+	var shortcut := Shortcut.new()
+	shortcut.events = [event]
+	return shortcut
 
 
 ## Guarda el personaje como preset y avisa. Devuelve el error.
 func save_preset(path: String) -> Error:
 	var error := PresetFile.save(path, view, editor.values)
+	if error == OK:
+		saved_text = _current_text()
+		current_path = path
+		if quit_after_save:
+			get_tree().quit()
+			return error
+	quit_after_save = false
 	_tell("Guardar preset", "Guardado:\n%s" % path if error == OK else "No se pudo guardar\n%s\n(%s)" % [path, error_string(error)])
 	return error
 
@@ -65,6 +133,8 @@ func open_preset(path: String) -> String:
 		_tell("Abrir preset", "No se pudo abrir\n%s\n%s" % [path, loaded["error"]])
 		return loaded["error"]
 	PresetFile.apply(loaded, view, editor)
+	saved_text = _current_text()
+	current_path = path
 	garment_check.set_pressed_no_signal(BodyMaterial.is_garment_visible(view.species.mesh))
 	look_changed.emit()
 	if not loaded["desconocidas"].is_empty():
@@ -84,6 +154,7 @@ func _preset_dialog(mode: FileDialog.FileMode, action: Callable) -> FileDialog:
 	dialog.access = FileDialog.ACCESS_FILESYSTEM
 	dialog.filters = PackedStringArray(["*.json ; Preset de personaje"])
 	dialog.current_file = "personaje.json"
+	dialog.file_selected.connect(_remember_folder)
 	dialog.file_selected.connect(action)
 	add_child(dialog)
 	return dialog
@@ -176,6 +247,7 @@ func _add_dialogs() -> void:
 	file_dialog.access = FileDialog.ACCESS_FILESYSTEM
 	file_dialog.filters = PackedStringArray(["*.glb ; Personaje glTF"])
 	file_dialog.current_file = "personaje.glb"
+	file_dialog.file_selected.connect(_remember_folder)
 	file_dialog.file_selected.connect(_on_file_selected)
 	add_child(file_dialog)
 	message = AcceptDialog.new()

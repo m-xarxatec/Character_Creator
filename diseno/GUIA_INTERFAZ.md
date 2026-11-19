@@ -96,7 +96,7 @@ El rosa coral (`#E2477A` / `#FF7AA2`) queda solo para ilustraciones (miniaturas,
 | `letra_valor` | 13 px | 600 | Números de los deslizadores (cifras de ancho fijo si la fuente lo permite) |
 | `letra_pequena` | 12 px | 600 | Insignias, «Pronto», barra de estado. **Nada por debajo de 12 px.** |
 
-Fuente: una **redondeada** da el aire amable que buscamos. Propuesta: **Nunito** (licencia SIL OFL 1.1, por comprobar). Necesita la decisión **D30 b)** y ampliar la regla 5 solo para fuentes. Mientras no se decida, la de Godot con los mismos tamaños.
+Fuente: una **redondeada** da el aire amable que buscamos. **Nunito** (SIL OFL 1.1, comprobada; D30 b), variable: los pesos 500, 600 y 700 con `FontVariation` (eje `wght`).
 
 ### 3.3 Espacio, formas y movimiento
 
@@ -164,7 +164,7 @@ godot/app/tema/
   tokens.gd           # CLARO y OSCURO: diccionarios con los tokens de §3 (lo único con colores y tamaños)
   theme_builder.gd    # build(tokens, escala) -> Theme, por código (texto revisable, como recomienda la ficha 14)
   iconos/*.svg        # 24 px, trazo 2 px, color blanco (se tiñen con el tema)
-  fuentes/            # solo si se aprueba D30 b): .ttf + OFL.txt
+  fuentes/            # nunito.ttf + ofl.txt (D30 b)
 godot/app/textos/ayuda_deslizadores.csv
 ```
 
@@ -214,7 +214,7 @@ godot/app/textos/ayuda_deslizadores.csv
 
 ## 7. Accesibilidad
 
-- Contraste: texto ≥ 4,5:1; bordes de campos y agarradores ≥ 3:1 frente a su fondo.
+- Contraste: texto ≥ 4,5:1; el agarrador del deslizador ≥ 3:1 frente a su fondo (D43).
 - El color nunca va solo: el informe lleva icono y palabra; las insignias, texto.
 - Todo se puede usar con teclado: Tab recorre los controles con un foco visible (`acento_linea`, 2 px); flechas mueven el deslizador enfocado (paso 1; con Mayús, 10).
 - Tamaño de la interfaz ajustable y opción «Reducir animaciones».
@@ -227,7 +227,7 @@ godot/app/textos/ayuda_deslizadores.csv
 
 ## 9. Decisiones que necesita (detalle en `propuestas/expansion_v2.md` §7)
 
-- **D30:** fuente redondeada OFL (Nunito) o la de Godot.
+- **D30:** decidida: Nunito.
 - **D33:** iconos dibujados por nosotros (CC0) o un juego MIT (Tabler Icons, licencia por comprobar).
-- **D34:** tema por defecto: claro (recomendado, más «VRoid») u oscuro.
+- **D34:** decidida: oscuro por defecto, con un botón pequeño y visible para cambiar a claro.
 - **D35:** la pestaña Exportar pasa a botón principal con diálogo.

@@ -14,6 +14,7 @@ const WEIGHT_SUM_EPS := 1e-4  # Godot guarda los pesos en 16 bits: la suma es 1 
 const SCALE_EPS := 1e-4
 const BUDGET := {"triangulos": 40000, "huesos": 75}  # PC, GUIA_ESTILO.md §7: PROPUESTA sin aprobar, por eso solo avisa
 const LEVELS := ["bien", "aviso", "error"]
+const MeshChecks := preload("mesh_checks.gd")  # paso P.5b: num() pone la coma decimal
 
 
 static func run(character: Node3D, manifest: Dictionary) -> Array[Dictionary]:
@@ -73,7 +74,7 @@ static func _weight_sums(mesh: MeshInstance3D, skeleton: Skeleton3D) -> Dictiona
 					bones.append(name)
 	if count == 0:
 		return _result("pesos_suman_1", "bien", "Los pesos de cada vértice suman 1")
-	return _result("pesos_suman_1", "error", "%d vértices cuyos pesos no suman 1 (peor: %.4f)" % [count, worst_sum], bones)
+	return _result("pesos_suman_1", "error", "%d vértices cuyos pesos no suman 1 (peor: %s)" % [count, MeshChecks.num(worst_sum, 4)], bones)
 
 
 static func _four_influences(mesh: MeshInstance3D) -> Dictionary:

@@ -8,7 +8,8 @@ extends ScrollContainer
 
 signal zone_chosen(zone: String)
 
-const LEVEL_COLORS := {"bien": Color("3b6d11"), "aviso": Color("ba7517"), "error": Color("a32d2d")}  # maqueta, tema oscuro
+## Paso IU.1b: nivel → variación del tema (tema/theme_builder.gd); su font_color es el color del nivel.
+const LEVEL_VARIATIONS := {"bien": "NivelBien", "aviso": "NivelAviso", "error": "NivelError"}
 const LEVEL_ORDER := ["error", "aviso", "bien"]
 ## Trozo del nombre del hueso (sin Left/Right) → zona de deslizadores.csv. Gana el primero que encaja: UpperChest antes que Chest.
 const BONE_ZONES := [["Head", "Cabeza"], ["Neck", "Cuello"], ["Shoulder", "Hombros"], ["UpperArm", "Brazos"],
@@ -60,10 +61,24 @@ func show_results(results: Array) -> void:
 		list.add_child(_row(result))
 
 
+## Color de un nivel según el tema en uso (cambia al pasar de oscuro a claro).
+func level_color(level: String) -> Color:
+	return get_theme_color("font_color", LEVEL_VARIATIONS.get(level, LEVEL_VARIATIONS["error"]))
+
+
+func _notification(what: int) -> void:
+	if what == NOTIFICATION_THEME_CHANGED and list != null:
+		for row: Node in list.get_children():
+			var square := row.get_child(0) as ColorRect
+			if square != null and square.has_meta("nivel"):
+				square.color = level_color(square.get_meta("nivel"))
+
+
 func _row(result: Dictionary) -> HBoxContainer:
 	var row := HBoxContainer.new()
 	var square := ColorRect.new()
-	square.color = LEVEL_COLORS.get(result["nivel"], LEVEL_COLORS["error"])
+	square.set_meta("nivel", result["nivel"])
+	square.color = level_color(result["nivel"])
 	square.custom_minimum_size = Vector2(12, 12)
 	square.size_flags_vertical = Control.SIZE_SHRINK_CENTER
 	row.add_child(square)

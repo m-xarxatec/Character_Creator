@@ -1,6 +1,7 @@
 extends SceneTree
 # Paso 4.7b: panel Acabado (godot/app/finish_panel.gd) dentro de la ventana (main.gd). Sin ventana.
 # Uso: (ulimit -v 4000000; timeout 120 godot --headless --path pruebas/godot -s probar_acabado.gd 2>&1 | grep -E 'FALLO|RESULTADO|ERROR')
+# Paso P.5a: nombres sin «Rim» y ayuda en cada deslizador. Detecta el fallo: volver a «Rim (fuerza)».
 
 var failures := 0
 var BodyMaterial: GDScript
@@ -15,6 +16,7 @@ func _initialize() -> void:
 	check("la vista carga sin error", main.body_view.error == "", main.body_view.error)
 	if main.body_view.error == "":
 		_check_panel(main.finish_panel, main.body_view)
+		_check_names(main.finish_panel)
 	main.free()
 	print("RESULTADO: ", "TODO BIEN" if failures == 0 else "%d FALLOS" % failures)
 	quit(1 if failures else 0)
@@ -24,6 +26,19 @@ func check(label: String, ok: bool, detail := "") -> void:
 	print(("  bien  " if ok else "  FALLO ") + label, " ", detail)
 	if not ok:
 		failures += 1
+
+
+## Paso P.5a: sin «Rim» y con ayuda en cada deslizador.
+func _check_names(panel) -> void:
+	var labels: Array[String] = []
+	for label: Label in panel.find_children("*", "Label", true, false):
+		labels.append(label.text)
+	check("ningún nombre del panel dice «Rim» (paso P.5a)", not " ".join(labels).contains("Rim")
+		and labels.has("Brillo de borde"), str(labels))
+	var without_help := 0
+	for slider: HSlider in panel.sliders.values():
+		without_help += int(slider.tooltip_text == "")
+	check("cada deslizador tiene su ayuda", without_help == 0, "%d sin ayuda" % without_help)
 
 
 func _check_panel(panel, view) -> void:

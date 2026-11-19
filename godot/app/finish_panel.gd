@@ -2,11 +2,16 @@ extends VBoxContainer
 # Paso 4.7b: panel Acabado de la pestaña Cuerpo, debajo de los deslizadores.
 # Color de piel (cualquier color), borde entre tonos, rim (fuerza y ancho) y grosor del contorno: van al material
 # (BodyMaterial), así que el .glb y el .tres salen como se ve. No entra en Deshacer: tiene su botón Restablecer acabado.
+# Paso P.5a: nombres en español claro y una ayuda de una línea en cada deslizador (sin «Rim»).
 # Uso: var panel := FinishPanel.new(); panel.setup(body_view)
 
 const BodyMaterial := preload("../addons/creador/body_material.gd")
 const SKIN := "skin_color"
-const NAMES := {"softness": "Borde", "rim_strength": "Rim (fuerza)", "rim_width": "Rim (ancho)", "width_px": "Contorno (px)"}
+const NAMES := {"softness": "Suavidad de la sombra", "rim_strength": "Brillo de borde", "rim_width": "Ancho del brillo",
+	"width_px": "Grosor de la línea"}
+const HELP := {"softness": "Lo suave que es el paso de luz a sombra",
+	"rim_strength": "Luz en el contorno del cuerpo, vista a contraluz",
+	"rim_width": "Cuánto entra ese brillo hacia dentro", "width_px": "Grosor del contorno negro, en píxeles"}
 const NAME_WIDTH := 130.0
 const STEPS := 100.0
 
@@ -63,6 +68,7 @@ func _add_slider(key: String) -> void:
 	slider.size_flags_horizontal = Control.SIZE_EXPAND_FILL
 	slider.size_flags_vertical = Control.SIZE_SHRINK_CENTER
 	slider.value_changed.connect(func(value: float) -> void: BodyMaterial.set_finish(mesh, key, value))
+	slider.tooltip_text = HELP[key]
 	sliders[key] = slider
 	_add_row(NAMES[key], slider)
 

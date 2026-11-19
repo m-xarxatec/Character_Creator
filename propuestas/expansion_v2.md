@@ -48,7 +48,7 @@ Estado: **Hecho** · **Plan** (ya está en `PLAN.md` o en la hoja de ruta) · **
 | Pies al suelo al animar (IK de pies) | Nuevo | X.1 |
 | Recortar `UAL1_Standard.glb` | Plan | P.6 |
 | Más deslizadores de MakeHuman | Plan + Nuevo | 9.2 (cara); X.2 (cuerpo: pies, dedos, orejas…) |
-| Deslizador Edad (nunca menores) | Nuevo | PL.8 |
+| Deslizador Edad (de joven a mayor; las demás edades, X.17) | Nuevo | PL.8 |
 | Edades de 5 a 60 años, como Anny | Nuevo | X.17 (D42 aprobada) |
 | Pestaña Cara y ojos | Plan | Fase 9 |
 | Pestaña Pelo | Plan + Nuevo | AB.9a–AB.9d (casquete, peinados CC0 moldeados, peinados propios, pelo de MakeHuman) + Fase 11 (física) |
@@ -78,7 +78,7 @@ Estado: **Hecho** · **Plan** (ya está en `PLAN.md` o en la hoja de ruta) · **
 | Estética de la ventana | Nuevo | **Fase IU** |
 | Comando en el PATH | Nuevo | 0.5 |
 | Quaternius UBC: peinados, cejas y barba | Plan + Nuevo | AB.9b (moldeados a nuestra cabeza) y 11.5 |
-| Quaternius UBC: segunda base estilizada | Plan | 16.3 (solo proporciones adultas) |
+| Quaternius UBC: segunda base estilizada | Plan | 16.3 |
 | Sistema de piezas (packs) | Plan | 11.1 = AB.2 |
 | Conversor de assets CC0 de MakeHuman | Plan + Nuevo | AB.3 (helpers) + 12.1–12.2 (`.mhclo`) |
 | Adaptador en Blender para piezas de otras webs | Plan | 13.3 |
@@ -253,18 +253,18 @@ Estado: **Hecho** · **Plan** (ya está en `PLAN.md` o en la hoja de ruta) · **
 - **Prueba:** al soltar no queda ningún nodo extra; la memoria vuelve a su valor (± 5 %).
 - **Nivel:** medio · **Tam.:** S–M.
 
-### PL.8 Deslizador Edad (de adulto joven a mayor; nunca menores)
+### PL.8 Deslizador Edad (primera parte: de joven a mayor)
 - **Objetivo:** fila nueva `age,Global,Edad,Forma,macro:age=<mín>,macro:age=1,1,0` con sus correcciones, y las plantillas **Mayor** y **Mayora**.
 - **Archivos:** `blender/exportar_datos.py`, `godot/datos/humana/*` (sube la `version` del manifiesto), `deslizadores.csv`, pruebas de la fase 2 y `probar_rendimiento.gd`.
-- **Diseño:** el deslizador mezcla **solo las variaciones `young` y `old`** de MakeHuman (con sus correcciones), como hace Anny (`propuestas/proyectos_parecidos.md` §1.2). Las variaciones infantiles (`newborn`, `baby`, `child`) **no se exportan a `datos/`**: no hay forma de pedir menos de adulto porque esos datos no existen en el programa. **Comprobar** en MPFB que `young` corresponde a unos 25 años. La edad queda **fuera** de «Exageración» (16.2) y del aleatorio. **Después (X.17, D42 aprobada):** el rango se amplía hacia abajo; PL.8 se hace tal cual. Medir la memoria que añade (`RENDIMIENTO.md` O6).
-- **Prueba:** el deslizador a 0 da exactamente la variación `young`; ningún archivo de `datos/` contiene formas `newborn`, `baby` ni `child` (la prueba lo busca por nombre); las pruebas de reajuste de huesos (fase 2) siguen < 1 mm.
+- **Diseño:** el deslizador mezcla **solo las variaciones `young` y `old`** de MakeHuman (con sus correcciones), como hace Anny (`propuestas/proyectos_parecidos.md` §1.2). **Comprobar** en MPFB que `young` corresponde a unos 25 años. La edad queda **fuera** de «Exageración» (16.2) y del aleatorio. **Después (X.17):** el rango se amplía hasta los 5 años. Medir la memoria que añade (`RENDIMIENTO.md` O6).
+- **Prueba:** el deslizador a 0 da exactamente la variación `young`; las pruebas de reajuste de huesos (fase 2) siguen < 1 mm.
 - **Juicio visual:** sí.
 - **Nivel:** fuerte · **Tam.:** M · **Modelo:** Fable · **Depende de:** D38.
 
 ### PL.9 (opcional) Chibi con la misma malla
 - **Objetivo:** intentar el chibi (2,5–3 cabezas) sin base nueva: rangos ampliados de Proporción + formas propias de cuello y cabeza. El 3.12 llegó a 3,46 cabezas fuera de rango.
 - **Diseño:** es el 16.2 adelantado solo para Proporción. Si no llega a 3 cabezas con buen aspecto, se para y se va a 16.3 (segunda base).
-- **Nivel:** fuerte · **Tam.:** M · **Modelo:** Fable. El chibi es siempre un adulto estilizado (regla 11).
+- **Nivel:** fuerte · **Tam.:** M · **Modelo:** Fable.
 
 ---
 
@@ -281,7 +281,7 @@ Estado: **Hecho** · **Plan** (ya está en `PLAN.md` o en la hoja de ruta) · **
 | **Ropa de «MakeHuman system assets»** (`.mhclo`) | Camisetas, pantalones, zapatos realistas | CC0 | Bueno, con el lector y la transferencia del 12.1 | Alto |
 | **KayKit «Character Pack: Adventurers»** | 25+ armas y accesorios (espadas, escudos, hachas, bastones…) | CC0 (comprobar en su página y en el `LICENSE` del zip antes de descargar) | Rígidas en los anclajes: no hace falta ajustarlas | Bajo |
 | **Quaternius «Modular Character Outfits – Fantasy»** (noviembre de 2025) | 12 trajes de fantasía en 62 piezas | CC0 (comprobar) | Hechas para **su** cuerpo: hace falta la transferencia del 12.1 y revisión a mano | Alto |
-| **Quaternius «Universal Base Characters»** | Hasta 20 peinados, cejas, barba; base de referencia | CC0 (comprobar) | Peinados: se moldean a nuestra cabeza (AB.9b). **Usar solo las proporciones adultas** (el pack trae también «Teen»: no se usa, regla 11) | Medio |
+| **Quaternius «Universal Base Characters»** | Hasta 20 peinados, cejas, barba; base de referencia | CC0 (comprobar) | Peinados: se moldean a nuestra cabeza (AB.9b). | Medio |
 | **Peinados libres sueltos** | Ver §5.3 | CC0 | Se moldean (AB.9b) | Medio |
 
 **La pieza clave:** la malla base de MakeHuman trae, además del cuerpo, geometría de ayuda numerada después de él: `helper-tights` para la ropa pegada al cuerpo, `helper-skirt` para las faldas y `helper-hair` para el pelo. Los *targets* de MakeHuman mueven también esos vértices (por eso la ropa de MakeHuman sigue al cuerpo). Si nuestro pipeline los exporta como piezas aparte, con sus formas y pesos, tenemos ropa ceñida, falda y casquete de pelo que **siguen a todos los deslizadores desde el primer día**, sin la herramienta difícil del 12.1.
@@ -467,7 +467,7 @@ Un peinado CC0 moldeado sigue siendo CC0 y puede entrar en el Pack Base 1 (D36);
 | X.13 | Traducciones (español base, inglés) | simple–medio | M | `TranslationServer` + CSV de traducciones; los textos salen del código |
 | X.14 | Simetría relativa (mover un lado suma lo mismo al otro) | simple | S | Opción en `BodyEditor` |
 | X.15 | Opción de 8 influencias al exportar | medio | S | Aviso: algunos motores solo leen 4 |
-| X.17 | **Edades de 5 a 60 años, como Anny:** deslizador Edad completo (`child` ↔ `young` ↔ `old`) y plantillas prehechas por edad (Niña, Niño, Adolescente, Adulta, Adulto, Mayor) que después se ajustan con los deslizadores | fuerte | L | D42 aprobada (regla 11 ya cambiada). Cambia la prueba de PL.8 que prohíbe `child`. Salvaguardas: por debajo de adulto la prenda base no se puede ocultar, sin chibi ni «Exageración», sin poses del estudio que no sean neutras, y la edad nunca entra en el aleatorio. **Comprobar** en MPFB qué edad da cada variación |
+| X.17 | **Edades de 5 a 60 años, como Anny:** deslizador Edad completo (`child` ↔ `young` ↔ `old`) y plantillas prehechas por edad (Niña, Niño, Adolescente, Adulta, Adulto, Mayor) que después se ajustan con los deslizadores | fuerte | L | D42 aprobada. Salvaguardas: por debajo de adulto la prenda base no se puede ocultar, sin chibi ni «Exageración», sin poses del estudio que no sean neutras, y la edad nunca entra en el aleatorio. **Comprobar** en MPFB qué edad da cada variación |
 | X.16 | Reproducción mínima del cuelgue de `GLTFDocument` (BoneAttachment sin malla ni piel) | medio | S | El responsable decide si lo reporta a Godot |
 
 ---
@@ -476,18 +476,18 @@ Un peinado CC0 moldeado sigue siendo CC0 y puede entrar en el Pack Base 1 (D36);
 
 | Código | Pregunta | Opciones | Recomendación |
 | --- | --- | --- | --- |
-| D30 (ya existe) | Fuente de la interfaz | a) La de Godot · b) Nunito (SIL OFL 1.1, por comprobar) | **b)**: la letra redondeada aporta buena parte del aire amable que se busca. Pide ampliar la regla 5: «OFL solo para fuentes», con `OFL.txt` y fila en `CREDITOS.md` |
+| D30 (ya existe) | Fuente de la interfaz (**decidida: b**) | a) La de Godot · b) Nunito (SIL OFL 1.1, comprobada) | **b)**: la letra redondeada aporta buena parte del aire amable que se busca. Pide ampliar la regla 5: «OFL solo para fuentes», con `OFL.txt` y fila en `CREDITOS.md` |
 | D32 | Orden de la expansión | El de §0 · otro | **Decidida el 2026-11-18:** los assets van antes que Windows; Windows, al final |
-| D33 | Iconos | a) Propios, CC0 · b) Tabler Icons (MIT, por comprobar) | **b)** si se confirma MIT (más rápido y coherente); si no, a) |
-| D34 | Tema por defecto | a) Claro · b) Oscuro | **a)** Más amable y más cerca de la idea; el oscuro queda en Ajustes |
-| D35 | ¿«Exportar» deja de ser pestaña y pasa a botón principal con diálogo? | a) Sí · b) No | **a)** Las pestañas son para crear el personaje; exportar es una acción |
+| D33 | Iconos | a) Propios, CC0 · b) Tabler Icons (MIT, comprobada) | **Decidida: b)**, temporal (Tabler v3.50.0) |
+| D34 | Tema por defecto | a) Claro · b) Oscuro | **Decidida: b)** oscuro, con un botón pequeño para cambiar a claro |
+| D35 (**decidida: a**) | ¿«Exportar» deja de ser pestaña y pasa a botón principal con diálogo? | a) Sí · b) No | **a)** Las pestañas son para crear el personaje; exportar es una acción |
 | D36 | Licencia de los assets propios y de los CC0 moldeados, y ¿se publican las piezas rígidas y los peinados como pack suelto? | a) CC0 y publicar · b) CC0 sin publicar fuera | **a)** Suma al portafolio y no cuesta nada; los moldeados citan al autor original |
 | D39 | ¿Se aprueba descargar los packs de §5.3 (prioridades 1 y 2) y KayKit? | a) Sí, uno a uno, con la licencia comprobada · b) No, solo assets propios | **a)** El permiso de red lo da el responsable en cada descarga |
 | D40 | Código de Anny (Apache 2.0) y Character Studio (MIT): ¿se porta con su cabecera o se reimplementa? | a) Reimplementar en GDScript y citar en `CREDITOS.md` · b) Portar con cabecera y aviso | **a)** Están en Python y JavaScript: portar ya es reescribir. Se citan igual |
 | D41 | ¿Las 52 expresiones «Face Units» (CC0) entran en `datos/` cuando llegue la Fase 9? | a) Sí, con D31 · b) No, expresiones propias | **a)** Origen limpio y estándar ARKit; ahorra la parte más difícil del 9.7 |
 | D37 | ¿El pipeline vuelve a exportar los helpers de MakeHuman como piezas (AB.3)? | a) Sí · b) No, solo el camino del 12.1 | **a)** Es el camino más barato y fiable para la ropa ceñida, la falda y el pelo |
 | D38 | Rango del deslizador Edad | a) 25 a 90 años · b) 25 a 70 años | **a)**, con el mínimo fijo en los datos |
-| D42 | ¿Se permiten personajes de 5 a 60 años, como Anny (X.17)? | a) No: siempre adulto · b) Sí, con las salvaguardas de X.17 | **Decidida el 2026-11-19: b)** |
+| D42 | ¿Se permiten personajes de 5 a 60 años, como Anny (X.17)? | a) No · b) Sí, con las salvaguardas de X.17 | **Decidida el 2026-11-19: b)** |
 
 ---
 
@@ -534,9 +534,9 @@ Licencias: Anny = Apache 2.0 (datos CC0); Character Studio = MIT; Humanizer = AG
 Además de las de `ruta/GUIA_MODELOS.md` §3, el agente **para y pregunta** si:
 
 1. Un paso de la fase IU necesita tocar el núcleo (`addons/creador/`) y la ficha no lo decía.
-2. Una plantilla, un aleatorio o una combinación de deslizadores puede dar un aspecto que no sea de adulto. (El chibi es estilización de un adulto.) Excepción: X.17 (D42), con sus salvaguardas.
+2. Una plantilla, un aleatorio o una combinación de deslizadores da una edad fuera de 5–60 años, o una edad infantil sin las salvaguardas de X.17.
 3. Un asset no trae su licencia en el propio archivo descargado o en la página oficial del autor, o la licencia del archivo no coincide con la de la página. Sin licencia comprobada no se descarga ni se usa (D19: nada de CC-BY por ahora). Tampoco se usa nada que venga de VRoid ni nada etiquetado como personaje adolescente o infantil, aunque diga CC0.
-4. Un recorte de prenda o un peinado deja ver detalle anatómico bajo la ropa (regla 11).
+4. Un recorte de prenda o un peinado deja ver detalle anatómico bajo la ropa.
 5. Las formas de una pieza disparan la memoria por encima de lo medido en AB.3 más un 20 %.
 6. Algo de la maqueta HTML no se puede hacer igual en Godot: se propone la alternativa más cercana con una captura, no se inventa otra cosa.
 7. Un paso de la fase R necesita mirar el código de Humanizer (AGPL): no se mira. Se trabaja desde `propuestas/proyectos_parecidos.md` §3 y la documentación pública.

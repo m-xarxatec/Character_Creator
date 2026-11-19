@@ -124,6 +124,11 @@ static func degenerate_count(rest: PackedVector3Array, posed: PackedVector3Array
 	return _degenerate(rest, posed, indices).size()
 
 
+## Paso P.5b: número con coma decimal para los textos del informe («0,6 mm»).
+static func num(value: float, decimals: int) -> String:
+	return ("%.*f" % [decimals, value]).replace(".", ",")
+
+
 static func _result(id: String, value: float, text: String, bones: PackedStringArray) -> Dictionary:
 	var level := "error" if value >= LIMITS[id][1] else ("aviso" if value >= LIMITS[id][0] else "bien")
 	return {"id": id, "nivel": level, "texto": text, "huesos": bones, "valor": value}
@@ -168,9 +173,9 @@ static func _sections(rest: PackedVector3Array, posed: PackedVector3Array, rings
 			worst = loss
 			worst_bone = name
 		if loss >= LIMITS["seccion"][0]:
-			results.append(_result("seccion", loss, "La articulación de %s adelgaza un %.0f %%" % [name, loss], PackedStringArray([name])))
+			results.append(_result("seccion", loss, "La articulación de %s adelgaza un %s %%" % [name, num(loss, 0)], PackedStringArray([name])))
 	if results.is_empty():
-		results.append(_result("seccion", worst, "Ninguna articulación adelgaza (máximo %.1f %%, %s)" % [worst, worst_bone],
+		results.append(_result("seccion", worst, "Ninguna articulación adelgaza (máximo %s %%, %s)" % [num(worst, 1), worst_bone],
 			PackedStringArray()))
 	return results
 
@@ -197,9 +202,9 @@ static func _crossings(rest: PackedVector3Array, owners: PackedInt32Array, skele
 				worst = mm
 				worst_pair = " y ".join(names)
 			if mm >= LIMITS["cruce"][0]:
-				results.append(_result("cruce", mm, "%s se atraviesan %.0f mm" % [" y ".join(names), mm], names))
+				results.append(_result("cruce", mm, "%s se atraviesan %s mm" % [" y ".join(names), num(mm, 0)], names))
 	if results.is_empty():
-		results.append(_result("cruce", worst, "Ninguna parte atraviesa otra (máximo %.1f mm%s)" % [worst,
+		results.append(_result("cruce", worst, "Ninguna parte atraviesa otra (máximo %s mm%s)" % [num(worst, 1),
 			", " + worst_pair if worst_pair else ""], PackedStringArray()))
 	return results
 
@@ -238,7 +243,7 @@ static func _stretch_result(rest: PackedVector3Array, posed: PackedVector3Array,
 		owners: PackedInt32Array, skeleton: Skeleton3D) -> Dictionary:
 	var edge := _worst_edge(rest, posed, indices)
 	var bones := PackedStringArray([skeleton.get_bone_name(owners[edge[1]])]) if edge[1] >= 0 else PackedStringArray()
-	return _result("estiramiento", edge[0], "La malla se estira hasta ×%.2f" % edge[0] + (" (%s)" % bones[0] if bones else ""), bones)
+	return _result("estiramiento", edge[0], "La malla se estira hasta ×%s" % num(edge[0], 2) + (" (%s)" % bones[0] if bones else ""), bones)
 
 
 ## Triángulos sin área en la pose que sí la tenían en reposo.

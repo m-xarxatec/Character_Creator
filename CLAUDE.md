@@ -22,13 +22,12 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 2. **Un paso cada vez.** Solo el paso actual de `PLAN.md`. Al terminarlo, para, informa y espera.
 3. **Si dudas, pregunta** (máximo 3 preguntas a la vez). No asumas decisiones pendientes: están en `ruta/DECISIONES.md` (nombre definitivo, renderizador, pose de exportación…). Plataformas ya decididas: Linux y Windows, editor completo; Android, solo estudio de poses (no exporta `.glb`).
 4. **No inventes.** Si no puedes comprobar una API, una versión o una licencia, dilo.
-5. **Licencias limpias.** Solo CC0, MIT, Apache 2.0 o GPL. Nada de MB-Lab, VRoid ni SMPL. El editor es MIT: no copies código de MPFB2 (GPL), reimplementa desde su documentación. Solo `blender/` es GPL-3.0+. Todo lo de terceros va a `CREDITOS.md`.
+5. **Licencias limpias.** Solo CC0, MIT, Apache 2.0 o GPL (y SIL OFL 1.1 solo para fuentes, D30). Nada de MB-Lab, VRoid ni SMPL. El editor es MIT: no copies código de MPFB2 (GPL), reimplementa desde su documentación. Solo `blender/` es GPL-3.0+. Todo lo de terceros va a `CREDITOS.md`.
 6. **Las ideas nuevas no se construyen:** se apuntan en `IDEAS.md`.
 7. **Simple y corto.** Código, documentos y este archivo: lo mínimo que funcione. Aquí no se repite lo que ya está en otro archivo o se ve leyendo el código; si algo ya no sirve, bórralo.
 8. **Git lo ejecuto yo.** Claude puede usar git solo de lectura (`status`, `diff`, `log`); nunca comandos que cambien el repositorio. Commits: uno por paso, mensaje corto en español, sin autoría ni `Co-Authored-By`.
 9. **Los límites de las pruebas no se tocan solos.** Cambiar el límite de una prueba requiere propuesta y aprobación, con el motivo y la medida real.
 10. **Sin ficha no hay paso.** Cada paso se hace con su ficha de `ruta/pasos/`: solo los archivos que lista y con el diseño que da. Si aparece una señal de alarma de `ruta/GUIA_MODELOS.md` §3, para y dilo.
-11. **Límites del personaje.** (chibi y las especies son estilizaciones). Desde X.17 (D42), también de 5 a 60 años.
 
 ## Modo ligero (ahorro de tokens)
 
@@ -74,7 +73,7 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 | Pesos | Máximo 4 influencias por vértice, y suman 1 |
 | Malla | La base completa de MakeHuman, sin proxy; sin Draco |
 | Puntos de anclaje | `socket_hand_r`, `socket_hand_l`, `socket_back`, `socket_hip`: nodos vacíos hijos del hueso |
-| Cuerpo | Adulto, neutro, sin detalle anatómico |
+| Cuerpo | De 5 a 60 años (D42; hoy, joven), neutro, sin detalle anatómico |
 | Prenda base | Pintada: color por vértice `garment` (1 = prenda), siempre en la malla; el shader la muestra o la oculta (botón) |
 | Estilo | Ilustración (anime 3D): sombra de 3 tonos (valor por defecto) y contorno negro grueso, propio. El shader va en el núcleo, no en el `.glb` |
 

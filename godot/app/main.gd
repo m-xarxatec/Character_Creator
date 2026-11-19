@@ -8,6 +8,19 @@ extends Control
 # Paso 5.4: con Probar huesos o una animación se calcula el informe (report_panel.gd); su botón de zona sale de la
 # prueba y abre esa zona. Paso P.2: el informe va en un desplegable bajo la vista (report_section.gd), plegado al
 # empezar; los deslizadores no se ocultan nunca.
+# Paso P.4: al cerrar con cambios sin guardar, close_dialog pregunta: Guardar… / Salir sin guardar / Cancelar.
+# Pasos IU.1b y IU.1c: el tema de tema/theme_builder.gd en la raíz (oscuro por defecto, D34) y un botón pequeño
+# «Claro» / «Oscuro» en la barra de abajo que lo cambia y lo recuerda (settings_file.gd).
+# Paso IU.2: iconos en las pestañas, en Licencias y en el botón de tema (sol o luna, sin texto).
+# Paso P.8b: botón «Comandos» (junto al sol/luna) que abre la lista de atajos (commands_dialog.gd).
+# Paso IU.4: barra superior (top_bar.gd) con la marca, el archivo (• si hay cambios), las pestañas (Exportar ya no es
+# pestaña: D35; las que faltan dicen «Pronto») y Deshacer, Rehacer, Abrir, Guardar y Exportar (botón principal).
+# Paso IU.5: a la izquierda de la vista, el panel de zonas (zone_picker.gd): silueta y lista; sigue al panel derecho.
+# Paso IU.5c: un botón en su borde lo pliega («<») y lo despliega («>»).
+# Paso IU.6c: [zonas] [<] [vista + informe] [panel derecho, 360 px]. Las pestañas solo cambian el panel derecho
+# (Cuerpo = ajustes, Estilo = Acabado, el resto «Pronto»): la vista y las zonas se quedan.
+# Paso IU.8: abajo del todo, la barra de estado (status_bar.gd): informe, altura y cabezas (measures.gd, en reposo) y
+# presupuesto.
 
 const BodyView := preload("body_view.gd")
 const SliderPanel := preload("slider_panel.gd")
@@ -16,7 +29,24 @@ const BodyActions := preload("body_actions.gd")
 const FinishPanel := preload("finish_panel.gd")
 const ReportSection := preload("report_section.gd")
 const LicensesDialog := preload("licenses_dialog.gd")
-const TAB_NAMES := ["Cuerpo", "Cara y ojos", "Pelo", "Ropa", "Accesorios", "Exportar"]
+const ThemeBuilder := preload("tema/theme_builder.gd")
+const CommandsDialog := preload("commands_dialog.gd")
+const SettingsFile := preload("settings_file.gd")
+const TopBar := preload("top_bar.gd")
+const StatusBar := preload("status_bar.gd")
+const Measures := preload("measures.gd")
+const Tokens := preload("tema/tokens.gd")
+const ZonePicker := preload("zone_picker.gd")
+const TAB_NAMES := ["Cuerpo", "Cara y ojos", "Pelo", "Ropa", "Accesorios", "Estilo"]
+const TAB_ICONS := ["cuerpo", "cara", "pelo", "ropa", "accesorios", "estilo"]  # paso IU.2
+## Paso IU.4: pestañas que aún no existen → qué llegará (dicen «Pronto», se pueden abrir y lo cuentan).
+const SOON := {
+	"Cara y ojos": "ojos, cejas y expresiones.",
+	"Pelo": "elegir peinados y ajustarlos a la cabeza.",
+	"Ropa": "prendas que siguen al cuerpo al moverlo.",
+	"Accesorios": "armas, gafas, cuernos y otras piezas en las manos, la espalda o la cadera.",
+}
+const FILE_REFRESH := 0.3  # s: cada cuánto se mira si hay cambios sin guardar (el • de la barra)
 const ACTIVE_TAB := 0
 
 var tabs: TabContainer
@@ -28,37 +58,190 @@ var report_panel: ScrollContainer  # ReportPanel, dentro de report_section
 var report_section: VBoxContainer
 var editor  # BodyEditor (null si la especie no cargó)
 var licenses: AcceptDialog  # paso 7.3b
+var close_dialog: ConfirmationDialog  # paso P.4
+var theme_button: Button  # paso IU.1c
+var commands_button: Button  # paso P.8b
+var commands: AcceptDialog  # paso P.8b
+var dark := true  # paso IU.1c: tema en uso
+var top_bar: PanelContainer  # paso IU.4
+var undo_button: Button  # paso IU.4
+var redo_button: Button  # paso IU.4
+var zone_picker: TabContainer  # paso IU.5
+var fold_button: Button  # paso IU.5c
+var status_bar: PanelContainer  # paso IU.8
+var measures  # paso IU.8: Measures (null si la especie no cargó)
 
 
 func _ready() -> void:
 	set_anchors_and_offsets_preset(Control.PRESET_FULL_RECT)
-	tabs = TabContainer.new()
-	tabs.set_anchors_and_offsets_preset(Control.PRESET_FULL_RECT)
-	add_child(tabs)
-	for tab_name in TAB_NAMES:
-		var page: Control = _body_page() if tab_name == "Cuerpo" else Control.new()
-		page.name = tab_name
-		tabs.add_child(page)
-	for i in TAB_NAMES.size():
-		tabs.set_tab_disabled(i, i != ACTIVE_TAB)
+	dark = SettingsFile.get_dark()
+	theme = ThemeBuilder.build(dark)
+	var background := Panel.new()  # paso IU.6c: el fondo de la ventana (antes lo pintaba la página de la pestaña)
+	background.theme_type_variation = "Fondo"
+	background.set_anchors_and_offsets_preset(Control.PRESET_FULL_RECT)
+	add_child(background)
+	var column := VBoxContainer.new()
+	column.set_anchors_and_offsets_preset(Control.PRESET_FULL_RECT)
+	add_child(column)
+	top_bar = TopBar.new()
+	top_bar.setup(TAB_NAMES, TAB_ICONS, SOON)
+	column.add_child(top_bar)
+	column.add_child(_body())
+	body_actions = BodyActions.new()
+	body_actions.name = "Acciones"
+	column.add_child(body_actions)
+	status_bar = StatusBar.new()
+	status_bar.report_pressed.connect(func() -> void: report_section.set_open(true))
+	column.add_child(status_bar)
 	tabs.current_tab = ACTIVE_TAB
+	top_bar.tab_bar.current_tab = ACTIVE_TAB
+	top_bar.tab_bar.tab_changed.connect(func(index: int) -> void: tabs.current_tab = index)
 	if body_view.error == "":  # la vista ya cargó la especie (su _ready va al entrar en el árbol)
 		editor = BodyEditor.new(body_view.species.sliders, body_view.values)
 		editor.changed.connect(func() -> void: body_view.set_values(editor.values))
+		slider_panel.zone_opened.connect(zone_picker.select)
 		slider_panel.setup(editor)
+		zone_picker.setup(slider_panel.zones, _zone_counts())
+		zone_picker.select(slider_panel.open_zone)
+		zone_picker.zone_chosen.connect(slider_panel.open)
+		zone_picker.zone_chosen.connect(func(_zone: String) -> void: top_bar.tab_bar.current_tab = ACTIVE_TAB)
 		body_actions.setup(body_view, editor)
 		finish_panel.setup(body_view)
 		body_actions.test_changed.connect(update_report)
 		body_actions.look_changed.connect(finish_panel.refresh)
 		report_panel.zone_chosen.connect(_on_zone_chosen)
+		_fill_top_bar()
+		_start_measures()
 	licenses = LicensesDialog.new()
 	add_child(licenses)
 	var licenses_button := Button.new()
 	licenses_button.text = "Licencias"
+	licenses_button.icon = ThemeBuilder.icon("licencias")
 	licenses_button.pressed.connect(func() -> void: licenses.popup_centered_ratio(0.7))
 	body_actions.add_child(licenses_button)
+	commands = CommandsDialog.new()
+	add_child(commands)
+	commands_button = Button.new()
+	commands_button.text = "Comandos"
+	commands_button.icon = ThemeBuilder.icon("teclado")
+	commands_button.theme_type_variation = "BotonFantasma"
+	commands_button.tooltip_text = "Atajos de teclado y ratón"
+	commands_button.pressed.connect(func() -> void: commands.popup_centered())
+	body_actions.add_child(commands_button)
+	theme_button = Button.new()
+	theme_button.theme_type_variation = "BotonFantasma"
+	theme_button.pressed.connect(func() -> void: set_dark(not dark))
+	body_actions.add_child(theme_button)
+	_name_theme_button()
 	if "--autoprueba" in OS.get_cmdline_user_args():
 		_self_test()
+	elif editor != null:
+		_add_close_dialog()
+		get_tree().auto_accept_quit = false
+
+
+## Paso P.4: cerrar la ventana pasa por aquí (auto_accept_quit = false).
+func _notification(what: int) -> void:
+	if what == NOTIFICATION_WM_CLOSE_REQUEST and is_inside_tree() and not get_tree().auto_accept_quit:
+		_on_close_requested()
+
+
+func _on_close_requested() -> void:
+	if body_actions.has_changes():
+		close_dialog.popup_centered()
+	else:
+		get_tree().quit()
+
+
+func _add_close_dialog() -> void:
+	close_dialog = ConfirmationDialog.new()
+	close_dialog.title = "Cerrar GameMolde"
+	close_dialog.dialog_text = "Hay cambios sin guardar."
+	close_dialog.ok_button_text = "Guardar…"
+	close_dialog.cancel_button_text = "Cancelar"
+	close_dialog.add_button("Salir sin guardar", true, "salir")
+	close_dialog.confirmed.connect(body_actions.save_and_quit)
+	close_dialog.custom_action.connect(_on_close_action)
+	add_child(close_dialog)
+
+
+func _on_close_action(action: StringName) -> void:
+	if action == &"salir":
+		get_tree().quit()
+
+
+## Paso IU.4: Deshacer, Rehacer, Abrir, Guardar y Exportar (principal) arriba; el nombre del archivo, al día.
+func _fill_top_bar() -> void:
+	undo_button = _icon_button("deshacer", "Deshacer (Ctrl+Z)", editor.undo)
+	redo_button = _icon_button("rehacer", "Rehacer (Ctrl+Y)", editor.redo)
+	for button: Button in [body_actions.open_button, body_actions.save_button, body_actions.export_button]:
+		top_bar.add_action(button)
+	body_actions.export_button.theme_type_variation = "BotonPrincipal"
+	var timer := Timer.new()
+	timer.wait_time = FILE_REFRESH
+	timer.timeout.connect(refresh_top_bar)
+	add_child(timer)
+	timer.start()
+	editor.changed.connect(refresh_top_bar)  # paso IU.6b: Deshacer/Rehacer al momento, sin esperar al temporizador
+	refresh_top_bar()
+
+
+## Nombre del archivo con • si hay cambios, y Deshacer/Rehacer activos solo si se puede.
+func refresh_top_bar() -> void:
+	top_bar.set_file(body_actions.file_name(), body_actions.has_changes())
+	undo_button.disabled = not editor.can_undo()
+	redo_button.disabled = not editor.can_redo()
+
+
+func _icon_button(icon_name: String, help: String, action: Callable) -> Button:
+	var button := Button.new()
+	button.icon = ThemeBuilder.icon(icon_name)
+	button.theme_type_variation = "BotonFantasma"
+	button.tooltip_text = help
+	button.pressed.connect(func() -> void: action.call())
+	top_bar.add_action(button)
+	return button
+
+
+## Paso IU.5c: pliega o despliega el panel de zonas (la vista se agranda y vuelve a encuadrar sola).
+func set_zones_visible(on: bool) -> void:
+	zone_picker.visible = on
+	_name_fold_button()
+
+
+func _name_fold_button() -> void:
+	fold_button.icon = ThemeBuilder.icon("plegar" if zone_picker.visible else "desplegar")
+	fold_button.tooltip_text = "Ocultar las zonas" if zone_picker.visible else "Mostrar las zonas"
+
+
+## Paso IU.5: zona → número de ajustes visibles (filas de la tabla; las de dos lados cuentan una).
+func _zone_counts() -> Dictionary:
+	var counts := {}
+	for row: Dictionary in editor.rows:
+		counts[row["zona"]] = counts.get(row["zona"], 0) + 1
+	return counts
+
+
+func _soon_page(text: String) -> Control:
+	var page := CenterContainer.new()
+	var label := Label.new()
+	label.text = "Pronto: " + text
+	label.theme_type_variation = "Pista"
+	page.add_child(label)
+	return page
+
+
+## Paso IU.1c: cambia el tema de toda la ventana y lo recuerda para la próxima vez.
+func set_dark(on: bool) -> void:
+	dark = on
+	SettingsFile.set_dark(on)
+	theme = ThemeBuilder.build(on)
+	_name_theme_button()
+
+
+func _name_theme_button() -> void:
+	theme_button.icon = ThemeBuilder.icon("claro" if dark else "oscuro")  # dice a qué tema pasa
+	theme_button.tooltip_text = "Pasar al tema claro" if dark else "Pasar al tema oscuro"
 
 
 ## Paso A2: autoprueba para builds (`programa -- --autoprueba`): carga, exporta a user:// y sale con 0 o 1.
@@ -86,6 +269,23 @@ func update_report() -> void:
 		report_section.show_results(body_view.check_report())
 	else:
 		report_section.clear()
+	status_bar.set_report(report_panel.rows)
+	refresh_measures()
+
+
+## Paso IU.8: medidas en reposo (si se prueban los huesos o se anima, se queda la última) y presupuesto.
+func refresh_measures() -> void:
+	if measures != null and not body_view.pose_t and body_view.clip == "":
+		status_bar.set_measures(measures.measure(body_view.species.mesh, body_view.species.skeleton))
+
+
+func _start_measures() -> void:
+	var mesh: MeshInstance3D = body_view.species.mesh
+	measures = Measures.new(mesh, body_view.species.skeleton)
+	# Los huesos que se exportan (los de deformación del manifiesto), no los de ayuda del maniquí.
+	status_bar.set_budget(mesh.mesh.surface_get_array_index_len(0) / 3, body_view.species.manifest["bones"]["deform"].size())
+	body_view.frame_timer.timeout.connect(refresh_measures)  # como el encuadre: al dejar quietos los deslizadores
+	refresh_measures()
 
 
 func _on_zone_chosen(zone: String) -> void:
@@ -103,14 +303,21 @@ func _unhandled_key_input(event: InputEvent) -> void:
 		editor.undo()
 
 
-func _body_page() -> Control:
-	var column := VBoxContainer.new()
+## Paso IU.6c: zonas | vista + informe | panel derecho (las páginas de las pestañas).
+func _body() -> Control:
 	var page := HBoxContainer.new()
 	page.size_flags_vertical = Control.SIZE_EXPAND_FILL
-	column.add_child(page)
+	zone_picker = ZonePicker.new()
+	zone_picker.name = "Zonas"
+	page.add_child(zone_picker)
+	fold_button = Button.new()
+	fold_button.theme_type_variation = "BotonFantasma"
+	fold_button.size_flags_vertical = Control.SIZE_SHRINK_BEGIN
+	fold_button.pressed.connect(func() -> void: set_zones_visible(not zone_picker.visible))
+	page.add_child(fold_button)
+	_name_fold_button()
 	var left := VBoxContainer.new()
 	left.size_flags_horizontal = Control.SIZE_EXPAND_FILL
-	left.size_flags_stretch_ratio = 2.0
 	page.add_child(left)
 	body_view = BodyView.new()
 	body_view.size_flags_vertical = Control.SIZE_EXPAND_FILL
@@ -119,18 +326,15 @@ func _body_page() -> Control:
 	report_section.name = "InformeDeformacion"
 	report_panel = report_section.panel
 	left.add_child(report_section)
+	tabs = TabContainer.new()
+	tabs.tabs_visible = false  # paso IU.4: las pestañas están en la barra de arriba
+	tabs.custom_minimum_size.x = Tokens.PANEL_DERECHO
+	page.add_child(tabs)
 	slider_panel = SliderPanel.new()
-	slider_panel.name = "Deslizadores"
-	slider_panel.size_flags_vertical = Control.SIZE_EXPAND_FILL
 	finish_panel = FinishPanel.new()
-	finish_panel.name = "Acabado"
-	var side := VBoxContainer.new()
-	side.size_flags_horizontal = Control.SIZE_EXPAND_FILL
-	side.add_child(slider_panel)
-	side.add_child(HSeparator.new())
-	side.add_child(finish_panel)
-	page.add_child(side)
-	body_actions = BodyActions.new()
-	body_actions.name = "Acciones"
-	column.add_child(body_actions)
-	return column
+	for tab_name: String in TAB_NAMES:
+		var panel: Control = slider_panel if tab_name == "Cuerpo" else (finish_panel if tab_name == "Estilo"
+			else _soon_page(SOON[tab_name]))
+		panel.name = tab_name  # el nombre de la página es el de la pestaña
+		tabs.add_child(panel)
+	return page

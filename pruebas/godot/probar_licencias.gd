@@ -5,6 +5,7 @@ extends SceneTree
 # Que detecta el fallo: cambiar una letra de CREDITOS.md sin copiarlo a godot/CREDITOS.txt -> falla la fila de las copias.
 
 const ALLOWED := ["CC0", "MIT", "Apache-2.0", "Apache 2.0", "GPL"]
+const FONT_LICENSE := "SIL OFL 1.1"  # regla 5: solo para fuentes (D30)
 const WORDS := ["MIT", "MakeHuman", "Quaternius", "Godot Engine", "FreeType"]
 const MIN_LENGTH := 10000
 
@@ -49,6 +50,7 @@ func _check_credits(credits: String) -> void:
 		rows += 1
 		var cells := line.trim_prefix("|").trim_suffix("|").split("|")
 		var license := cells[2].strip_edges() if cells.size() == 5 else ""
-		if cells.size() != 5 or not ALLOWED.any(func(name: String) -> bool: return license.begins_with(name)):
+		var font_ok := license.begins_with(FONT_LICENSE) and cells[0].contains("fuente")
+		if cells.size() != 5 or not (font_ok or ALLOWED.any(func(name: String) -> bool: return license.begins_with(name))):
 			bad.append(cells[0].strip_edges())
 	check("CREDITOS.md: %d filas con 5 columnas y licencia admitida" % rows, rows > 0 and bad.is_empty(), str(bad))

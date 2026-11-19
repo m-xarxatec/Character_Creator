@@ -1,6 +1,7 @@
 extends SceneTree
 # Paso 5.4: informe del banco de pruebas (godot/app/report_panel.gd) dentro de la ventana (main.gd). Sin ventana.
 # Uso: (ulimit -v 4000000; timeout 300 godot --headless --path pruebas/godot -s probar_informe.gd 2>&1 | grep -E 'FALLO|MEDIDA|RESULTADO|ERROR')
+# Paso P.5b: los números llevan coma decimal. Detecta el fallo: quitar el replace de MeshChecks.num.
 # Que detecta el fallo: en BONE_ZONES, poner ["Chest", "Torso"] antes que ["UpperChest", "Pecho"] -> falla «UpperChest».
 
 var failures := 0
@@ -93,6 +94,16 @@ func _check_window(main: Control) -> void:
 	var crossing: Array = deform.filter(func(r: Dictionary) -> bool: return r["id"] == "cruce")
 	check("el cruce de la mano con el muslo sale, en Dedos o Manos", crossing.any(func(r: Dictionary) -> bool:
 		return Report.zone_of(r["huesos"]) in ["Dedos", "Manos"]))
+	# Paso P.5b: los textos de malla (solo salen al animar) llevan coma decimal.
+	var dot := RegEx.create_from_string("\\d\\.\\d")
+	var comma := RegEx.create_from_string("\\d,\\d")
+	var with_dot := 0
+	var with_comma := 0
+	for row: Dictionary in main.report_panel.rows:
+		with_dot += int(dot.search(row["texto"]) != null)
+		with_comma += int(comma.search(row["texto"]) != null)
+	check("los números del informe llevan coma decimal (paso P.5b)", with_dot == 0 and with_comma > 0,
+		"%d con punto, %d con coma" % [with_dot, with_comma])
 	for row: Dictionary in main.report_panel.rows:
 		if row["nivel"] != "bien":
 			print("  MEDIDA fila: [%s] %s → %s" % [row["nivel"], row["texto"], Report.zone_of(row["huesos"])])

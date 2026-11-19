@@ -7,6 +7,7 @@ extends SubViewportContainer
 # Paso 5.2: set_animation() también pone las poses fijas del mismo archivo (StaticPose).
 # Paso 5.4: check_report() revisa el personaje que se exporta (CharacterChecks) y su malla en la pose o el clip en marcha
 # (MeshChecks, sobre una copia horneada en pose T; un clip se mide en REPORT_INSTANTS momentos y queda el peor).
+# Paso P.8a: con Ctrl pulsado, el cursor sobre la vista es una mano (desplazar la cámara).
 # Paso P.3: frame_character() encuadra el personaje entero (al cargar, RESTYLE_WAIT s después de mover un deslizador, al cambiar la pose o
 # la animación y al cambiar el tamaño de la vista); no en cada fotograma.
 # Paso 5.9: set_animation(ROM_ID) recorre el rango de movimiento (rom.gd): cada fotograma vuelve a la pose T y gira.
@@ -132,6 +133,8 @@ func set_animation(id: String) -> bool:
 
 
 func _process(delta: float) -> void:
+	# Paso P.8a: con Ctrl, el cursor es una mano (Ctrl + arrastrar desplaza la cámara: orbit_camera.gd).
+	mouse_default_cursor_shape = CURSOR_POINTING_HAND if Input.is_key_pressed(KEY_CTRL) else CURSOR_ARROW
 	if clip == ROM_ID:
 		rom_time += delta
 		pose_turns = rom.turns_at(rom_time)

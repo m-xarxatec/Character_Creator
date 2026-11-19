@@ -54,8 +54,4 @@ func _title(summary: String) -> void:
 	for level: String in ["error", "aviso", "bien"]:
 		if worst == "" and panel.rows.any(func(r: Dictionary) -> bool: return r["nivel"] == level):
 			worst = level
-	for state: String in ["font_color", "font_pressed_color", "font_hover_color", "font_hover_pressed_color", "font_focus_color"]:
-		if worst == "":
-			header.remove_theme_color_override(state)
-		else:
-			header.add_theme_color_override(state, ReportPanel.LEVEL_COLORS[worst].lightened(0.35))
+	header.theme_type_variation = ReportPanel.LEVEL_VARIATIONS.get(worst, "")  # paso IU.1b: color del tema

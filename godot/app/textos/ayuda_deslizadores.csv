@@ -1,0 +1,41 @@
+id,ayuda,extremo_izq,extremo_der
+height,Altura de todo el cuerpo,Más bajo,Más alto
+gender,Pasa de un cuerpo femenino a uno masculino,Femenino,Masculino
+muscle,Cuánto músculo tiene todo el cuerpo,Poco,Mucho
+weight,Cuánta grasa tiene todo el cuerpo,Poca,Mucha
+head_size,Tamaño de toda la cabeza,,
+head_width,Ancho de la cabeza,,
+head_height,Alto de la cabeza,,
+neck_length,Largo del cuello,,
+neck_thickness,Grosor del cuello,,
+shoulder_width,Ancho de los hombros (de un hombro al otro),,
+shoulder_height,Hombros más caídos o más subidos,Caídos,Subidos
+shoulder_muscle,Músculo del hombro,,
+torso_length,Largo del tronco (de la nuca a la cintura),,
+torso_width,Ancho del tronco,,
+torso_vshape,Espalda en forma de V: hombros más amplios y cintura estrecha,,
+back_width,Ancho de la espalda a la altura de los dorsales,,
+torso_depth,Fondo del tronco (de delante a atrás),,
+breast_volume,Tamaño del pecho,,
+breast_firmness,Pecho más caído o más firme,,
+breast_distance,Separación entre los dos lados del pecho,,
+breast_height,Pecho más bajo o más alto,Más bajo,Más alto
+waist_width,Ancho de la cintura,,
+waist_height,Cintura más baja o más alta,Más baja,Más alta
+hip_width,Ancho de las caderas,,
+hip_depth,Fondo de las caderas (de delante a atrás),,
+buttocks_volume,Tamaño de los glúteos,,
+buttocks_height,Glúteos más bajos o más altos,Más bajos,Más altos
+buttocks_roundness,Glúteos más planos o más redondos,Planos,Redondos
+arm_length,Largo de los brazos,,
+arm_thickness,Grosor de los brazos,,
+arm_muscle,Músculo de los brazos,,
+hand_size,Tamaño de las manos,,
+hand_position,Manos más hacia dentro o hacia fuera,Dentro,Fuera
+finger_length,Largo de los dedos,,
+finger_thickness,Grosor de los dedos,,
+finger_spread,Separación entre los dedos,,
+leg_length,Largo de las piernas,,
+thigh,Grosor del muslo,,
+calf,Grosor de la pantorrilla,,
+foot_size,Tamaño de los pies,,
