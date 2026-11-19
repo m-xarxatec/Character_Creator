@@ -16,11 +16,11 @@
 | 7 | D16: Godot en Windows | Hecho | — |
 | 8 | **IU.1** Tema: oscuro, Nunito, botón Claro/Oscuro | Cerrado | — |
 | 9 | **IU.2** Iconos Tabler (temporales, D33) | Cerrado | — |
-| 10 | **P.8** Ctrl + arrastrar (mano), Inicio y botón «Comandos» | Probado | Probarlo a mano |
+| 10 | **P.8** Ctrl + arrastrar (mano), Inicio y botón «Comandos» | Cerrado | — |
 | 11 | **IU.4** Barra superior (D35) | Cerrado | — |
 | 12 | **IU.5** Silueta de zonas (y plegar) | Cerrado | — |
 | 13 | **IU.6** Filas nuevas, buscador, pestaña Estilo | Cerrado | — |
-| 14 | **IU.8** Barra de estado (informe, altura, cabezas, presupuesto) | Probado | Juzgar `iu8/`; aprobar ± 1 mm y ± 0,05 cabezas |
+| 14 | **IU.8** Barra de estado (informe, altura, cabezas, presupuesto) | Cerrado | — |
 | 15 | IU.9–IU.11 (ajustes, microinteracciones, cierre); IU.3 e IU.7 con Fable | Siguiente | — |
 
 ## En Linux

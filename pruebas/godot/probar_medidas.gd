@@ -3,8 +3,8 @@ extends SceneTree
 # Uso: (ulimit -v 4000000; timeout 300 godot --headless --path pruebas/godot -s probar_medidas.gd 2>&1 | grep -E 'FALLO|MEDIDA|RESULTADO|ERROR')
 # Que detecta el fallo: en main.refresh_measures, medir sin mirar la pose -> sentado, la altura cambia.
 
-const HEIGHT_MM := 1.0  # PROVISIONAL: diferencia con la medida exacta, en mm
-const HEADS := 0.05  # PROVISIONAL: diferencia con la medida exacta, en cabezas
+const HEIGHT_MM := 1.0  # diferencia con la medida exacta, en mm
+const HEADS := 0.05  # diferencia con la medida exacta, en cabezas
 const ROOT_SCALE := 1.15  # escala:Root=1.15 con Global › Altura a 1 (deslizadores.csv)
 
 var failures := 0

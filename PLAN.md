@@ -3,7 +3,7 @@
 > Paso a paso. Un paso cada vez y siempre con aprobación (ver `CLAUDE.md`).
 > Lo que no es del MVP va a `IDEAS.md`.
 
-**Estado actual:** MVP preparado: build de Linux, README, licencias y paquete 0.1.0 listos. Nombre definitivo: GameMolde (D28). Publicar queda aplazado: se pule (fase «Pulido»: P.1 hecho; P.2 y P.3 esperan tu juicio). Falta lo tuyo: mirar capturas (6.3 y referencia nueva), abrir el build a mano (7.1), elegir capturas y grabar el vídeo (7.2). Lista: `ruta/PENDIENTES.md`
+**Estado actual:** MVP preparado: build de Linux, README, licencias y paquete 0.1.0 listos. Nombre definitivo: GameMolde (D28). Pulido: hecho (P.1–P.8). Publicar (7.4) espera a tus juicios. Fase IU (`propuestas/expansion_v2.md` §3): IU.1, IU.2, IU.4–IU.6 e IU.8 hechos; sigue IU.9 (ficha escrita); faltan IU.3, IU.7, IU.10 e IU.11. Falta lo tuyo: mirar capturas (5.15/5.11 y 6.3), abrir el build a mano (7.1), elegir capturas y grabar el vídeo (7.2). Lista: `ruta/PENDIENTES.md`
 **Fichas:** cada paso pendiente tiene la suya en `ruta/pasos/` (traspaso del 2026-11-16; decisiones en `ruta/DECISIONES.md`).
 **Leyenda:** `[ ]` pendiente · `[~]` en curso · `[x]` hecho
 
@@ -209,13 +209,13 @@ Según `diseno/maqueta-pestana-cuerpo.html`.
 > Pedido por el responsable el 2026-11-18. Ordenado por lo que más se nota al usarlo. Fichas `ruta/pasos/P.*`.
 
 - [x] P.1 Exportar sin congelar la ventana (lo pesado, en un hilo).
-- [~] P.2 El informe de deformación deja de tapar los deslizadores: pasa a un desplegable propio con nombre claro, fuera de los deslizadores (pedido por el responsable).
-- [~] P.3 Encuadre: el personaje entero en la vista al animar y al cambiar la altura.
+- [x] P.2 El informe de deformación deja de tapar los deslizadores: pasa a un desplegable propio con nombre claro, fuera de los deslizadores (pedido por el responsable).
+- [x] P.3 Encuadre: el personaje entero en la vista al animar y al cambiar la altura.
 - [x] P.4 Atajos (Ctrl+S, Ctrl+O, Ctrl+E) y aviso de cambios sin guardar al cerrar.
 - [x] P.5 Textos claros: «Rim» con nombre en español, decimales con coma en el informe, recordar la última carpeta.
 - [x] P.6 Paquete más ligero: `UAL1_Standard.glb` solo con las animaciones que se usan.
 - [x] P.7 Icono propio de la ventana (lo eliges tú).
-- [~] P.8 Ctrl + arrastrar desplaza la cámara (cursor de mano; Inicio la centra) y botón «Comandos» con los atajos (pedido por el responsable).
+- [x] P.8 Ctrl + arrastrar desplaza la cámara (cursor de mano; Inicio la centra) y botón «Comandos» con los atajos (pedido por el responsable).
 
 **Hecho cuando:** nada de la lista se nota al usarlo y pasan todas las pruebas.
 
@@ -230,7 +230,8 @@ Según `diseno/maqueta-pestana-cuerpo.html`.
 - [x] IU.4 Barra superior: marca, archivo con •, pestañas (Exportar ya no es pestaña: D35) y Abrir, Guardar, Exportar arriba.
 - [x] IU.5 Panel izquierdo: silueta de zonas (propia, por código) y lista; Plantillas «Pronto».
 - [x] IU.6 Filas de deslizador nuevas (0–100, ↺, relleno desde el neutro, ayuda), buscador; las pestañas cambian solo el panel derecho y Estilo tiene el Acabado.
-- [~] IU.8 Barra de estado: pastilla del informe, altura y cabezas en vivo (en reposo) y presupuesto.
+- [x] IU.8 Barra de estado: pastilla del informe, altura y cabezas en vivo (en reposo) y presupuesto.
+- [ ] IU.9 Ajustes: tema, tamaño de la interfaz (90–150 %) y «Reducir animaciones», en un diálogo y guardados en `user://ajustes.cfg`.
 
 ---
 
@@ -300,3 +301,5 @@ Según `diseno/maqueta-pestana-cuerpo.html`.
 | 2026-11-19 | IU.6 | Ficha `ruta/pasos/IU.6_filas_y_estilo.md`. **6a:** `slider_row.gd` (nombre + insignia; barra `BarraNeutro` con la pista, el relleno desde el neutro y su marca dibujados por un hijo `show_behind_parent`, alineados con el centro del agarrador; agarrador propio: SVG con los colores del tema; número 0–100 que se escribe; ↺ y doble clic en el nombre; extremos con nombre) y `textos/ayuda_deslizadores.csv` (40 ayudas propias; «Keep File» y en el filtro del `.pck`). **6b:** `slider_panel.gd` reescrito: una zona con título y «n ajustes», «Buscar ajuste…» (nombre y ayuda, sin mayúsculas ni tildes), Simetría (una fila «⇆» por pareja; sin ella, izq. y der.); sin cabeceras ni Deshacer/Rehacer (arriba, y ahora al momento con `editor.changed`). **6c:** `main.gd`: fondo `Fondo` del tema detrás de todo; [zonas] [<] [vista + informe] [panel derecho 360 px = las pestañas]: Cuerpo = ajustes, Estilo = Acabado, elegir zona vuelve a Cuerpo. `project.godot`: ventana de 1280 × 720 (la guía; antes 1152 × 648). `capturar_ventana.gd`: `window_set_size` (en Windows `root.size` no basta) y captura `4_estilo`. Pruebas: nueva `probar_fila.gd`; adaptadas `probar_panel.gd` (Deshacer de arriba, `open`, simetría, buscador: «ancho» = 6 ajustes de **5** zonas, Torso tiene dos), `probar_ventana.gd` (Estilo sin «Pronto», vista y zonas fijas), `probar_zonas.gd` (ventana a 1280 × 720: sin ventana mide 64 × 64 y la medida de plegar no valía; ahora 588 → 872 px), `probar_tema.gd` (`` en el patrón de `icon(`; variaciones de `HSlider` y `Panel`). Detectan el fallo: relleno desde la izquierda (2), buscar solo en el nombre (5 en vez de 6), sin volver a Cuerpo al elegir zona (1). Pasan las 18 pruebas de la ventana y la autoprueba. Capturas: `pruebas/capturas/interfaz/iu6/` (4 por tema). Falta: tu juicio |
 | 2026-11-19 | IU.6 | Cerrado: el responsable lo aprueba. Se paró la tanda de pruebas pesadas: en Windows no terminan porque necesitan `pruebas/fase_*/salida/` de Blender (sin él, error al empezar y Godot no sale); se lanzan en Linux (lista en `ruta/TRABAJO_WINDOWS.md`) |
 | 2026-11-19 | IU.8 | Ficha `ruta/pasos/IU.8_barra_de_estado.md`. **8a:** `measures.gd` (barbilla por la regla del 3.12, elegida una vez en reposo; altura y cabezas con la muestra de `CharacterBox`); `character_box.gd`: muestras extra y `points()` (`measure` la usa). **8b:** `status_bar.gd` (pastilla con icono y texto del peor nivel, abre el informe; «1,66 m · 7,4 cabezas»; «26.756 triángulos · 53 huesos»: los de deformación del manifiesto, no los 57 del maniquí); variación `BarraEstado`; los niveles colorean también el icono. `main.gd`: la barra abajo; mide al encuadrar (`frame_timer`) y al cambiar el informe, solo en reposo. Prueba nueva `probar_medidas.gd`: **medido** neutro 1,6594 m y 7,378 cabezas, rápida = exacta (límites PROVISIONAL ± 1 mm y ± 0,05 cabezas); Altura a 1 → × 1,15; sentado no cambia la medida. Detecta el fallo (medir sin mirar la pose: sentado da 1,39 m). Pasan las 19 pruebas de la ventana, `probar_datos`, `probar_icono`, `probar_licencias` y el `.pck`. Coste: medidas 0,6 ms, encuadre 0,7 ms, barra de arriba 0,3 ms. `probar_exportar_hilo` falla a veces en este equipo (418 ms con todo en serie; sola 221–224 ms; límite 300): va justa, no es de IU.8. Capturas: `pruebas/capturas/interfaz/iu8/`. Falta: tu juicio y aprobar los dos límites |
+| 2026-11-19 | traspaso | Rama `traspaso` integrada en Linux (4 commits: `.uid`, P.6, D42, P.4–P.8 e IU.1–IU.8). Pasan 44 pruebas de Godot sin ventana, `probar_datos`, `probar_licencias`, `probar_icono` y la autoprueba. No lanzadas: las que necesitan ventana o la salida de Blender (lista en `ruta/TRABAJO_WINDOWS.md`) |
+| 2026-11-19 | P.2, P.3, P.8, IU.8 | Cerrados: el responsable los prueba a mano («todo perfecto»; Ctrl + arrastrar, Inicio y «Comandos» funcionan) y aprueba IU.8 tal como está, con sus límites (± 1 mm y ± 0,05 cabezas, ya sin `PROVISIONAL`). `ruta/PENDIENTES.md` al día. Ficha nueva `ruta/pasos/IU.9_ajustes.md` |
