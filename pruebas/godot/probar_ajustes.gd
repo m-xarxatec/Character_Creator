@@ -27,11 +27,13 @@ func _initialize() -> void:
 
 	# 2. Desde el diálogo: se aplican al momento y se guardan.
 	main.open_settings()
+	check("2 al 100 % no hay aviso de tamaño", not main.settings.scale_warning.visible)
 	main.settings.theme_option.select(1)
 	main.settings.theme_option.item_selected.emit(1)
 	main.settings.scale_option.select(3)
 	main.settings.scale_option.item_selected.emit(3)
 	main.settings.reduce_box.button_pressed = true
+	check("2 a más del 100 % avisa (menos nítido, panel cortado)", main.settings.scale_warning.visible)
 	main.settings.hide()
 	check("2 Claro cambia el tema y el sol/luna", not main.dark
 		and main.theme_button.tooltip_text == "Pasar al tema oscuro", main.theme_button.tooltip_text)

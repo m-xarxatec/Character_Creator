@@ -12,6 +12,8 @@ cerrarlo.
 - En la barra de abajo, delante de «Comandos» (que sigue junto al sol/luna, P.8b), hay un botón «Ajustes» que abre un diálogo con:
   - **Tema:** Oscuro / Claro. Es el mismo ajuste que el botón sol/luna (D34), que se queda: los dos van a la par.
   - **Tamaño de la interfaz:** 90, 100, 110, 125 y 150 %.
+    A más del 100 % avisa debajo de que el personaje se ve menos nítido y de que, si la ventana es pequeña, el panel
+    de la derecha puede quedar cortado (decidido por el responsable tras medirlo: se queda como opción, con aviso).
   - **Reducir animaciones:** una casilla. Activada, la cámara llega de golpe al encuadre (P.3), sin el movimiento suave.
 - Cada cambio se ve al momento (sin botón «Aplicar») y se guarda en `user://ajustes.cfg`; al volver a abrir el
   programa sigue igual.
