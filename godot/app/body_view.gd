@@ -331,7 +331,7 @@ func highlight(zone: String, at: Vector2) -> void:
 		zone_material.set_shader_parameter("zone_mask", mask)
 		overlay = zone_material
 		zone_label.text = "%s · clic para editar" % zone
-		zone_label.position = at + Vector2(16, 16)
+		zone_label.position = at + Vector2(18, 18)
 	species.mesh.material_overlay = overlay
 	style.material_overlay = overlay
 
@@ -340,7 +340,7 @@ func _add_zone_label() -> void:
 	zone_material = ShaderMaterial.new()
 	zone_material.shader = ZONE_SHADER
 	zone_label = Label.new()
-	zone_label.theme_type_variation = "Pista"
+	zone_label.theme_type_variation = "EtiquetaZona"  # IU.12: con fondo, que la malla no la tape
 	zone_label.mouse_filter = MOUSE_FILTER_IGNORE
 	zone_label.visible = false
 	add_child(zone_label)

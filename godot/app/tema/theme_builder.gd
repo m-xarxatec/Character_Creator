@@ -12,7 +12,7 @@ const VARIATIONS := {
 	"BotonPrincipal": "Button", "BotonFantasma": "Button", "Chip": "Button", "Tarjeta": "PanelContainer",
 	"TituloZona": "Label", "InsigniaForma": "Label", "InsigniaProporcion": "Label", "InsigniaCrear": "Label",
 	"Pista": "Label", "NivelBien": "Button", "NivelAviso": "Button", "NivelError": "Button", "BarraNeutro": "HSlider",
-	"Fondo": "Panel", "BarraEstado": "PanelContainer",
+	"Fondo": "Panel", "BarraEstado": "PanelContainer", "EtiquetaZona": "Label",
 }
 ## Paso IU.6a: agarrador de la barra (guía §4): círculo blanco con borde del acento; 18 px y 20 px al pasar el ratón.
 const GRABBER_SVG := "<svg xmlns=\"http://www.w3.org/2000/svg\" width=\"%d\" height=\"%d\"><circle cx=\"%f\" cy=\"%f\" r=\"%f\" fill=\"#%s\" stroke=\"#%s\" stroke-width=\"2\"/></svg>"
@@ -76,6 +76,15 @@ static func icon(icon_name: String) -> Texture2D:
 		image.load_svg_from_string(FileAccess.get_file_as_string(path), 1.0)
 		_icons[icon_name] = ImageTexture.create_from_image(image)
 	return _icons[icon_name]
+
+
+## Paso IU.12: un icono blanco teñido de un color (para los que Godot no tiñe, como el right_icon de LineEdit).
+static func tinted(icon_name: String, color: Color) -> ImageTexture:
+	var image := icon(icon_name).get_image()
+	for y in image.get_height():
+		for x in image.get_width():
+			image.set_pixel(x, y, Color(color, image.get_pixel(x, y).a))
+	return ImageTexture.create_from_image(image)
 
 
 static func _font_file() -> FontFile:
@@ -192,6 +201,8 @@ static func _slider(theme: Theme, c: Dictionary) -> void:
 	theme.set_stylebox("slider", "HSlider", track)
 	theme.set_stylebox("grabber_area", "HSlider", box(c["acento"], pill, 2))
 	theme.set_stylebox("grabber_area_highlight", "HSlider", box(c["acento_hover"], pill, 2))
+	theme.set_icon("grabber", "HSlider", _grabber(GRABBER_SIZE, c))  # IU.12: el de Godot es blanco y en claro no se ve
+	theme.set_icon("grabber_highlight", "HSlider", _grabber(GRABBER_HOVER_SIZE, c))
 	# BarraNeutro: la pista y el relleno los dibuja la fila (slider_row.gd) desde el neutro; aquí, transparentes.
 	var empty := StyleBoxEmpty.new()
 	empty.content_margin_top = 2
@@ -230,7 +241,9 @@ static func _fields(theme: Theme, c: Dictionary) -> void:
 	_set_boxes(theme, "LineEdit", {"normal": box(c["panel_2"], r, 8, c["borde_fuerte"], 1),
 		"focus": _focus(c, r), "read_only": box(c["panel_2"], r, 8, c["borde"], 1)})
 	_set_colors(theme, "LineEdit", {"font_color": c["texto"], "font_placeholder_color": c["texto_3"],
-		"caret_color": c["acento_linea"], "selection_color": c["acento_suave"]})
+		"caret_color": c["acento_linea"], "selection_color": c["acento_suave"],
+		"clear_button_color": c["texto_2"], "clear_button_color_pressed": c["acento_linea"]})
+	theme.set_icon("buscar", "LineEdit", tinted("buscar", c["texto_2"]))  # IU.12: Godot no tiñe el right_icon
 
 
 ## Paso IU.5: colores de la silueta de zonas (zone_silhouette.gd los pide al tipo «Silueta»).
@@ -248,6 +261,9 @@ static func _tooltip(theme: Theme, c: Dictionary) -> void:
 	theme.set_stylebox("panel", "TooltipPanel", box(c["texto"], Tokens.RADIO["boton"], 8))
 	theme.set_color("font_color", "TooltipLabel", c["panel"])
 	theme.set_font_size("font_size", "TooltipLabel", Tokens.LETRA["valor"])
+	theme.set_stylebox("normal", "EtiquetaZona", box(c["texto"], Tokens.RADIO["boton"], 6))  # IU.12: como la ayuda
+	theme.set_color("font_color", "EtiquetaZona", c["panel"])
+	theme.set_font_size("font_size", "EtiquetaZona", Tokens.LETRA["valor"])
 
 
 static func _scroll(theme: Theme, c: Dictionary) -> void:

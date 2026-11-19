@@ -2,12 +2,14 @@ extends SceneTree
 # Paso IU.1a: tokens y tema de la interfaz (godot/app/tema/). Sin ventana. Comprobaciones de diseno/GUIA_INTERFAZ.md §8:
 # (1) claro y oscuro con las mismas claves; (2) contrastes WCAG ≥ 4,5 del texto y ≥ 3 del agarrador (D43);
 # (3) estilo para cada control de la guía §5.2 y todas las variaciones; (4) ninguna letra por debajo de 12 px.
-# (5) IU.1b: sin colores ni estilos a mano fuera de tema/; (6) IU.1c: botón de tema; (7) IU.2: iconos; (8) casillas.
+# (5) IU.1b: sin colores ni estilos a mano fuera de tema/; (6) IU.1c: botón de tema; (7) IU.2: iconos; (8) casillas, tirador, lupa y etiqueta de zona (IU.12).
 # Uso: (ulimit -v 4000000; timeout 120 godot --headless --path pruebas/godot -s probar_tema.gd 2>&1 | grep -E 'FALLO|MEDIDA|RESULTADO|ERROR')
-# Que detecta el fallo: poner texto_3 a #B0B0B0 en tokens.gd -> falla la (2); quitar los iconos de CheckBox -> falla la (8).
+# Que detecta el fallo: poner texto_3 a #B0B0B0 en tokens.gd -> falla la (2); quitar los iconos de CheckBox -> falla la (8);
+# no teñir la lupa (slider_panel._tint_search) -> falla la (6).
 
 const TEXT_MIN := 4.5
 const GRABBER_MIN := 3.0
+const GRABBER_SIZE_EDGE := 1  # columna del borde (acento) del tirador de 18 px
 ## Texto sobre fondo que tiene que leerse (guía §3.1).
 const TEXT_PAIRS := [
 	["texto", "panel"], ["texto_2", "panel"], ["texto_3", "panel"], ["texto", "fondo"], ["texto_2", "fondo"],
@@ -63,6 +65,13 @@ func _initialize() -> void:
 		var fill: Color = theme.get_icon("checked", "CheckBox").get_image().get_pixel(4, 4)
 		var boxes := minf(contrast(edge, c["panel"]), contrast(fill, c["panel"]))
 		check("(8) %s: casillas ≥ %.0f:1 sobre el panel" % [mode, GRABBER_MIN], boxes >= GRABBER_MIN, "%.2f" % boxes)
+		# (8) IU.12: el tirador de los deslizadores normales, la lupa y la etiqueta de la zona también se ven.
+		var knob: Color = theme.get_icon("grabber", "HSlider").get_image().get_pixel(GRABBER_SIZE_EDGE, 9)
+		var lens: Color = _opaque_pixel(theme.get_icon("buscar", "LineEdit").get_image())
+		var label := contrast(c["panel"], c["texto"])
+		var seen := minf(minf(contrast(knob, c["panel"]), contrast(lens, c["panel_2"])), label)
+		check("(8) %s: tirador, lupa y etiqueta de zona ≥ %.0f:1" % [mode, GRABBER_MIN], seen >= GRABBER_MIN
+			and theme.has_stylebox("normal", "EtiquetaZona"), "%.2f" % seen)
 		var missing: Array[String] = []
 		for type: String in STYLES:
 			for style: String in STYLES[type]:
@@ -142,6 +151,9 @@ func _check_theme_button(app: String) -> void:
 	main.theme_button.pressed.emit()
 	check("(6) el botón cambia a claro y lo guarda", not main.dark and not Settings.get_dark()
 		and main.theme_button.tooltip_text.contains("oscuro") and main.theme != null)
+	var lens: Color = _opaque_pixel(main.slider_panel.search.right_icon.get_image())
+	var lens_color: Color = load(app.path_join("tema/tokens.gd")).palette(false)["texto_2"]
+	check("(6) en claro, la lupa de «Buscar ajuste…» se tiñe (IU.12)", lens.is_equal_approx(lens_color), str(lens))
 	main.free()
 	main = Main.new()
 	root.add_child(main)
@@ -152,6 +164,16 @@ func _check_theme_button(app: String) -> void:
 
 
 ## Contraste WCAG 2 entre dos colores (1 a 21).
+## Primer píxel opaco de un icono (su color sin el alfa).
+static func _opaque_pixel(image: Image) -> Color:
+	for y in image.get_height():
+		for x in image.get_width():
+			var pixel := image.get_pixel(x, y)
+			if pixel.a > 0.99:
+				return Color(pixel, 1.0)
+	return Color.TRANSPARENT
+
+
 static func contrast(a: Color, b: Color) -> float:
 	var la := _luminance(a)
 	var lb := _luminance(b)

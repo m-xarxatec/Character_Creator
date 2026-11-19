@@ -142,10 +142,10 @@ func _add_header(list: VBoxContainer) -> void:
 	list.add_child(top)
 	search = LineEdit.new()
 	search.placeholder_text = "Buscar ajuste…"
-	search.right_icon = ThemeBuilder.icon("buscar")
 	search.clear_button_enabled = true
 	search.text_changed.connect(func(_text: String) -> void: _show_rows())
 	list.add_child(search)
+	_tint_search()
 	symmetry_box = CheckBox.new()
 	symmetry_box.text = "Simetría"
 	symmetry_box.tooltip_text = "Mover un lado mueve también el otro"
@@ -196,3 +196,14 @@ func _add_row(box: VBoxContainer, row: Dictionary, side: String) -> void:
 	rows[line.key] = line
 	sliders[line.key] = line.slider
 	badges[line.key] = line.badge
+
+
+## Paso IU.12: la lupa, teñida por el tema (Godot no tiñe el right_icon); se cambia con el tema claro u oscuro.
+func _notification(what: int) -> void:
+	if what == NOTIFICATION_THEME_CHANGED:
+		_tint_search()
+
+
+func _tint_search() -> void:
+	if search != null and has_theme_icon("buscar", "LineEdit"):  # de este nodo: el aviso llega antes que a search
+		search.right_icon = get_theme_icon("buscar", "LineEdit")
