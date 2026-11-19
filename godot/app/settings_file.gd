@@ -1,7 +1,7 @@
 extends RefCounted
 # Paso P.5c: ajustes del programa que sobreviven al cerrarlo, en user://ajustes.cfg (vale en Linux, Windows, Android y
 # dentro del build, donde res:// es de solo lectura): la última carpeta de los diálogos (P.5c), el tema (IU.1c), el
-# tamaño de la interfaz y «Reducir animaciones» (IU.9).
+# tamaño de la interfaz y «Reducir animaciones» (IU.9) y si ya se vio la pista de la vista (IU.10a).
 # Un archivo roto o que falta da los valores por defecto.
 # Uso:
 #   SettingsFile.set_folder(path.get_base_dir())
@@ -9,6 +9,7 @@ extends RefCounted
 #   var dark := SettingsFile.get_dark()       # true si no hay ajuste (D34: oscuro por defecto)
 #   var scale := SettingsFile.get_ui_scale()  # uno de SCALES; sin ajuste, el más cercano al de la pantalla
 #   var reduce := SettingsFile.get_reduce_motion()  # false si no hay ajuste
+#   var seen := SettingsFile.get_hint_seen()  # false si no hay ajuste
 
 const PATH := "user://ajustes.cfg"
 const SCALES := [0.9, 1.0, 1.1, 1.25, 1.5]  # paso IU.9: lista fija (con un deslizador la ventana cambiaría al arrastrar)
@@ -59,6 +60,15 @@ static func set_reduce_motion(on: bool) -> void:
 	_write("interfaz", "reducir_animaciones", on)
 
 
+## Paso IU.10a: la pista sobre la vista solo sale hasta el primer giro.
+static func get_hint_seen() -> bool:
+	return _read_bool("pista_vista", false)
+
+
+static func set_hint_seen(seen: bool) -> void:
+	_write("interfaz", "pista_vista", seen)
+
+
 ## Un ajuste de [interfaz] que debe ser bool; si no lo es (archivo roto o a mano), el valor por defecto.
 static func _read_bool(key: String, fallback: bool) -> bool:
 	var value: Variant = _read("interfaz", key, fallback)
@@ -67,7 +77,7 @@ static func _read_bool(key: String, fallback: bool) -> bool:
 
 static func _read(section: String, key: String, fallback: Variant) -> Variant:
 	var config := ConfigFile.new()
-	if config.load(PATH) != OK:
+	if config.load(PATH) != OK or not config.has_section_key(section, key):  # get_value con null por defecto da error
 		return fallback
 	return config.get_value(section, key, fallback)
 

@@ -10,6 +10,7 @@ extends SubViewportContainer
 # Paso P.8a: con Ctrl pulsado, el cursor sobre la vista es una mano (desplazar la cámara).
 # Paso P.3: frame_character() encuadra el personaje entero (al cargar, RESTYLE_WAIT s después de mover un deslizador, al cambiar la pose o
 # la animación y al cambiar el tamaño de la vista); no en cada fotograma.
+# Paso IU.10a: la primera vez, una pista abajo de la vista (HINT); se oculta al primer giro y no vuelve (settings_file.gd).
 # Paso 5.9: set_animation(ROM_ID) recorre el rango de movimiento (rom.gd): cada fotograma vuelve a la pose T y gira.
 
 const SpeciesData := preload("../addons/creador/species_data.gd")
@@ -28,6 +29,8 @@ const Sockets := preload("../addons/creador/sockets.gd")
 const CharacterChecks := preload("../addons/creador/character_checks.gd")
 const MeshChecks := preload("../addons/creador/mesh_checks.gd")
 const CharacterBox := preload("character_box.gd")
+const SettingsFile := preload("settings_file.gd")
+const HINT := "Arrastra para girar · Rueda para acercar · F1 atajos"  # paso IU.10a
 
 const SPECIES := "humana"
 const DATA_RES := "res://datos"
@@ -58,6 +61,7 @@ var restyle_timer: Timer
 var frame_timer: Timer  # paso P.3: encuadrar al dejar quietos los deslizadores
 var character_box  # CharacterBox
 var viewport: SubViewport
+var hint: Label  # paso IU.10a (null si ya se vio)
 
 
 func _ready() -> void:
@@ -82,6 +86,8 @@ func _ready() -> void:
 		frame_character()
 		camera.snap()
 		viewport.size_changed.connect(frame_character)
+		if not SettingsFile.get_hint_seen():
+			_add_hint()
 	if error:
 		push_error(error)
 		var label := Label.new()
@@ -225,6 +231,23 @@ func frame_character() -> void:
 	var box: AABB = to_world * character_box.measure(species.mesh, species.skeleton)
 	var size := Vector2(viewport.size)
 	camera.frame(box, size.x / size.y if size.y > 0 else 1.0)
+
+
+## Paso IU.10a: pista centrada abajo; no tapa el ratón.
+func _add_hint() -> void:
+	hint = Label.new()
+	hint.text = HINT
+	hint.mouse_filter = MOUSE_FILTER_IGNORE
+	hint.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
+	hint.vertical_alignment = VERTICAL_ALIGNMENT_BOTTOM
+	hint.set_anchors_and_offsets_preset(PRESET_FULL_RECT, PRESET_MODE_MINSIZE, 24)
+	add_child(hint)
+	camera.rotated.connect(_on_first_rotation, CONNECT_ONE_SHOT)
+
+
+func _on_first_rotation() -> void:
+	hint.visible = false
+	SettingsFile.set_hint_seen(true)
 
 
 func _add_world() -> void:

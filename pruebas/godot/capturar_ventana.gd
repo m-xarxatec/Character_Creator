@@ -5,6 +5,7 @@ extends SceneTree
 # 3_animacion_desplegado.png (Reposo, informe desplegado) y 4_estilo.png (pestaña Estilo, paso IU.6c).
 # Paso IU.9: 5_ajustes.png (el diálogo) y 6_tamano_150.png (al 150 %, a 1920 × 1080), en oscuro y en claro (_claro);
 # borra después el user://ajustes.cfg de este proyecto.
+# Paso IU.10a: 7_pista.png (la pista sobre la vista) en oscuro y en claro; borra el archivo de ajustes también al empezar.
 
 var out: String
 
@@ -13,6 +14,7 @@ func _initialize() -> void:
 	var root_dir := ProjectSettings.globalize_path("res://").path_join("../..").simplify_path()
 	out = root_dir.path_join("pruebas/capturas/ventana")
 	DirAccess.make_dir_recursive_absolute(out)
+	DirAccess.remove_absolute(ProjectSettings.globalize_path("user://ajustes.cfg"))  # paso IU.10a: que salga la pista
 	root.size = Vector2i(1280, 720)
 	DisplayServer.window_set_size(Vector2i(1280, 720))  # en Windows root.size solo no cambia la ventana
 	var main: Control = load(root_dir.path_join("godot/app/main.gd")).new()
@@ -30,6 +32,7 @@ func _initialize() -> void:
 	for dark: bool in [true, false]:
 		var suffix := "" if dark else "_claro"
 		main.set_dark(dark)
+		await _shoot("7_pista" + suffix)
 		main.open_settings()
 		await _shoot("5_ajustes" + suffix)
 		main.settings.hide()

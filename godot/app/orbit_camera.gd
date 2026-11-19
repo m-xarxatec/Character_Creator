@@ -6,6 +6,7 @@ extends Camera3D
 # Paso P.8a: Ctrl + arrastrar desplaza la cámara en el plano de la pantalla (pan, aparte de target: el encuadre no lo
 # borra); Inicio la vuelve a centrar.
 # Paso IU.9: con instant («Reducir animaciones»), frame() llega de golpe.
+# Paso IU.10a: rotated avisa de cada giro (no del zoom ni del desplazamiento): la vista oculta su pista.
 
 const MIN_PITCH := -10.0  # grados: un poco por debajo de la cintura, sin darse la vuelta
 const MAX_PITCH := 60.0
@@ -27,6 +28,8 @@ var goal_target := target
 var goal_distance := 3.2
 var pan := Vector3.ZERO  # paso P.8a: desplazamiento del punto mirado
 var instant := false  # paso IU.9: «Reducir animaciones»
+
+signal rotated  # paso IU.10a
 
 
 func _ready() -> void:
@@ -89,6 +92,7 @@ func rotate_by(pixels: Vector2) -> void:
 	yaw = fposmod(yaw - pixels.x * DEGREES_PER_PIXEL, 360.0)
 	pitch = clampf(pitch + pixels.y * DEGREES_PER_PIXEL, MIN_PITCH, MAX_PITCH)
 	_place()
+	rotated.emit()
 
 
 ## pixels: lo que se ha arrastrado el ratón con Ctrl. Lo que hay bajo el ratón lo sigue; la cámara no gira.
