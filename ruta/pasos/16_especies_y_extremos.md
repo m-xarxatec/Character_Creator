@@ -12,7 +12,7 @@
 | --- | --- | --- | --- | --- | --- |
 | ★ 16.1 | Largo y grosor de **un** hueso (brazo), de punta a punta: tabla → núcleo → panel → `.glb` → prueba | M | Medio: diseño razonado pero **no probado** | **fuerte** | MVP |
 | 16.2 | Rangos ampliados y deslizador «Exageración» | S–M | Medio: las formas fuera de rango se rompen | medio | 16.1 |
-| 16.3 | Auditoría de especie y segunda base (chibi adulto) | XL | Alto: assets y pipeline de Blender | fuerte | Fase 9, Blender |
+| 16.3 | Auditoría de especie y segunda base (chibi) | XL | Alto: assets y pipeline de Blender | fuerte | Fase 9, Blender |
 | 16.4 | Formas dispersas (solo si las medidas lo piden) | XL | Alto: cambia cómo se dibuja el personaje vivo | fuerte | medidas de 8.5 y O6 |
 | 16.5 | Escultura libre (empujar, tirar, alisar) | XL | Muy alto | fuerte | 16.4 o capa de CPU |
 | 16.6 | Piernas de animal (talón elevado) | L | Alto: animaciones humanoides sobre otra pierna | fuerte | 16.1, 16.3 |
@@ -30,7 +30,7 @@
 
 ## Límites que se revisan en cada paso de esta fase
 
-Parte de un adulto · sin detalle anatómico bajo la prenda base · assets CC0 o propios · las referencias CC-BY-SA solo se miran.
+Edades de 5 a 60 años (D42) · sin detalle anatómico bajo la prenda base · assets CC0 o propios · las referencias CC-BY-SA solo se miran.
 
 ## Juicio visual
 

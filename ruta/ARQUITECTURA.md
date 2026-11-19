@@ -224,7 +224,7 @@ Cuando llegue, el manifiesto (versión nueva) añade: `"capacidades": {"perfil":
 
 **Bases de estilo** (chibi, heroico, esbelto): son especies con la misma lista de huesos y otra malla o tabla. Una base **no se cambia a mitad de edición** (ya decidido en `IDEAS.md`).
 
-**Límites del proyecto, como lista de revisión de cada especie o base nueva:** parte de un adulto; sin detalle anatómico bajo la prenda base; assets CC0 o propios. Va en la ficha de la especie y la comprueba el responsable. El código no puede comprobarlo.
+**Límites del proyecto, como lista de revisión de cada especie o base nueva:** edades de 5 a 60 años (D42); sin detalle anatómico bajo la prenda base; assets CC0 o propios. Va en la ficha de la especie y la comprueba el responsable. El código no puede comprobarlo.
 
 ---
 

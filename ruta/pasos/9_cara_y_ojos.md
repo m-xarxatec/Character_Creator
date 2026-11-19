@@ -27,7 +27,7 @@
 - **Nombres:** usar los de VRM 1.0 para las expresiones (`happy`, `angry`, `sad`, `surprised`, `blink`, `aa`, `ih`, `ou`, `ee`, `oh`), así la Fase 17 no renombra nada. Son nombres de una especificación abierta, no un asset.
 - **Origen de las formas de expresión:** MakeHuman trae unidades de expresión en sus assets CC0 (**NO VERIFICADO** que estén en el paquete instalado y que su licencia sea CC0: comprobar en `CREDITOS.md` y en la página de assets antes de usarlas). Plan B: hacerlas por script, como la cara anime.
 - **Ojos (9.4):** esfera achatada propia + shader. El iris se dibuja con matemáticas en el shader (círculos y degradados), no con una textura: pesa 0 bytes, no tiene licencia y se anima (pupila). Los ojos provisionales con `Decal` de `probar_estilo.gd` se retiran: no existen en Compatibility (`PLATAFORMAS.md` §3).
-- **Límite del proyecto:** el deslizador de edad nunca baja de adulto joven. Los rasgos de cara no deben permitir, combinados, una cara infantil sobre un cuerpo adulto de proporciones infantiles. El chibi es estilización, no edad. Revisión del responsable en cada paso con capturas.
+- **Límite del proyecto:** edades de 5 a 60 años (D42, X.17). El chibi es estilización, no edad. Revisión del responsable en cada paso con capturas.
 
 ## Juicio visual
 

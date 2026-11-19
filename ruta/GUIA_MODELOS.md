@@ -81,7 +81,7 @@ Cuando aparezca una, se para. Se escribe qué pasó, en 3 líneas, y se espera.
 7. **Dos documentos se contradicen** (ficha y `PLAN.md`, ficha y código). No elijas: pregunta.
 8. **El código real no coincide con lo que dice la ficha** (una función con otra firma, un archivo que no existe). Las fichas se escribieron el 2026-11-16 sobre el commit `61aaee9`; el código puede haber cambiado.
 9. **Vas a escribir más de unas 150 líneas** en un paso que la ficha describe como pequeño.
-10. **Algo toca los límites del proyecto:** personajes adultos, sin detalle anatómico bajo la prenda base, assets solo CC0 o propios, nada de `referencias/` en operaciones geométricas.
+10. **Algo toca los límites del proyecto:** edades de 5 a 60 años (D42), sin detalle anatómico bajo la prenda base, assets solo CC0 o propios, nada de `referencias/` en operaciones geométricas.
 11. **Vas a nombrar `app/` desde `godot/addons/creador/`.** El núcleo no conoce la interfaz (`probar_ventana.gd` lo vigila).
 12. **Necesitas instalar algo, usar la red o un comando de git que cambia el repositorio.**
 

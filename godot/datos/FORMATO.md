@@ -93,7 +93,7 @@ partes está en su valor neutro (peso 0), la corrección no entra. Hay correccio
 - MPFB descarta cada combinación de macros con peso < 0,01, y eso da saltos de hasta ~3 mm (sobre todo en el pecho).
   El conversor mide sin ese descarte, así que las formas siguen la mezcla de MakeHuman de forma continua.
 - Godot no necesita saber nada de MakeHuman: le basta con multiplicar.
-- Las macros que no están en la tabla se quedan en su valor por defecto: **edad** 0,5 (adulto joven; el MVP solo hace adultos), **altura** 0,5 (la altura se cambia con la escala del hueso `Root`, que es Proporción), proporciones y etnia.
+- Las macros que no están en la tabla se quedan en su valor por defecto: **edad** 0,5 (joven; más edades en X.17), **altura** 0,5 (la altura se cambia con la escala del hueso `Root`, que es Proporción), proporciones y etnia.
 
 ## Formas de cara (paso 3.14)
 

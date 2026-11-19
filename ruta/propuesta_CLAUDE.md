@@ -18,7 +18,6 @@
 +3. **Si dudas, pregunta** (máximo 3 preguntas a la vez). No asumas decisiones pendientes: están en `ruta/DECISIONES.md` (nombre definitivo, renderizador, pose de exportación…). Plataformas ya decididas: Linux y Windows, editor completo; Android, solo estudio de poses (no exporta `.glb`).
  9. **Los límites de las pruebas no se tocan solos.** Cambiar el límite de una prueba requiere propuesta y aprobación, con el motivo y la medida real.
 +10. **Sin ficha no hay paso.** Cada paso se hace con su ficha de `ruta/pasos/`: solo los archivos que lista y con el diseño que da. Si la ficha pide un nivel de modelo mayor que el tuyo, o aparece una señal de alarma de `ruta/GUIA_MODELOS.md` §3, para y dilo.
-+11. **Límites del personaje.** Siempre adulto (el chibi y las especies son estilizaciones de un adulto); sin detalle anatómico bajo la prenda base; `referencias/` solo se mira, nunca entra en una operación geométrica.
 
 @@ ## Modo ligero (ahorro de tokens)
 -- Usa Fable para lo difícil; si un paso es sencillo, avísame para cambiar a un modelo más barato.
@@ -37,7 +36,6 @@
 +- Un límite nuevo de una prueba se marca `# PROVISIONAL` hasta que lo apruebe con la medida real.
 ```
 
-Nota sobre la regla 11: los tres límites ya están repartidos entre `CLAUDE.md` («Cuerpo: adulto, neutro, sin detalle anatómico»), `IDEAS.md` y `GUIA_ESTILO.md`. La regla los junta porque las fases de especies y escultura (16) los ponen a prueba y un modelo sencillo no leerá los tres documentos. Si se prefiere no alargar las reglas de oro, puede ir como fila en la tabla «Reglas del personaje exportado».
 
 ## Bloque 2 — Depende de decisiones
 
