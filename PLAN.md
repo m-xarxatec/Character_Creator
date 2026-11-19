@@ -3,7 +3,7 @@
 > Paso a paso. Un paso cada vez y siempre con aprobación (ver `CLAUDE.md`).
 > Lo que no es del MVP va a `IDEAS.md`.
 
-**Estado actual:** MVP preparado: build de Linux, README, licencias y paquete 0.1.0 listos. Nombre definitivo: GameMolde (D28). Pulido: hecho (P.1–P.8). Publicar (7.4) espera a tus juicios. Fase IU (`propuestas/expansion_v2.md` §3): IU.1, IU.2, IU.4–IU.6 e IU.8 hechos; IU.9 espera tu juicio; faltan IU.3, IU.7, IU.10 e IU.11. Falta lo tuyo: mirar capturas (5.15/5.11 y 6.3), abrir el build a mano (7.1), elegir capturas y grabar el vídeo (7.2). Lista: `ruta/PENDIENTES.md`
+**Estado actual:** MVP preparado: build de Linux, README, licencias y paquete 0.1.0 listos. Nombre definitivo: GameMolde (D28). Pulido: hecho (P.1–P.8). Publicar (7.4) espera a tus juicios. Fase IU (`propuestas/expansion_v2.md` §3): IU.1, IU.2, IU.4–IU.6 e IU.8 hechos; IU.9 hecho; faltan IU.3, IU.7, IU.10 e IU.11. Falta lo tuyo: mirar capturas (5.15/5.11 y 6.3), abrir el build a mano (7.1), elegir capturas y grabar el vídeo (7.2). Lista: `ruta/PENDIENTES.md`
 **Fichas:** cada paso pendiente tiene la suya en `ruta/pasos/` (traspaso del 2026-11-16; decisiones en `ruta/DECISIONES.md`).
 **Leyenda:** `[ ]` pendiente · `[~]` en curso · `[x]` hecho
 
@@ -231,7 +231,7 @@ Según `diseno/maqueta-pestana-cuerpo.html`.
 - [x] IU.5 Panel izquierdo: silueta de zonas (propia, por código) y lista; Plantillas «Pronto».
 - [x] IU.6 Filas de deslizador nuevas (0–100, ↺, relleno desde el neutro, ayuda), buscador; las pestañas cambian solo el panel derecho y Estilo tiene el Acabado.
 - [x] IU.8 Barra de estado: pastilla del informe, altura y cabezas en vivo (en reposo) y presupuesto.
-- [~] IU.9 Ajustes: tema, tamaño de la interfaz (90–150 %) y «Reducir animaciones», en un diálogo y guardados en `user://ajustes.cfg`.
+- [x] IU.9 Ajustes: tema, tamaño de la interfaz (90–150 %) y «Reducir animaciones», en un diálogo y guardados en `user://ajustes.cfg`.
 
 ---
 
@@ -305,3 +305,4 @@ Según `diseno/maqueta-pestana-cuerpo.html`.
 | 2026-11-19 | P.2, P.3, P.8, IU.8 | Cerrados: el responsable los prueba a mano («todo perfecto»; Ctrl + arrastrar, Inicio y «Comandos» funcionan) y aprueba IU.8 tal como está, con sus límites (± 1 mm y ± 0,05 cabezas, ya sin `PROVISIONAL`). `ruta/PENDIENTES.md` al día. Ficha nueva `ruta/pasos/IU.9_ajustes.md` |
 | 2026-11-19 | IU.9 | Ficha `ruta/pasos/IU.9_ajustes.md`. `settings_file.gd`: `get/set_ui_scale` (lista fija `SCALES` 90–150 %, el más cercano; sin ajuste, el de la pantalla), `get/set_reduce_motion`, y los `bool` comprueban el tipo (`7 == true` daba error de script). `settings_dialog.gd` (Tema, Tamaño, «Reducir animaciones»; se aplican al momento); `main.gd`: botón «Ajustes» delante de «Comandos» (`probar_comandos` pide «Comandos» junto al sol/luna), aplica al arrancar sin guardar; `orbit_camera.gd`: `instant` → `frame()` llega de golpe. Icono `ajustes` = Tabler `settings` v3.50.0 (31 iconos en `CREDITOS`). **Medido:** `content_scale_factor` escala con `stretch/mode = disabled`; `screen_get_scale()` = 1,0 en este Linux; la vista 3D se dibuja a tamaño lógico (al 150 % en 1920 × 1080: 588 × 412 px, ampliada); **al 150 % en 1280 × 720 no cabe**: el panel derecho acaba en x = 1163 de 853. `probar_ajustes.gd` (6 casos) detecta el fallo (sin `snap`: 1; sin el más cercano: 2); liberar `main` en el fotograma en que se cierra el diálogo hacía caer a Godot (señal 11): la prueba espera un fotograma. Pasan las 44 sin ventana, `probar_ajustes`, `datos`, `licencias`, `icono` y la autoprueba. Capturas `5_ajustes*` y `6_tamano_150*` en `pruebas/capturas/ventana/`. Falta: tu juicio |
 | 2026-11-19 | IU.9 | El responsable decide: el 150 % se queda como opción; a más del 100 % el diálogo avisa (menos nítido; panel derecho cortado en ventanas pequeñas). Comprobación nueva en `probar_ajustes.gd` (detecta el fallo: sin el aviso al elegir, 1) |
+| 2026-11-19 | IU.9 | Cerrado: el responsable lo aprueba. Fable ya no está disponible: IU.3 e IU.7 (marcados para Fable) quedan por decidir con qué modelo |

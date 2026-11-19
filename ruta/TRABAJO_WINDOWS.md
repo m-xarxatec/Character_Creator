@@ -21,7 +21,8 @@
 | 12 | **IU.5** Silueta de zonas (y plegar) | Cerrado | — |
 | 13 | **IU.6** Filas nuevas, buscador, pestaña Estilo | Cerrado | — |
 | 14 | **IU.8** Barra de estado (informe, altura, cabezas, presupuesto) | Cerrado | — |
-| 15 | IU.9–IU.11 (ajustes, microinteracciones, cierre); IU.3 e IU.7 con Fable | Siguiente | — |
+| 15 | **IU.9** Ajustes (tema, tamaño con aviso, reducir animaciones) | Cerrado | — |
+| 16 | IU.10–IU.11; IU.3 e IU.7 (pedían Fable) | Siguiente | Elegir modelo para IU.3 e IU.7 |
 
 ## En Linux
 
