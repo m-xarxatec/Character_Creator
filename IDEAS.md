@@ -85,6 +85,7 @@
 
 - Estética de la ventana del editor (tema, colores, tipografía, espaciado), según la maqueta. Hoy son los controles de Godot por defecto.
 - Cuando el editor esté como queremos: un comando en el PATH que lo abra con una sola orden.
+- Elegir tocando el cuerpo (IU.7) para partes pequeñas: rasgos de la cara (nariz, labios, cejas) u otras piezas, cuando el proyecto crezca.
 - Cambio de color de 120 ms al pasar el ratón por los botones (guía §3 «Movimiento»): Godot no lo anima solo; pide código en cada botón. Fuera de IU.10.
 
 ## Pack "Universal Base Characters" de Quaternius (CC0)

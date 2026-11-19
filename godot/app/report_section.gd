@@ -4,6 +4,7 @@ extends VBoxContainer
 # Uso: var section := ReportSection.new(); section.show_results(results)  /  section.clear()
 
 const ReportPanel := preload("report_panel.gd")
+const Motion := preload("motion.gd")
 const TITLE := "Informe de deformación"
 const IDLE := "pulsa Probar huesos o elige una animación"
 
@@ -29,7 +30,10 @@ func _init() -> void:
 
 func set_open(on: bool) -> void:
 	header.set_pressed_no_signal(on)
-	panel.visible = on
+	if on:
+		Motion.fade_in(panel)  # paso IU.10c
+	else:
+		panel.visible = false
 	_title(_summary_text())
 
 

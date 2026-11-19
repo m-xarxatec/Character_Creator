@@ -1,7 +1,8 @@
 extends RefCounted
 # Paso P.5c: ajustes del programa que sobreviven al cerrarlo, en user://ajustes.cfg (vale en Linux, Windows, Android y
 # dentro del build, donde res:// es de solo lectura): la última carpeta de los diálogos (P.5c), el tema (IU.1c), el
-# tamaño de la interfaz y «Reducir animaciones» (IU.9) y si ya se vio la pista de la vista (IU.10a).
+# tamaño de la interfaz y «Reducir animaciones» (IU.9), si ya se vio la pista de la vista (IU.10a) la rejilla (IU.3) y
+# «Elegir zona tocando el cuerpo» (IU.7a).
 # Un archivo roto o que falta da los valores por defecto.
 # Uso:
 #   SettingsFile.set_folder(path.get_base_dir())
@@ -10,6 +11,8 @@ extends RefCounted
 #   var scale := SettingsFile.get_ui_scale()  # uno de SCALES; sin ajuste, el más cercano al de la pantalla
 #   var reduce := SettingsFile.get_reduce_motion()  # false si no hay ajuste
 #   var seen := SettingsFile.get_hint_seen()  # false si no hay ajuste
+#   var grid := SettingsFile.get_grid()       # false si no hay ajuste
+#   var touch := SettingsFile.get_touch_zones()  # false si no hay ajuste (apagado por defecto)
 
 const PATH := "user://ajustes.cfg"
 const SCALES := [0.9, 1.0, 1.1, 1.25, 1.5]  # paso IU.9: lista fija (con un deslizador la ventana cambiaría al arrastrar)
@@ -67,6 +70,22 @@ static func get_hint_seen() -> bool:
 
 static func set_hint_seen(seen: bool) -> void:
 	_write("interfaz", "pista_vista", seen)
+
+
+static func get_grid() -> bool:
+	return _read_bool("rejilla", false)
+
+
+static func set_grid(on: bool) -> void:
+	_write("interfaz", "rejilla", on)
+
+
+static func get_touch_zones() -> bool:
+	return _read_bool("tocar_zonas", false)
+
+
+static func set_touch_zones(on: bool) -> void:
+	_write("interfaz", "tocar_zonas", on)
 
 
 ## Un ajuste de [interfaz] que debe ser bool; si no lo es (archivo roto o a mano), el valor por defecto.

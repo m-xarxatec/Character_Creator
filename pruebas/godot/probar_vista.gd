@@ -1,5 +1,6 @@
 extends SceneTree
 # Paso 4.2: vista 3D del maniquí (godot/app/body_view.gd) y cámara orbital (orbit_camera.gd). Sin ventana.
+# Borra user://ajustes.cfg al terminar: girar la cámara guarda la pista como vista (IU.10a).
 # Uso: (ulimit -v 4000000; timeout 120 godot --headless --path pruebas/godot -s probar_vista.gd 2>&1 | grep -E 'FALLO|MEDIDA|RESULTADO|ERROR')
 
 const SAME := 0.00001
@@ -19,6 +20,7 @@ func _initialize() -> void:
 		_check_camera(view.camera)
 		_check_live(view)
 	view.free()
+	DirAccess.remove_absolute(ProjectSettings.globalize_path("user://ajustes.cfg"))
 	print("RESULTADO: ", "TODO BIEN" if failures == 0 else "%d FALLOS" % failures)
 	quit(1 if failures else 0)
 

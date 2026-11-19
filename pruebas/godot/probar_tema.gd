@@ -33,7 +33,7 @@ const STYLES := {
 ## (5) Lo que no se puede escribir en app/ fuera de tema/, y los archivos que pueden (con su motivo).
 const LOOSE_COLOR_WORDS := ["Color(", "add_theme_color_override", "add_theme_font_size_override",
 	"add_theme_stylebox_override"]
-const LOOSE_COLOR_EXCEPTIONS := ["body_view.gd", "test_sword.gd"]  # fondo de la vista (hasta IU.3) y material 3D
+const LOOSE_COLOR_EXCEPTIONS := ["test_sword.gd"]  # material 3D (el fondo de la vista sale de los tokens desde IU.3)
 
 var failures := 0
 

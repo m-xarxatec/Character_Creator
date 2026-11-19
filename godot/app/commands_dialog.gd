@@ -1,10 +1,11 @@
 extends AcceptDialog
 # Paso P.8b: ventana «Comandos» con los atajos de teclado y ratón. COMMANDS es la única lista: un atajo nuevo es una
-# fila más aquí. La abre el botón «Comandos» de la barra de abajo (main.gd).
+# fila más aquí. La abre el botón «Comandos» de la barra de abajo o F1 (main.gd).
 # Uso: var dialog := CommandsDialog.new(); add_child(dialog); dialog.popup_centered()
 
 ## [teclas, qué hace], en el orden en que se enseñan.
 const COMMANDS := [
+	["F1", "Ver esta lista"],  # paso IU.10b: la primera, es la puerta a las demás
 	["Ctrl + S", "Guardar preset"],
 	["Ctrl + O", "Abrir preset"],
 	["Ctrl + E", "Exportar .glb"],

@@ -40,6 +40,7 @@ const StatusBar := preload("status_bar.gd")
 const Measures := preload("measures.gd")
 const Tokens := preload("tema/tokens.gd")
 const ZonePicker := preload("zone_picker.gd")
+const Motion := preload("motion.gd")
 const TAB_NAMES := ["Cuerpo", "Cara y ojos", "Pelo", "Ropa", "Accesorios", "Estilo"]
 const TAB_ICONS := ["cuerpo", "cara", "pelo", "ropa", "accesorios", "estilo"]  # paso IU.2
 ## Paso IU.4: pestañas que aún no existen → qué llegará (dicen «Pronto», se pueden abrir y lo cuentan).
@@ -69,6 +70,9 @@ var settings_button: Button  # paso IU.9
 var settings: AcceptDialog  # paso IU.9
 var ui_scale := 1.0  # paso IU.9
 var reduce_motion := false  # paso IU.9
+var grid := false  # paso IU.3: rejilla en el suelo de la vista
+var light_turn := 0.0  # paso IU.3: luz de vista previa, solo en esta sesión
+var light_energy := 1.0
 var dark := true  # paso IU.1c: tema en uso
 var top_bar: PanelContainer  # paso IU.4
 var undo_button: Button  # paso IU.4
@@ -112,6 +116,7 @@ func _ready() -> void:
 		zone_picker.select(slider_panel.open_zone)
 		zone_picker.zone_chosen.connect(slider_panel.open)
 		zone_picker.zone_chosen.connect(func(_zone: String) -> void: top_bar.tab_bar.current_tab = ACTIVE_TAB)
+		body_view.zone_touched.connect(_on_zone_touched)  # paso IU.7a: igual que elegirla en la silueta
 		body_actions.setup(body_view, editor)
 		finish_panel.setup(body_view)
 		body_actions.test_changed.connect(update_report)
@@ -134,12 +139,16 @@ func _ready() -> void:
 	commands_button.theme_type_variation = "BotonFantasma"
 	commands_button.tooltip_text = "Atajos de teclado y ratón"
 	commands_button.pressed.connect(func() -> void: commands.popup_centered())
+	commands_button.shortcut = _f1_shortcut()  # paso IU.10b: el atajo del botón vale esté donde esté el foco
 	body_actions.add_child(commands_button)
 	settings = SettingsDialog.new()
 	add_child(settings)
 	settings.dark_chosen.connect(set_dark)
 	settings.scale_chosen.connect(set_ui_scale)
 	settings.reduce_motion_chosen.connect(set_reduce_motion)
+	settings.grid_chosen.connect(set_grid)  # paso IU.3
+	settings.light_chosen.connect(set_light)
+	settings.touch_zones_chosen.connect(set_touch_zones)  # paso IU.7a
 	settings_button = Button.new()
 	settings_button.text = "Ajustes"
 	settings_button.icon = ThemeBuilder.icon("ajustes")
@@ -158,6 +167,10 @@ func _ready() -> void:
 	reduce_motion = SettingsFile.get_reduce_motion()
 	if body_view.camera:
 		body_view.camera.instant = reduce_motion
+	body_view.set_touch_zones(SettingsFile.get_touch_zones())  # paso IU.7a
+	grid = SettingsFile.get_grid()  # paso IU.3
+	if body_view.floor_shadow:
+		body_view.floor_shadow.set_grid(grid)
 	if "--autoprueba" in OS.get_cmdline_user_args():
 		_self_test()
 	elif editor != null:
@@ -229,8 +242,20 @@ func _icon_button(icon_name: String, help: String, action: Callable) -> Button:
 
 
 ## Paso IU.5c: pliega o despliega el panel de zonas (la vista se agranda y vuelve a encuadrar sola).
+## Paso IU.10b: F1 abre «Comandos».
+func _f1_shortcut() -> Shortcut:
+	var event := InputEventKey.new()
+	event.keycode = KEY_F1
+	var shortcut := Shortcut.new()
+	shortcut.events = [event]
+	return shortcut
+
+
 func set_zones_visible(on: bool) -> void:
-	zone_picker.visible = on
+	if on:
+		Motion.fade_in(zone_picker)  # paso IU.10c
+	else:
+		zone_picker.visible = false
 	_name_fold_button()
 
 
@@ -259,6 +284,7 @@ func _soon_page(text: String) -> Control:
 ## Paso IU.9: abre «Ajustes» con los valores de ahora.
 func open_settings() -> void:
 	settings.refresh(dark, ui_scale, reduce_motion)
+	settings.refresh_view(grid, light_turn, light_energy, body_view.touch_zones)
 	settings.popup_centered()
 
 
@@ -277,11 +303,38 @@ func set_reduce_motion(on: bool) -> void:
 		body_view.camera.instant = on
 
 
+## Paso IU.7a: «Elegir zona tocando el cuerpo»; lo recuerda.
+func set_touch_zones(on: bool) -> void:
+	body_view.set_touch_zones(on)
+	SettingsFile.set_touch_zones(on)
+
+
+func _on_zone_touched(zone: String) -> void:
+	if zone in slider_panel.zones:
+		zone_picker.zone_chosen.emit(zone)
+
+
+## Paso IU.3: rejilla en el suelo de la vista; la recuerda.
+func set_grid(on: bool) -> void:
+	grid = on
+	SettingsFile.set_grid(on)
+	if body_view.floor_shadow:
+		body_view.floor_shadow.set_grid(on)
+
+
+## Paso IU.3: luz de vista previa (no se guarda ni se exporta).
+func set_light(turn_degrees: float, energy: float) -> void:
+	light_turn = turn_degrees
+	light_energy = energy
+	body_view.set_light(turn_degrees, energy)
+
+
 ## Paso IU.1c: cambia el tema de toda la ventana y lo recuerda para la próxima vez.
 func set_dark(on: bool) -> void:
 	dark = on
 	SettingsFile.set_dark(on)
 	theme = ThemeBuilder.build(on)
+	body_view.set_dark(on)  # paso IU.3: el degradado de la vista
 	_name_theme_button()
 
 
