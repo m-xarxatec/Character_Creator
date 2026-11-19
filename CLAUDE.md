@@ -1,7 +1,5 @@
 # CLAUDE.md
 
-This file provides guidance to Claude Code (claude.ai/code) when working with code in this repository.
-
 **GameMolde**: editor libre de personajes 3D hecho con Godot, al estilo de VRoid. Todo en español.
 
 ## Dónde está cada cosa (léelo allí, no lo copies aquí)
