@@ -26,7 +26,7 @@ const BUTTON_STATES := ["normal", "hover", "pressed", "disabled", "focus"]
 ## Paso IU.2: los iconos que existen (iconos/<nombre>.svg). Cambiar un icono = cambiar su archivo, no el nombre.
 const ICONS := ["cuerpo", "cara", "pelo", "ropa", "accesorios", "exportar", "pronto", "oscuro", "reproducir", "deshacer",
 	"rehacer", "abrir", "guardar", "vistas", "simetria", "prenda", "claro", "pausa", "rejilla", "luz", "restablecer",
-	"buscar", "bien", "aviso", "error", "licencias", "teclado", "estilo", "plegar", "desplegar"]
+	"buscar", "bien", "aviso", "error", "licencias", "teclado", "estilo", "plegar", "desplegar", "ajustes"]
 const ICON_SIZE := 24
 
 static var _icons := {}  # nombre → ImageTexture (se cargan una vez)

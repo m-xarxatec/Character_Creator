@@ -3,6 +3,8 @@ extends SceneTree
 # Uso: (ulimit -v 4000000; timeout 120 godot --path pruebas/godot -s capturar_ventana.gd)
 # Escribe en pruebas/capturas/ventana/: 1_inicio.png, 2_probar_huesos.png (informe plegado) y
 # 3_animacion_desplegado.png (Reposo, informe desplegado) y 4_estilo.png (pestaña Estilo, paso IU.6c).
+# Paso IU.9: 5_ajustes.png (el diálogo) y 6_tamano_150.png (al 150 %, a 1920 × 1080), en oscuro y en claro (_claro);
+# borra después el user://ajustes.cfg de este proyecto.
 
 var out: String
 
@@ -24,6 +26,21 @@ func _initialize() -> void:
 	await _shoot("3_animacion_desplegado")
 	main.top_bar.tab_bar.current_tab = main.TAB_NAMES.find("Estilo")  # paso IU.6c: el Acabado en su pestaña
 	await _shoot("4_estilo")
+	main.top_bar.tab_bar.current_tab = 0
+	for dark: bool in [true, false]:
+		var suffix := "" if dark else "_claro"
+		main.set_dark(dark)
+		main.open_settings()
+		await _shoot("5_ajustes" + suffix)
+		main.settings.hide()
+		root.size = Vector2i(1920, 1080)
+		DisplayServer.window_set_size(Vector2i(1920, 1080))
+		main.set_ui_scale(1.5)
+		await _shoot("6_tamano_150" + suffix)
+		main.set_ui_scale(1.0)
+		root.size = Vector2i(1280, 720)
+		DisplayServer.window_set_size(Vector2i(1280, 720))
+	DirAccess.remove_absolute(ProjectSettings.globalize_path("user://ajustes.cfg"))
 	print("Capturas en ", out)
 	quit()
 

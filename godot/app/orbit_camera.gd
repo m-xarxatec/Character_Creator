@@ -5,6 +5,7 @@ extends Camera3D
 # la rueda es relativo a ese encuadre.
 # Paso P.8a: Ctrl + arrastrar desplaza la cámara en el plano de la pantalla (pan, aparte de target: el encuadre no lo
 # borra); Inicio la vuelve a centrar.
+# Paso IU.9: con instant («Reducir animaciones»), frame() llega de golpe.
 
 const MIN_PITCH := -10.0  # grados: un poco por debajo de la cintura, sin darse la vuelta
 const MAX_PITCH := 60.0
@@ -25,6 +26,7 @@ var fit_distance := 3.2  # la del encuadre que se ve ahora (va hacia goal_distan
 var goal_target := target
 var goal_distance := 3.2
 var pan := Vector3.ZERO  # paso P.8a: desplazamiento del punto mirado
+var instant := false  # paso IU.9: «Reducir animaciones»
 
 
 func _ready() -> void:
@@ -66,6 +68,8 @@ func frame(box: AABB, aspect: float) -> void:
 	var fit := maxf(box.size.y / 2.0 / half, radius / (half * maxf(aspect, 0.1)))
 	goal_target = box.get_center()
 	goal_distance = fit * FRAME_MARGIN + radius / 2.0
+	if instant:
+		snap()
 
 
 ## Llega al encuadre de golpe.

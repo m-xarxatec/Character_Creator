@@ -9,7 +9,7 @@
 cerrarlo.
 
 **Hecho cuando:**
-- En la barra de abajo, junto a «Comandos», hay un botón «Ajustes» que abre un diálogo con:
+- En la barra de abajo, delante de «Comandos» (que sigue junto al sol/luna, P.8b), hay un botón «Ajustes» que abre un diálogo con:
   - **Tema:** Oscuro / Claro. Es el mismo ajuste que el botón sol/luna (D34), que se queda: los dos van a la par.
   - **Tamaño de la interfaz:** 90, 100, 110, 125 y 150 %.
   - **Reducir animaciones:** una casilla. Activada, la cámara llega de golpe al encuadre (P.3), sin el movimiento suave.

@@ -21,6 +21,8 @@ extends Control
 # (Cuerpo = ajustes, Estilo = Acabado, el resto «Pronto»): la vista y las zonas se quedan.
 # Paso IU.8: abajo del todo, la barra de estado (status_bar.gd): informe, altura y cabezas (measures.gd, en reposo) y
 # presupuesto.
+# Paso IU.9: botón «Ajustes» (delante de «Comandos») con el tema, el tamaño de la interfaz y «Reducir animaciones»
+# (settings_dialog.gd); se aplican al momento y se recuerdan (settings_file.gd).
 
 const BodyView := preload("body_view.gd")
 const SliderPanel := preload("slider_panel.gd")
@@ -31,6 +33,7 @@ const ReportSection := preload("report_section.gd")
 const LicensesDialog := preload("licenses_dialog.gd")
 const ThemeBuilder := preload("tema/theme_builder.gd")
 const CommandsDialog := preload("commands_dialog.gd")
+const SettingsDialog := preload("settings_dialog.gd")
 const SettingsFile := preload("settings_file.gd")
 const TopBar := preload("top_bar.gd")
 const StatusBar := preload("status_bar.gd")
@@ -62,6 +65,10 @@ var close_dialog: ConfirmationDialog  # paso P.4
 var theme_button: Button  # paso IU.1c
 var commands_button: Button  # paso P.8b
 var commands: AcceptDialog  # paso P.8b
+var settings_button: Button  # paso IU.9
+var settings: AcceptDialog  # paso IU.9
+var ui_scale := 1.0  # paso IU.9
+var reduce_motion := false  # paso IU.9
 var dark := true  # paso IU.1c: tema en uso
 var top_bar: PanelContainer  # paso IU.4
 var undo_button: Button  # paso IU.4
@@ -128,11 +135,29 @@ func _ready() -> void:
 	commands_button.tooltip_text = "Atajos de teclado y ratón"
 	commands_button.pressed.connect(func() -> void: commands.popup_centered())
 	body_actions.add_child(commands_button)
+	settings = SettingsDialog.new()
+	add_child(settings)
+	settings.dark_chosen.connect(set_dark)
+	settings.scale_chosen.connect(set_ui_scale)
+	settings.reduce_motion_chosen.connect(set_reduce_motion)
+	settings_button = Button.new()
+	settings_button.text = "Ajustes"
+	settings_button.icon = ThemeBuilder.icon("ajustes")
+	settings_button.theme_type_variation = "BotonFantasma"
+	settings_button.tooltip_text = "Tema, tamaño de la interfaz y animaciones"
+	settings_button.pressed.connect(open_settings)
+	body_actions.add_child(settings_button)
+	body_actions.move_child(settings_button, commands_button.get_index())  # «Comandos» sigue junto al sol/luna (P.8b)
 	theme_button = Button.new()
 	theme_button.theme_type_variation = "BotonFantasma"
 	theme_button.pressed.connect(func() -> void: set_dark(not dark))
 	body_actions.add_child(theme_button)
 	_name_theme_button()
+	ui_scale = SettingsFile.get_ui_scale()  # paso IU.9: se aplican sin volver a guardarlos
+	get_window().content_scale_factor = ui_scale
+	reduce_motion = SettingsFile.get_reduce_motion()
+	if body_view.camera:
+		body_view.camera.instant = reduce_motion
 	if "--autoprueba" in OS.get_cmdline_user_args():
 		_self_test()
 	elif editor != null:
@@ -229,6 +254,27 @@ func _soon_page(text: String) -> Control:
 	label.theme_type_variation = "Pista"
 	page.add_child(label)
 	return page
+
+
+## Paso IU.9: abre «Ajustes» con los valores de ahora.
+func open_settings() -> void:
+	settings.refresh(dark, ui_scale, reduce_motion)
+	settings.popup_centered()
+
+
+## Paso IU.9: tamaño de toda la interfaz (uno de SettingsFile.SCALES); lo recuerda.
+func set_ui_scale(scale: float) -> void:
+	ui_scale = SettingsFile.nearest_scale(scale)
+	SettingsFile.set_ui_scale(ui_scale)
+	get_window().content_scale_factor = ui_scale
+
+
+## Paso IU.9: «Reducir animaciones»: la cámara llega de golpe al encuadre; lo recuerda.
+func set_reduce_motion(on: bool) -> void:
+	reduce_motion = on
+	SettingsFile.set_reduce_motion(on)
+	if body_view.camera:
+		body_view.camera.instant = on
 
 
 ## Paso IU.1c: cambia el tema de toda la ventana y lo recuerda para la próxima vez.
