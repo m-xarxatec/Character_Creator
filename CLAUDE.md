@@ -12,7 +12,8 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 - `ruta/` — el mapa después del traspaso. Antes de cada paso lee **su ficha** en `ruta/pasos/` y `ruta/GUIA_MODELOS.md` (protocolo y señales de alarma). El resto de `ruta/` solo si la ficha lo cita. No sustituye a `PLAN.md`.
 - `README.md` — qué es, para qué sirve cada carpeta y licencias.
 - `CREDITOS.md` — material de terceros.
-- `diseno/maqueta-pestana-cuerpo.html` — cómo es la interfaz.
+- `diseno/GUIA_INTERFAZ.md` y `diseno/maqueta-v2.html` — cómo es la interfaz.
+- `propuestas/expansion_v2.md` — fases después del Pulido.
 - Cabecera de cada script — su uso y sus argumentos.
 
 ## Reglas de oro (no negociables)
@@ -27,7 +28,7 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 8. **Git lo ejecuto yo.** Claude puede usar git solo de lectura (`status`, `diff`, `log`); nunca comandos que cambien el repositorio. Commits: uno por paso, mensaje corto en español, sin autoría ni `Co-Authored-By`.
 9. **Los límites de las pruebas no se tocan solos.** Cambiar el límite de una prueba requiere propuesta y aprobación, con el motivo y la medida real.
 10. **Sin ficha no hay paso.** Cada paso se hace con su ficha de `ruta/pasos/`: solo los archivos que lista y con el diseño que da. Si aparece una señal de alarma de `ruta/GUIA_MODELOS.md` §3, para y dilo.
-11. **Límites del personaje.** Siempre adulto (el chibi y las especies son estilizaciones de un adulto); sin detalle anatómico bajo la prenda base; `referencias/` solo se mira, nunca entra en una operación geométrica.
+11. **Límites del personaje.** Adulto (el chibi y las especies son estilizaciones de un adulto). Desde X.17 (D42), también de 5 a 60 años, con sus salvaguardas: por debajo de adulto la prenda base no se oculta, sin chibi ni «Exageración», solo poses neutras y la edad fuera del aleatorio; sin detalle anatómico bajo la prenda base; `referencias/` solo se mira, nunca entra en una operación geométrica.
 
 ## Modo ligero (ahorro de tokens)
 

@@ -1,0 +1,543 @@
+<!DOCTYPE html>
+<html lang="es" data-tema="claro">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=1440">
+<title>Maqueta v2 — GameMolde, pestaña Cuerpo</title>
+<!-- Maqueta de referencia (no es el programa). Cómo debe verse y comportarse: diseno/GUIA_INTERFAZ.md.
+     La figura es un dibujo plano hecho con SVG; en el programa es la vista 3D. Todo el dibujo es propio. -->
+<style>
+:root{
+  --fondo:#F3F1F8;--panel:#FFFFFF;--panel-2:#F7F6FB;--borde:#E3E0EC;--borde-fuerte:#CFCADD;
+  --texto:#1E1B2E;--texto-2:#4F4A66;--texto-3:#6E6987;
+  --acento:#6A55E0;--acento-hover:#5A46D0;--acento-linea:#6A55E0;--acento-suave:#EEEBFF;--acento-texto:#4B37C4;
+  --exito:#17794C;--exito-suave:#E3F4EC;--aviso:#946000;--aviso-suave:#FFF1D6;--error:#D63A40;
+  --forma-f:#EEEBFF;--forma-t:#4B37C4;--prop-f:#E0F4F6;--prop-t:#0B6E78;--crear-f:#FFF1D6;--crear-t:#8A5A00;
+  --vista-centro:#FFFFFF;--vista-borde:#E6E1F3;--sombra-suelo:rgba(30,20,70,.18);
+  --sombra-flotante:0 4px 16px rgba(30,20,70,.10);--coral:#E2477A;
+  --r-s:8px;--r-m:12px;--r-l:16px;
+  --letra:"Nunito","Segoe UI",system-ui,-apple-system,sans-serif;
+}
+[data-tema="oscuro"]{
+  --fondo:#15131D;--panel:#1E1B29;--panel-2:#262234;--borde:#36314A;--borde-fuerte:#4A4462;
+  --texto:#F2F0FA;--texto-2:#C3BED6;--texto-3:#9C97B2;
+  --acento:#6A55E0;--acento-hover:#5A46D0;--acento-linea:#8F7DFF;--acento-suave:#2D2650;--acento-texto:#C9C0FF;
+  --exito:#4CC38A;--exito-suave:#163528;--aviso:#F2B544;--aviso-suave:#3A2A0A;--error:#FF6B70;
+  --forma-f:#2D2650;--forma-t:#CFC7FF;--prop-f:#12363B;--prop-t:#8EE3EC;--crear-f:#3A2A0A;--crear-t:#F7C873;
+  --vista-centro:#2B2640;--vista-borde:#14121B;--sombra-suelo:rgba(0,0,0,.35);
+  --sombra-flotante:0 4px 16px rgba(0,0,0,.40);--coral:#FF7AA2;
+}
+*{box-sizing:border-box}
+html,body{margin:0;height:100%}
+body{background:var(--fondo);color:var(--texto);font-family:var(--letra);font-size:14px;font-weight:500;min-width:1280px;min-height:720px;overflow:hidden}
+button{font:inherit;color:inherit;cursor:pointer}
+button:focus-visible,input:focus-visible{outline:2px solid var(--acento-linea);outline-offset:2px}
+svg{display:block}
+.app{display:grid;grid-template-columns:280px 1fr 360px;grid-template-rows:56px 1fr 32px;height:100vh;min-height:720px}
+
+/* ---------- barra superior ---------- */
+.barra{grid-column:1/-1;display:flex;align-items:center;gap:6px;padding:0 12px 0 16px;background:var(--panel);border-bottom:1px solid var(--borde)}
+.marca{display:flex;align-items:center;gap:10px;margin-right:18px}
+.marca b{font-size:16px;font-weight:800;letter-spacing:.2px}
+.archivo{color:var(--texto-3);font-size:13px;font-weight:600}
+.archivo i{font-style:normal;color:var(--acento-linea);visibility:hidden}
+.archivo.cambiado i{visibility:visible}
+.pestanas{display:flex;align-items:stretch;height:56px;gap:2px}
+.pestana{display:flex;align-items:center;gap:8px;padding:0 12px;white-space:nowrap;border:0;background:none;color:var(--texto-2);font-weight:600;position:relative;transition:background .12s,color .12s}
+.pestana:hover{background:var(--panel-2);color:var(--texto)}
+.pestana.on{color:var(--texto)}
+.pestana.on::after{content:"";position:absolute;left:12px;right:12px;bottom:0;height:3px;border-radius:3px 3px 0 0;background:var(--acento-linea)}
+.pestana svg{width:18px;height:18px}
+.pronto{font-size:12px;font-weight:700;padding:1px 7px;border-radius:999px;background:var(--panel-2);color:var(--texto-3);border:1px solid var(--borde)}
+.hueco{flex:1}
+.ico{width:34px;height:34px;display:grid;place-items:center;border:0;border-radius:var(--r-s);background:none;color:var(--texto-2);transition:background .12s,color .12s}
+.ico:hover{background:var(--panel-2);color:var(--texto)}
+.ico:disabled{opacity:.35;cursor:default;background:none}
+.ico svg{width:20px;height:20px}
+.sep{width:1px;height:24px;background:var(--borde);margin:0 6px}
+.btn{height:34px;padding:0 14px;border-radius:var(--r-s);border:1px solid var(--borde-fuerte);background:var(--panel);font-weight:600;display:flex;align-items:center;gap:8px;transition:background .12s}
+.btn:hover{background:var(--panel-2)}
+.btn svg{width:18px;height:18px}
+.btn-principal{height:36px;padding:0 18px;white-space:nowrap;border:0;background:var(--acento);color:#fff;font-weight:700;box-shadow:0 2px 8px rgba(106,85,224,.35)}
+.btn-principal:hover{background:var(--acento-hover)}
+
+/* ---------- paneles ---------- */
+.izq,.der{background:var(--panel);display:flex;flex-direction:column;min-height:0}
+.izq{border-right:1px solid var(--borde)}
+.der{border-left:1px solid var(--borde)}
+.seg{display:flex;margin:12px 16px 4px;padding:3px;background:var(--panel-2);border-radius:10px;border:1px solid var(--borde)}
+.seg button{flex:1;height:30px;border:0;border-radius:8px;background:none;color:var(--texto-2);font-weight:700;font-size:13px}
+.seg button.on{background:var(--panel);color:var(--texto);box-shadow:0 1px 3px rgba(30,20,70,.12)}
+.desliza{overflow:auto;min-height:0;flex:1;padding:4px 16px 16px}
+.desliza::-webkit-scrollbar{width:6px}.desliza::-webkit-scrollbar-thumb{background:var(--borde-fuerte);border-radius:6px}
+.silueta{margin:6px auto 4px;width:200px}
+.silueta .zona{fill:transparent;stroke:none;cursor:pointer;transition:fill .12s}
+.silueta .zona:hover{fill:color-mix(in srgb,var(--acento) 22%,transparent)}
+.silueta .zona.on{fill:color-mix(in srgb,var(--acento) 38%,transparent)}
+.titulo-sec{font-size:12px;font-weight:800;color:var(--texto-3);text-transform:uppercase;letter-spacing:.6px;margin:12px 4px 6px}
+.lista-z{display:flex;flex-direction:column;gap:2px}
+.fz{display:flex;align-items:center;gap:10px;height:34px;padding:0 10px;border:0;border-radius:var(--r-s);background:none;text-align:left;color:var(--texto);transition:background .12s}
+.fz:hover{background:var(--panel-2)}
+.fz.on{background:var(--acento-suave);color:var(--acento-texto);font-weight:700}
+.fz .pt{width:8px;height:8px;border-radius:50%;background:var(--borde-fuerte)}
+.fz.on .pt{background:var(--acento-linea)}
+.fz span.n{margin-left:auto;font-size:12px;font-weight:700;color:var(--texto-3)}
+.fz.on span.n{color:var(--acento-texto)}
+.fz .candado{width:16px;height:16px;color:var(--texto-3);opacity:0;transition:opacity .12s}
+.fz:hover .candado{opacity:.8}
+
+.rejilla{display:grid;grid-template-columns:1fr 1fr;gap:10px}
+.tarjeta{border:1px solid var(--borde);border-radius:var(--r-m);background:var(--panel);padding:6px 6px 8px;text-align:center;position:relative;transition:border-color .12s,transform .12s,box-shadow .12s}
+.tarjeta:hover{border-color:var(--borde-fuerte);transform:translateY(-1px);box-shadow:var(--sombra-flotante)}
+.tarjeta.on{border:2px solid var(--acento-linea);padding:5px 5px 7px}
+.tarjeta .mini{border-radius:8px;background:radial-gradient(circle at 50% 40%,var(--vista-centro),var(--vista-borde));height:150px;overflow:hidden}
+.tarjeta .nom{font-weight:700;margin-top:6px;font-size:13px}
+.tarjeta .lic{font-size:12px;color:var(--texto-3);font-weight:600}
+.tarjeta .ok{position:absolute;top:10px;right:10px;width:22px;height:22px;border-radius:50%;background:var(--acento);color:#fff;display:none;place-items:center}
+.tarjeta.on .ok{display:grid}
+.tarjeta.bloq{opacity:.55}
+.tarjeta .pronto{position:absolute;top:10px;left:10px}
+
+/* ---------- vista ---------- */
+.vista{position:relative;overflow:hidden;background:radial-gradient(ellipse 70% 75% at 50% 45%,var(--vista-centro),var(--vista-borde));min-height:0}
+.vista>svg.escena{position:absolute;inset:0;width:100%;height:100%}
+.flota{position:absolute;display:flex;gap:4px;padding:4px;background:var(--panel);border-radius:999px;box-shadow:var(--sombra-flotante);border:1px solid var(--borde)}
+.arriba-izq{top:14px;left:14px}
+.arriba-der{top:14px;right:14px;border-radius:14px}
+.abajo{bottom:18px;left:50%;transform:translateX(-50%)}
+.chip{height:30px;padding:0 13px;border:0;border-radius:999px;background:none;color:var(--texto-2);font-weight:700;font-size:13px;transition:background .12s,color .12s;white-space:nowrap}
+.chip:hover{background:var(--panel-2);color:var(--texto)}
+.chip.on{background:var(--acento-suave);color:var(--acento-texto)}
+.chip.play{width:30px;padding:0;display:grid;place-items:center;background:var(--acento);color:#fff}
+.chip.play svg{width:14px;height:14px}
+.arriba-der .ico{width:32px;height:32px}
+.arriba-der .ico.on{background:var(--acento-suave);color:var(--acento-texto)}
+.pista{position:absolute;left:50%;transform:translateX(-50%);bottom:72px;white-space:nowrap;display:flex;align-items:center;gap:8px;padding:6px 6px 6px 12px;border-radius:999px;background:color-mix(in srgb,var(--panel) 85%,transparent);color:var(--texto-2);font-size:12px;font-weight:700;border:1px solid var(--borde);transition:opacity .18s}
+.pista button{width:22px;height:22px;border-radius:50%;border:0;background:var(--panel-2);color:var(--texto-3);display:grid;place-items:center}
+.parte{cursor:pointer}
+.toque{fill:transparent;cursor:pointer;transition:fill .12s}
+.toque:hover{fill:color-mix(in srgb,var(--acento) 20%,transparent)}
+.cajon{position:absolute;left:0;right:0;bottom:0;background:var(--panel);border-top:1px solid var(--borde);box-shadow:0 -6px 20px rgba(30,20,70,.10);transform:translateY(100%);transition:transform .18s ease-out;padding:12px 18px 14px;z-index:3}
+.cajon.abierto{transform:none}
+.cajon h3{margin:0 0 8px;font-size:15px;display:flex;align-items:center;gap:8px}
+.cajon .fila{display:flex;align-items:center;gap:10px;padding:6px 0;border-top:1px solid var(--borde);font-size:13px;color:var(--texto-2)}
+.cajon .fila b{color:var(--texto)}
+.cajon .fila .ir{margin-left:auto}
+
+/* ---------- panel derecho ---------- */
+.cab{padding:16px 16px 10px;border-bottom:1px solid var(--borde)}
+.cab h2{margin:0;font-size:18px;font-weight:800;display:flex;align-items:baseline;gap:8px}
+.cab h2 small{font-size:12px;font-weight:700;color:var(--texto-3)}
+.buscar{margin-top:10px;display:flex;align-items:center;gap:8px;height:34px;padding:0 10px;border-radius:var(--r-s);background:var(--panel-2);border:1px solid var(--borde-fuerte);color:var(--texto-3)}
+.buscar input{flex:1;border:0;background:none;outline:none;font:inherit;color:var(--texto)}
+.buscar svg{width:16px;height:16px}
+.fila-d{padding:10px 4px 10px;border-radius:var(--r-s);transition:background .12s}
+.fila-d:hover{background:var(--panel-2)}
+.fila-d .l1{display:flex;align-items:center;gap:8px;margin-bottom:6px}
+.fila-d .nom{font-weight:600;cursor:default;user-select:none}
+.ins{font-size:12px;font-weight:700;padding:1px 8px;border-radius:999px}
+.ins.F{background:var(--forma-f);color:var(--forma-t)}
+.ins.P{background:var(--prop-f);color:var(--prop-t)}
+.ins.N{background:var(--crear-f);color:var(--crear-t)}
+.ambos{font-size:12px;font-weight:700;color:var(--texto-3);display:flex;align-items:center;gap:3px}
+.zona-et{font-size:12px;font-weight:700;color:var(--texto-3)}
+.fila-d .l2{display:flex;align-items:center;gap:10px}
+.pista-b{position:relative;flex:1;height:22px}
+.pista-b input{position:absolute;inset:0;width:100%;margin:0;appearance:none;-webkit-appearance:none;background:none;cursor:pointer}
+.pista-b .carril{position:absolute;left:9px;right:9px;top:9px;height:4px;border-radius:4px;background:var(--borde)}
+.pista-b .relleno{position:absolute;top:9px;height:4px;border-radius:4px;background:var(--acento)}
+.pista-b .neutro{position:absolute;top:5px;width:2px;height:12px;border-radius:1px;background:var(--borde-fuerte)}
+.pista-b input::-webkit-slider-thumb{-webkit-appearance:none;width:18px;height:18px;border-radius:50%;background:#fff;border:2px solid var(--acento);box-shadow:0 1px 4px rgba(30,20,70,.25);transition:transform .12s}
+.pista-b input:hover::-webkit-slider-thumb{transform:scale(1.12)}
+.pista-b input::-moz-range-thumb{width:16px;height:16px;border-radius:50%;background:#fff;border:2px solid var(--acento)}
+.pista-b input::-webkit-slider-runnable-track{height:22px;background:none}
+.valor{width:46px;height:28px;border-radius:var(--r-s);border:1px solid var(--borde-fuerte);background:var(--panel);text-align:center;font:inherit;font-size:13px;font-weight:700;color:var(--texto);font-variant-numeric:tabular-nums}
+.reset{width:28px;height:28px;border-radius:var(--r-s);border:0;background:none;color:var(--texto-2);display:grid;place-items:center}
+.reset:hover{background:var(--panel)}
+.reset:disabled{opacity:.3;cursor:default}
+.reset svg{width:16px;height:16px}
+.extremos{display:flex;justify-content:space-between;margin:2px 84px 0 0;font-size:12px;font-weight:700;color:var(--texto-3)}
+.pie-der{padding:12px 16px;border-top:1px solid var(--borde);display:flex;gap:8px;align-items:center}
+.pie-der .btn{flex:1;justify-content:center}
+.consejo{margin:14px 4px 0;padding:10px 12px;border-radius:var(--r-m);background:var(--acento-suave);color:var(--acento-texto);font-size:13px;font-weight:600;display:flex;gap:8px}
+.color-fila{display:flex;gap:8px;flex-wrap:wrap;margin-top:4px}
+.muestra{width:30px;height:30px;border-radius:50%;border:2px solid var(--panel);box-shadow:0 0 0 1px var(--borde-fuerte);cursor:pointer}
+.muestra.on{box-shadow:0 0 0 2px var(--acento-linea)}
+
+/* ---------- barra de estado ---------- */
+.estado{grid-column:1/-1;display:flex;align-items:center;gap:14px;padding:0 12px;background:var(--panel);border-top:1px solid var(--borde);font-size:12px;font-weight:700;color:var(--texto-3)}
+.pastilla{height:22px;padding:0 10px;border-radius:999px;border:0;display:flex;align-items:center;gap:6px;font-size:12px;font-weight:800}
+.pastilla.bien{background:var(--exito-suave);color:var(--exito)}
+.pastilla.aviso{background:var(--aviso-suave);color:var(--aviso)}
+.pastilla.nada{background:var(--panel-2);color:var(--texto-3)}
+.pastilla svg{width:14px;height:14px}
+.estado .tema{display:flex;align-items:center;gap:6px;border:0;background:none;color:var(--texto-2);font-weight:700;font-size:12px}
+.estado .tema svg{width:16px;height:16px}
+
+/* ---------- diálogo y aviso ---------- */
+.velo{position:fixed;inset:0;background:rgba(10,8,20,.4);display:none;place-items:center;z-index:10}
+.velo.abierto{display:grid}
+.dialogo{width:440px;background:var(--panel);border-radius:var(--r-l);box-shadow:0 12px 40px rgba(10,8,20,.3);padding:20px}
+.dialogo h3{margin:0 0 4px;font-size:18px}
+.dialogo p{margin:0 0 14px;color:var(--texto-2);font-size:13px}
+.campo{display:flex;flex-direction:column;gap:6px;margin-bottom:12px;font-weight:700;font-size:13px}
+.campo input[type=text]{height:36px;border-radius:var(--r-s);border:1px solid var(--borde-fuerte);background:var(--panel-2);padding:0 10px;font:inherit;color:var(--texto)}
+.check{display:flex;align-items:center;gap:8px;font-size:13px;font-weight:600;margin:8px 0;color:var(--texto)}
+.check input{accent-color:var(--acento);width:16px;height:16px}
+.check.bloq{color:var(--texto-3)}
+.acciones{display:flex;justify-content:flex-end;gap:8px;margin-top:16px}
+.tostada{position:fixed;left:50%;bottom:52px;transform:translate(-50%,20px);opacity:0;background:var(--texto);color:var(--panel);padding:8px 14px;border-radius:999px;font-size:13px;font-weight:700;transition:opacity .18s,transform .18s;pointer-events:none;z-index:20}
+.tostada.ver{opacity:1;transform:translate(-50%,0)}
+</style>
+</head>
+<body>
+<div class="app">
+
+  <!-- ===== barra superior ===== -->
+  <header class="barra">
+    <div class="marca">
+      <svg width="30" height="30" viewBox="0 0 30 30" aria-hidden="true"><rect width="30" height="30" rx="9" fill="var(--acento)"/><circle cx="15" cy="9.5" r="3.6" fill="#fff"/><path d="M9 24c0-4.5 2.6-8.5 6-8.5s6 4 6 8.5" fill="none" stroke="#fff" stroke-width="2.6" stroke-linecap="round"/><circle cx="23.5" cy="7" r="2" fill="var(--coral)"/></svg>
+      <b>GameMolde</b>
+    </div>
+    <nav class="pestanas" id="pestanas"></nav>
+    <div class="hueco"></div>
+    <button class="ico" id="deshacer" title="Deshacer (Ctrl+Z)" aria-label="Deshacer" disabled><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M9 14 4 9l5-5"/><path d="M4 9h10.5a5.5 5.5 0 0 1 0 11H11"/></svg></button>
+    <button class="ico" id="rehacer" title="Rehacer (Ctrl+Y)" aria-label="Rehacer" disabled><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="m15 14 5-5-5-5"/><path d="M20 9H9.5a5.5 5.5 0 0 0 0 11H13"/></svg></button>
+    <button class="ico" id="azar" title="Aleatorio (con límites razonables)" aria-label="Aleatorio"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="3" width="18" height="18" rx="4"/><circle cx="8.5" cy="8.5" r="1.2" fill="currentColor"/><circle cx="15.5" cy="15.5" r="1.2" fill="currentColor"/><circle cx="15.5" cy="8.5" r="1.2" fill="currentColor"/><circle cx="8.5" cy="15.5" r="1.2" fill="currentColor"/></svg></button>
+    <span class="sep"></span>
+    <button class="ico" id="abrir" title="Abrir… (Ctrl+O)" aria-label="Abrir"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 7a2 2 0 0 1 2-2h4l2 2h8a2 2 0 0 1 2 2v8a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"/></svg></button>
+    <button class="ico" id="guardar" title="Guardar (Ctrl+S)" aria-label="Guardar"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M5 3h11l5 5v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2z"/><path d="M7 3v5h8V3"/><rect x="7" y="13" width="10" height="6" rx="1"/></svg></button>
+    <button class="btn btn-principal" id="exportar"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 3v12"/><path d="m7 10 5 5 5-5"/><path d="M5 21h14"/></svg>Exportar .glb</button>
+  </header>
+
+  <!-- ===== panel izquierdo ===== -->
+  <aside class="izq">
+    <div class="seg" id="segIzq"><button class="on" data-v="zonas">Zonas</button><button data-v="plantillas">Plantillas</button></div>
+    <div class="desliza" id="izqContenido"></div>
+  </aside>
+
+  <!-- ===== vista 3D ===== -->
+  <main class="vista" id="vista">
+    <svg class="escena" id="escena" viewBox="0 10 600 760" preserveAspectRatio="xMidYMid meet" aria-label="Vista del personaje"></svg>
+    <div class="flota arriba-izq" id="vistas"></div>
+    <div class="flota arriba-der" id="interruptores"></div>
+    <div class="flota abajo" id="poses"></div>
+    <div class="pista" id="pista">Arrastra para girar · Rueda para acercar · Clic en el cuerpo para elegir zona<button aria-label="Cerrar pista" id="cerrarPista">✕</button></div>
+    <div class="cajon" id="cajon"></div>
+  </main>
+
+  <!-- ===== panel derecho ===== -->
+  <aside class="der">
+    <div class="cab">
+      <h2 id="tituloZona">Global <small id="cuenta">4 ajustes</small></h2>
+      <label class="buscar"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><circle cx="11" cy="11" r="7"/><path d="m20 20-3.5-3.5"/></svg><input id="buscar" placeholder="Buscar ajuste…"></label>
+    </div>
+    <div class="desliza" id="filas"></div>
+    <div class="pie-der" id="pieDer"><button class="btn" id="restZona"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 12a9 9 0 1 0 3-6.7L3 8"/><path d="M3 3v5h5"/></svg>Restablecer zona</button></div>
+  </aside>
+
+  <!-- ===== barra de estado ===== -->
+  <footer class="estado">
+    <button class="pastilla nada" id="informe"></button>
+    <span id="medidas"></span>
+    <span>·</span>
+    <span>26.756 triángulos · 53 huesos</span>
+    <span class="archivo" id="archivo" style="margin-left:auto">personaje.json <i>• sin guardar</i></span>
+    <button class="tema" id="tema" style="margin-left:8px"></button>
+  </footer>
+</div>
+
+<div class="velo" id="velo"><div class="dialogo" role="dialog" aria-labelledby="tExp">
+  <h3 id="tExp">Exportar personaje</h3>
+  <p>Se guarda un <b>.glb</b> en pose T, listo para Godot y Blender, y un <b>.tres</b> con el material toon al lado.</p>
+  <label class="campo">Nombre del archivo<input type="text" value="personaje.glb"></label>
+  <label class="check"><input type="checkbox" checked> Prenda base visible</label>
+  <label class="check"><input type="checkbox" checked> Material toon (.tres) junto al .glb</label>
+  <label class="check bloq"><input type="checkbox" disabled> Niveles de detalle <span class="pronto">Pronto</span></label>
+  <label class="check bloq"><input type="checkbox" disabled> VRM 1.0 <span class="pronto">Pronto</span></label>
+  <div class="acciones"><button class="btn" id="cancelar">Cancelar</button><button class="btn btn-principal" id="okExp">Exportar</button></div>
+</div></div>
+<div class="tostada" id="tostada"></div>
+
+<script>
+/* ===================== datos (de deslizadores.csv; ayudas de godot/app/textos/) ===================== */
+const FILAS=[
+ ['height','Global','Altura','P',1,'Altura total del personaje.','Baja','Alta'],
+ ['gender','Global','Complexión','F',1,'Lleva el cuerpo de femenino a masculino.','Femenino','Masculino'],
+ ['muscle','Global','Músculo','F',1,'Cuánto músculo se nota.','',''],
+ ['weight','Global','Grasa','F',1,'Cantidad de grasa del cuerpo.','',''],
+ ['head_size','Cabeza','Tamaño','P',1,'Tamaño de toda la cabeza (cambia el hueso).','',''],
+ ['head_width','Cabeza','Ancho','F',1,'Cabeza más ancha o más estrecha.','',''],
+ ['head_height','Cabeza','Alto','F',1,'Cabeza más alta o más baja.','',''],
+ ['neck_length','Cuello','Largo','F',1,'Largo del cuello.','',''],
+ ['neck_thickness','Cuello','Grosor','F',1,'Grosor del cuello.','',''],
+ ['shoulder_width','Hombros','Ancho','F',1,'Distancia entre los hombros.','',''],
+ ['shoulder_height','Hombros','Altura','F',1,'Hombros más altos o más caídos.','',''],
+ ['shoulder_muscle','Hombros','Músculo','F',2,'Volumen del músculo del hombro.','',''],
+ ['torso_length','Torso','Largo','F',1,'Largo del tronco, del cuello a la cadera.','',''],
+ ['torso_width','Torso','Ancho','F',1,'Ancho del tronco.','',''],
+ ['torso_vshape','Torso','Forma en V','F',1,'Espalda ancha arriba y estrecha abajo.','',''],
+ ['back_width','Torso','Espalda ancha','F',1,'Ancho de la espalda.','',''],
+ ['torso_depth','Torso','Fondo','F',1,'Fondo del tronco, de delante atrás.','',''],
+ ['breast_volume','Pecho','Volumen','F',1,'Volumen del pecho.','',''],
+ ['breast_firmness','Pecho','Firmeza','F',1,'Firmeza del pecho.','',''],
+ ['breast_distance','Pecho','Separación','F',1,'Separación del pecho.','',''],
+ ['breast_height','Pecho','Altura','F',1,'Altura del pecho.','',''],
+ ['waist_width','Cintura','Ancho','F',1,'Ancho de la cintura.','',''],
+ ['waist_height','Cintura','Altura','F',1,'Cintura más alta o más baja.','',''],
+ ['hip_width','Caderas','Ancho','F',1,'Ancho de las caderas.','',''],
+ ['hip_depth','Caderas','Profundidad','F',1,'Fondo de las caderas.','',''],
+ ['buttocks_volume','Glúteos','Volumen','F',1,'Volumen de los glúteos.','',''],
+ ['buttocks_height','Glúteos','Altura','F',1,'Glúteos más altos o más bajos.','',''],
+ ['buttocks_roundness','Glúteos','Redondez','F',1,'Glúteos más redondos o más planos.','',''],
+ ['arm_length','Brazos','Largo','F',1,'Largo de los brazos.','',''],
+ ['arm_thickness','Brazos','Grosor','F',1,'Grosor de los brazos.','',''],
+ ['arm_muscle','Brazos','Músculo','F',2,'Músculo del brazo y del antebrazo.','',''],
+ ['hand_size','Manos','Tamaño','P',2,'Tamaño de las manos (cambia el hueso).','',''],
+ ['hand_position','Manos','Posición','F',2,'Mano más hacia dentro o hacia fuera.','',''],
+ ['finger_length','Dedos','Largo','F',2,'Largo de los dedos.','',''],
+ ['finger_thickness','Dedos','Grosor','F',2,'Grosor de los dedos.','',''],
+ ['finger_spread','Dedos','Separación','F',2,'Separación entre los dedos.','',''],
+ ['leg_length','Piernas','Largo','F',1,'Largo de las piernas.','',''],
+ ['thigh','Piernas','Muslo','F',1,'Grosor del muslo.','',''],
+ ['calf','Piernas','Pantorrilla','F',1,'Grosor de la pantorrilla.','',''],
+ ['foot_size','Pies','Tamaño','P',2,'Tamaño de los pies (cambia el hueso).','',''],
+].map(([id,zona,nombre,tipo,lados,ayuda,a,b])=>({id,zona,nombre,tipo,lados,ayuda,a,b}));
+const ZONAS=[...new Set(FILAS.map(f=>f.zona))];
+const TIPOS={F:'Forma',P:'Proporción',N:'Por crear'};
+const PLANTILLAS=[
+ ['neutro','Neutro',{}],
+ ['femenina','Femenina',{gender:0,muscle:.3,weight:.4,head_size:.8,neck_length:.6,neck_thickness:.1,shoulder_width:.35,torso_length:.35,waist_width:.15,hip_width:.55,leg_length:.9,thigh:.45,calf:.35,arm_thickness:.3,hand_size_l:.2,hand_size_r:.2,foot_size_l:.15,foot_size_r:.15}],
+ ['masculino','Masculino',{gender:1,muscle:.3,weight:.35,head_size:.75,neck_length:.55,neck_thickness:.35,shoulder_width:.7,torso_length:.4,torso_vshape:.6,waist_width:.25,leg_length:.95,hand_size_l:.4,hand_size_r:.4,foot_size_l:.4,foot_size_r:.4}],
+ ['atletica','Atlética',{gender:.1,muscle:.72,weight:.32,shoulder_width:.55,waist_width:.3,leg_length:.75,thigh:.62,calf:.6}],
+ ['atletico','Atlético',{gender:.95,muscle:.82,weight:.32,shoulder_width:.82,torso_vshape:.85,waist_width:.35,leg_length:.7,arm_thickness:.7}],
+ ['delgada','Delgada',{gender:.05,muscle:.3,weight:.12,waist_width:.2,hip_width:.4,arm_thickness:.25,thigh:.3,calf:.3}],
+ ['robusto','Robusto',{gender:.9,muscle:.55,weight:.88,waist_width:.85,torso_width:.75,neck_thickness:.75,thigh:.7,arm_thickness:.7}],
+ ['esbelta','Esbelta',{gender:.1,height:.75,leg_length:1,torso_length:.3,neck_length:.7,waist_width:.15,head_size:.35}],
+];
+const ESTILOS=[['anime3','Anime 3 tonos',false],['anime2','Anime 2 tonos',true],['comic','Cómic',true],['suave','Suave',true],['arcilla','Arcilla',true],['boceto','Boceto',true]];
+const PIELES=['#CCCCCC','#F6E3D8','#EBC7AE','#C99A78','#8E6248','#A8B8E8','#B9E0C6'];
+
+/* ===================== estado ===================== */
+const E={pestana:'cuerpo',izq:'zonas',zona:'Global',valores:{},sim:true,pose:'reposo',vistaCam:'frente',prenda:true,rejilla:false,
+  plantilla:'neutro',piel:'#CCCCCC',acabado:{suav:4,brillo:25,ancho:30,contorno:2.5},informe:false,historial:[],futuro:[],guardado:''};
+const claves=()=>FILAS.flatMap(f=>f.lados==2?[f.id+'_l',f.id+'_r']:[f.id]);
+function neutros(){const v={};claves().forEach(k=>v[k]=.5);return v}
+E.valores=neutros();E.guardado=JSON.stringify(E.valores);
+const $=s=>document.querySelector(s);
+const val=(k)=>E.valores[k]??.5;
+
+/* ===================== figura (dibujo plano propio) ===================== */
+function mezcla(hex,f){const n=parseInt(hex.slice(1),16);const r=Math.round(((n>>16)&255)*f),g=Math.round(((n>>8)&255)*f),b=Math.round((n&255)*f);return'#'+((1<<24)|(r<<16)|(g<<8)|b).toString(16).slice(1)}
+function suave(p,cerrar=true){ // Catmull-Rom → Bézier
+  let d=`M${p[0][0].toFixed(1)},${p[0][1].toFixed(1)}`;const n=p.length;
+  for(let i=0;i<(cerrar?n:n-1);i++){const p0=p[(i-1+n)%n],p1=p[i],p2=p[(i+1)%n],p3=p[(i+2)%n];
+    const c1=[p1[0]+(p2[0]-p0[0])/6,p1[1]+(p2[1]-p0[1])/6],c2=[p2[0]-(p3[0]-p1[0])/6,p2[1]-(p3[1]-p1[1])/6];
+    d+=`C${c1[0].toFixed(1)},${c1[1].toFixed(1)} ${c2[0].toFixed(1)},${c2[1].toFixed(1)} ${p2[0].toFixed(1)},${p2[1].toFixed(1)}`}
+  return d+(cerrar?'Z':'')}
+function miembro(a,b,anchos,ts){ // contorno de un miembro afilado de a a b
+  const dx=b[0]-a[0],dy=b[1]-a[1],L=Math.hypot(dx,dy),nx=-dy/L,ny=dx/L,ida=[],vuelta=[];
+  ts.forEach((t,i)=>{const x=a[0]+dx*t,y=a[1]+dy*t,w=anchos[i];ida.push([x+nx*w,y+ny*w]);vuelta.unshift([x-nx*w,y-ny*w])});
+  return suave(ida.concat(vuelta))}
+function escala(v){return v<.5?.8+.4*v:1+.6*(v-.5)}
+function geometria(V){
+  const g=k=>V[k]??.5,G=640,C=300,s=.85+.3*g('height'),hs=escala(g('head_size'));
+  const k=1+.35*(g('muscle')-.5)+.35*(g('weight')-.5),sexo=g('gender')-.5;
+  const L=262*(.86+.28*g('leg_length')),T=200*(.88+.24*g('torso_length')),N=22*(.7+.6*g('neck_length'));
+  const ry=38*hs*(.92+.16*g('head_height')),rx=31*hs*(.92+.16*g('head_width'));
+  const SW=60*(.86+.28*g('shoulder_width'))*(1+.16*sexo)*(1+.08*(g('torso_vshape')-.5));
+  const WW=37*(.82+.36*g('waist_width'))*(1+.3*(g('weight')-.5))*(1+.06*sexo);
+  const HW=52*(.86+.28*g('hip_width'))*(1-.12*sexo)*(1+.12*(g('weight')-.5));
+  const crotch=G-L,hipY=crotch-22,waistY=crotch-T*(.40+.08*(g('waist_height')-.5)),chestY=crotch-T*.74,shY=crotch-T-6*(g('shoulder_height')-.5),chin=shY-N,hc=chin-ry;
+  return {G,C,s,hs,k,sexo,L,T,N,rx,ry,SW,WW,HW,crotch,hipY,waistY,chestY,shY,chin,hc,top:hc-ry*1.04};
+}
+function figura(V,op={}){
+  const q=geometria(V),{G,C,k,SW,WW,HW,crotch,hipY,waistY,chestY,shY,chin,hc,rx,ry}=q,g=x=>V[x]??.5;
+  const piel=op.piel||E.piel,plano=op.plano,trazo=op.contorno??E.acabado.contorno;
+  const fp=plano?'var(--panel-2)':'url(#gP'+(op.id||'')+')',fr=plano?'var(--panel-2)':'url(#gR'+(op.id||'')+')';
+  const st=plano?`stroke="var(--borde-fuerte)" stroke-width="2"`:`stroke="#2B2233" stroke-width="${trazo}" stroke-linejoin="round"`;
+  let defs='';
+  if(!plano){const tonos=(id,base)=>`<linearGradient id="${id}" x1="0" y1="0" x2="1" y2=".35"><stop offset="0" stop-color="${base}"/><stop offset=".58" stop-color="${base}"/><stop offset=".58" stop-color="${mezcla(base,.9)}"/><stop offset=".8" stop-color="${mezcla(base,.9)}"/><stop offset=".8" stop-color="${mezcla(base,.73)}"/><stop offset="1" stop-color="${mezcla(base,.73)}"/></linearGradient>`;
+    defs=`<defs>${tonos('gP'+(op.id||''),piel)}${tonos('gR'+(op.id||''),'#3A3A46')}<radialGradient id="gS${op.id||''}"><stop offset="0" stop-color="var(--sombra-suelo)"/><stop offset="1" stop-color="transparent"/></radialGradient></defs>`}
+  const out=[defs];
+  if(!plano) out.push(`<ellipse cx="${C}" cy="${G+2}" rx="${HW*1.9}" ry="15" fill="url(#gS${op.id||''})"/>`);
+  if(op.rejilla){for(let i=-4;i<=4;i++)out.push(`<line x1="${C+i*60}" y1="${G-10}" x2="${C+i*90}" y2="${G+40}" stroke="var(--borde-fuerte)" stroke-width="1" opacity=".6"/>`);out.push(`<line x1="${C-380}" y1="${G+12}" x2="${C+380}" y2="${G+12}" stroke="var(--borde-fuerte)" opacity=".6"/>`)}
+  const partes=[];const parte=(zona,d,fill)=>partes.push(`<path class="parte" data-zona="${zona}" d="${d}" fill="${fill}" ${st}/>`);
+  // piernas y pies
+  [-1,1].forEach(lado=>{
+    const fs=escala(g('foot_size_'+(lado<0?'l':'r'))),a=[C+lado*HW*.5,crotch-6],b=[C+lado*HW*.4,G-14];
+    const tw=22*k*(.86+.28*g('thigh')),cw=14.5*k*(.86+.28*g('calf'));
+    parte('Pies',suave([[b[0]-lado*7,G-18],[b[0]+lado*(6+12*fs),G-10],[b[0]+lado*(4+16*fs),G-1],[b[0]-lado*9,G-1]]),fp);
+    parte('Piernas',miembro(a,b,[tw,tw*.86,11*k,cw,8.5,7],[0,.22,.47,.64,.9,1]),fp);
+  });
+  // brazos
+  const pose=op.pose||'reposo';
+  [-1,1].forEach(lado=>{
+    const A=196*(.86+.28*g('arm_length')),h=escala(g('hand_size_'+(lado<0?'l':'r'))),m=1+.25*(g('arm_muscle_'+(lado<0?'l':'r'))-.5);
+    let ang=pose==='poseT'?90:(pose==='atacar'&&lado>0?150:14);
+    const r=ang*Math.PI/180,o=[C+lado*SW*.88,shY+14],dir=[lado*Math.sin(r),Math.cos(r)],e=[o[0]+dir[0]*A,o[1]+dir[1]*A];
+    const aw=12*k*m*(.86+.28*g('arm_thickness'));
+    parte('Brazos',miembro(o,e,[aw,aw*.95,8.5*k,9.5*k*m,6],[0,.25,.52,.62,1]),fp);
+    const hx=e[0]+dir[0]*16*h,hy=e[1]+dir[1]*16*h;
+    partes.push(`<ellipse class="parte" data-zona="Manos" cx="${hx}" cy="${hy}" rx="${7.5*h}" ry="${17*h}" transform="rotate(${-lado*ang} ${hx} ${hy})" fill="${fp}" ${st}/>`);
+    if(op.anclajes) partes.push(`<circle cx="${hx}" cy="${hy+(pose==='poseT'?0:6)}" r="4.5" fill="var(--acento)" stroke="#fff" stroke-width="1.5"/>`);
+  });
+  // cuello y cabeza
+  const nh=11*(.8+.4*g('neck_thickness'))*(1+.15*q.sexo);
+  parte('Cuello',`M${C-nh},${chin-8} L${C+nh},${chin-8} L${C+nh*1.15},${shY+4} L${C-nh*1.15},${shY+4}Z`,fp);
+  // tronco
+  const pts=[[0,shY-4],[nh*1.25,shY-3],[SW*.62,shY-1],[SW,shY+10],[SW*.86,shY+36],[SW*.8,chestY],[WW,waistY],[HW,hipY],[HW*.93,crotch+4],[HW*.45,crotch+10],[0,crotch+8]];
+  const torso=pts.concat(pts.slice(1,-1).reverse().map(p=>[-p[0],p[1]])).map(p=>[C+p[0],p[1]]);
+  parte('Torso',suave(torso),fp);
+  if(op.prenda!==false){ // prenda base pintada (una pieza)
+    const pr=[[0,chestY-6],[SW*.38,chestY-16],[SW*.42,shY+14],[SW*.52,shY+16],[SW*.78,chestY-4],[WW*1.02,waistY],[HW*1.0,hipY+2],[HW*.7,crotch-14],[0,crotch+8]];
+    const prenda=pr.concat(pr.slice(1,-1).reverse().map(p=>[-p[0],p[1]])).map(p=>[C+p[0],p[1]]);
+    partes.push(`<path class="parte" data-zona="Torso" d="${suave(prenda)}" fill="${fr}" ${plano?'stroke="var(--borde-fuerte)" stroke-width="1.5"':'stroke="#2B2233" stroke-width="'+(trazo*.7)+'"'}/>`);
+  }
+  partes.push(`<ellipse class="parte" data-zona="Cabeza" cx="${C}" cy="${hc}" rx="${rx}" ry="${ry}" fill="${fp}" ${st}/>`);
+  out.push(`<g>${partes.join('')}</g>`);
+  if(op.toques){ // zonas que se pueden tocar en la vista
+    const t=(z,el)=>out.push(el.replace('<e ',`<ellipse class="toque" data-zona="${z}" `));
+    t('Cabeza',`<e cx="${C}" cy="${hc}" rx="${rx+4}" ry="${ry+4}"/>`);
+    t('Cuello',`<e cx="${C}" cy="${(chin+shY)/2}" rx="${nh+6}" ry="${(shY-chin)/2+4}"/>`);
+    t('Hombros',`<e cx="${C-SW*.82}" cy="${shY+10}" rx="18" ry="16"/>`);t('Hombros',`<e cx="${C+SW*.82}" cy="${shY+10}" rx="18" ry="16"/>`);
+    t('Pecho',`<e cx="${C}" cy="${chestY}" rx="${SW*.7}" ry="24"/>`);
+    t('Cintura',`<e cx="${C}" cy="${waistY}" rx="${WW*.95}" ry="16"/>`);
+    t('Caderas',`<e cx="${C}" cy="${hipY+2}" rx="${HW*.98}" ry="18"/>`);
+  }
+  return out.join('');
+}
+function metricas(V){const q=geometria(V);const alto=(q.G-q.top)*q.s,cab=(2*q.ry*1.04)*q.s;return{m:(alto/560*1.70),cab:alto/cab}}
+
+/* ===================== pintar ===================== */
+const ICON={
+ cuerpo:'<circle cx="12" cy="5" r="2.6"/><path d="M8 21l1.5-7L7 9.5h10L14.5 14 16 21"/>',
+ cara:'<circle cx="12" cy="12" r="8.5"/><circle cx="9" cy="11" r="1" fill="currentColor"/><circle cx="15" cy="11" r="1" fill="currentColor"/><path d="M9.5 15.5c1.4 1 3.6 1 5 0"/>',
+ pelo:'<path d="M5 14c0-5 3-9 7-9s7 4 7 9"/><path d="M5 14c0 3 1 5 2 6M19 14c0 3-1 5-2 6"/><path d="M8 9c2 1 6 1 8-1"/>',
+ ropa:'<path d="M8 4 4 7l2 4 2-1v10h8V10l2 1 2-4-4-3c-.5 1.5-2 2.5-4 2.5S8.5 5.5 8 4z"/>',
+ accesorios:'<path d="M12 3l2.4 5 5.6.8-4 3.9.9 5.5L12 15.6 7.1 18.2l.9-5.5-4-3.9 5.6-.8z"/>',
+ estilo:'<circle cx="12" cy="12" r="8.5"/><path d="M12 3.5a8.5 8.5 0 0 0 0 17z" fill="currentColor"/>',
+};
+const PEST=[['cuerpo','Cuerpo',0],['cara','Cara y ojos',1],['pelo','Pelo',1],['ropa','Ropa',1],['accesorios','Accesorios',1],['estilo','Estilo',0]];
+function svgI(n){return`<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">${ICON[n]}</svg>`}
+function pintarPestanas(){
+  $('#pestanas').innerHTML=PEST.map(([id,n,p])=>`<button class="pestana ${E.pestana===id?'on':''}" data-p="${id}" title="${p?'Llega con la expansión: '+n.toLowerCase():n}">${svgI(id)}${n}${p?' <span class="pronto">Pronto</span>':''}</button>`).join('');
+  document.querySelectorAll('.pestana').forEach(b=>b.onclick=()=>{const p=PEST.find(x=>x[0]===b.dataset.p);if(p[2]){tostada(p[1]+': llega con la fase AB (assets) o la 9 (cara)');return}E.pestana=p[0];todo()});
+}
+function pintarIzq(){
+  const seg=$('#segIzq');
+  if(E.pestana==='estilo'){seg.innerHTML='<button class="on">Estilos</button>';$('#izqContenido').innerHTML='<div class="titulo-sec">Elige un estilo</div><div class="rejilla">'+ESTILOS.map(([id,n,p],i)=>`<div class="tarjeta ${i===0?'on':''} ${p?'bloq':''}"><div class="mini">${miniFigura(PLANTILLAS[i%3+0][2],'e'+id,{contorno:id==='arcilla'?0:id==='comic'?4:2.5})}</div><div class="nom">${n}</div>${p?'<span class="pronto">Pronto</span>':''}<span class="ok">${check()}</span></div>`).join('')+'</div>';return}
+  seg.innerHTML=`<button class="${E.izq==='zonas'?'on':''}" data-v="zonas">Zonas</button><button class="${E.izq==='plantillas'?'on':''}" data-v="plantillas">Plantillas</button>`;
+  seg.querySelectorAll('button').forEach(b=>b.onclick=()=>{E.izq=b.dataset.v;pintarIzq()});
+  if(E.izq==='zonas'){
+    $('#izqContenido').innerHTML=`<svg class="silueta" viewBox="150 40 300 640">${figura(neutros(),{plano:true,prenda:false,toques:true})}</svg>
+      <div style="text-align:center;font-size:12px;font-weight:700;color:var(--texto-3)">Toca una zona · Global, Glúteos y Dedos en la lista</div><div class="titulo-sec">Zonas</div><div class="lista-z">${ZONAS.map(z=>`<button class="fz ${E.zona===z?'on':''}" data-zona="${z}"><span class="pt"></span>${z}<svg class="candado" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="5" y="11" width="14" height="9" rx="2"/><path d="M8 11V8a4 4 0 0 1 8 0v3"/></svg><span class="n">${filasDe(z).length}</span></button>`).join('')}</div>`;
+    document.querySelectorAll('#izqContenido [data-zona]').forEach(el=>{el.onclick=()=>elegirZona(el.dataset.zona);if(el.dataset.zona===E.zona&&el.classList.contains('toque'))el.classList.add('on')});
+    document.querySelectorAll('.silueta .toque').forEach(el=>el.setAttribute('class','zona'+(el.dataset.zona===E.zona?' on':'')));
+    document.querySelectorAll('.silueta .parte').forEach(el=>{el.classList.add('zona-p');el.style.cursor='pointer';if(el.dataset.zona===E.zona){el.setAttribute('fill','var(--acento-suave)');el.setAttribute('stroke','var(--acento-linea)')}});
+  }else{
+    $('#izqContenido').innerHTML='<div class="titulo-sec">Cuerpos de serie</div><div class="rejilla">'+PLANTILLAS.map(([id,n,v])=>`<button class="tarjeta ${E.plantilla===id?'on':''}" data-pl="${id}"><div class="mini">${miniFigura(v,id)}</div><div class="nom">${n}</div><div class="lic">CC0</div><span class="ok">${check()}</span></button>`).join('')+'</div><div class="consejo">💡 Una plantilla es solo un punto de partida: después ajusta cada zona.</div>';
+    document.querySelectorAll('[data-pl]').forEach(b=>b.onclick=()=>{const p=PLANTILLAS.find(x=>x[0]===b.dataset.pl);guardarHist();E.valores=Object.assign(neutros(),p[2]);E.plantilla=p[0];todo();tostada('Plantilla «'+p[1]+'» aplicada · Ctrl+Z para volver')});
+  }
+}
+function check(){return'<svg viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"><path d="m5 12 5 5 9-10"/></svg>'}
+function miniFigura(v,id,extra={}){return`<svg viewBox="200 64 200 600" width="100%" height="150">${figura(Object.assign(neutros(),v),Object.assign({id:'m'+id,contorno:2.5},extra))}</svg>`}
+function filasDe(z){return FILAS.filter(f=>f.zona===z)}
+function pintarVista(){
+  const v=E.valores;let html=figura(v,{toques:true,pose:E.pose,prenda:E.prenda,rejilla:E.rejilla,anclajes:true});
+  const q=geometria(v);
+  const cuerpo=`<g transform="translate(${q.C},${q.G}) scale(${q.s}) translate(${-q.C},${-q.G})">${html}</g>`;
+  const cabezaY=q.G-(q.G-q.hc)*q.s;
+  $('#escena').innerHTML=E.vistaCam==='cara'?`<g transform="translate(300,300) scale(2.6) translate(-300,${-cabezaY})">${cuerpo}</g>`:cuerpo;
+  document.querySelectorAll('#escena [data-zona]').forEach(el=>{el.onclick=()=>elegirZona(el.dataset.zona);el.innerHTML=`<title>${el.dataset.zona}</title>`});
+  $('#vistas').innerHTML=[['frente','Frente'],['lado','Lado'],['tres','¾'],['espalda','Espalda'],['cara','Cara']].map(([id,n])=>`<button class="chip ${E.vistaCam===id?'on':''}" data-c="${id}">${n}</button>`).join('');
+  document.querySelectorAll('[data-c]').forEach(b=>b.onclick=()=>{E.vistaCam=b.dataset.c;if(!['frente','cara'].includes(E.vistaCam))tostada('En la maqueta la figura es plana: en el programa la cámara gira');pintarVista()});
+  const I=[['sim','Simetría','<path d="M12 3v18"/><path d="M8 7 4 12l4 5M16 7l4 5-4 5"/>',E.sim],['prenda','Prenda base','<path d="M8 4 4 7l2 4 2-1v10h8V10l2 1 2-4-4-3c-.5 1.5-2 2.5-4 2.5S8.5 5.5 8 4z"/>',E.prenda],['rejilla','Rejilla','<path d="M3 9h18M3 15h18M9 3v18M15 3v18"/>',E.rejilla],['luz','Luz de vista previa (no se exporta)','<circle cx="12" cy="12" r="4"/><path d="M12 2v2M12 20v2M2 12h2M20 12h2M5 5l1.4 1.4M17.6 17.6 19 19M5 19l1.4-1.4M17.6 6.4 19 5"/>',false]];
+  $('#interruptores').innerHTML=I.map(([id,n,p,on])=>`<button class="ico ${on?'on':''}" data-i="${id}" title="${n}" aria-label="${n}"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">${p}</svg></button>`).join('');
+  document.querySelectorAll('[data-i]').forEach(b=>b.onclick=()=>{const i=b.dataset.i;if(i==='luz'){tostada('Luz de vista previa: ángulo e intensidad (solo para mirar)');return}E[i]=!E[i];todo()});
+  $('#poses').innerHTML=[['reposo','Reposo'],['poseT','Pose T'],['caminar','Caminar'],['correr','Correr'],['atacar','Atacar'],['sentarse','Sentarse'],['rango','Rango']].map(([id,n])=>`<button class="chip ${E.pose===id?'on':''}" data-po="${id}">${n}</button>`).join('')+`<button class="chip play" title="Reproducir / pausar" aria-label="Reproducir"><svg viewBox="0 0 24 24" fill="currentColor"><path d="M7 4v16l13-8z"/></svg></button>`;
+  document.querySelectorAll('[data-po]').forEach(b=>b.onclick=()=>{E.pose=b.dataset.po;todo()});
+}
+function pintarFilas(){
+  const busq=$('#buscar').value.trim().toLowerCase();
+  if(E.pestana==='estilo'){
+    $('#tituloZona').innerHTML='Acabado <small>5 ajustes</small>';$('#buscar').parentElement.style.display='none';
+    const A=E.acabado;const fila=(id,n,ay,v,min,max,paso,un)=>`<div class="fila-d" title="${ay}"><div class="l1"><span class="nom">${n}</span></div><div class="l2"><div class="pista-b"><div class="carril"></div><div class="relleno" style="left:9px;width:calc((100% - 18px)*${(v-min)/(max-min)})"></div><input type="range" min="${min}" max="${max}" step="${paso}" value="${v}" data-ac="${id}"></div><input class="valor" value="${String(v).replace('.',',')}${un}" readonly><button class="reset" disabled>${svgReset()}</button></div></div>`;
+    $('#filas').innerHTML=`<div class="fila-d"><div class="l1"><span class="nom">Color de piel</span></div><div class="color-fila">${PIELES.map(c=>`<span class="muestra ${E.piel===c?'on':''}" style="background:${c}" data-piel="${c}" title="${c}"></span>`).join('')}<label class="muestra" style="background:conic-gradient(red,yellow,lime,cyan,blue,magenta,red);display:grid;place-items:center" title="Otro color"><input type="color" style="opacity:0;width:1px" id="otroColor"></label></div></div>`+
+      fila('suav','Suavidad de la sombra','Lo suave que es el paso entre luz y sombra.',A.suav,0,50,1,'')+fila('brillo','Brillo de borde: fuerza','Luz suave en la silueta, para separarla del fondo.',A.brillo,0,100,1,'')+fila('ancho','Brillo de borde: ancho','Cuánto entra el brillo de borde hacia dentro.',A.ancho,0,100,1,'')+fila('contorno','Contorno','Grosor de la línea de contorno, en píxeles. 0 = sin contorno.',A.contorno,0,10,.5,' px')+
+      '<div class="consejo">🎨 La sombra sale del color de piel, más oscura: cualquier color se ve bien.</div>';
+    document.querySelectorAll('[data-piel]').forEach(m=>m.onclick=()=>{E.piel=m.dataset.piel;todo()});
+    $('#otroColor').oninput=e=>{E.piel=e.target.value;todo()};
+    document.querySelectorAll('[data-ac]').forEach(i=>i.oninput=()=>{E.acabado[i.dataset.ac]=+i.value;pintarVista();pintarFilas()});
+    $('#pieDer').innerHTML=`<button class="btn" onclick="E.acabado={suav:4,brillo:25,ancho:30,contorno:2.5};E.piel='#CCCCCC';todo()">${svgReset()}Restablecer acabado</button>`;return}
+  $('#buscar').parentElement.style.display='';
+  $('#pieDer').innerHTML=`<button class="btn" id="restZona">${svgReset()}Restablecer zona</button>`;
+  $('#restZona').onclick=()=>{guardarHist();filasDe(E.zona).forEach(f=>claveDe(f).forEach(k=>E.valores[k]=.5));todo()};
+  let lista=busq?FILAS.filter(f=>(f.nombre+' '+f.ayuda+' '+f.zona).toLowerCase().includes(busq)):filasDe(E.zona);
+  $('#tituloZona').innerHTML=busq?`Resultados <small>${lista.length} ajustes</small>`:`${E.zona} <small>${lista.length} ajustes</small>`;
+  const html=[];
+  lista.forEach(f=>{
+    const lados=f.lados==2&&!E.sim?[['_l','Izq.'],['_r','Der.']]:[[f.lados==2?'_r':'','']];
+    lados.forEach(([suf,et])=>{const k=f.id+suf,v=val(k),n=.5;
+      const izq=Math.min(v,n),der=Math.max(v,n);
+      html.push(`<div class="fila-d" title="${f.ayuda}"><div class="l1"><span class="nom" data-dbl="${f.id}">${f.nombre}${et?' · '+et:''}</span><span class="ins ${f.tipo}">${TIPOS[f.tipo]}</span>${f.lados==2&&E.sim?`<span class="ambos" title="Con Simetría, mueve los dos lados">⇆ ambos lados</span>`:''}${busq?`<span class="zona-et">${f.zona}</span>`:''}</div>
+      <div class="l2"><div class="pista-b"><div class="carril"></div><div class="relleno" style="left:calc(9px + (100% - 18px)*${izq});width:calc((100% - 18px)*${der-izq})"></div><div class="neutro" style="left:calc(9px + (100% - 18px)*${n} - 1px)"></div><input type="range" min="0" max="100" value="${Math.round(v*100)}" data-k="${f.id}" data-suf="${suf}" aria-label="${f.zona} ${f.nombre}"></div><input class="valor" value="${Math.round(v*100)}" data-num="${f.id}" data-suf="${suf}" aria-label="Valor"><button class="reset" data-r="${f.id}" data-suf="${suf}" title="Restablecer (o doble clic en el nombre)" ${Math.abs(v-n)<.005?'disabled':''}>${svgReset()}</button></div>
+      ${f.a?`<div class="extremos"><span>${f.a}</span><span>${f.b}</span></div>`:''}</div>`)})});
+  $('#filas').innerHTML=html.join('')+(busq?'':`<div class="consejo">💡 Haz doble clic en un nombre para volver a su valor neutro.</div>`);
+  const fijar=(id,suf,v)=>{const f=FILAS.find(x=>x.id===id);const ks=f.lados==2&&E.sim?[id+'_l',id+'_r']:[id+suf];ks.forEach(k=>E.valores[k]=v)};
+  document.querySelectorAll('[data-k]').forEach(i=>{i.onpointerdown=()=>guardarHist();i.oninput=()=>{fijar(i.dataset.k,i.dataset.suf,+i.value/100);E.plantilla='';pintarVista();actualizarFila(i);pintarEstado();marcar()}});
+  document.querySelectorAll('[data-num]').forEach(i=>i.onchange=()=>{guardarHist();fijar(i.dataset.num,i.dataset.suf,Math.max(0,Math.min(100,parseInt(i.value)||0))/100);todo()});
+  document.querySelectorAll('[data-r]').forEach(b=>b.onclick=()=>{guardarHist();fijar(b.dataset.r,b.dataset.suf,.5);todo()});
+  document.querySelectorAll('[data-dbl]').forEach(s=>s.ondblclick=()=>{guardarHist();const f=FILAS.find(x=>x.id===s.dataset.dbl);claveDe(f).forEach(k=>E.valores[k]=.5);todo()});
+}
+function actualizarFila(i){const v=+i.value/100,izq=Math.min(v,.5),der=Math.max(v,.5),fila=i.closest('.fila-d');fila.querySelector('.relleno').style.left=`calc(9px + (100% - 18px)*${izq})`;fila.querySelector('.relleno').style.width=`calc((100% - 18px)*${der-izq})`;fila.querySelector('.valor').value=i.value;fila.querySelector('.reset').disabled=Math.abs(v-.5)<.005}
+function claveDe(f){return f.lados==2?[f.id+'_l',f.id+'_r']:[f.id]}
+function svgReset(){return'<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 12a9 9 0 1 0 3-6.7L3 8"/><path d="M3 3v5h5"/></svg>'}
+function pintarEstado(){
+  const m=metricas(E.valores);$('#medidas').textContent=`${m.m.toFixed(2).replace('.',',')} m · ${m.cab.toFixed(1).replace('.',',')} cabezas`;
+  const inf=$('#informe');let est,txt,ic;
+  if(E.pose==='reposo'){est='nada';txt='Informe: elige una pose para probar los huesos';ic='<circle cx="12" cy="12" r="9"/><path d="M12 8v5M12 16h.01"/>'}
+  else if(E.pose==='atacar'){est='aviso';txt='Informe: 1 aviso';ic='<path d="M12 3 2 20h20z"/><path d="M12 10v4M12 17h.01"/>'}
+  else{est='bien';txt='Informe: todo bien';ic='<path d="m5 12 5 5 9-10"/>'}
+  inf.className='pastilla '+est;inf.innerHTML=`<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.6" stroke-linecap="round" stroke-linejoin="round">${ic}</svg>${txt}`;
+  $('#cajon').innerHTML=`<h3>Informe de deformación <span class="pastilla ${est}">${txt.replace('Informe: ','')}</span><button class="ico" style="margin-left:auto" onclick="E.informe=false;pintarEstado()" aria-label="Cerrar">✕</button></h3>
+   <div class="fila"><span class="pastilla bien">${check()}</span><b>Pesos</b> máximo 4 influencias por vértice, y suman 1</div>
+   <div class="fila"><span class="pastilla bien">${check()}</span><b>Huesos</b> 53 del perfil humanoide · 4 anclajes</div>
+   ${E.pose==='atacar'?`<div class="fila"><span class="pastilla aviso">!</span><b>Hombros</b> con el brazo sobre la cabeza, la piel se hunde 21 mm<button class="btn ir" onclick="elegirZona('Hombros')">Ir a Hombros</button></div>`:`<div class="fila"><span class="pastilla bien">${check()}</span><b>Malla</b> sin autointersecciones ni triángulos estirados</div>`}`;
+  $('#cajon').classList.toggle('abierto',E.informe);
+  $('#tema').innerHTML=document.documentElement.dataset.tema==='claro'?'<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M20 14.5A8 8 0 0 1 9.5 4 8 8 0 1 0 20 14.5z"/></svg>Tema oscuro':'<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="4"/><path d="M12 2v2M12 20v2M2 12h2M20 12h2"/></svg>Tema claro';
+  $('#deshacer').disabled=!E.historial.length;$('#rehacer').disabled=!E.futuro.length;
+}
+function marcar(){$('#archivo').classList.toggle('cambiado',JSON.stringify(E.valores)!==E.guardado)}
+function guardarHist(){E.historial.push(JSON.stringify(E.valores));if(E.historial.length>200)E.historial.shift();E.futuro=[]}
+function elegirZona(z){E.zona=z;E.pestana='cuerpo';$('#buscar').value='';todo()}
+function todo(){pintarPestanas();pintarIzq();pintarVista();pintarFilas();pintarEstado();marcar()}
+let tt;function tostada(t){const el=$('#tostada');el.textContent=t;el.classList.add('ver');clearTimeout(tt);tt=setTimeout(()=>el.classList.remove('ver'),2200)}
+
+/* ===================== acciones ===================== */
+$('#buscar').oninput=pintarFilas;
+$('#informe').onclick=()=>{E.informe=!E.informe;pintarEstado()};
+$('#tema').onclick=()=>{const h=document.documentElement;h.dataset.tema=h.dataset.tema==='claro'?'oscuro':'claro';todo()};
+$('#cerrarPista').onclick=()=>$('#pista').style.opacity=0;
+$('#deshacer').onclick=()=>{if(!E.historial.length)return;E.futuro.push(JSON.stringify(E.valores));E.valores=JSON.parse(E.historial.pop());todo()};
+$('#rehacer').onclick=()=>{if(!E.futuro.length)return;E.historial.push(JSON.stringify(E.valores));E.valores=JSON.parse(E.futuro.pop());todo()};
+$('#guardar').onclick=()=>{E.guardado=JSON.stringify(E.valores);marcar();tostada('Guardado en personaje.json')};
+$('#abrir').onclick=()=>tostada('Abre un preset o, más adelante, un proyecto .gmolde');
+$('#azar').onclick=()=>{guardarHist();const sem=Math.floor(Math.random()*9000)+1000;let x=sem;const r=()=>{x=(x*16807)%2147483647;return x/2147483647};claves().forEach(k=>E.valores[k]=+(0.2+0.6*r()).toFixed(2));E.plantilla='';todo();tostada('Aleatorio · semilla '+sem+' · Ctrl+Z para volver')};
+$('#exportar').onclick=()=>$('#velo').classList.add('abierto');
+$('#cancelar').onclick=()=>$('#velo').classList.remove('abierto');
+$('#okExp').onclick=()=>{$('#velo').classList.remove('abierto');tostada('Exportado: personaje.glb y personaje.tres')};
+document.addEventListener('keydown',e=>{if(e.ctrlKey&&e.key.toLowerCase()==='z'){e.preventDefault();(e.shiftKey?$('#rehacer'):$('#deshacer')).click()}if(e.ctrlKey&&e.key.toLowerCase()==='y'){e.preventDefault();$('#rehacer').click()}if(e.key==='Escape')$('#velo').classList.remove('abierto')});
+const P=new URLSearchParams(location.search);
+if(P.get('tema'))document.documentElement.dataset.tema=P.get('tema');
+if(P.get('zona'))E.zona=P.get('zona');
+if(P.get('pestana'))E.pestana=P.get('pestana');
+if(P.get('izq'))E.izq=P.get('izq');
+if(P.get('pose'))E.pose=P.get('pose');
+if(P.get('plantilla')){const p=PLANTILLAS.find(x=>x[0]===P.get('plantilla'));if(p){E.valores=Object.assign(neutros(),p[2]);E.plantilla=p[0]}}
+if(P.get('informe'))E.informe=true;
+if(P.get('piel'))E.piel='#'+P.get('piel');
+todo();
+</script>
+</body>
+</html>

@@ -1,5 +1,5 @@
 extends Control
-# Paso 4.1: ventana del editor con las pestañas de diseno/maqueta-pestana-cuerpo.html; solo Cuerpo está activa.
+# Paso 4.1: ventana del editor con las pestañas de la maqueta de la pestaña Cuerpo (hoy diseno/maqueta-v2.html); solo Cuerpo está activa.
 # Abrir: (ulimit -v 4000000; timeout 900 godot --path godot)
 # Autoprueba (paso A2): (ulimit -v 4000000; timeout 120 godot --headless --path godot -- --autoprueba)
 # Las pestañas se crean aquí (no en main.tscn) para que la prueba pueda cargar este script desde otro proyecto.

@@ -1,5 +1,5 @@
 extends HBoxContainer
-# Paso 4.5: barra inferior de la pestaña Cuerpo (como en diseno/maqueta-pestana-cuerpo.html).
+# Paso 4.5: barra inferior de la pestaña Cuerpo (como en la maqueta de la pestaña Cuerpo (hoy diseno/maqueta-v2.html)).
 # - Probar huesos: alterna el maniquí entre el reposo (pose A) y la pose T, la que se exporta. El banco es la Fase 5.
 # - Animación (paso 5.1): lista con «Sin animación», los clips de datos/animaciones (en bucle), las poses fijas (5.2) y,
 #   al final, «Rango de movimiento» (5.9).
