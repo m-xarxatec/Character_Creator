@@ -19,7 +19,6 @@
 
 - Ir añadiendo filas a la tabla del paso 2.1 hasta cubrir cada detalle del cuerpo (MakeHuman trae unas 800 formas listas: orejas, nariz, mandíbula, dedos, pies…).
 - Deslizador **Edad** (primera parte, de joven a mayor): la macro `age` de MakeHuman, con sus correcciones.
-- **Futuro: edades de 5 a 60 años, como Anny.** Deslizador Edad completo y plantillas prehechas por edad que después se ajustan con los deslizadores. D42 aprobada el 2026-11-19 (ver X.17 en `propuestas/expansion_v2.md`).
 
 ---
 

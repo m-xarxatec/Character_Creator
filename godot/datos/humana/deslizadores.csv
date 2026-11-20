@@ -1,5 +1,5 @@
 id,zona,nombre,tipo,decr,incr,lados,neutro
-height,Global,Altura,Proporción,escala:Root=0.85,escala:Root=1.15,1,0.5
+height,Global,Altura,Proporción,escala:Root=0.65,escala:Root=1.15,1,0.5
 gender,Global,Complexión,Forma,macro:gender=0,macro:gender=1,1,0.5
 muscle,Global,Músculo,Forma,macro:muscle=0,macro:muscle=1,1,0.5
 weight,Global,Grasa,Forma,macro:weight=0,macro:weight=1,1,0.5

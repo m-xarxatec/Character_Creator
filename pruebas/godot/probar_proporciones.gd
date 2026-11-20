@@ -52,7 +52,7 @@ func _scales(changes: Dictionary) -> Dictionary:
 func _check_formula() -> void:
 	var values: Dictionary = proportions.neutral_values(species.sliders)
 	check("6 valores de Proporción", values.size() == 6, str(values.keys()))
-	var expected := {"Root": [0.85, 1.15], "Head": [0.8, 1.3], "LeftHand": [0.8, 1.2], "RightHand": [0.8, 1.2],
+	var expected := {"Root": [0.65, 1.15], "Head": [0.8, 1.3], "LeftHand": [0.8, 1.2], "RightHand": [0.8, 1.2],
 		"LeftFoot": [0.8, 1.2], "RightFoot": [0.8, 1.2]}
 	var ok := true
 	for v: float in [0.0, 0.25, 0.5, 0.75, 1.0]:
@@ -66,7 +66,7 @@ func _check_formula() -> void:
 			var want := lerpf(low, 1.0, 2.0 * v) if v < 0.5 else lerpf(1.0, high, 2.0 * v - 1.0)
 			ok = ok and result.size() == 6 and is_equal_approx(result[bone], want)
 	check("fórmula en 0, 0,25, 0,5, 0,75 y 1 (6 huesos)", ok)
-	check("height 0,25 → Root × 0,925", is_equal_approx(_scales({"height": 0.25})["Root"], 0.925))
+	check("height 0,25 → Root × 0,825", is_equal_approx(_scales({"height": 0.25})["Root"], 0.825))
 
 
 func _pose(bone: String) -> Transform3D:

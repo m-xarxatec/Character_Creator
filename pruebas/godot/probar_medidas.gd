@@ -16,6 +16,10 @@ const HUMAN := {"heads": [6.0, 8.5], "legs": [0.40, 0.55], "shoulders": [1.2, 2.
 ## Deslizador → la medida que sube al pasarlo de 0 a 1 (head_size: la baja, la cabeza crece).
 const FOLLOWS := {"leg_length": "legs", "shoulder_width": "shoulders", "waist_width": "waist", "hand_size_l": "hand",
 	"foot_size_l": "foot", "head_size": "heads"}
+## Paso PL.8: un niño de unos 5 años (D42) solo con deslizadores desde el cuerpo normal (sin deslizador Edad).
+const CHILD := {"height": 0.0, "head_size": 1.0, "leg_length": 0.0, "arm_length": 0.0, "neck_length": 0.0,
+	"torso_length": 0.0, "shoulder_width": 0.0}
+const CHILD_MAX := {"height": 1.10, "heads": 5.5}  # PROVISIONAL: metros y cabezas de un niño de 5 años
 const PRESETS := ["godot/datos/humana/presets/anime.json", "pruebas/fase_3/estilo/anime_femenino.json",
 	"pruebas/fase_3/estilo/anime_masculino.json"]
 
@@ -100,6 +104,13 @@ func _check_proportions(main: Control, exact: Dictionary) -> void:
 		var up := slider != "head_size"
 		check("%s de 0 a 1 %s %s" % [slider, "sube" if up else "baja", measure], high > low if up else high < low,
 			"%.3f -> %.3f" % [low, high])
+	var child := neutral.duplicate()
+	child.merge(CHILD, true)
+	main.editor.load_values(child)
+	var kid: Dictionary = Measures.proportions(mesh, skeleton)
+	print("  MEDIDA niño solo con deslizadores: %.2f m, %.2f cabezas" % [kid["height"], kid["heads"]])
+	check("se puede hacer un niño de 5 años con los deslizadores (≤ %.2f m y ≤ %.1f cabezas)" % [CHILD_MAX["height"],
+		CHILD_MAX["heads"]], kid["height"] <= CHILD_MAX["height"] and kid["heads"] <= CHILD_MAX["heads"])
 	var root_dir := ProjectSettings.globalize_path("res://").path_join("../..").simplify_path()
 	for path: String in PRESETS:
 		var values := neutral.duplicate()

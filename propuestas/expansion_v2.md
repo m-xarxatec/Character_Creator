@@ -48,8 +48,8 @@ Estado: **Hecho** · **Plan** (ya está en `PLAN.md` o en la hoja de ruta) · **
 | Pies al suelo al animar (IK de pies) | Nuevo | X.1 |
 | Recortar `UAL1_Standard.glb` | Plan | P.6 |
 | Más deslizadores de MakeHuman | Plan + Nuevo | 9.2 (cara); X.2 (cuerpo: pies, dedos, orejas…) |
-| Deslizador Edad (de joven a mayor; las demás edades, X.17) | Nuevo | PL.8 |
-| Edades de 5 a 60 años, como Anny | Nuevo | X.17 (D42 aprobada) |
+| Deslizador Edad | Descartado (2026-11-21) | PL.8: Altura desde ×0,65 |
+| Edades de 5 a 60 años, como Anny | Con los deslizadores (2026-11-21) | PL.8 (D42) |
 | Pestaña Cara y ojos | Plan | Fase 9 |
 | Pestaña Pelo | Plan + Nuevo | AB.9a–AB.9d (casquete, peinados CC0 moldeados, peinados propios, pelo de MakeHuman) + Fase 11 (física) |
 | Pestaña Ropa | Plan + Nuevo | AB.4–AB.8, AB.10 + Fase 12 |
@@ -254,12 +254,15 @@ Estado: **Hecho** · **Plan** (ya está en `PLAN.md` o en la hoja de ruta) · **
 - **Nivel:** medio · **Tam.:** S–M.
 
 ### PL.8 Deslizador Edad (primera parte: de joven a mayor)
-- **Objetivo:** fila nueva `age,Global,Edad,Forma,macro:age=<mín>,macro:age=1,1,0` con sus correcciones, y las plantillas **Mayor** y **Mayora**.
+> **Descartado por el responsable el 2026-11-21:** sin deslizador Edad (exacto pedía ~150 formas más). En su lugar,
+> Global › Altura baja hasta ×0,65 y cada uno ajusta la figura (`ruta/pasos/PL.8_figura_pequena.md`).
+
+- **Objetivo:** fila nueva `age` (Global › Edad) de joven (25 años) a 60 años (D42: nada por encima de 60), con sus correcciones, y las plantillas **Mayor** y **Mayora** (60 años).
 - **Archivos:** `blender/exportar_datos.py`, `godot/datos/humana/*` (sube la `version` del manifiesto), `deslizadores.csv`, pruebas de la fase 2 y `probar_rendimiento.gd`.
-- **Diseño:** el deslizador mezcla **solo las variaciones `young` y `old`** de MakeHuman (con sus correcciones), como hace Anny (`propuestas/proyectos_parecidos.md` §1.2). **Comprobar** en MPFB que `young` corresponde a unos 25 años. La edad queda **fuera** de «Exageración» (16.2) y del aleatorio. **Después (X.17):** el rango se amplía hasta los 5 años. Medir la memoria que añade (`RENDIMIENTO.md` O6).
+- **Diseño:** el deslizador va de la macro `age` 0,5 (`young`, 25 años) a la que da 60 años (con sus correcciones), como hace Anny (`propuestas/proyectos_parecidos.md` §1.2). **Comprobar** en MPFB la equivalencia en años. La edad queda **fuera** de «Exageración» (16.2) y del aleatorio. **Después (X.17):** el rango se amplía hasta los 5 años. Medir la memoria que añade (`RENDIMIENTO.md` O6).
 - **Prueba:** el deslizador a 0 da exactamente la variación `young`; las pruebas de reajuste de huesos (fase 2) siguen < 1 mm.
 - **Juicio visual:** sí.
-- **Nivel:** fuerte · **Tam.:** M · **Modelo:** Fable · **Depende de:** D38.
+- **Nivel:** fuerte · **Tam.:** M · **Modelo:** Fable · **Depende de:** D42 (decidida).
 
 ### PL.9 (opcional) Chibi con la misma malla
 - **Objetivo:** intentar el chibi (2,5–3 cabezas) sin base nueva: rangos ampliados de Proporción + formas propias de cuello y cabeza. El 3.12 llegó a 3,46 cabezas fuera de rango.
@@ -467,7 +470,7 @@ Un peinado CC0 moldeado sigue siendo CC0 y puede entrar en el Pack Base 1 (D36);
 | X.13 | Traducciones (español base, inglés) | simple–medio | M | `TranslationServer` + CSV de traducciones; los textos salen del código |
 | X.14 | Simetría relativa (mover un lado suma lo mismo al otro) | simple | S | Opción en `BodyEditor` |
 | X.15 | Opción de 8 influencias al exportar | medio | S | Aviso: algunos motores solo leen 4 |
-| X.17 | **Edades de 5 a 60 años, como Anny:** deslizador Edad completo (`child` ↔ `young` ↔ `old`) y plantillas prehechas por edad (Niña, Niño, Adolescente, Adulta, Adulto, Mayor) que después se ajustan con los deslizadores | fuerte | L | D42 aprobada. Salvaguardas: por debajo de adulto la prenda base no se puede ocultar, sin chibi ni «Exageración», sin poses del estudio que no sean neutras, y la edad nunca entra en el aleatorio. **Comprobar** en MPFB qué edad da cada variación |
+| X.17 | ~~Edades de 5 a 60 años con deslizador Edad y plantillas por edad~~ | — | — | **Descartado el 2026-11-21:** sin deslizador Edad: con Altura (desde ×0,65) y los demás deslizadores (PL.8, responsable, 2026-11-21) |
 | X.16 | Reproducción mínima del cuelgue de `GLTFDocument` (BoneAttachment sin malla ni piel) | medio | S | El responsable decide si lo reporta a Godot |
 
 ---
@@ -486,7 +489,7 @@ Un peinado CC0 moldeado sigue siendo CC0 y puede entrar en el Pack Base 1 (D36);
 | D40 | Código de Anny (Apache 2.0) y Character Studio (MIT): ¿se porta con su cabecera o se reimplementa? | a) Reimplementar en GDScript y citar en `CREDITOS.md` · b) Portar con cabecera y aviso | **a)** Están en Python y JavaScript: portar ya es reescribir. Se citan igual |
 | D41 | ¿Las 52 expresiones «Face Units» (CC0) entran en `datos/` cuando llegue la Fase 9? | a) Sí, con D31 · b) No, expresiones propias | **a)** Origen limpio y estándar ARKit; ahorra la parte más difícil del 9.7 |
 | D37 | ¿El pipeline vuelve a exportar los helpers de MakeHuman como piezas (AB.3)? | a) Sí · b) No, solo el camino del 12.1 | **a)** Es el camino más barato y fiable para la ropa ceñida, la falda y el pelo |
-| D38 | Rango del deslizador Edad | a) 25 a 90 años · b) 25 a 70 años | **a)**, con el mínimo fijo en los datos |
+| D38 | Rango del deslizador Edad | — | **Sustituida por D42** (responsable, 2026-11-20): de 5 a 60 años. El deslizador Edad se descartó el 2026-11-21 |
 | D42 | ¿Se permiten personajes de 5 a 60 años, como Anny (X.17)? | a) No · b) Sí, con las salvaguardas de X.17 | **Decidida el 2026-11-19: b)** |
 
 ---
