@@ -8,15 +8,17 @@ extends AcceptDialog
 signal template_chosen(values: Dictionary)
 signal recent_chosen(path: String)
 signal open_requested
+signal random_requested  # paso PL.5
 
 const SettingsFile := preload("settings_file.gd")
 const BIG := ["femenina", "masculino", "anime"]
-const BIG_THUMB := 128
+const BIG_THUMB := 112
 const SMALL_THUMB := 64
-const SMALL_COLUMNS := 4
-const RECENT_HEIGHT := 96  # px: «Recientes» se desplaza dentro, para que la ventana quepa a 1280 × 720
+const SMALL_COLUMNS := 5  # con «Aleatorio» son 9: dos filas
+const RECENT_HEIGHT := 72  # px: «Recientes» se desplaza dentro, para que la ventana quepa en 648 px de alto
 
 var cards := {}  # id → Button
+var random_card: Button  # paso PL.5: la primera de «Más cuerpos»
 var recent_box := VBoxContainer.new()
 var show_box := CheckBox.new()
 
@@ -38,6 +40,13 @@ func setup(gallery: ScrollContainer) -> void:
 	var grid := GridContainer.new()
 	grid.columns = SMALL_COLUMNS
 	column.add_child(grid)
+	random_card = gallery.random_button(SMALL_THUMB + 36)
+	random_card.size_flags_horizontal = Control.SIZE_FILL  # del ancho de las demás
+	random_card.custom_minimum_size.x = SMALL_THUMB + 16
+	random_card.pressed.connect(func() -> void:
+		hide()
+		random_requested.emit())
+	grid.add_child(random_card)
 	for id: String in gallery.cards:
 		if not id in BIG:
 			grid.add_child(_card(gallery, id, SMALL_THUMB))
@@ -53,11 +62,14 @@ func setup(gallery: ScrollContainer) -> void:
 	open.pressed.connect(func() -> void:
 		hide()
 		open_requested.emit())
-	column.add_child(open)
+	open.size_flags_horizontal = Control.SIZE_EXPAND_FILL
+	var row := HBoxContainer.new()  # en una fila: la ventana cabe en 648 px de alto
+	row.add_child(open)
 	show_box.text = "Mostrar al arrancar"
 	show_box.button_pressed = SettingsFile.get_start_screen()
 	show_box.toggled.connect(SettingsFile.set_start_screen)
-	column.add_child(show_box)
+	row.add_child(show_box)
+	column.add_child(row)
 
 
 func show_screen() -> void:

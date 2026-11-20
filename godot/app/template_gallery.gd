@@ -6,6 +6,7 @@ extends ScrollContainer
 #      gallery.template_chosen.connect(editor.load_values)
 
 signal template_chosen(values: Dictionary)
+signal random_requested  # paso PL.5: la tarjeta «Aleatorio» (la primera)
 
 const Preset := preload("../addons/creador/preset.gd")
 ## Orden de la galería (sin campo en el preset); las que no estén aquí van detrás, por orden alfabético.
@@ -17,6 +18,7 @@ const THUMB := 96  # px de la miniatura en la tarjeta
 var grid := GridContainer.new()
 var cards := {}  # id → Button, en el orden de la galería
 var templates := {}  # id → valores
+var random_card: Button  # paso PL.5
 
 
 func _init() -> void:
@@ -27,6 +29,9 @@ func _init() -> void:
 
 
 func setup(folder: String, species_id: String, sliders: Array) -> void:
+	random_card = random_button(THUMB + 32)
+	random_card.pressed.connect(random_requested.emit)
+	grid.add_child(random_card)
 	for id: String in ids(folder):
 		var loaded := Preset.from_text(FileAccess.get_file_as_string(folder.path_join(id + ".json")), species_id, sliders)
 		if loaded["error"] != "":
@@ -46,6 +51,19 @@ func setup(folder: String, species_id: String, sliders: Array) -> void:
 		card.pressed.connect(func() -> void: template_chosen.emit(templates[id].duplicate()))
 		grid.add_child(card)
 		cards[id] = card
+
+
+## Paso PL.5: tarjeta «Aleatorio» con el dado (la usa también start_screen.gd).
+static func random_button(height: int) -> Button:
+	var card := Button.new()
+	card.text = "Aleatorio"
+	card.icon = preload("tema/theme_builder.gd").icon("dado")
+	card.tooltip_text = "Un cuerpo al azar desde el de ahora (Ctrl+Z lo deshace)"
+	card.size_flags_horizontal = SIZE_EXPAND_FILL
+	card.custom_minimum_size.y = height
+	card.icon_alignment = HORIZONTAL_ALIGNMENT_CENTER
+	card.vertical_icon_alignment = VERTICAL_ALIGNMENT_TOP
+	return card
 
 
 ## Ids de los presets de la carpeta, en el orden de la galería.

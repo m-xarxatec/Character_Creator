@@ -36,6 +36,7 @@ const CommandsDialog := preload("commands_dialog.gd")
 const SettingsDialog := preload("settings_dialog.gd")
 const SettingsFile := preload("settings_file.gd")
 const StartScreen := preload("start_screen.gd")
+const Randomizer := preload("randomizer.gd")
 const TopBar := preload("top_bar.gd")
 const StatusBar := preload("status_bar.gd")
 const Measures := preload("measures.gd")
@@ -71,6 +72,7 @@ var settings_button: Button  # paso IU.9
 var settings: AcceptDialog  # paso IU.9
 var start_screen: AcceptDialog  # paso PL.4: «Nuevo personaje»
 var new_button: Button
+var rng := RandomNumberGenerator.new()  # paso PL.5: «Aleatorio»
 var ui_scale := 1.0  # paso IU.9
 var reduce_motion := false  # paso IU.9
 var grid := false  # paso IU.3: rejilla en el suelo de la vista
@@ -87,6 +89,7 @@ var measures  # paso IU.8: Measures (null si la especie no cargó)
 
 
 func _ready() -> void:
+	rng.randomize()  # paso PL.5
 	set_anchors_and_offsets_preset(Control.PRESET_FULL_RECT)
 	dark = SettingsFile.get_dark()
 	theme = ThemeBuilder.build(dark)
@@ -126,6 +129,8 @@ func _ready() -> void:
 		start_screen.setup(zone_picker.gallery)
 		start_screen.template_chosen.connect(editor.load_values)
 		start_screen.recent_chosen.connect(body_actions.open_preset)
+		zone_picker.gallery.random_requested.connect(randomize_body)  # paso PL.5
+		start_screen.random_requested.connect(randomize_body)
 		start_screen.open_requested.connect(func() -> void: body_actions.popup_file_dialog(body_actions.open_dialog))
 		zone_picker.zone_chosen.connect(func(_zone: String) -> void: top_bar.tab_bar.current_tab = ACTIVE_TAB)
 		body_view.zone_touched.connect(_on_zone_touched)  # paso IU.7a: igual que elegirla en la silueta
@@ -190,6 +195,11 @@ func _ready() -> void:
 		get_tree().auto_accept_quit = false
 		if SettingsFile.get_start_screen() and get_tree().current_scene == self:  # paso PL.4: no en las pruebas
 			start_screen.show_screen.call_deferred()
+
+
+## Paso PL.5: un cuerpo al azar desde el de ahora (Randomizer); un cambio de Deshacer.
+func randomize_body() -> void:
+	editor.load_values(Randomizer.values(editor.values, body_view.species.sliders, rng))
 
 
 ## Paso P.4: cerrar la ventana pasa por aquí (auto_accept_quit = false).

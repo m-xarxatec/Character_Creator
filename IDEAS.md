@@ -116,6 +116,7 @@ El zip está en `referencias/` (git no lo guarda). Versión gratis: 2 cuerpos es
 - **Android** (tablet).
 - **Rig automático con IA** (UniRig) para mallas importadas sin huesos, cuando haya una GPU con más de 8 GB.
 - **Comunidad:** repositorio de packs, guía para crear piezas, traducciones.
+- **Aleatorio con candados y semilla** (de PL.5, quitado por el responsable el 2026-11-20): candado por zona para que el azar no la cambie, «Atrevido» (0–1) y la semilla visible para repetir una tirada.
 - **Simetría relativa:** mover un lado suma lo mismo al otro y conserva la diferencia.
 - **8 influencias:** opción de exportar con 8 influencias por vértice (sin pérdida; Godot lo admite, algunos motores solo leen 4).
 - **Genitales (opcional):** cuando el cuerpo sea razonable, después del MVP. apagado por defecto y como pieza aparte; choca con «sin detalle anatómico», así que pide su propia decisión antes de entrar en un plan.

@@ -4,6 +4,7 @@ extends SceneTree
 # Que detecta el fallo: en SettingsFile.get_recent, no mirar si el archivo existe -> «Recientes» lista uno borrado.
 
 const BIG := ["femenina", "masculino", "anime"]
+const TITLE := 40  # PROVISIONAL: px de la barra de título de la ventana
 
 var failures := 0
 
@@ -18,6 +19,11 @@ func _initialize() -> void:
 	check("en las pruebas no se abre sola (main no es la escena principal)", not screen.visible)
 	main.new_button.pressed.emit()
 	check("«Nuevo…» la abre", screen.visible and screen.title == "Nuevo personaje")
+	var project := ConfigFile.new()
+	project.load(root_dir.path_join("godot/project.godot"))
+	var height: int = project.get_value("display", "window/size/viewport_height", 0)
+	check("cabe en la ventana del programa (%d px de alto, %d de barra de título)" % [height, TITLE], height > 0
+		and screen.size.y + TITLE <= height, "%d px" % screen.size.y)
 	var ids: Array = screen.cards.keys()
 	check("Femenina, Masculino y Neutro en grande y las otras 8 en «Más cuerpos»", ids.slice(0, 3) == BIG
 		and ids.size() == 11 and screen.cards["anime"].text == "Neutro" and screen.cards["femenina"].icon != null, str(ids))
