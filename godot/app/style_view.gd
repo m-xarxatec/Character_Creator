@@ -15,6 +15,7 @@ var source: MeshInstance3D
 var last_ms := 0  ## lo que tardó el último refresh()
 var _arrays: Array  # superficie de la malla original, sin formas
 var _head: PackedFloat32Array
+var _shape_cache := {}  # paso OPT.1: formas ya usadas, para no pedirlas todas a la malla en cada refresh
 var _weights := PackedFloat32Array()  # pesos de las formas con los que se calculó la copia
 
 
@@ -42,7 +43,7 @@ func refresh() -> void:
 	var start := Time.get_ticks_msec()
 	var vertices: PackedVector3Array = _arrays[Mesh.ARRAY_VERTEX].duplicate()
 	var normals: PackedVector3Array = _arrays[Mesh.ARRAY_NORMAL].duplicate()
-	MeshBaker._add_shapes(source, vertices, normals)
+	MeshBaker._add_shapes(source, vertices, normals, _shape_cache)
 	var arrays := _arrays.duplicate()
 	arrays[Mesh.ARRAY_VERTEX] = vertices
 	arrays[Mesh.ARRAY_NORMAL] = StyleNormals.apply(vertices, normals, arrays[Mesh.ARRAY_INDEX], _head)

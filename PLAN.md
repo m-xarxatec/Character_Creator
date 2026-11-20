@@ -3,9 +3,9 @@
 > Paso a paso. Un paso cada vez y siempre con aprobación (ver `CLAUDE.md`).
 > Lo que no es del MVP va a `IDEAS.md`.
 
-**Estado actual:** MVP preparado (build de Linux, README, licencias y paquete 0.1.0 de antes de la interfaz nueva). Nombre definitivo: GameMolde (D28). Pulido, Fase IU y PL.0–PL.0c hechos. Bloque 0 hecho (B0.3, B0.5, B0.4). PL.1 hecho (11 plantillas en `datos/`); PL.2 hecho; PL.3 hecho; PL.4 hecho; PL.5 hecho, espera tu juicio. Build (7.1), capturas y vídeo del README (7.2) y publicar (7.4): cuando lo pidas. Lista: `ruta/PENDIENTES.md`
+**Estado actual:** MVP preparado (build de Linux, README, licencias y paquete 0.1.0 de antes de la interfaz nueva). Nombre definitivo: GameMolde (D28). Pulido, Fase IU y PL.0–PL.0c hechos. Bloque 0 hecho (B0.3, B0.5, B0.4). PL.1 hecho (11 plantillas en `datos/`); PL.2 hecho; PL.3 hecho; PL.5 hecho; PL.6 descartado; PL.7 hecho. OPT.1 hecho (soltar un deslizador 279 → 117 ms; abrir 3,1 → 2,7 s). Build (7.1), capturas y vídeo del README (7.2) y publicar (7.4): cuando lo pidas. Lista: `ruta/PENDIENTES.md`
 **Fichas:** cada paso pendiente tiene la suya en `ruta/pasos/` (traspaso del 2026-11-16; decisiones en `ruta/DECISIONES.md`).
-**Leyenda:** `[ ]` pendiente · `[~]` en curso · `[x]` hecho
+**Leyenda:** `[ ]` pendiente · `[~]` en curso · `[x]` hecho · `[-]` descartado
 
 ---
 
@@ -231,6 +231,14 @@ Según `diseno/maqueta-pestana-cuerpo.html`.
 
 ---
 
+## Optimización (pedida por el responsable el 2026-11-20)
+
+> Fichas `ruta/pasos/OPT.*`. Medir con `pruebas/godot/medir_lentitud.gd`.
+
+- [x] OPT.1 Medir la lentitud y quitar lo fácil (formas pedidas una vez; caché de las usadas en la vista del estilo).
+
+---
+
 ## Fase IU — Interfaz nueva (estilo de `diseno/maqueta-v2.html`)
 
 > Pedida por el responsable el 2026-11-19 (`propuestas/expansion_v2.md` §3). Fichas `ruta/pasos/IU.*`.
@@ -264,9 +272,9 @@ Según `diseno/maqueta-pestana-cuerpo.html`.
 - [x] PL.2 Miniaturas hechas por el editor (simplificado: solo las de serie).
 - [x] PL.3 Galería de plantillas (simplificada: solo el cuerpo, Ctrl+Z la deshace).
 - [x] PL.4 Ventana «Nuevo personaje» (simplificada).
-- [~] PL.5 Aleatorio (solo el botón con el dado; candados y semilla, a `IDEAS.md`). Espera tu juicio.
-- [ ] PL.6 Mezclar dos plantillas.
-- [ ] PL.7 Comparar antes y después.
+- [x] PL.5 Aleatorio (solo el botón con el dado; candados y semilla, a `IDEAS.md`).
+- [-] PL.6 Mezclar dos plantillas: descartado por el responsable (2026-11-20): para eso están los deslizadores.
+- [x] PL.7 Comparar antes y después (simplificado: mantener «Comparar» o C).
 - [ ] PL.8 Deslizador Edad (de joven a mayor).
 - [ ] PL.9 (opcional) Chibi con la misma malla.
 
@@ -372,3 +380,6 @@ Según `diseno/maqueta-pestana-cuerpo.html`.
 | 2026-11-20 | PL.4 (en curso) | Ficha `ruta/pasos/PL.4_nuevo_personaje.md` (simplificada). `godot/app/start_screen.gd`: `AcceptDialog` «Nuevo personaje» con Femenina, Masculino y Neutro (128 px), «Más cuerpos» (las otras 8, 64 px), «Recientes» (zona de 96 px con desplazamiento), «Abrir preset…» y «Mostrar al arrancar»; reutiliza las tarjetas de la galería y elige igual (solo el cuerpo, Ctrl+Z). `main.gd`: botón «Nuevo…» en la barra superior y se abre al arrancar solo si `main` es la escena principal (no en las pruebas). `settings_file.gd`: `pantalla_inicio` (sí por defecto) y `recientes` (8; solo los que existen, el más nuevo primero, sin repetir); `body_actions.gd` los apunta al guardar y al abrir. **Medido:** la ventana mide 472 × 666 px (cabe a 1280 × 720 al 100 %; a 150 % no cabe en una ventana de 720 de alto). Prueba nueva `probar_inicio.gd` (10); detecta el fallo (`get_recent` sin mirar si existe). Capturas `pruebas/capturas/plantillas/inicio.png` e `inicio_ventana.png`. Falta: tu juicio |
 | 2026-11-20 | PL.4 | Aprobado y probado por el responsable |
 | 2026-11-20 | PL.5 (en curso) | Ficha `ruta/pasos/PL.5_aleatorio.md`. Decidido por el responsable: solo «Aleatorio» con el dado, en la galería y en «Nuevo personaje»; candados, «Atrevido» y semilla visible, a `IDEAS.md`. `godot/app/randomizer.gd`: cada deslizador Forma o Proporción del cuerpo en 0,2–0,8, igual en los dos lados; Complexión, cara y alisado sin tocar (respeta la plantilla de partida); un cambio de Deshacer. `tema/iconos/dado.svg` propio (trazo de Tabler, MIT; en `ICONS` de `theme_builder.gd` y aclarado en `CREDITOS.md` y su copia `godot/CREDITOS.txt`). Tarjeta primera de la galería y de «Más cuerpos»; `main.rng` con semilla al azar. «Nuevo personaje»: 5 columnas, miniaturas grandes de 112 px, «Recientes» de 72 px y «Abrir preset…» con «Mostrar al arrancar» en una fila: mide 602 px de alto (antes 666; con «Aleatorio» se salía). `probar_plantillas.gd` (+6; 10 tiradas sin errores del informe en pose T; detecta el fallo: lados distintos) y `probar_inicio.gd` (+1: cabe en los 720 px de `project.godot` con 40 de barra, PROVISIONAL; detecta una ventana de 690 px). Captura `pruebas/capturas/plantillas/inicio.png` y `galeria.png`. Falta: tu juicio |
+| 2026-11-20 | PL.5, PL.6 | PL.5 aprobado. PL.6 (mezclar plantillas) descartado por el responsable: editar cuerpos es para los deslizadores. Nota del responsable: «al abrirlo y moverlo lo sentí un poco lento» (sin medir) |
+| 2026-11-20 | PL.7 (en curso) | Ficha `ruta/pasos/PL.7_comparar.md` (simplificada: sin malla fantasma, por memoria y lentitud). `body_actions.gd`: botón «Comparar» (mantener) y `show_saved(on)`: la vista pasa a los valores de lo último abierto o guardado (`saved_text`) y vuelve; el editor y Deshacer no cambian. `main.gd`: la tecla C mantenida (no con Ctrl; `_unhandled_input`, no al escribir). `commands_dialog.gd`: fila «C (mantener)». Prueba nueva `probar_comparar.gd` (7); detecta el fallo (pasar por `editor.load_values`). Falta: tu juicio |
+| 2026-11-20 | PL.7, OPT.1 | PL.7 aprobado al pasar a OPT.1. Ficha `ruta/pasos/OPT.1_medir_lentitud.md`. Herramienta nueva `pruebas/godot/medir_lentitud.gd` (con ventana, sin límites). **Medido antes:** arrastrar 2,4 ms por fotograma (no es lo lento); al soltar, 279 ms congelado por las normales del estilo (194 ms en pedir las 286 formas a la malla, con 5 activas); abrir 3,1 s hasta el primer fotograma (cargar el personaje 1,77 s: leer el glTF 0,95, crear la escena 0,25; las 286 formas se pedían 3 veces). **Cambios (mismo resultado):** `MeshBaker._add_shapes(…, cache)` con caché opcional, que `StyleView` guarda (~0,35 MB por forma usada); `MeshBaker.shape_arrays()` pide las formas una vez por fotograma y las suelta en el siguiente (`CharacterBox` la usa). **Medido después:** al soltar 117 ms; abrir 2,7 s; memoria 121 MB. Descartado: `bake_mesh_from_current_blend_shape_mix` (290 ms, más lento). Pasan 53 pruebas sin ventana, la autoprueba, `probar_reajuste_esqueleto`, `probar_proporciones` y `probar_prenda_exportada` |

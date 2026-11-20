@@ -197,6 +197,15 @@ func _ready() -> void:
 			start_screen.show_screen.call_deferred()
 
 
+## Paso PL.7: la tecla C, mantenida, enseña cómo estaba al abrir o guardar (como el botón «Comparar»).
+func _unhandled_input(event: InputEvent) -> void:
+	var key := event as InputEventKey
+	if key != null and key.keycode == KEY_C and not key.echo and not key.ctrl_pressed and not key.meta_pressed \
+			and editor != null:
+		body_actions.show_saved(key.pressed)
+		get_viewport().set_input_as_handled()
+
+
 ## Paso PL.5: un cuerpo al azar desde el de ahora (Randomizer); un cambio de Deshacer.
 func randomize_body() -> void:
 	editor.load_values(Randomizer.values(editor.values, body_view.species.sliders, rng))
