@@ -35,6 +35,7 @@ const ThemeBuilder := preload("tema/theme_builder.gd")
 const CommandsDialog := preload("commands_dialog.gd")
 const SettingsDialog := preload("settings_dialog.gd")
 const SettingsFile := preload("settings_file.gd")
+const StartScreen := preload("start_screen.gd")
 const TopBar := preload("top_bar.gd")
 const StatusBar := preload("status_bar.gd")
 const Measures := preload("measures.gd")
@@ -68,6 +69,8 @@ var commands_button: Button  # paso P.8b
 var commands: AcceptDialog  # paso P.8b
 var settings_button: Button  # paso IU.9
 var settings: AcceptDialog  # paso IU.9
+var start_screen: AcceptDialog  # paso PL.4: «Nuevo personaje»
+var new_button: Button
 var ui_scale := 1.0  # paso IU.9
 var reduce_motion := false  # paso IU.9
 var grid := false  # paso IU.3: rejilla en el suelo de la vista
@@ -118,6 +121,12 @@ func _ready() -> void:
 		var species = body_view.species  # paso PL.3: galería de plantillas
 		zone_picker.gallery.setup(species.folder.path_join("presets"), species.manifest["species"], species.sliders)
 		zone_picker.gallery.template_chosen.connect(editor.load_values)
+		start_screen = StartScreen.new()  # paso PL.4
+		add_child(start_screen)
+		start_screen.setup(zone_picker.gallery)
+		start_screen.template_chosen.connect(editor.load_values)
+		start_screen.recent_chosen.connect(body_actions.open_preset)
+		start_screen.open_requested.connect(func() -> void: body_actions.popup_file_dialog(body_actions.open_dialog))
 		zone_picker.zone_chosen.connect(func(_zone: String) -> void: top_bar.tab_bar.current_tab = ACTIVE_TAB)
 		body_view.zone_touched.connect(_on_zone_touched)  # paso IU.7a: igual que elegirla en la silueta
 		body_actions.setup(body_view, editor)
@@ -179,6 +188,8 @@ func _ready() -> void:
 	elif editor != null:
 		_add_close_dialog()
 		get_tree().auto_accept_quit = false
+		if SettingsFile.get_start_screen() and get_tree().current_scene == self:  # paso PL.4: no en las pruebas
+			start_screen.show_screen.call_deferred()
 
 
 ## Paso P.4: cerrar la ventana pasa por aquí (auto_accept_quit = false).
@@ -215,6 +226,12 @@ func _on_close_action(action: StringName) -> void:
 func _fill_top_bar() -> void:
 	undo_button = _icon_button("deshacer", "Deshacer (Ctrl+Z)", editor.undo)
 	redo_button = _icon_button("rehacer", "Rehacer (Ctrl+Y)", editor.redo)
+	new_button = Button.new()  # paso PL.4
+	new_button.text = "Nuevo…"
+	new_button.icon = ThemeBuilder.icon("cuerpo")
+	new_button.tooltip_text = "Empezar desde una plantilla o un archivo reciente"
+	new_button.pressed.connect(start_screen.show_screen)
+	top_bar.add_action(new_button)
 	for button: Button in [body_actions.open_button, body_actions.save_button, body_actions.export_button]:
 		top_bar.add_action(button)
 	body_actions.export_button.theme_type_variation = "BotonPrincipal"

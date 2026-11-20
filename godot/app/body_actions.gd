@@ -118,6 +118,7 @@ func save_preset(path: String) -> Error:
 	if error == OK:
 		saved_text = _current_text()
 		current_path = path
+		SettingsFile.add_recent(path)  # paso PL.4
 		if quit_after_save:
 			get_tree().quit()
 			return error
@@ -135,6 +136,7 @@ func open_preset(path: String) -> String:
 	PresetFile.apply(loaded, view, editor)
 	saved_text = _current_text()
 	current_path = path
+	SettingsFile.add_recent(path)  # paso PL.4
 	garment_check.set_pressed_no_signal(BodyMaterial.is_garment_visible(view.species.mesh))
 	look_changed.emit()
 	if not loaded["desconocidas"].is_empty():

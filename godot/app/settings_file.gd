@@ -15,6 +15,7 @@ extends RefCounted
 #   var touch := SettingsFile.get_touch_zones()  # false si no hay ajuste (apagado por defecto)
 
 const PATH := "user://ajustes.cfg"
+const RECENT_MAX := 8  # paso PL.4: presets en «Recientes»
 const SCALES := [0.9, 1.0, 1.1, 1.25, 1.5]  # paso IU.9: lista fija (con un deslizador la ventana cambiaría al arrastrar)
 
 
@@ -86,6 +87,34 @@ static func get_touch_zones() -> bool:
 
 static func set_touch_zones(on: bool) -> void:
 	_write("interfaz", "tocar_zonas", on)
+
+
+## Paso PL.4: abrir «Nuevo personaje» al arrancar (por defecto, sí).
+static func get_start_screen() -> bool:
+	return _read_bool("pantalla_inicio", true)
+
+
+static func set_start_screen(on: bool) -> void:
+	_write("interfaz", "pantalla_inicio", on)
+
+
+## Paso PL.4: los últimos presets abiertos o guardados, el más nuevo primero; solo los que aún existen (RECENT_MAX).
+static func get_recent() -> PackedStringArray:
+	var value: Variant = _read("archivos", "recientes", PackedStringArray())
+	var found := PackedStringArray()
+	if typeof(value) in [TYPE_PACKED_STRING_ARRAY, TYPE_ARRAY]:
+		for path: Variant in value:
+			if typeof(path) == TYPE_STRING and FileAccess.file_exists(path) and not found.has(path):
+				found.append(path)
+	return found.slice(0, RECENT_MAX)
+
+
+static func add_recent(path: String) -> void:
+	var recent := PackedStringArray([path])
+	for old: String in get_recent():
+		if old != path:
+			recent.append(old)
+	_write("archivos", "recientes", recent.slice(0, RECENT_MAX))
 
 
 ## Un ajuste de [interfaz] que debe ser bool; si no lo es (archivo roto o a mano), el valor por defecto.

@@ -3,7 +3,7 @@
 > Paso a paso. Un paso cada vez y siempre con aprobación (ver `CLAUDE.md`).
 > Lo que no es del MVP va a `IDEAS.md`.
 
-**Estado actual:** MVP preparado (build de Linux, README, licencias y paquete 0.1.0 de antes de la interfaz nueva). Nombre definitivo: GameMolde (D28). Pulido, Fase IU y PL.0–PL.0c hechos. Bloque 0 hecho (B0.3, B0.5, B0.4). PL.1 hecho (11 plantillas en `datos/`); PL.2 hecho; PL.3 hecho, espera tu juicio. Build (7.1), capturas y vídeo del README (7.2) y publicar (7.4): cuando lo pidas. Lista: `ruta/PENDIENTES.md`
+**Estado actual:** MVP preparado (build de Linux, README, licencias y paquete 0.1.0 de antes de la interfaz nueva). Nombre definitivo: GameMolde (D28). Pulido, Fase IU y PL.0–PL.0c hechos. Bloque 0 hecho (B0.3, B0.5, B0.4). PL.1 hecho (11 plantillas en `datos/`); PL.2 hecho; PL.3 hecho; PL.4 hecho, espera tu juicio. Build (7.1), capturas y vídeo del README (7.2) y publicar (7.4): cuando lo pidas. Lista: `ruta/PENDIENTES.md`
 **Fichas:** cada paso pendiente tiene la suya en `ruta/pasos/` (traspaso del 2026-11-16; decisiones en `ruta/DECISIONES.md`).
 **Leyenda:** `[ ]` pendiente · `[~]` en curso · `[x]` hecho
 
@@ -262,8 +262,8 @@ Según `diseno/maqueta-pestana-cuerpo.html`.
   - [x] PL.1b Neutro, Femenina y Masculino en `datos/`; rangos de §2 reescritos con lo medido.
   - [x] PL.1c Las otras 8 (Atlética, Delgada, Robusta, Esbelta y sus masculinos).
 - [x] PL.2 Miniaturas hechas por el editor (simplificado: solo las de serie).
-- [~] PL.3 Galería de plantillas (simplificada: solo el cuerpo, Ctrl+Z la deshace). Espera tu juicio.
-- [ ] PL.4 Pantalla «Nuevo personaje».
+- [x] PL.3 Galería de plantillas (simplificada: solo el cuerpo, Ctrl+Z la deshace).
+- [~] PL.4 Ventana «Nuevo personaje» (simplificada). Espera tu juicio.
 - [ ] PL.5 Aleatorio con semilla y candados.
 - [ ] PL.6 Mezclar dos plantillas.
 - [ ] PL.7 Comparar antes y después.
@@ -368,3 +368,5 @@ Según `diseno/maqueta-pestana-cuerpo.html`.
 | 2026-11-20 | PL.2 (en curso) | Ficha `ruta/pasos/PL.2_miniaturas.md` (simplificada por el responsable: solo las de serie; sin `thumbnailer.gd` ni miniaturas de presets del usuario). `pruebas/godot/generar_miniaturas.gd` (con ventana): toon con contorno, valores en reposo con `CharacterUpdater`, luz y ambiente de la vista, cámara de 35° a ¾ que encuadra la caja del cuerpo; fondo transparente (la tarjeta pondrá el del tema). 11 `presets/<id>.png` de 256 × 256 con `importer="keep"` (viajan tal cual; no van en el manifiesto). **Medido:** cuerpo entero con 12–14 px de margen arriba y abajo en las 11. `probar_presets.gd` (+11): cada una 256 × 256, esquinas transparentes y cuerpo en el centro; detecta el fallo (sin `esbelto.png`). `FORMATO.md`: miniaturas. Pasan `probar_presets`, `probar_datos`, `probar_licencias` y la autoprueba. Falta: tu juicio |
 | 2026-11-20 | PL.2 | Miniaturas aprobadas por el responsable |
 | 2026-11-20 | PL.3 (en curso) | Ficha `ruta/pasos/PL.3_galeria.md` (simplificada). `godot/app/template_gallery.gd`: una tarjeta por preset de serie (miniatura de PL.2 a 96 px y nombre; 2 columnas; orden `ORDER`, sin campo en el preset); un clic emite los valores → `BodyEditor.load_values`: solo el cuerpo, un cambio de Deshacer, sin tocar colores, prenda, acabado ni el archivo abierto (sin aviso: Ctrl+Z lo devuelve). `zone_picker.gd`: la pestaña «Plantillas» deja de ser «Pronto»; `main.gd` la conecta. `anime.json`: `nombre` «Neutro» (manifiesto regenerado: solo cambia su línea). Prueba nueva `probar_plantillas.gd` (5); `probar_zonas` al día. Detecta el fallo (conectada a «Abrir preset»: cambia el archivo abierto). Captura `pruebas/capturas/plantillas/galeria.png`. Falta: tu juicio |
+| 2026-11-20 | PL.3 | Aprobado por el responsable |
+| 2026-11-20 | PL.4 (en curso) | Ficha `ruta/pasos/PL.4_nuevo_personaje.md` (simplificada). `godot/app/start_screen.gd`: `AcceptDialog` «Nuevo personaje» con Femenina, Masculino y Neutro (128 px), «Más cuerpos» (las otras 8, 64 px), «Recientes» (zona de 96 px con desplazamiento), «Abrir preset…» y «Mostrar al arrancar»; reutiliza las tarjetas de la galería y elige igual (solo el cuerpo, Ctrl+Z). `main.gd`: botón «Nuevo…» en la barra superior y se abre al arrancar solo si `main` es la escena principal (no en las pruebas). `settings_file.gd`: `pantalla_inicio` (sí por defecto) y `recientes` (8; solo los que existen, el más nuevo primero, sin repetir); `body_actions.gd` los apunta al guardar y al abrir. **Medido:** la ventana mide 472 × 666 px (cabe a 1280 × 720 al 100 %; a 150 % no cabe en una ventana de 720 de alto). Prueba nueva `probar_inicio.gd` (10); detecta el fallo (`get_recent` sin mirar si existe). Capturas `pruebas/capturas/plantillas/inicio.png` e `inicio_ventana.png`. Falta: tu juicio |
