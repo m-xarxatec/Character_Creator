@@ -6,6 +6,18 @@ extends SceneTree
 const HEIGHT_MM := 1.0  # diferencia con la medida exacta, en mm
 const HEADS := 0.05  # diferencia con la medida exacta, en cabezas
 const ROOT_SCALE := 1.15  # escala:Root=1.15 con Global › Altura a 1 (deslizadores.csv)
+# Paso PL.1a: Measures.proportions().
+const PROPORTION_HEADS := 0.01  # sus cabezas frente a la medida exacta
+const SIDE_MM := 1.0  # mano y pie: izquierda frente a derecha en el neutro
+const WAIST_AT := [0.2, 0.8]  # PROVISIONAL: la cintura va por el medio del tramo (0 cadera, 1 axila), no en la cadera
+## Margen de cuerpo humano para el neutro (no es el estilo: eso son los rangos de GUIA_ESTILO.md §2, PL.1b).
+const HUMAN := {"heads": [6.0, 8.5], "legs": [0.40, 0.55], "shoulders": [1.2, 2.4], "waist": [0.5, 0.95],
+	"hand": [0.6, 1.0], "foot": [0.8, 1.3]}  # PROVISIONAL
+## Deslizador → la medida que sube al pasarlo de 0 a 1 (head_size: la baja, la cabeza crece).
+const FOLLOWS := {"leg_length": "legs", "shoulder_width": "shoulders", "waist_width": "waist", "hand_size_l": "hand",
+	"foot_size_l": "foot", "head_size": "heads"}
+const PRESETS := ["godot/datos/humana/presets/anime.json", "pruebas/fase_3/estilo/anime_femenino.json",
+	"pruebas/fase_3/estilo/anime_masculino.json"]
 
 var failures := 0
 
@@ -24,6 +36,7 @@ func _initialize() -> void:
 		exact["height"], exact["heads"]])
 	check("altura rápida = exacta (± %.0f mm)" % HEIGHT_MM, absf(fast["height"] - exact["height"]) * 1000.0 <= HEIGHT_MM)
 	check("cabezas rápidas = exactas (± %.2f)" % HEADS, absf(fast["heads"] - exact["heads"]) <= HEADS)
+	_check_proportions(main, exact)
 
 	main.editor.set_value("height", 1.0)
 	var tall: Dictionary = main.measures.measure(mesh, skeleton)
@@ -58,6 +71,47 @@ func _initialize() -> void:
 	main.free()
 	print("RESULTADO: ", "TODO BIEN" if failures == 0 else "%d FALLOS" % failures)
 	quit(1 if failures else 0)
+
+
+## Paso PL.1a: proportions() en el neutro, cada deslizador mueve su medida y MEDIDA de los presets. Vuelve al neutro.
+func _check_proportions(main: Control, exact: Dictionary) -> void:
+	var Measures: GDScript = main.measures.get_script()
+	var mesh: MeshInstance3D = main.body_view.species.mesh
+	var skeleton: Skeleton3D = main.body_view.species.skeleton
+	var neutral: Dictionary = main.editor.values.duplicate()
+	var p: Dictionary = Measures.proportions(mesh, skeleton)
+	_print_proportions("neutro", p)
+	check("proportions: cabezas = la medida exacta (± %.2f)" % PROPORTION_HEADS,
+		absf(p["heads"] - exact["heads"]) <= PROPORTION_HEADS, "%.3f" % p["heads"])
+	check("mano y pie simétricos en el neutro (± %.0f mm)" % SIDE_MM, absf(p["hand_l"] - p["hand_r"]) * 1000.0 <= SIDE_MM
+		and absf(p["foot_l"] - p["foot_r"]) * 1000.0 <= SIDE_MM)
+	for key: String in HUMAN:
+		check("%s del neutro dentro de un cuerpo humano (%.2f–%.2f)" % [key, HUMAN[key][0], HUMAN[key][1]],
+			p[key] >= HUMAN[key][0] and p[key] <= HUMAN[key][1], "%.3f" % p[key])
+	check("la cintura va por el medio del torso, no en la cadera ni en la axila", p["waist_at"] > WAIST_AT[0]
+		and p["waist_at"] < WAIST_AT[1], "%.2f" % p["waist_at"])
+	for slider: String in FOLLOWS:
+		var measure: String = FOLLOWS[slider]
+		main.editor.load_values(neutral)
+		main.editor.set_value(slider, 0.0)
+		var low: float = Measures.proportions(mesh, skeleton)[measure]
+		main.editor.set_value(slider, 1.0)
+		var high: float = Measures.proportions(mesh, skeleton)[measure]
+		var up := slider != "head_size"
+		check("%s de 0 a 1 %s %s" % [slider, "sube" if up else "baja", measure], high > low if up else high < low,
+			"%.3f -> %.3f" % [low, high])
+	var root_dir := ProjectSettings.globalize_path("res://").path_join("../..").simplify_path()
+	for path: String in PRESETS:
+		var values := neutral.duplicate()
+		values.merge(JSON.parse_string(FileAccess.get_file_as_string(root_dir.path_join(path)))["valores"], true)
+		main.editor.load_values(values)
+		_print_proportions(path.get_file(), Measures.proportions(mesh, skeleton))
+	main.editor.load_values(neutral)
+
+
+func _print_proportions(label: String, p: Dictionary) -> void:
+	print("  MEDIDA %s: %.2f cabezas, piernas %.3f, hombros %.2f, cintura %.3f, mano %.3f, pie %.3f" % [label, p["heads"],
+		p["legs"], p["shoulders"], p["waist"], p["hand"], p["foot"]])
 
 
 ## La medida exacta del 3.12: toda la malla horneada; barbilla = el más bajo del centro y delante de la cabeza.

@@ -3,7 +3,7 @@
 > Paso a paso. Un paso cada vez y siempre con aprobación (ver `CLAUDE.md`).
 > Lo que no es del MVP va a `IDEAS.md`.
 
-**Estado actual:** MVP preparado (build de Linux, README, licencias y paquete 0.1.0 de antes de la interfaz nueva). Nombre definitivo: GameMolde (D28). Pulido, Fase IU y PL.0–PL.0c hechos. Ahora: Bloque 0 (B0.3 y B0.5 hechos; B0.4 medido, espera tu juicio), después PL.1. Build (7.1), capturas y vídeo del README (7.2) y publicar (7.4): cuando lo pidas. Lista: `ruta/PENDIENTES.md`
+**Estado actual:** MVP preparado (build de Linux, README, licencias y paquete 0.1.0 de antes de la interfaz nueva). Nombre definitivo: GameMolde (D28). Pulido, Fase IU y PL.0–PL.0c hechos. Bloque 0 hecho (B0.3, B0.5, B0.4). PL.1a hecho; PL.1b espera tu decisión sobre los rangos de `GUIA_ESTILO.md` §2. Build (7.1), capturas y vídeo del README (7.2) y publicar (7.4): cuando lo pidas. Lista: `ruta/PENDIENTES.md`
 **Fichas:** cada paso pendiente tiene la suya en `ruta/pasos/` (traspaso del 2026-11-16; decisiones en `ruta/DECISIONES.md`).
 **Leyenda:** `[ ]` pendiente · `[~]` en curso · `[x]` hecho
 
@@ -227,7 +227,7 @@ Según `diseno/maqueta-pestana-cuerpo.html`.
 
 - [x] B0.3 `probar_rendimiento.gd` acepta rutas relativas al `.glb`.
 - [x] B0.5 Comando `gamemolde` en el PATH: `scripts/instalar_lanzador.sh` (sin `sudo`).
-- [~] B0.4 Borde de la prenda ondulado en primeros planos: medir y proponer el arreglo. Medido: espera tu juicio de la hoja.
+- [x] B0.4 Borde de la prenda ondulado en primeros planos: medido; se ve bien y no se cambia nada.
 
 ---
 
@@ -257,7 +257,10 @@ Según `diseno/maqueta-pestana-cuerpo.html`.
 - [x] PL.0 Medir `alisado` con complexión y firmeza a 0 y a 1. Fallaba (masculino: 20 y 6 triángulos invertidos; el relieve no baja lo pedido): lo arreglan PL.0b y PL.0c.
 - [x] PL.0b Correcciones de `alisado` también para complexión y firmeza.
 - [x] PL.0c El alisado no invierte triángulos (`unflip`) y el `.glb` lleva los nombres completos de las formas.
-- [ ] PL.1 Plantillas de serie (Femenina, Masculino, Atlética…).
+- [ ] PL.1 Plantillas de serie (Femenina, Masculino, Atlética…). Ficha `ruta/pasos/PL.1_plantillas.md`; el campo `orden`, en PL.3.
+  - [x] PL.1a Medir las proporciones de `GUIA_ESTILO.md` §2 (`Measures.proportions`).
+  - [ ] PL.1b Neutro, Femenina y Masculino en `datos/`, dentro de los rangos.
+  - [ ] PL.1c Las otras 8.
 - [ ] PL.2 Miniaturas hechas por el editor.
 - [ ] PL.3 Galería de plantillas.
 - [ ] PL.4 Pantalla «Nuevo personaje».
@@ -356,3 +359,5 @@ Según `diseno/maqueta-pestana-cuerpo.html`.
 | 2026-11-20 | B0.3 | Ficha `ruta/pasos/B0.3_rendimiento_rutas.md`. `probar_rendimiento.gd`: `glb_path()` deja la ruta absoluta tal cual y la relativa la toma desde la raíz del repositorio (como las demás pruebas); «Uso:» con `godot/datos/humana/cuerpo.glb`. **Medido:** relativa y absoluta abren 286 formas y pasan (media 0,87 y 0,83 ms). Detecta el fallo (sin resolver la relativa: `ERROR: no se pudo abrir el .glb`) |
 | 2026-11-20 | B0.5 | Ficha `ruta/pasos/B0.5_lanzador.md`. `scripts/instalar_lanzador.sh` (sin `sudo`): copia el build que haya y `icono.png` a `${XDG_DATA_HOME:-~/.local/share}/gamemolde/`, enlaza `~/.local/bin/gamemolde`, escribe `applications/gamemolde.desktop` y avisa si `~/.local/bin` no está en el `PATH`; volver a lanzarlo actualiza la copia. `README.md`: carpeta `scripts/` y cómo instalar. Prueba nueva `pruebas/fase_7/probar_lanzador.sh` con `HOME` y `XDG_DATA_HOME` temporales (no toca los de verdad): 5 comprobaciones, entre ellas `desktop-file-validate` y la autoprueba lanzando `gamemolde` desde otra carpeta. Detecta el fallo (sin el enlace: 2 fallos). No se ha instalado en tu `HOME`: lo haces tú cuando quieras |
 | 2026-11-20 | B0.4 (en curso) | Ficha `ruta/pasos/B0.4_borde_prenda.md`. Herramienta nueva `pruebas/godot/medir_borde_prenda.gd` (con ventana, sin límites): personaje nuevo en pose A, sin luces, cámara de 35° a 0,5 m de 3 bordes (pecho arriba, pecho abajo, cintura; 1 px ≈ 0,6 mm) y 5 variantes (editor, sin degradado, editor + `fwidth` en una copia del shader, exportado 2048 y 4096); hoja `pruebas/capturas/borde_prenda/hoja.png`. **Medido** (zigzag = media de la segunda diferencia entre columnas; ondulación = mayor distancia a la media de 41 columnas, que cuenta también la forma de la banda): editor 0,38 / 0,26 / 0,11 px de zigzag (ondulación 2,6 / 2,9 / 1,0 mm); `fwidth` y 4096 no lo mejoran (0,17–0,38 px); sin degradado, 0,65 y 0,63 px y 11 mm (la medida ve el fallo). Falta: tu juicio de la hoja y en qué caso viste el borde ondulado |
+| 2026-11-20 | B0.4 | Cerrado por el responsable: la hoja se ve bien. No se cambia nada (ni `fwidth` ni textura de 4096: no mejoran la medida). `medir_borde_prenda.gd` queda para volver a medir si cambia la prenda |
+| 2026-11-20 | PL.1a | Ficha `ruta/pasos/PL.1_plantillas.md` (PL.1a, b y c; `orden` queda para PL.3). `godot/app/measures.gd`: `proportions()` con la malla horneada entera (en reposo): cabezas (regla del 3.12), piernas (ingle = vértice más bajo del torso en el centro), hombros (ancho de la malla a la altura de `UpperArm`, ± 1 cm), cintura (corte más estrecho del torso, cortes de ± 1,5 cm cada 5 mm de la cadera a medio camino entre `UpperChest` y el hombro, con vértices a los dos lados; y `waist_at`), mano (muñeca → vértice más lejano) y pie (largo en Z), mano y pie con la media de los lados; `dominant_bones` (lo usa también `head_mask`) y `chin_index`. `probar_medidas.gd` (+16): cabezas = la exacta, simetría, margen humano del neutro y `waist_at` 0,2–0,8 (PROVISIONAL), cada deslizador mueve su medida. **Medido** (cabezas, piernas, hombros, cintura, mano, pie): neutro 7,38 / 0,475 / 2,12 / 0,520 / 0,823 / 1,040; borrador femenino 7,16 / 0,503 / 1,73 / 0,540 / 0,604 / 0,744; masculino 7,12 / 0,521 / 1,95 / 0,490 / 0,733 / 0,934. Con los hombros de articulación a articulación: 1,51 / 1,23 / 1,52 y cintura 0,73 / 0,76 / 0,63: tampoco encajan todos los rangos de §2. Pasan 50 pruebas sin ventana y la autoprueba. Detecta el fallo (cintura con el corte más ancho: `waist_at` 0,07; cortes de 5 mm sin pedir los dos lados: cintura 0,228) |
