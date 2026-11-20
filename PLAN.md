@@ -3,7 +3,7 @@
 > Paso a paso. Un paso cada vez y siempre con aprobación (ver `CLAUDE.md`).
 > Lo que no es del MVP va a `IDEAS.md`.
 
-**Estado actual:** MVP preparado: build de Linux, README, licencias y paquete 0.1.0 listos. Nombre definitivo: GameMolde (D28). Pulido: hecho (P.1–P.8). Publicar (7.4) espera a tus juicios. Fase IU (`propuestas/expansion_v2.md` §3): IU.1–IU.12 hechos (fase cerrada). Falta lo tuyo: mirar capturas (5.15/5.11 y 6.3), abrir el build a mano (7.1), elegir capturas y grabar el vídeo (7.2). Lista: `ruta/PENDIENTES.md`
+**Estado actual:** MVP preparado: build de Linux, README, licencias y paquete 0.1.0 listos. Nombre definitivo: GameMolde (D28). Pulido: hecho (P.1–P.8). Publicar (7.4) espera a tus juicios. Fase IU (`propuestas/expansion_v2.md` §3): IU.1–IU.12 hechos (fase cerrada). Fase PL: PL.0–PL.0c hechos y capturas aprobadas; sigue PL.1. Falta lo tuyo: mirar capturas (5.15/5.11 y 6.3), abrir el build a mano (7.1), elegir capturas y grabar el vídeo (7.2). Lista: `ruta/PENDIENTES.md`
 **Fichas:** cada paso pendiente tiene la suya en `ruta/pasos/` (traspaso del 2026-11-16; decisiones en `ruta/DECISIONES.md`).
 **Leyenda:** `[ ]` pendiente · `[~]` en curso · `[x]` hecho
 
@@ -240,6 +240,27 @@ Según `diseno/maqueta-pestana-cuerpo.html`.
 
 ---
 
+## Fase PL — Plantillas y cuerpos (`propuestas/expansion_v2.md` §4)
+
+> Fichas `ruta/pasos/PL.*`.
+
+- [x] PL.0 Medir `alisado` con complexión y firmeza a 0 y a 1. Fallaba (masculino: 20 y 6 triángulos invertidos; el relieve no baja lo pedido): lo arreglan PL.0b y PL.0c.
+- [x] PL.0b Correcciones de `alisado` también para complexión y firmeza.
+- [x] PL.0c El alisado no invierte triángulos (`unflip`) y el `.glb` lleva los nombres completos de las formas.
+- [ ] PL.1 Plantillas de serie (Femenina, Masculino, Atlética…).
+- [ ] PL.2 Miniaturas hechas por el editor.
+- [ ] PL.3 Galería de plantillas.
+- [ ] PL.4 Pantalla «Nuevo personaje».
+- [ ] PL.5 Aleatorio con semilla y candados.
+- [ ] PL.6 Mezclar dos plantillas.
+- [ ] PL.7 Comparar antes y después.
+- [ ] PL.8 Deslizador Edad (de joven a mayor).
+- [ ] PL.9 (opcional) Chibi con la misma malla.
+
+**Hecho cuando:** al abrir el programa se elige «Femenina» o «Masculino» (o cualquier otra plantilla) con un clic, el personaje cumple las proporciones de `GUIA_ESTILO.md` §2 y se exporta sin avisos del informe.
+
+---
+
 ## Registro
 
 > Las filas de las Fases 0 a 3 están en `REGISTRO.md`.
@@ -320,3 +341,4 @@ Según `diseno/maqueta-pestana-cuerpo.html`.
 | 2026-11-19 | Cierre de IU.10, IU.3 e IU.7 | Revisados y aprobados por el responsable. Arreglo: las casillas de Godot apenas se veían en oscuro (1,24:1 sobre el panel); `theme_builder.gd` las dibuja con los tokens (vacía: `panel_2` con borde `texto_3`; marcada: `acento` con ✓ blanco; desactivadas al 45 %). Medido: 3,21:1 en oscuro y 5,21:1 en claro (límite 3:1, el del agarrador, D43). `probar_tema.gd` (8) detecta el fallo. Captura `5_ajustes.png` |
 | 2026-11-19 | IU.11 | Ficha `ruta/pasos/IU.11_cierre_fase.md`. `capturar_hoja_iu.gd`: 6 capturas (oscuro/claro × 1280 × 720, 1920 × 1080, 150 %) y `hoja.png` en `pruebas/capturas/interfaz/iu11/`; ventana sin bordes (si no, Linux la recorta a 1009 px de alto); comprueba tamaño y que no esté vacía, y detecta el fallo. Prueba con persona ajena: hecha por el responsable. Revisor-visual (rápido): exportado sin cambios (vista_bonita, zona_rayo, autoprueba bien); 3 hallazgos menores: la etiqueta de zona sin fondo queda tapada por la malla (`9_zona_iluminada`), en claro no se ve el tirador de los deslizadores de luz (`5_ajustes_claro`) y la lupa de «Buscar ajuste…» apenas se ve en claro. Detalles: barra de título de «Ajustes» sin tema; textos del panel derecho pegados a la barra de desplazamiento. No verificado: A/B contra `aprobadas/` ni Mobile/Compatibility |
 | 2026-11-19 | IU.12 | Ficha `ruta/pasos/IU.12_retoques_revisor.md`. Los 3 hallazgos del revisor: variación `EtiquetaZona` (fondo `texto`, letra `panel`, como la ayuda) para la etiqueta de la zona; `HSlider` con el tirador del tema (el de Godot es blanco: 1,24:1); la lupa teñida (`ThemeBuilder.tinted`, Godot no tiñe el `right_icon`) y `clear_button_color`. `slider_panel` pide la lupa a sí mismo al cambiar el tema (a `search` el aviso le llega después). `probar_tema.gd` (6) y (8) detectan el fallo. Barra de título de «Ajustes» y márgenes del panel derecho: a `IDEAS.md` |
+| 2026-11-20 | PL.0, PL.0b, PL.0c | Fichas `ruta/pasos/PL.0_alisado_complexion.md`, `PL.0b_alisado_correcciones.md` y `PL.0c_alisado_sin_invertir.md`. **PL.0:** `probar_formas_propias.py` mide el alisado en los 4 cuerpos con `gender` y `breast_firmness` a 0 y a 1 (hoja `complexion.png`). **PL.0b:** `SMOOTHING_SLIDERS` pasa a las 5 macros; la prueba mide las 243 esquinas una vez y suma a cada cuerpo sus correcciones. Seguía fallando: el alisado propio de cada cuerpo invertía triángulos (mujer: 4 en la entrepierna; hombre con firmeza 0: 2). **PL.0c:** `formas_propias.unflip` reduce a la mitad el alisado de los vértices (y sus simétricos) de cada triángulo invertido hasta que no queda ninguno; `smoothing` y `smoothing_corrections` reciben `triangles`. Blender corta los nombres de forma a 63 caracteres y 36 correcciones son más largas: `exportar_datos.write_full_names` reescribe `extras.targetNames` del `.glb` (sin cambio de formato ni de versión) y `probar_exportar_datos.read_glb` los lee de ahí. **Decidido (A y A):** nombres completos en el `.glb` (quitar esas 36 daba 4 invertidos y 12,8 mm; sin firmeza, el hombre seguía con 2 y pecho al 26 %); «macros extremas» cuenta todas las formas en las 8 esquinas del 6.2 y solo `alisado` en las 32: `shoulder_height_decr` invierte 4 triángulos en 4 de ellas (a `IDEAS.md`). **Medido:** 115 correcciones de alisado (antes 21), 286 formas; relieve en PL.0 del 57 al 73 %, volumen −0,2 a −0,3 %; `cuerpo.glb` 17,5 → 21,8 MB; exportar 3 min 53 s; rendimiento media/p99 0,89/1,11 ms (antes 0,69/1,26). Recuentos en `probar_carga` (286) y `probar_formas` (196 = 81 + 115); textos de `FORMATO.md` y `probar_exportar_datos.py`. Pasan `probar_formas_propias.py`, `probar_exportar_datos.py` (mismos `sha256` en dos exportaciones), `referencia_reajuste.py`, 50 pruebas de Godot sin ventana, `probar_rendimiento` y la autoprueba. Detecta el fallo: sin `unflip`, 4 FALLOS; sin `write_full_names`, `probar_exportar_datos` falla en los nombres |

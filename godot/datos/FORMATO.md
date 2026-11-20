@@ -115,9 +115,10 @@ Filas de tipo Forma con `incr` = `propia:<forma>` (y `decr` = `propia:<forma>` s
   el conversor llama a `own_shapes()`. Son datos **CC0** (script propio sobre malla CC0).
 - `shoulder_height` (±3 cm) es la única que **mueve huesos**: la cola del hombro y todo el brazo (sale en `articulaciones.json`).
 - `alisado` (zona `Base`, de un lado, neutro 0, oculta en la interfaz) quita el relieve de pecho y entrepierna. Lleva
-  **correcciones** `alisado*<esquina>` sobre músculo, grasa y pecho (`muscle`, `weight`, `breast_volume`), calculadas
-  como las de las macros: el alisado se mide también sobre cada esquina, así que sigue al cuerpo. Sin ellas, el
-  alisado fijo del neutro hundía el pezón de los cuerpos que ya lo traen más plano. Su peso es el producto de sus partes.
+  **correcciones** `alisado*<esquina>` sobre las 5 macros (`gender`, `muscle`, `weight`, `breast_volume`,
+  `breast_firmness`; paso PL.0b), calculadas como las de las macros: el alisado se mide también sobre cada esquina,
+  así que sigue al cuerpo. Sin ellas, el alisado fijo del neutro hundía el pezón de los cuerpos que ya lo traen más
+  plano. Donde un triángulo se daría la vuelta, el alisado se queda a medias (PL.0c). Su peso es el producto de sus partes.
 - El preset `anime.json` lleva `alisado` = 1 («sin detalle anatómico» desde el primer momento). Un preset sin la clave la deja en 0.
 
 ## `presets/`

@@ -78,7 +78,10 @@ def read_glb(path):
         return local @ to_world[:3, :3].T + to_world[:3, 3]
 
     keys = mesh.data.shape_keys.key_blocks
-    return mesh, rig, coords(keys[0]), {k.name: coords(k) for k in keys[1:]}
+    names = ed.target_names(path)  # los del .glb: Blender corta los largos al importar (PL.0b)
+    if len(names) != len(keys) - 1:
+        raise ValueError(f"{len(names)} nombres en el .glb y {len(keys) - 1} formas importadas")
+    return mesh, rig, coords(keys[0]), {name: coords(k) for name, k in zip(names, keys[1:])}
 
 
 def deltas_by_skin_index(base, shapes, reference):
@@ -153,7 +156,7 @@ macro_ids = tuple(i for i, _ in ed.macro_sliders(rows))
 check("glb: correcciones hechas de formas de macro", fixes and all(
     p in expected and p.startswith(macro_ids) for n in fixes for p in n.split("*")),
     f"{len(fixes)} correcciones, {len(shapes)} formas en total")
-check("glb: correcciones de alisado sobre músculo, grasa y pecho", smoothing and all(
+check("glb: correcciones de alisado sobre las macros de SMOOTHING_SLIDERS", smoothing and all(
     p in expected and p.startswith(ed.SMOOTHING_SLIDERS) for n in smoothing for p in n.split("*")[1:]),
     f"{len(smoothing)} correcciones")
 check("glb: nombres _decr / _incr (y _l / _r)", all(p.rsplit("_", 2)[-1] in ("decr", "incr", "l", "r")

@@ -17,6 +17,7 @@ import itertools
 import hashlib
 import json
 import os
+import struct
 import sys
 
 import bpy
@@ -35,7 +36,7 @@ from prenda_base import paint_base_garment  # noqa: E402
 FORMAT_VERSION = 3
 FACE = "cara:"  # fuente de las formas de cara: cara:<forma de cara_anime.py>
 OWN = "propia:"  # fuente de las formas propias: propia:<forma de formas_propias.py>
-SMOOTHING_SLIDERS = ("muscle", "weight", "breast_volume")  # macros que cambian pecho y entrepierna (ver own_shapes)
+SMOOTHING_SLIDERS = ("gender", "muscle", "weight", "breast_volume", "breast_firmness")  # ver own_shapes
 SPECIES = "humana"
 SOURCE = "MakeHuman system assets (CC0) con MPFB 2.0.18"
 SOCKET_LENGTH = 0.05  # metros; el hueso de anclaje apunta hacia arriba
@@ -280,18 +281,18 @@ def own_shapes(basemesh, rows, bodies):
                 name = f"{row['id']}_{direction}" if row["decr"] else row["id"]
                 shapes[name] = made[row[direction][len(OWN):]]
     if fp.SMOOTHING in shapes:
-        shapes.update(smoothing_corrections(fp.mesh_arrays(basemesh)[1], bodies))
+        shapes.update(smoothing_corrections(*fp.mesh_arrays(basemesh)[1:3], bodies))
     return shapes
 
 
-def smoothing_corrections(edges, bodies):
+def smoothing_corrections(edges, triangles, bodies):
     """{«alisado*<esquina>»: (desplazamiento, huesos quietos)} de las esquinas de SMOOTHING_SLIDERS en bodies."""
     import formas_propias as fp
     corners = {c: body for c, body in bodies.items() if all(i in SMOOTHING_SLIDERS for i, _ in c)}
     neutral, joints = corners[()]
     mirror, zones = fp.mirror_map(neutral), fp.load_zones()
     still = {bone: (np.zeros(3), np.zeros(3)) for bone in joints}
-    smoothed = {c: (fp.smoothing(body[0], edges, zones, mirror), still) for c, body in corners.items()}
+    smoothed = {c: (fp.smoothing(body[0], edges, triangles, zones, mirror), still) for c, body in corners.items()}
     return {f"{fp.SMOOTHING}*{name}": shape for name, shape in corrections(smoothed, smallest=1).items()}
 
 
@@ -304,6 +305,35 @@ def add_shape_keys(basemesh, shapes):
             raise ValueError(f"{name}: {len(verts_delta)} vertices, la malla tiene {len(base) // 3}")
         key = basemesh.shape_key_add(name=name, from_mix=False)
         key.data.foreach_set("co", base + verts_delta.ravel())
+
+
+def _glb_parts(path):
+    """(JSON del .glb, bytes que siguen al trozo JSON)."""
+    with open(path, "rb") as file:
+        data = file.read()
+    size = struct.unpack_from("<I", data, 12)[0]
+    return json.loads(data[20:20 + size]), data[20 + size:]
+
+
+def target_names(path):
+    """Nombres de las formas del .glb (extras.targetNames de su malla)."""
+    return _glb_parts(path)[0]["meshes"][0]["extras"]["targetNames"]
+
+
+def write_full_names(path, names):
+    """Pone en el .glb los nombres completos de las formas. Blender los corta a 63 caracteres (y repite con .001),
+    y las correcciones de alisado de 4 o 5 macros son mas largas (PL.0b). Solo cambia el trozo JSON."""
+    gltf, rest = _glb_parts(path)
+    extras = gltf["meshes"][0]["extras"]
+    cut = extras["targetNames"]
+    if len(cut) != len(names) or not all(n.startswith(c.split(".")[0]) for c, n in zip(cut, names)):
+        raise ValueError("Las formas del .glb no estan en el orden de las shape keys")
+    extras["targetNames"] = list(names)
+    text = json.dumps(gltf, ensure_ascii=False, separators=(",", ":")).encode("utf-8")
+    text += b" " * (-len(text) % 4)
+    with open(path, "wb") as file:
+        file.write(struct.pack("<4sII", b"glTF", 2, 20 + len(text) + len(rest)))
+        file.write(struct.pack("<I4s", len(text), b"JSON") + text + rest)
 
 
 def godot(v):
@@ -367,6 +397,7 @@ def export_species(folder):
     shapes.update(own_shapes(basemesh, rows, bodies))
     add_shape_keys(basemesh, shapes)
     export_glb(basemesh, [], os.path.join(folder, "cuerpo.glb"), morph=True, deform_only=False)
+    write_full_names(os.path.join(folder, "cuerpo.glb"), list(shapes))
     write_json(os.path.join(folder, "articulaciones.json"), joints_json(basemesh.parent, shapes, socket_rules))
     data = manifest(folder, basemesh, basemesh.parent)
     write_json(os.path.join(folder, "manifiesto.json"), data)

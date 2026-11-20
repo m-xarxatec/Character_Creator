@@ -6,7 +6,7 @@ extends SceneTree
 
 const MAX_WEIGHT_ERROR := 1e-6
 const MAX_MM := 0.1
-const CORRECTIONS := 102  # 81 de macros + 21 de alisado (paso 6.2)
+const CORRECTIONS := 196  # 81 de macros + 115 de alisado (pasos 6.2 y PL.0b)
 const MACRO_CORRECTIONS := 81  # las de alisado no salen en la referencia: MPFB no tiene las formas propias
 
 var failures := 0
