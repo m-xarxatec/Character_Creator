@@ -100,7 +100,7 @@ func _ready() -> void:
 	restyle_timer = Timer.new()
 	restyle_timer.one_shot = true
 	restyle_timer.wait_time = RESTYLE_WAIT
-	restyle_timer.timeout.connect(func() -> void: style.refresh())
+	restyle_timer.timeout.connect(func() -> void: style.refresh_async())  # paso OPT.2: en un hilo
 	add_child(restyle_timer)
 	frame_timer = Timer.new()
 	frame_timer.one_shot = true

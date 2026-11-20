@@ -69,6 +69,15 @@ func _initialize() -> void:
 		total += t
 	print("  MEDIDA arrastrar «Músculo» (%d fotogramas): media %.1f ms, p99 %.1f ms, peor %.1f ms" % [DRAG_FRAMES,
 		total / times.size(), times[int(times.size() * 0.99)], times[-1]])
+	var worst := 0.0  # paso OPT.2: el tirón al soltar (el recálculo del estilo llega a los 0,3 s)
+	var release := Time.get_ticks_usec()
+	last = release
+	while Time.get_ticks_usec() - release < 800000:
+		await process_frame
+		var now := Time.get_ticks_usec()
+		worst = maxf(worst, (now - last) / 1000.0)
+		last = now
+	print("  MEDIDA al soltar, peor fotograma en 0,8 s: %.1f ms" % worst)
 	main.free()
 	quit()
 

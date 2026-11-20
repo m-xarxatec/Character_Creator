@@ -1,9 +1,12 @@
 extends SceneTree
 # Paso 4.6: la vista enseña el maniquí con las normales del estilo (godot/app/style_view.gd). Sin ventana.
+# Paso OPT.2: al dejar quieto un deslizador se recalcula en un hilo (refresh_async). Detecta el fallo: sin mirar _generation.
 # Uso: (ulimit -v 4000000; timeout 120 godot --headless --path pruebas/godot -s probar_vista_estilo.gd 2>&1 | grep -E 'FALLO|MEDIDA|RESULTADO|ERROR')
 
 const SAME := 0.00001  # metros
 const SAME_DEG := 0.1  # mismo criterio que probar_normales_estilo.gd
+const MAIN_MS := 20  # PROVISIONAL (paso OPT.2): lo que refresh_async deja al hilo principal (formas ya en caché)
+const THREAD_WAIT := 3.0  # s: tope para esperar al hilo
 
 var failures := 0
 
@@ -55,15 +58,38 @@ func _check_style(view, root_dir: String) -> void:
 	check("Forma '%s': mientras cambia se ve la malla original" % key, source.visible and not style.visible)
 	check("y el temporizador está en marcha", not view.restyle_timer.is_stopped())
 	var old_mesh := style.mesh
-	await create_timer(view.RESTYLE_WAIT + 0.2).timeout
-	check("al dejarlo quieto vuelve la copia, recalculada", style.visible and not source.visible and style.mesh != old_mesh)
-	print("  MEDIDA recálculo: %d ms" % style.last_ms)
+	await create_timer(view.RESTYLE_WAIT).timeout
+	var waited := await _wait_thread(style)  # paso OPT.2: el recálculo va en un hilo
+	check("al dejarlo quieto vuelve la copia, recalculada (en un hilo)", style.visible and not source.visible
+		and style.mesh != old_mesh, "%d ms" % waited)
+	print("  MEDIDA recálculo en el hilo: %d ms" % style.last_ms)
 	_check_arrays("forma cambiada", view, root_dir)
 	var moved := _max_distance(style.mesh.surface_get_arrays(0)[Mesh.ARRAY_VERTEX], old_mesh.surface_get_arrays(0)[Mesh.ARRAY_VERTEX])
 	check("la forma ha movido la copia", moved > 0.001, "%.4f m" % moved)
 	view.set_values(preset)
 	check("volver al preset: original a la vista hasta recalcular", source.visible)
+	view.restyle_timer.stop()
+	var start := Time.get_ticks_usec()
+	style.refresh_async()
+	var call_ms := (Time.get_ticks_usec() - start) / 1000.0
+	print("  MEDIDA refresh_async en el hilo principal: %.1f ms" % call_ms)
+	check("refresh_async apenas ocupa el hilo principal (< %d ms)" % MAIN_MS, call_ms < MAIN_MS, "%.1f ms" % call_ms)
+	view.set_values(shaped)  # cambia antes de que acabe el hilo: su resultado ya no vale
+	view.restyle_timer.stop()
+	style.refresh()
+	await _wait_thread(style)
+	check("si cambia a mitad, el resultado viejo del hilo no pisa al nuevo", style.visible
+		and style._weights == style._shape_weights())
 
+
+
+## Espera a que el hilo de StyleView termine (o THREAD_WAIT); devuelve los ms esperados.
+func _wait_thread(style) -> int:
+	var start := Time.get_ticks_msec()
+	while not style._tasks.is_empty() and Time.get_ticks_msec() - start < THREAD_WAIT * 1000.0:
+		await process_frame
+	await process_frame
+	return Time.get_ticks_msec() - start
 
 ## La copia = la malla original con sus formas aplicadas + StyleNormals.apply, y lo demás igual.
 func _check_arrays(label: String, view, root_dir: String) -> void:

@@ -79,20 +79,37 @@ static func _global_pose(skeleton: Skeleton3D, bone: int, globals: Array[Transfo
 ## las formas a la malla las trae todas (~200 ms con 286): quien hornea a menudo (style_view.gd) guarda el suyo.
 static func _add_shapes(mesh: MeshInstance3D, vertices: PackedVector3Array, normals: PackedVector3Array,
 		cache: Variant = null) -> void:
+	var active := active_shapes(mesh)
+	var shapes := {} if cache == null else cache as Dictionary
+	cache_shapes(mesh, active, shapes)
+	add_shape_arrays(vertices, normals, active, shapes)
+
+
+## {forma: peso} de las formas con peso distinto de 0 (hilo principal: lee la malla).
+static func active_shapes(mesh: MeshInstance3D) -> Dictionary:
 	var active := {}
 	for shape in mesh.mesh.get_blend_shape_count():
 		if mesh.get_blend_shape_value(shape) != 0.0:
 			active[shape] = mesh.get_blend_shape_value(shape)
+	return active
+
+
+## Pone en cache {forma: [vértices, normales]} las de active que falten (hilo principal: pide las formas a la malla).
+static func cache_shapes(mesh: MeshInstance3D, active: Dictionary, cache: Dictionary) -> void:
+	if active.keys().any(func(shape: int) -> bool: return not cache.has(shape)):
+		var all := shape_arrays(mesh.mesh)
+		for shape: int in active:
+			if not cache.has(shape):
+				cache[shape] = [all[shape][Mesh.ARRAY_VERTEX], all[shape][Mesh.ARRAY_NORMAL]]
+
+
+## Suma las formas a vértices y normales con sus pesos. Solo arrays: vale en un hilo (paso OPT.2).
+static func add_shape_arrays(vertices: PackedVector3Array, normals: PackedVector3Array, active: Dictionary,
+		shapes: Dictionary) -> void:
 	if active.is_empty():
 		return
 	var base_vertices := vertices.duplicate()
 	var base_normals := normals.duplicate()
-	var shapes := {} if cache == null else cache as Dictionary
-	if active.keys().any(func(shape: int) -> bool: return not shapes.has(shape)):
-		var all := shape_arrays(mesh.mesh)
-		for shape: int in active:
-			if not shapes.has(shape):
-				shapes[shape] = [all[shape][Mesh.ARRAY_VERTEX], all[shape][Mesh.ARRAY_NORMAL]]
 	for shape: int in active:
 		var weight: float = active[shape]
 		var shape_vertices: PackedVector3Array = shapes[shape][0]
