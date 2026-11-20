@@ -1,9 +1,20 @@
 extends SceneTree
 # Paso 3.7: presets en JSON (preset.gd). Paso 4.7: versión 2, con el acabado. Sin ventana.
-# Uso: godot --headless --path pruebas/godot -s probar_presets.gd 2>&1 | grep -E 'FALLO|RESULTADO|ERROR'
+# Paso PL.1b: plantillas de serie (TEMPLATES): completas, con la cara y el aspecto de anime.json, y en la ventana sin
+# errores del informe en pose T y en «Atacar»; sus proporciones (godot/app/measures.gd) en los rangos de GUIA_ESTILO.md §2.
+# Uso: godot --headless --path pruebas/godot -s probar_presets.gd 2>&1 | grep -E 'FALLO|MEDIDA|RESULTADO|ERROR'
 
 const MAX_ROUNDING := 0.0000501  # 4 decimales: el error de redondeo es de 0,00005 como mucho
 const STYLE_PRESETS := ["anime_femenino", "anime_masculino", "chibi_oscuro", "chibi_fuera_de_rango"]
+const TEMPLATES := ["femenina", "masculino", "atletica", "atletico", "delgada", "delgado", "robusta", "robusto",
+	"esbelta", "esbelto"]  # pasos PL.1b y PL.1c; el neutro es anime.json
+const FACE := ["cuenca_plana", "boca_anime", "mandibula_anime", "menton_anime", "nariz_anime", "alisado"]
+## Rangos de diseno/GUIA_ESTILO.md §2 (aprobados el 2026-11-20 con lo medido; el ± es PROVISIONAL).
+const STYLE_RANGES := {
+	"femenina": {"heads": [7.01, 7.31], "legs": [0.47, 0.53], "shoulders": [1.68, 1.78], "waist": [0.51, 0.57],
+		"hand": [0.57, 0.63], "foot": [0.71, 0.77]},
+	"masculino": {"heads": [6.97, 7.27], "legs": [0.49, 0.55], "shoulders": [1.90, 2.00], "waist": [0.46, 0.52],
+		"hand": [0.70, 0.76], "foot": [0.90, 0.96]}}
 
 var failures := 0
 var preset: GDScript
@@ -30,7 +41,9 @@ func _initialize() -> void:
 	_check_errors()
 	_check_style_presets()
 	_check_new_character()
+	_check_templates()
 	species.scene.free()
+	await _check_templates_in_window()
 	print("RESULTADO: ", "TODO BIEN" if failures == 0 else "%d FALLOS" % failures)
 	quit(1 if failures else 0)
 
@@ -265,6 +278,61 @@ func _check_new_character() -> void:
 	var saved: String = preset.to_text(preset.to_dict(loaded["nombre"], "humana", loaded["valores"], loaded["colores"],
 		loaded["prenda_visible"], loaded["acabado"]))
 	check("anime.json: cargar y guardar da el mismo texto", saved + "\n" == text)
+
+
+
+## Paso PL.1b: cada plantilla es anime.json con otro cuerpo, completa, en el manifiesto, y se guarda igual que se lee.
+func _check_templates() -> void:
+	var base: Dictionary = preset.from_text(species.preset_text(), "humana", species.sliders)
+	for template: String in TEMPLATES:
+		var file := "presets/%s.json" % template
+		var text := FileAccess.get_file_as_string(root_dir.path_join("godot/datos/humana").path_join(file))
+		var loaded: Dictionary = preset.from_text(text, "humana", species.sliders)
+		check("%s carga sin error ni claves desconocidas" % file, loaded.get("error") == "" and loaded["desconocidas"].is_empty(),
+			str(loaded.get("error")))
+		if loaded.get("error") != "":
+			continue
+		var data: Dictionary = JSON.parse_string(text)
+		check("%s: versión 2, completa y en el manifiesto" % file, data["version"] == 2
+			and data["valores"].size() == base["valores"].size() and species.manifest["files"].has(file))
+		check("%s: cara, alisado, colores, prenda y acabado de anime.json" % file,
+			FACE.all(func(key: String) -> bool: return loaded["valores"][key] == base["valores"][key])
+			and loaded["colores"] == base["colores"] and loaded["prenda_visible"] == base["prenda_visible"]
+			and loaded["acabado"] == base["acabado"])
+		check("%s: cargar y guardar da el mismo texto" % file, preset.to_text(preset.to_dict(loaded["nombre"], "humana",
+			loaded["valores"], loaded["colores"], loaded["prenda_visible"], loaded["acabado"])) + "\n" == text)
+
+
+## Paso PL.1b: en la ventana, cada plantilla (y el neutro) sin errores del informe en pose T y en «Atacar».
+func _check_templates_in_window() -> void:
+	var main: Control = load(root_dir.path_join("godot/app/main.gd")).new()
+	root.add_child(main)
+	await process_frame
+	var mesh: MeshInstance3D = main.body_view.species.mesh
+	var skeleton: Skeleton3D = main.body_view.species.skeleton
+	var attack: int = 1 + main.body_view.animations.entries().map(func(e: Dictionary) -> String: return e["id"]).find("atacar")
+	check("la lista de animaciones tiene «Atacar»", attack > 0)
+	for template: String in ["anime"] + TEMPLATES:
+		var text := FileAccess.get_file_as_string(root_dir.path_join("godot/datos/humana/presets/%s.json" % template))
+		main.editor.load_values(preset.from_text(text, "humana", main.body_view.species.sliders)["valores"])
+		var p: Dictionary = main.measures.get_script().proportions(mesh, skeleton)
+		print("  MEDIDA %s: %.2f cabezas, piernas %.3f, hombros %.2f, cintura %.3f, mano %.3f, pie %.3f" % [template,
+			p["heads"], p["legs"], p["shoulders"], p["waist"], p["hand"], p["foot"]])
+		if STYLE_RANGES.has(template):
+			var ranges: Dictionary = STYLE_RANGES[template]
+			var outside := ranges.keys().filter(func(k: String) -> bool: return p[k] < ranges[k][0] or p[k] > ranges[k][1])
+			check("%s: proporciones en los rangos de GUIA_ESTILO.md §2" % template, outside.is_empty(), str(outside))
+		for pose: String in ["pose T", "Atacar"]:
+			main.body_actions.set_pose_t(true)
+			main.body_actions.set_animation(attack if pose == "Atacar" else 0)
+			var rows: Array = main.report_panel.rows
+			var errors := rows.filter(func(r: Dictionary) -> bool: return r["nivel"] == "error")
+			var warnings := rows.filter(func(r: Dictionary) -> bool: return r["nivel"] == "aviso")
+			check("%s en %s: el informe no tiene errores" % [template, pose], not rows.is_empty() and errors.is_empty(),
+				"%d avisos %s" % [warnings.size(), str(errors.map(func(r: Dictionary) -> String: return r["texto"]))])
+		main.body_actions.set_animation(0)
+		main.body_actions.set_pose_t(false)
+	main.free()
 
 
 func _both_sides(values: Dictionary) -> bool:

@@ -44,3 +44,20 @@ cada medida dentro de un margen de cuerpo humano (PROVISIONAL); cada deslizador 
 (`leg_length`, `shoulder_width`, `waist_width`, `hand_size`, `foot_size` de 0 a 1 la suben; `head_size` baja `heads`).
 `MEDIDA` de `anime.json` y de `pruebas/fase_3/estilo/anime_femenino.json` y `anime_masculino.json`.
 **Detecta el fallo:** la cintura con el corte más ancho en vez del más estrecho cae en la cadera (`waist_at` < 0,2).
+
+## 6. Diseño (PL.1c)
+
+Cada una parte de la plantilla aprobada de su lado (`femenina.json` o `masculino.json`) y cambia poco: los tipos de cuerpo
+solo con **Músculo** y **Grasa** (las macros de MakeHuman, 0,5 = medio), y las esbeltas con piernas, cabeza y altura
+(proporciones heroicas). Lo demás (cara, `alisado`, colores, prenda, acabado), igual.
+
+| Plantilla | Parte de | Cambia |
+| --- | --- | --- |
+| Atlética / Atlético | Femenina / Masculino | `muscle` 0,7 / 0,8; `weight` 0,3 |
+| Delgada / Delgado | Femenina / Masculino | `muscle` 0,25; `weight` 0,1 |
+| Robusta / Robusto | Femenina / Masculino | `muscle` 0,4 / 0,55; `weight` 0,8 / 0,85 |
+| Esbelta / Esbelto | Femenina / Masculino | `leg_length` 1; `head_size` 0,65 / 0,6; `height` 0,65 / 0,7 |
+
+`exportar_datos.py`: `TEMPLATES` con todas y `FILES` las incluye. Prueba: las de `probar_presets.gd` (completas, en el
+manifiesto, aspecto de `anime.json`, mismo texto, informe sin errores en pose T y en «Atacar») y `MEDIDA` de sus
+proporciones; los rangos de §2 son solo de Femenina y Masculino (las demás se apartan a propósito). Hoja: frente, ¾ y lado.

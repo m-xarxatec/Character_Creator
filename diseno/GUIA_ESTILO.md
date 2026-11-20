@@ -15,20 +15,23 @@
 
 ## 2. Proporciones por preset
 
-Medidas en "cabezas de alto" (altura total ÷ alto de la cabeza, de la barbilla a la coronilla).
+Femenino y masculino: **aprobados el 2026-11-20** (paso PL.1b) con las plantillas `femenina.json` y `masculino.json`,
+medidas con `Measures.proportions()` (`godot/app/measures.gd`, en reposo): rango = lo medido ± 0,15 cabezas, ± 0,05 en
+hombros y ± 0,03 en lo demás. Cómo se mide cada una: `ruta/pasos/PL.1_plantillas.md` §4 (hombros: ancho de la malla a
+la altura de la articulación, por fuera; mano y pie: media de los dos lados). El chibi sigue sin medir.
 
 | Medida | Anime femenino | Anime masculino | Chibi |
 | --- | --- | --- | --- |
-| Cabezas de alto | PROPUESTA (pendiente de aprobar): 6,5–7 | PROPUESTA (pendiente de aprobar): 7–7,5 | PROPUESTA (pendiente de aprobar): 2,5–3 |
-| Piernas (de la ingle al suelo ÷ altura) | PROPUESTA (pendiente de aprobar): 0,50–0,55 | PROPUESTA (pendiente de aprobar): 0,48–0,53 | PROPUESTA (pendiente de aprobar): 0,25–0,35 |
-| Hombros (ancho ÷ alto de la cabeza) | PROPUESTA (pendiente de aprobar): 1,4–1,6 | PROPUESTA (pendiente de aprobar): 1,8–2,1 | PROPUESTA (pendiente de aprobar): 1,0–1,3 |
-| Cintura (ancho ÷ ancho de hombros) | PROPUESTA (pendiente de aprobar): 0,60–0,70 | PROPUESTA (pendiente de aprobar): 0,70–0,80 | PROPUESTA (pendiente de aprobar): 0,80–0,95 |
-| Mano (largo ÷ alto de la cabeza) | PROPUESTA (pendiente de aprobar): 0,65–0,75 | PROPUESTA (pendiente de aprobar): 0,75–0,85 | PROPUESTA (pendiente de aprobar): 0,40–0,50 (algo grande para el cuerpo) |
-| Pie (largo ÷ alto de la cabeza) | PROPUESTA (pendiente de aprobar): 0,85–0,95 | PROPUESTA (pendiente de aprobar): 0,95–1,05 | PROPUESTA (pendiente de aprobar): 0,50–0,65 (botas algo grandes) |
+| Cabezas de alto (altura ÷ barbilla–coronilla) | 7,01–7,31 (7,16) | 6,97–7,27 (7,12) | PROPUESTA (pendiente de aprobar): 2,5–3 |
+| Piernas (de la ingle al suelo ÷ altura) | 0,47–0,53 (0,503) | 0,49–0,55 (0,521) | PROPUESTA (pendiente de aprobar): 0,25–0,35 |
+| Hombros (ancho ÷ alto de la cabeza) | 1,68–1,78 (1,73) | 1,90–2,00 (1,95) | PROPUESTA (pendiente de aprobar): 1,0–1,3 |
+| Cintura (ancho ÷ ancho de hombros) | 0,51–0,57 (0,540) | 0,46–0,52 (0,490) | PROPUESTA (pendiente de aprobar): 0,80–0,95 |
+| Mano (largo ÷ alto de la cabeza) | 0,57–0,63 (0,604) | 0,70–0,76 (0,733) | PROPUESTA (pendiente de aprobar): 0,40–0,50 (algo grande para el cuerpo) |
+| Pie (largo ÷ alto de la cabeza) | 0,71–0,77 (0,744) | 0,90–0,96 (0,934) | PROPUESTA (pendiente de aprobar): 0,50–0,65 (botas algo grandes) |
 
 Por qué: el anime alarga las piernas y estrecha la cintura respecto a un humano real (unas 7,5 cabezas); el chibi encoge el cuerpo, no la cabeza, y agranda manos y pies para que se lean a poca resolución.
 
-Medido en el 3.12: femenino 6,96, masculino 6,94, chibi 5,25 (fuera de rango, 3,46). **El chibi no llega con los deslizadores actuales**: necesita la segunda base o formas propias.
+Medido en el 3.12: femenino 6,96, masculino 6,94, chibi 5,25 (fuera de rango, 3,46); los rangos propuestos entonces (sin medir) no encajaban con estos cuerpos y se cambiaron por lo medido en PL.1b. **El chibi no llega con los deslizadores actuales**: necesita la segunda base o formas propias.
 
 ---
 
