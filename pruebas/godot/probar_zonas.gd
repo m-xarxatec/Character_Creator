@@ -55,7 +55,7 @@ func _initialize() -> void:
 	check("el botón de zona del informe también mueve la marca", silhouette.selected_zone == "Manos"
 		and picker.buttons["Manos"].button_pressed)
 	await _check_fold(main)
-	check("Plantillas existe y dice «Pronto»", picker.get_tab_title(1).contains("Pronto"), picker.get_tab_title(1))
+	check("Plantillas existe y ya no dice «Pronto» (paso PL.3)", picker.get_tab_title(1) == "Plantillas", picker.get_tab_title(1))
 	main.free()
 	print("RESULTADO: ", "TODO BIEN" if failures == 0 else "%d FALLOS" % failures)
 	quit(1 if failures else 0)

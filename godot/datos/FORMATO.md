@@ -133,6 +133,10 @@ Plantillas de serie (paso PL.1): `femenina.json` y `masculino.json` son `anime.j
 colores, prenda y acabado iguales); las demás (`atletica`, `delgada`, `robusta`, `esbelta` y sus masculinos) parten de
 una de esas dos. `nombre` es el que verá quien las elija. Cada una va en `TEMPLATES` de `exportar_datos.py`.
 
+Miniaturas (paso PL.2): `presets/<id>.png`, 256 × 256 con fondo transparente, una por preset; las hace
+`pruebas/godot/generar_miniaturas.gd` (con ventana; volver a lanzarlo si cambia una plantilla). Van con `importer="keep"`
+(viajan tal cual; se leen con `Image.load_from_file`) y no están en el manifiesto.
+
 ## `articulaciones.json`
 
 MPFB coloca cada hueso en el centro de unos cubos auxiliares que se borran en el paso 1.3. Las formas mueven esos

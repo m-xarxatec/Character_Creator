@@ -1,6 +1,6 @@
 extends SceneTree
 # Paso 3.7: presets en JSON (preset.gd). Paso 4.7: versión 2, con el acabado. Sin ventana.
-# Paso PL.1b: plantillas de serie (TEMPLATES): completas, con la cara y el aspecto de anime.json, y en la ventana sin
+# Paso PL.2: su miniatura (presets/<id>.png). Paso PL.1b: plantillas de serie (TEMPLATES): completas, con la cara y el aspecto de anime.json, y en la ventana sin
 # errores del informe en pose T y en «Atacar»; sus proporciones (godot/app/measures.gd) en los rangos de GUIA_ESTILO.md §2.
 # Uso: godot --headless --path pruebas/godot -s probar_presets.gd 2>&1 | grep -E 'FALLO|MEDIDA|RESULTADO|ERROR'
 
@@ -42,6 +42,7 @@ func _initialize() -> void:
 	_check_style_presets()
 	_check_new_character()
 	_check_templates()
+	_check_thumbnails()
 	species.scene.free()
 	await _check_templates_in_window()
 	print("RESULTADO: ", "TODO BIEN" if failures == 0 else "%d FALLOS" % failures)
@@ -302,6 +303,15 @@ func _check_templates() -> void:
 		check("%s: cargar y guardar da el mismo texto" % file, preset.to_text(preset.to_dict(loaded["nombre"], "humana",
 			loaded["valores"], loaded["colores"], loaded["prenda_visible"], loaded["acabado"])) + "\n" == text)
 
+
+
+## Paso PL.2: cada preset de serie tiene su miniatura (generar_miniaturas.gd): 256 × 256, fondo transparente, cuerpo en medio.
+func _check_thumbnails() -> void:
+	for template: String in ["anime"] + TEMPLATES:
+		var image := Image.load_from_file(root_dir.path_join("godot/datos/humana/presets/%s.png" % template))
+		var ok := image != null and image.get_size() == Vector2i(256, 256) and image.get_pixel(0, 0).a == 0.0 \
+			and image.get_pixel(128, 128).a > 0.5
+		check("presets/%s.png: 256 × 256, esquinas transparentes y el cuerpo en el centro" % template, ok)
 
 ## Paso PL.1b: en la ventana, cada plantilla (y el neutro) sin errores del informe en pose T y en «Atacar».
 func _check_templates_in_window() -> void:

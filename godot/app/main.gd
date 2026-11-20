@@ -115,6 +115,9 @@ func _ready() -> void:
 		zone_picker.setup(slider_panel.zones, _zone_counts())
 		zone_picker.select(slider_panel.open_zone)
 		zone_picker.zone_chosen.connect(slider_panel.open)
+		var species = body_view.species  # paso PL.3: galería de plantillas
+		zone_picker.gallery.setup(species.folder.path_join("presets"), species.manifest["species"], species.sliders)
+		zone_picker.gallery.template_chosen.connect(editor.load_values)
 		zone_picker.zone_chosen.connect(func(_zone: String) -> void: top_bar.tab_bar.current_tab = ACTIVE_TAB)
 		body_view.zone_touched.connect(_on_zone_touched)  # paso IU.7a: igual que elegirla en la silueta
 		body_actions.setup(body_view, editor)
