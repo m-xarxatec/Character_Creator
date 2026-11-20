@@ -7,7 +7,6 @@
 ## Antes del MVP (solo si sobra tiempo, sin desviar el plan)
 
 - Presets de cuerpo: atlético, delgado, robusto, mayor.
-- `probar_rendimiento.gd` debería aceptar rutas relativas al `.glb` (hoy pide la absoluta; con `datos/humana/cuerpo.glb` no lo abre).
 - Botón "aleatorio" con límites razonables.
 - Comparar antes y después (dos maniquíes lado a lado).
 - Medidas reales (altura en cm) junto a los deslizadores.
@@ -54,7 +53,6 @@
 
 - Contorno tipo ilustración regulable: desde quitarlo del todo hasta muy grueso, con un deslizador; quizá también color del contorno y grosor distinto por zona (cara más fino, silueta más grueso).
 - Hace grumos en los dedos de manos y pies (grosor en píxeles mayor que el dedo en pantalla): hace falta grosor por zona.
-- El borde de la prenda sale ondulado en primeros planos: revisarlo.
 
 ---
 
@@ -84,7 +82,6 @@
 ## Después del MVP: interfaz
 
 - Estética de la ventana del editor (tema, colores, tipografía, espaciado), según la maqueta. Hoy son los controles de Godot por defecto.
-- Cuando el editor esté como queremos: un comando en el PATH que lo abra con una sola orden.
 - Elegir tocando el cuerpo (IU.7) para partes pequeñas: rasgos de la cara (nariz, labios, cejas) u otras piezas, cuando el proyecto crezca.
 - Barra de título de los diálogos (Ajustes, Comandos) con el tema: hoy es la gris de Godot (revisor, IU.11).
 - Margen entre los textos del panel derecho («4 ajustes», «Más alto»…) y la barra de desplazamiento (revisor, IU.11).

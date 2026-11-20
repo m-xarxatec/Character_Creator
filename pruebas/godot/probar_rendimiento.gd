@@ -1,7 +1,8 @@
 extends SceneTree
 # Paso 2.3: con todas las formas de datos/ activas, el maniquí se mueve fluido al arrastrar un deslizador.
 # Necesita ventana (no --headless): sin ella Godot no usa la tarjeta gráfica.
-# Uso: godot --path pruebas/godot -s probar_rendimiento.gd -- <ruta a cuerpo.glb> 2>&1 | grep -E 'FALLO|RESULTADO|ERROR'
+# Uso: godot --path pruebas/godot -s probar_rendimiento.gd -- godot/datos/humana/cuerpo.glb 2>&1 | grep -E 'FALLO|RESULTADO|ERROR'
+# La ruta al .glb puede ser absoluta o relativa a la raíz del repositorio (paso B0.3).
 # Simula arrastrar "Músculo" de 0 a 1 y vuelta. Peor caso: todas las demás formas a 0,3 (también _decr e _incr
 # a la vez, cosa que el editor no hará), para que entren todas las correcciones.
 
@@ -17,11 +18,19 @@ var last_usec := 0
 var frame := 0
 
 
+## Ruta del .glb: la absoluta tal cual; la relativa, desde la raíz del repositorio (donde se lanzan las pruebas).
+func glb_path() -> String:
+	var path := OS.get_cmdline_user_args()[0]
+	if path.is_absolute_path():
+		return path
+	return ProjectSettings.globalize_path("res://").path_join("../..").path_join(path).simplify_path()
+
+
 func _initialize() -> void:
 	DisplayServer.window_set_vsync_mode(DisplayServer.VSYNC_DISABLED)  # medir lo que da de sí, no los 60 Hz
 	var doc := GLTFDocument.new()
 	var state := GLTFState.new()
-	if doc.append_from_file(OS.get_cmdline_user_args()[0], state) != OK:
+	if doc.append_from_file(glb_path(), state) != OK:
 		print("ERROR: no se pudo abrir el .glb")
 		quit(1)
 		return

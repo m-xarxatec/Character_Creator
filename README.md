@@ -59,6 +59,7 @@ Todo va en un solo archivo: no hace falta instalar Godot.
   El botón «Download ZIP» de GitHub no incluye los archivos de Git LFS: clona con `git lfs` instalado.
 - Abrir el editor: `godot --path godot`. Una prueba: `godot --headless --path pruebas/godot -s probar_carga.gd`
   (cada script de prueba dice en su cabecera cómo se lanza). El build de Linux: `sh pruebas/fase_7/probar_build_linux.sh`.
+  Después, `sh scripts/instalar_lanzador.sh` lo abre con la orden `gamemolde` y desde el menú (sin `sudo`).
 
 | Carpeta | Para qué sirve |
 | --- | --- |
@@ -66,6 +67,7 @@ Todo va en un solo archivo: no hace falta instalar Godot.
 | `godot/datos/` | El cuerpo base ya preparado y las animaciones de prueba; viaja dentro del programa. |
 | `blender/` | Scripts que preparan el cuerpo base con Blender. |
 | `pruebas/` | Pruebas automáticas y sus resultados. |
+| `scripts/` | Utilidades: instalar la orden `gamemolde`. |
 | `diseno/` | Dibujo de cómo se verá el programa. Ábrelo con el navegador. |
 
 Documentos: `PLAN.md` (los pasos), `IDEAS.md` (lo que viene después), `CREDITOS.md` (lo que no hicimos nosotros).
