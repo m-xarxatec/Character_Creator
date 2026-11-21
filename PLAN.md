@@ -4,7 +4,7 @@
 > Lo que no es del MVP va a `IDEAS.md`.
 
 **Estado actual:** MVP preparado: build de Linux, README, licencias y paquete 0.1.0 listos. Nombre definitivo: GameMolde (D28). Pulido: hecho (P.1–P.8). Publicar (7.4) espera a tus juicios. Fase IU (`propuestas/expansion_v2.md` §3): IU.1–IU.12 hechos (fase cerrada). Falta lo tuyo: mirar capturas (5.15/5.11 y 6.3), abrir el build a mano (7.1), elegir capturas y grabar el vídeo (7.2). Lista: `ruta/PENDIENTES.md`
-**Taller de Assets:** TA.1, TA.2, TA.3a y TA.3b cerrados en `taller_asets`. Pendiente de aprobación la [ficha de TA.3c, edición de espada en el visor](ruta/pasos/ta.3c_edicion_espada.md).
+**Taller de Assets:** TA.1, TA.2, TA.3a, TA.3b, [TA.3c](ruta/pasos/ta.3c_edicion_espada.md) y [TA.4a](ruta/pasos/ta.4a_contorno_imagen.md) cerrados en `taller_asets`. Sigue la propuesta de un paso corto para el salto de 144 a 272 triángulos de la espada y, después, la ficha de TA.4b (contorno a malla extruida).
 **Fichas:** cada paso pendiente tiene la suya en `ruta/pasos/` (traspaso del 2026-11-16; decisiones en `ruta/DECISIONES.md`).
 **Leyenda:** `[ ]` pendiente · `[~]` en curso · `[x]` hecho
 
@@ -252,7 +252,8 @@ La [hoja de ruta del Taller](<taller assets/pasos_a_seguir.md>) recoge el alcanc
 - [x] TA.2b Incorporar el visor orbital, el selector de modo y el panel de propiedades. Revisión visual aprobada.
 - [x] TA.3a Generar y validar la primera espada 3D a partir de una receta v1. Silueta aprobada.
 - [x] TA.3b Variar punta, guarda, mango y pomo desde la receta. Variantes aprobadas en la revisión visual.
-- [ ] TA.3c Editar dimensiones, proporciones y colores de la espada en el visor del Taller.
+- [x] TA.3c Editar dimensiones, proporciones y colores de la espada en el visor del Taller. Revisión visual aprobada.
+- [x] TA.4a Obtener de una imagen sencilla el contorno de su objeto principal, con avisos. [Ficha](ruta/pasos/ta.4a_contorno_imagen.md). Revisión visual aprobada.
 
 ---
 
@@ -348,3 +349,7 @@ La [hoja de ruta del Taller](<taller assets/pasos_a_seguir.md>) recoge el alcanc
 | 2026-11-21 | Cierre de TA.3a | El responsable aprueba las tres vistas de la espada. Se presenta la ficha de TA.3b. |
 | 2026-11-21 | TA.3b | Cuatro escalas opcionales del 50 al 150 %. Los arrays de las dos recetas anteriores y la captura de referencia al 100 % coinciden byte por byte con TA.3a. Se corrigió la coincidencia de aristas al escalar el mango al 112,5 %. Pasan las 184 comprobaciones del generador y un barrido de 243 combinaciones. Omitir el factor de punta provocó tres fallos de longitud (salida 1). Tras restaurarlo pasan la autoprueba y los 59 scripts con recorrido sin ventana, incluida la reimportación. Capturas con cámara fija en `pruebas/capturas/interfaz/ta3b/`. Pendiente de aprobación visual. |
 | 2026-11-21 | Cierre de TA.3b | El responsable aprueba las variantes. Se presenta la ficha de edición de la espada en el visor del Taller. |
+| 2026-11-21 | TA.3c | Espada real en el Taller: `sword_panel.gd` con siete medidas, tres colores y Restablecer; Generar, vistas Frente, Perfil y ¾, triángulos y tamaño real. La receta limita el largo a 0,5–1,5 m, el ancho a 0,045–0,135 m y el grosor a 0,009–0,027 m (ampliación aprobada). Regenerar tarda 1,65 ms de mediana. Pasan 70 comprobaciones de ventana y 81 de receta. En una copia, desconectar la barra de guarda dio «FALLO proporción escala_guarda» (salida 1), quitar los límites dio 9 fallos y quitar la carga en bloque hizo fallar «Restablecer regenera una sola vez». Pasan la autoprueba, 55 scripts sin ventana, el importador y Overwrite Axis, tras generar con Blender `referencia_reajuste.json`, que faltaba. No se lanzaron las 13 pruebas con ventana ni `probar_normales_leidas`, que depende de una de ellas; ninguna carga este código. Al cambiar una proporción, la espada pasa de 144 hasta 272 triángulos por la subdivisión de TA.3b. Capturas en `pruebas/capturas/interfaz/ta3c/`. Pendiente la aprobación visual. |
+| 2026-11-21 | TA.4a | `image_mask.gd`: de la imagen al contorno del objeto mayor con `BitMap`, con avisos de piezas, huecos, borde, reducción y fondo de color. Pasan 160 comprobaciones. Analizar 1024 × 1024 con fondo de color tarda 159 ms. Límites `# PROVISIONAL`: 4096 px, 1024 px, 4 px² y 1000 vértices. En una copia, elegir la primera isla dio 4 fallos, quitar la comprobación de cruces 3 y anular el recuento de huecos 6 (salida 1). Misma tanda de regresiones que TA.3c, con la prueba nueva incluida. Hoja en `pruebas/capturas/interfaz/ta4a/hoja_contornos.png`. Pendiente la aprobación visual. |
+| 2026-11-21 | Cierre de TA.3c | El responsable aprueba la edición de la espada en el visor. No se pasó el revisor-visual. El salto de 144 a 272 triángulos queda para un paso corto con su propuesta. |
+| 2026-11-21 | Cierre de TA.4a | El responsable aprueba la hoja de contornos. Los límites de 4096 px, 1024 px, 4 px² y 1000 vértices siguen `# PROVISIONAL`. Después del paso de los triángulos sigue la ficha de TA.4b. |
