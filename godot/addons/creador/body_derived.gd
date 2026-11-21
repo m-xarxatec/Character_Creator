@@ -1,7 +1,6 @@
 class_name BodyDerived
 extends RefCounted
-## Paso AB.9a (y AB.10): piezas hechas con caras del propio cuerpo, separadas un poco por su normal (casquete,
-## guantes, calcetines y botas). Mismos vértices = mismas formas, huesos y pesos: siguen al cuerpo sin medir nada, y se
+## Paso AB.9a: piezas hechas con caras del propio cuerpo, separadas un poco por su normal (hoy, el casquete). Mismos vértices = mismas formas, huesos y pesos: siguen al cuerpo sin medir nada, y se
 ## generan al vuelo (no ocupan sitio en el programa). Sin interfaz.
 ## La máscara elige caras del cuerpo en reposo con reglas relativas a la caja de los vértices de su hueso (fracciones de
 ## 0 a 1: abajo/atrás → arriba/delante; x es la distancia al centro, 1 = el borde), no con números de la humana.
@@ -11,19 +10,11 @@ extends RefCounted
 
 const MeshBaker := preload("mesh_baker.gd")
 const MIN_DELTA := 0.00001  # metros: una forma que mueve menos la pieza no se guarda
-const HANDS := ["LeftHand", "RightHand", "LeftThumb", "RightThumb", "LeftIndex", "RightIndex", "LeftMiddle",
-	"RightMiddle", "LeftRing", "RightRing", "LeftLittle", "RightLittle"]  # prefijos: la mano y sus dedos
-const LEGS := ["LeftFoot", "RightFoot", "LeftToes", "RightToes", "LeftLowerLeg", "RightLowerLeg"]
-## Reglas de cada máscara: huesos (prefijos del nombre), peso mínimo de la suma de esos huesos y zonas (un vértice
-## entra si cumple alguna zona entera; sin zonas, entran todos). La caja es la de los vértices de esos huesos.
 const MASKS := {
 	"casquete": {"huesos": ["Head"], "peso": 0.5, "zonas": [
 		{"y_min": 0.755},  # la coronilla, hasta el nacimiento del pelo en la frente
 		{"y_min": 0.48, "z_max": 0.40, "x_max": 0.84},  # los lados, por encima y detrás de las orejas
 		{"y_min": 0.19, "z_max": 0.21}]},  # la nuca
-	"guantes": {"huesos": HANDS, "peso": 0.5, "zonas": []},  # paso AB.10: hasta la muñeca
-	"calcetines": {"huesos": LEGS, "peso": 0.5, "zonas": [{"y_max": 0.45}]},  # hasta media pantorrilla
-	"botas": {"huesos": LEGS, "peso": 0.5, "zonas": [{"y_max": 0.85}]},  # hasta debajo de la rodilla
 }
 
 

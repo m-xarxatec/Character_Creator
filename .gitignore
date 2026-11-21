@@ -32,3 +32,6 @@ pruebas/godot/bonemap_personaje.tres
 
 # Personajes exportados a mano desde el editor
 godot/personaje.*
+
+# Recursos descargados sin revisar (propuestas/recursos_3d.md §2-3)
+recursos_externos/

@@ -2,7 +2,7 @@
 """Exporta las mallas de ayuda de MakeHuman como piezas base que siguen al cuerpo (paso AB.3).
 
 Uso: blender -b -P blender/exportar_helpers.py -- godot/datos/humana godot/packs/base
-Lee <datos>/deslizadores.csv y <datos>/cuerpo.glb; escribe en <pack> tights.glb, skirt.glb, hair.glb (con su .import)
+Lee <datos>/deslizadores.csv y <datos>/cuerpo.glb; escribe en <pack> tights.glb y hair.glb (con su .import)
 y pack.json.
 
 Cada pieza es un helper de la malla base (CC0, como el cuerpo: viene en la misma malla), con el mismo rig y pesos
@@ -34,15 +34,12 @@ from poner_rig import add_rig  # noqa: E402
 
 MIN_DELTA = 1e-5  # metros (0,01 mm): una forma que mueve menos el helper no se guarda
 PIECES = {  # id: (grupo de MakeHuman, nombre del objeto, ficha de pack.json)
-    "tights": ("helper-tights", "Tights", {"nombre": "Mallas (base)", "tipo": "ropa", "ranura": "ropa_interior"}),
-    "skirt": ("helper-skirt", "Skirt", {"nombre": "Falda larga", "tipo": "ropa", "ranura": "ropa_piernas"}),
+    "tights": ("helper-tights", "Tights", {"nombre": "Malla de cuerpo completo", "tipo": "ropa", "ranura": "ropa_interior"}),
     "hair": ("helper-hair", "Hair", {"nombre": "Volumen de melena (base)", "tipo": "pelo", "ranura": "pelo"}),
 }
-DERIVED = [  # piezas hechas en Godot con caras del cuerpo (BodyDerived, pasos AB.9a y AB.10): sin archivo
-    dict(id=i, nombre=n, tipo=tp, ranura=r, derivada={"mascara": i, "separacion": s}, especies=["humana"],
-         sigue_al_cuerpo=True, colores=["principal"])
-    for i, n, tp, r, s in (("casquete", "Casquete", "pelo", "pelo", 0.004), ("guantes", "Guantes", "ropa", "ropa_exterior", 0.002),
-                           ("calcetines", "Calcetines", "ropa", "ropa_pies", 0.002), ("botas", "Botas altas", "ropa", "ropa_pies", 0.006))
+DERIVED = [  # piezas hechas en Godot con caras del cuerpo (BodyDerived, paso AB.9a): sin archivo
+    {"id": "casquete", "nombre": "Casquete", "tipo": "pelo", "ranura": "pelo", "especies": ["humana"],
+     "derivada": {"mascara": "casquete", "separacion": 0.004}, "sigue_al_cuerpo": True, "colores": ["principal"]},
 ]
 GENERATED = [  # accesorios rígidos hechos en Godot por un generador (RigidPiece, paso AB.11): sin archivo
     {"id": "cuernos", "nombre": "Cuernos", "tipo": "accesorio", "ranura": "accesorio", "especies": ["humana"],
@@ -60,25 +57,14 @@ GENERATED = [  # accesorios rígidos hechos en Godot por un generador (RigidPiec
      "anclaje": {"hueso": "Head", "transform": [0, 0.205, -0.01, -0.1305, 0, 0, 0.9914, 1]},
      "sigue_al_cuerpo": False, "colores": ["principal"]},
 ]
-CUTS = [  # prendas recortadas en Godot de las mallas (GarmentCut, paso AB.5): sin archivo
-    dict(id=i, nombre=n, tipo="ropa", ranura=r, especies=["humana"], corte=dict(c, de="tights"), sigue_al_cuerpo=True,
-         colores=["principal"])
-    for i, n, r, c in (
-        ("camiseta", "Camiseta", "ropa_torso", {"brazos": 0.35, "piernas": -1, "torso": [0.0, 1.0]}),
-        ("camiseta_larga", "Camiseta de manga larga", "ropa_torso", {"brazos": 0.98, "piernas": -1, "torso": [0.0, 1.0]}),
-        ("top", "Top", "ropa_torso", {"brazos": -1, "piernas": -1, "torso": [0.45, 0.92]}),
-        ("pantalon_corto", "Pantalón corto", "ropa_piernas", {"brazos": -1, "piernas": 0.35, "torso": [-1.0, 0.2]}),
-        ("pantalon", "Pantalón", "ropa_piernas", {"brazos": -1, "piernas": 0.97, "torso": [-1.0, 0.2]}),
-        ("banador", "Bañador", "ropa_interior", {"brazos": -1, "piernas": 0.06, "torso": [-1.0, 0.92]}))
-] + [{"id": "melena", "nombre": "Melena con flequillo", "tipo": "pelo", "ranura": "pelo", "especies": ["humana"],
-      "corte": {"de": "hair", "quitar": [[-0.07, 0.9, 0.04, 0.07, 1.585, 0.3]]},  # el flequillo, por encima de las cejas
-      "sigue_al_cuerpo": True, "colores": ["principal"]}] + [
-    {"id": i, "nombre": n, "tipo": "ropa", "ranura": "ropa_piernas", "especies": ["humana"],  # paso AB.8: el largo
-     "corte": {"de": "skirt", "quitar": [[-1, -1, -1, 1, y, 1]]}, "sigue_al_cuerpo": True, "colores": ["principal"]}
-    for i, n, y in (("falda_corta", "Falda corta", 0.62), ("falda_midi", "Falda midi", 0.4))] + [
-    {"id": "ojos_anime", "nombre": "Ojos anime", "tipo": "ojos", "ranura": "ojos", "especies": ["humana"],  # paso 9.4
-     "ojos": {"estilo": "anime"}, "sigue_al_cuerpo": True, "colores": ["principal"]}]
-COLORS = {"tights": [0.22, 0.26, 0.4], "banador": [0.22, 0.26, 0.4], "skirt": [0.45, 0.2, 0.22], "falda_corta": [0.45, 0.2, 0.22], "falda_midi": [0.45, 0.2, 0.22], "camiseta": [0.85, 0.85, 0.82], "camiseta_larga": [0.85, 0.85, 0.82], "top": [0.85, 0.85, 0.82], "pantalon": [0.2, 0.25, 0.4], "pantalon_corto": [0.2, 0.25, 0.4], "hair": [0.24, 0.16, 0.12], "melena": [0.24, 0.16, 0.12], "casquete": [0.24, 0.16, 0.12], "guantes": [0.35, 0.35, 0.38], "calcetines": [0.3, 0.2, 0.14], "botas": [0.3, 0.2, 0.14], "cuernos": [0.85, 0.82, 0.72], "orejas_gato": [0.24, 0.16, 0.12], "halo": [0.95, 0.82, 0.4], "ojos_anime": [0.25, 0.45, 0.8]}  # color de partida de cada pieza (RGB de 0 a 1)
+CUTS = [  # piezas recortadas en Godot de otra (GarmentCut): sin archivo
+    {"id": "melena", "nombre": "Melena con flequillo", "tipo": "pelo", "ranura": "pelo", "especies": ["humana"],
+     "corte": {"de": "hair", "quitar": [[-0.07, 0.9, 0.04, 0.07, 1.585, 0.3]]},  # el flequillo, por encima de las cejas
+     "sigue_al_cuerpo": True, "colores": ["principal"]},
+]
+COLORS = {"tights": [0.22, 0.26, 0.4], "hair": [0.24, 0.16, 0.12], "melena": [0.24, 0.16, 0.12],
+          "casquete": [0.24, 0.16, 0.12], "cuernos": [0.85, 0.82, 0.72], "orejas_gato": [0.24, 0.16, 0.12],
+          "halo": [0.95, 0.82, 0.4]}  # color de partida de cada pieza (RGB de 0 a 1)
 PACK = {"formato": "gamemolde-pack", "version": 1, "id": "base", "nombre": "Pack base",
         "autor": "GameMolde (de la malla base de MakeHuman)", "licencia": "CC0-1.0",
         "origen": "https://static.makehumancommunity.org/makehuman/faq/are_makehuman_files_free.html"}

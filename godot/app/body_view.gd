@@ -48,7 +48,6 @@ const BodyPiece := preload("../addons/creador/body_piece.gd")
 const BodyDerived := preload("../addons/creador/body_derived.gd")  # paso AB.9a
 const RigidPiece := preload("../addons/creador/rigid_piece.gd")  # paso AB.11
 const GarmentCut := preload("../addons/creador/garment_cut.gd")  # paso AB.5
-const EyePiece := preload("../addons/creador/eye_piece.gd")  # paso 9.4
 ## Paso AB.6: capa de cada ranura (más alta = más por fuera): se adelanta BodyMaterial.PIECE_PULL × capa.
 const LAYERS := {"ropa_interior": 1, "ropa_torso": 2, "ropa_piernas": 2, "pelo": 2, "ropa_pies": 3, "ropa_exterior": 3,
 	"accesorio": 4}
@@ -474,10 +473,6 @@ func set_piece(pack_id: String, piece_id: String, on: bool) -> bool:
 		mesh = BodyDerived.build(species.mesh, species.skeleton, card["derivada"]["mascara"], card["derivada"]["separacion"])
 		if mesh != null:
 			BodyPiece.hang(mesh, species.skeleton)
-	elif card.has("ojos"):  # paso 9.4: ojos anime pintados en la cara
-		mesh = EyePiece.build(species.mesh, species.skeleton)
-		if mesh != null:
-			BodyPiece.hang(mesh, species.skeleton)
 	elif card.has("corte"):  # paso AB.5: recortada de otra pieza (las mallas)
 		var whole: MeshInstance3D = BodyPiece.attach(library.load_piece(pack_id, card["corte"]["de"]), species.skeleton)
 		if whole != null:
@@ -494,18 +489,15 @@ func set_piece(pack_id: String, piece_id: String, on: bool) -> bool:
 		for other: String in pieces.keys():
 			if library.piece(other.get_base_dir(), other.get_file())["ranura"] == card["ranura"]:
 				set_piece(other.get_base_dir(), other.get_file(), false)
-	if card.has("ojos"):
-		EyePiece.set_iris(mesh, library.color_of(card))
-	else:
-		BodyMaterial.apply(mesh, true)  # paso AB.6: se adelanta un poco y tapa la piel que asoma
-		(mesh.material_override as ShaderMaterial).set_shader_parameter("depth_pull",
-			BodyMaterial.PIECE_PULL * LAYERS.get(card["ranura"], 1))
-		var color: Color = library.color_of(card)  # el de partida, de pack.json
-		BodyMaterial.set_color(mesh, "skin_color", color)
-		BodyMaterial.set_color(mesh, "garment_color", color)
-		var finish: Dictionary = BodyMaterial.get_finish(species.mesh)
-		for name: String in finish:
-			BodyMaterial.set_finish(mesh, name, finish[name])
+	BodyMaterial.apply(mesh, true)  # paso AB.6: se adelanta un poco y tapa la piel que asoma
+	(mesh.material_override as ShaderMaterial).set_shader_parameter("depth_pull",
+		BodyMaterial.PIECE_PULL * LAYERS.get(card["ranura"], 1))
+	var color: Color = library.color_of(card)  # el de partida, de pack.json
+	BodyMaterial.set_color(mesh, "skin_color", color)
+	BodyMaterial.set_color(mesh, "garment_color", color)
+	var finish: Dictionary = BodyMaterial.get_finish(species.mesh)
+	for name: String in finish:
+		BodyMaterial.set_finish(mesh, name, finish[name])
 	pieces[key] = mesh
 	updater.pieces.append(mesh)
 	BodyPiece.follow(mesh, species.mesh)
@@ -536,21 +528,16 @@ func _set_accessory(key: String, card: Dictionary, on: bool) -> bool:
 	return true
 
 
-## Color principal de una pieza puesta (el iris, en los ojos).
+## Color principal de una pieza puesta.
 func piece_color(key: String) -> Color:
 	var meshes := meshes_of(key)
-	if meshes.is_empty():
-		return Color.WHITE
-	return EyePiece.get_iris(meshes[0]) if meshes[0].has_meta("textura") else BodyMaterial.get_color(meshes[0], "skin_color")
+	return BodyMaterial.get_color(meshes[0], "skin_color") if not meshes.is_empty() else Color.WHITE
 
 
 func set_piece_color(key: String, color: Color) -> void:
 	for mesh in meshes_of(key):
-		if mesh.has_meta("textura"):
-			EyePiece.set_iris(mesh, color)
-		else:
-			BodyMaterial.set_color(mesh, "skin_color", color)
-			BodyMaterial.set_color(mesh, "garment_color", color)
+		BodyMaterial.set_color(mesh, "skin_color", color)
+		BodyMaterial.set_color(mesh, "garment_color", color)
 
 
 ## Paso AB.11: ¿está puesta? (pieza que sigue al cuerpo o accesorio rígido)

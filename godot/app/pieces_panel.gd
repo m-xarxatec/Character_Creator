@@ -1,5 +1,5 @@
 extends ScrollContainer
-# Paso AB.13: pestañas Pelo, Ropa y Accesorios (AB.11), y Cara y ojos (9.4: el color es el del iris). Una fila por pieza de ese tipo (packs que siguen al cuerpo): un clic la pone o la
+# Paso AB.13: pestañas Pelo, Ropa y Accesorios (AB.11). Una fila por pieza de ese tipo (packs que siguen al cuerpo): un clic la pone o la
 # quita (body_view.set_piece: una por ranura, así que poner una puede quitar otra), su color y, siempre a la vista, su
 # ranura, autor y licencia. Aún no entra en Deshacer ni en el proyecto .gmolde (bloque «piezas»: siguiente paso).
 # Uso: panel.setup(body_view, "pelo")

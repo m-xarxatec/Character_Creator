@@ -131,8 +131,7 @@ func _check_piece(item: Variant, folder: String, ids: Dictionary) -> String:
 	if derived != null and (typeof(derived) != TYPE_DICTIONARY or typeof(derived.get("mascara")) != TYPE_STRING
 			or not _is_number(derived.get("separacion"))):
 		return "pieza %s: «derivada» no es válida" % id
-	var eyes: Variant = card.get("ojos")  # paso 9.4: ojos pintados en la cara (EyePiece)
-	if derived == null and generator == null and cut == null and eyes == null and (typeof(card.get("archivo")) != TYPE_STRING
+	if derived == null and generator == null and cut == null and (typeof(card.get("archivo")) != TYPE_STRING
 			or not FileAccess.file_exists(folder.path_join(card["archivo"]))):
 		return "pieza %s: falta su archivo" % id
 	card["archivo"] = card.get("archivo", "")

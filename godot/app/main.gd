@@ -44,11 +44,12 @@ const Tokens := preload("tema/tokens.gd")
 const ZonePicker := preload("zone_picker.gd")
 const Motion := preload("motion.gd")
 const PiecesPanel := preload("pieces_panel.gd")  # paso AB.13
-const PIECE_TABS := {"Cara y ojos": "ojos", "Pelo": "pelo", "Ropa": "ropa", "Accesorios": "accesorio"}  # pestaña → tipo
+const PIECE_TABS := {"Pelo": "pelo", "Ropa": "ropa", "Accesorios": "accesorio"}  # pestaña → tipo de pieza
 const TAB_NAMES := ["Cuerpo", "Cara y ojos", "Pelo", "Ropa", "Accesorios", "Estilo"]
 const TAB_ICONS := ["cuerpo", "cara", "pelo", "ropa", "accesorios", "estilo"]  # paso IU.2
 ## Paso IU.4: pestañas que aún no existen → qué llegará (dicen «Pronto», se pueden abrir y lo cuentan).
 const SOON := {
+	"Cara y ojos": "ojos, cejas y expresiones.",
 }
 const FILE_REFRESH := 0.3  # s: cada cuánto se mira si hay cambios sin guardar (el • de la barra)
 const ACTIVE_TAB := 0

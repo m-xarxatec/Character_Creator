@@ -4,8 +4,7 @@ extends SceneTree
 # Uso: (ulimit -v 4000000; timeout 120 godot --headless --path pruebas/godot -s probar_packs.gd 2>&1 | grep -E 'FALLO|RESULTADO|ERROR')
 # Que detecta el fallo: en PackLibrary._add, quitar la comprobación de LICENSES -> falla «licencia CC-BY: rechazado».
 
-const BASE_PIECES := ["tights", "skirt", "hair", "casquete", "guantes", "calcetines", "botas", "cuernos", "camiseta",
-	"pantalon", "melena", "falda_corta", "orejas_gato", "halo", "ojos_anime"]
+const BASE_PIECES := ["tights", "hair", "casquete", "melena", "cuernos", "orejas_gato", "halo"]
 
 var failures := 0
 var root_dir: String
@@ -34,7 +33,8 @@ func _check_base() -> void:
 	var warnings: Array = library.scan(PackedStringArray([root_dir.path_join("godot/packs")]))
 	check("el pack base se lee sin avisos", warnings.is_empty() and library.packs.has("base"), str(warnings))
 	var ids: Array = library.pieces().map(func(card: Dictionary) -> String: return card["id"])
-	check("trae las %d piezas" % BASE_PIECES.size(), BASE_PIECES.all(func(id: String) -> bool: return id in ids), str(ids))
+	check("trae las %d piezas" % BASE_PIECES.size(), ids.size() == BASE_PIECES.size()
+		and BASE_PIECES.all(func(id: String) -> bool: return id in ids), str(ids))
 	check("todas CC0-1.0 y con autor", library.pieces().all(func(card: Dictionary) -> bool:
 		return card["licencia"] == "CC0-1.0" and card["autor"] != ""))
 	check("filtro por tipo: pelo = volumen, casquete y melena", library.pieces("pelo", "humana").size() == 3)
@@ -53,7 +53,7 @@ func _check_base() -> void:
 ## Packs rotos: cada uno en su carpeta; scan los rechaza y dice por qué.
 func _check_rejected() -> void:
 	_clean()
-	var glb := FileAccess.get_file_as_bytes(root_dir.path_join("godot/packs/base/skirt.glb"))
+	var glb := FileAccess.get_file_as_bytes(root_dir.path_join("godot/packs/base/hair.glb"))
 	var good := {"formato": "gamemolde-pack", "version": 1, "id": "bueno", "nombre": "Bueno", "autor": "Prueba",
 		"licencia": "CC0-1.0", "piezas": [{"id": "falda", "tipo": "ropa", "ranura": "ropa_piernas", "archivo": "falda.glb",
 		"sha256": "0".repeat(64), "sigue_al_cuerpo": true}]}

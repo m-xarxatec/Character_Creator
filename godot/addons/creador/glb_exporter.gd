@@ -108,22 +108,14 @@ static func save(mesh: MeshInstance3D, skeleton: Skeleton3D, socket_names: Array
 ## Paso AB.7: material de cada pieza exportada (todas las mallas detrás de la primera), con el color del editor.
 static func _color_pieces(character: Node3D, pieces: Array) -> void:
 	var colors := {}
-	var textures := {}  # paso 9.4: los ojos llevan su dibujo
 	for piece: MeshInstance3D in pieces:
 		colors[piece.name] = BodyMaterial.get_color(piece, "skin_color")
-		if piece.has_meta("textura"):
-			textures[piece.name] = piece.get_meta("textura")
 	for exported: MeshInstance3D in character.find_children("*", "MeshInstance3D", true, false).slice(1):
 		var material := StandardMaterial3D.new()
 		material.resource_name = String(exported.name).to_lower()
 		material.metallic = 0.0
 		material.roughness = 1.0
 		material.albedo_color = colors.get(exported.name, Color.WHITE)
-		if textures.has(exported.name):
-			material.albedo_color = Color.WHITE
-			material.albedo_texture = textures[exported.name]
-			material.transparency = BaseMaterial3D.TRANSPARENCY_ALPHA_SCISSOR
-			material.shading_mode = BaseMaterial3D.SHADING_MODE_UNSHADED
 		exported.mesh.surface_set_material(0, material)
 
 
