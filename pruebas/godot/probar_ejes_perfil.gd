@@ -20,6 +20,7 @@ const SOCKET_MM := 0.1  # el límite del 3.6.4
 const FILE_AXES_DEG := 0.01  # PROVISIONAL: el .glb guarda los giros con 32 bits
 
 var failures := 0
+var saved := false
 var species
 var baker: GDScript
 var mesh_baker: GDScript
@@ -61,7 +62,10 @@ func _initialize() -> void:
 		if result["nivel"] != "bien":
 			bad.append("%s: %s" % [result["id"], result["texto"]])
 	check("las comprobaciones del 5.3 dan todo bien", bad.is_empty(), ", ".join(bad))
-	_save(character, root_dir.path_join("pruebas/fase_5/salida"))
+	var folder := root_dir.path_join("pruebas/fase_5/salida")
+	DirAccess.remove_absolute(folder.path_join("t_perfil.glb"))  # que un archivo viejo no valga
+	_save(character, folder)
+	check("el guardado llegó al final y el .glb existe", saved and FileAccess.file_exists(folder.path_join("t_perfil.glb")))
 	print("RESULTADO: ", "TODO BIEN" if failures == 0 else "%d FALLOS" % failures)
 	quit(1 if failures else 0)
 
@@ -187,27 +191,17 @@ func _check_sockets(plain: Node3D, proto: Node3D, socket_names: Array) -> Node3D
 	return b
 
 
-## Escribe el prototipo como lo haría GlbExporter.save (que no se toca hasta que se decida D11).
+## Escribe el .glb con el exportador real (prepare, compute, finish, write); un error o un archivo sin escribir es FALLO.
 func _save(character: Node3D, folder: String) -> void:
 	DirAccess.make_dir_recursive_absolute(folder)
 	var path := folder.path_join("t_perfil.glb")
-	var exported := character.find_children("*", "MeshInstance3D", true, false)[0] as MeshInstance3D
-	var material: StandardMaterial3D = exporter._material(species.mesh, exported.mesh)
-	exported.mesh = exporter._garment_in_alpha(exported.mesh, exported.skin, exported.get_parent() as Skeleton3D)
-	exported.mesh.surface_set_material(0, material)
-	exporter._add_armature_node(character)
-	exporter._set_owner(character, character)
+	character.free()  # el que se comprobó; se exporta uno igual, hecho como lo hace el exportador real
+	var job: Dictionary = exporter.prepare(species.mesh, species.skeleton, species.manifest["bones"]["sockets"], true)
+	exporter.compute(job)
+	var error: Error = exporter.write(exporter.finish(job), job["toon"], path)
+	check("se escribe " + path, error == OK, error_string(error))
 	var document := GLTFDocument.new()
 	var state := GLTFState.new()
-	var error := document.append_from_scene(character, state)
-	if error == OK:
-		error = document.write_to_filesystem(state, path)
-	if error == OK:
-		error = ResourceSaver.save(load(exporter.resource_path.get_base_dir().path_join("body_material.gd")).standalone(species.mesh),
-			path.get_basename() + ".tres")
-	check("se escribe " + path, error == OK, error_string(error))
-	character.free()
-	state = GLTFState.new()
 	if document.append_from_file(path, state) != OK:
 		check("el archivo se vuelve a leer", false)
 		return
@@ -219,6 +213,7 @@ func _save(character: Node3D, folder: String) -> void:
 	check("en el archivo, los 53 huesos conservan los ejes del perfil (< %s°)" % FILE_AXES_DEG,
 		turned < FILE_AXES_DEG and skeleton.get_bone_count() == 53, "%.6f°" % turned)
 	scene.free()
+	saved = true
 
 
 func _angle(a: Basis, b: Basis) -> float:
