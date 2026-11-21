@@ -62,7 +62,7 @@ func _check_random(main: Control, root_dir: String) -> void:
 			bad.append(key)
 		elif not kept and (after[key] < Randomizer.LOW or after[key] > Randomizer.HIGH or after[row["id"] + sides[-1]] != after[key]):
 			bad.append(key)
-	check("Aleatorio: el cuerpo en 0,2–0,8 con los lados iguales; complexión, cara y alisado sin tocar", bad.is_empty()
+	check("Aleatorio: el cuerpo en 0,2–0,8 con los lados iguales; complexión, cabeza, cara y alisado sin tocar", bad.is_empty()
 		and after != before, str(bad))
 	main.editor.undo()
 	check("Deshacer lo devuelve", main.editor.values == before)

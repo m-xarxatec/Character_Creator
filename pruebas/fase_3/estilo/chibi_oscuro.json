@@ -23,7 +23,7 @@
 		"gender": 0.5,
 		"hand_size_l": 0.85,
 		"hand_size_r": 0.85,
-		"head_size": 1.0,
+		"head_size": 0.6,
 		"head_width": 0.7,
 		"leg_length": 0.0,
 		"muscle": 0.2,

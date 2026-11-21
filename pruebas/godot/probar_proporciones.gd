@@ -52,7 +52,7 @@ func _scales(changes: Dictionary) -> Dictionary:
 func _check_formula() -> void:
 	var values: Dictionary = proportions.neutral_values(species.sliders)
 	check("6 valores de Proporción", values.size() == 6, str(values.keys()))
-	var expected := {"Root": [0.65, 1.15], "Head": [0.8, 1.3], "LeftHand": [0.8, 1.2], "RightHand": [0.8, 1.2],
+	var expected := {"Root": [0.65, 1.15], "Head": [0.8, 2.5], "LeftHand": [0.8, 1.2], "RightHand": [0.8, 1.2],
 		"LeftFoot": [0.8, 1.2], "RightFoot": [0.8, 1.2]}
 	var ok := true
 	for v: float in [0.0, 0.25, 0.5, 0.75, 1.0]:
@@ -113,8 +113,8 @@ func _check_skeleton() -> void:
 	var head_scale := _pose("Head").basis.get_scale()
 	var neck_scale := _pose("Neck").basis.get_scale()
 	proportions.apply(species.skeleton, _scales({}))
-	check("head_size 1: cabeza × 1,3 en los tres ejes, cuello igual",
-		head_scale.is_equal_approx(Vector3.ONE * 1.3) and neck_scale.is_equal_approx(Vector3.ONE), str(head_scale))
+	check("head_size 1: cabeza × 2,5 en los tres ejes, cuello igual",
+		head_scale.is_equal_approx(Vector3.ONE * 2.5) and neck_scale.is_equal_approx(Vector3.ONE), str(head_scale))
 
 
 ## (altura, punto más bajo) de la malla deformada por el esqueleto con esas escalas, horneada en CPU.

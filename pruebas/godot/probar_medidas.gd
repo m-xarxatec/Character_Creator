@@ -17,7 +17,7 @@ const HUMAN := {"heads": [6.0, 8.5], "legs": [0.40, 0.55], "shoulders": [1.2, 2.
 const FOLLOWS := {"leg_length": "legs", "shoulder_width": "shoulders", "waist_width": "waist", "hand_size_l": "hand",
 	"foot_size_l": "foot", "head_size": "heads"}
 ## Paso PL.8: un niño de unos 5 años (D42) solo con deslizadores desde el cuerpo normal (sin deslizador Edad).
-const CHILD := {"height": 0.0, "head_size": 1.0, "leg_length": 0.0, "arm_length": 0.0, "neck_length": 0.0,
+const CHILD := {"height": 0.0, "head_size": 0.6, "leg_length": 0.0, "arm_length": 0.0, "neck_length": 0.0,
 	"torso_length": 0.0, "shoulder_width": 0.0}
 const CHILD_MAX := {"height": 1.10, "heads": 5.5}  # PROVISIONAL: metros y cabezas de un niño de 5 años
 const PRESETS := ["godot/datos/humana/presets/anime.json", "pruebas/fase_3/estilo/anime_femenino.json",

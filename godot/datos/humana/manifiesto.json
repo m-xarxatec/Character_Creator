@@ -70,40 +70,40 @@
    "sha256": "06e7aaff4a724f021206d0dfb92a48c94fc03d7b5967836dc22e106871468a05"
   },
   "deslizadores.csv": {
-   "sha256": "220ee1ece5de8fd5cee2743079e3a90ce9657b923d8ba8a474c00d564e4a30a6"
+   "sha256": "0a59a39e8dc99fc1117de8f96f6e45f5090cfd9a47fa5bde1f2c6e7bcc612972"
   },
   "presets/anime.json": {
    "sha256": "53b3d76f9e8191b3f8558b4907abd284fe24ae6bcea56bc084897c49ad36db68"
   },
   "presets/atletica.json": {
-   "sha256": "7a8463cad202dc1f81327d5e5a7a2717ebfe896913efe33a454eb9d6b7621f75"
+   "sha256": "6daf565ab926e8af479e7506926f99e3bccfc772b88ec5599c8c04f3b172aa72"
   },
   "presets/atletico.json": {
-   "sha256": "f9f424ec3c99864f8cd062c171ebfda73efaf31b951ed3f3217ed43e3cfc2cee"
+   "sha256": "c8e451eda96734690460265e3499370b1bf1bf970ffe2e62aa1e7109ef38c417"
   },
   "presets/delgada.json": {
-   "sha256": "22c578b77cd66c1b94c4ea8381e07c9a0e14e7dd9e738c2378d22da73037bb0a"
+   "sha256": "b51a903e1038032260a5da5ec35067adf9cca1900469dcd0755d6c6e405fabda"
   },
   "presets/delgado.json": {
-   "sha256": "103f4feddc0d228da8311dd7ac754e9d28d0d653786f028528952040f3052535"
+   "sha256": "eda90cee09684a034730839743898e219e1dc6fb97b3b14bff13369667442216"
   },
   "presets/esbelta.json": {
-   "sha256": "3112071c9570b9aa0cbfa4f7861faae80d3ca8075bde427c87404727bae5c860"
+   "sha256": "8aa89c54f7b58608cb266911e04e71096c028b28fed74a22e040d0c19d3ef991"
   },
   "presets/esbelto.json": {
-   "sha256": "11584b5aa5cd3997b67c5a34524b70468e078f693fc4d98ebfb74043fe2ae146"
+   "sha256": "d8ab4113e097d34f55c091b9febf24c8a4b3c5817c3518c0a4f9126342f371f0"
   },
   "presets/femenina.json": {
-   "sha256": "1058b6778d339b43f5f5043909572c2be5b39743031e0ac75347d19e6c79c321"
+   "sha256": "becd5b85223af6a9b6169c23c0391fcffdd7838e97c2eeccb2985a0129be9343"
   },
   "presets/masculino.json": {
-   "sha256": "651d577feadf867e2b7f07ab446b4409a2de841ca552bc76643e23ba4821ee55"
+   "sha256": "5dee26771959f3f43788c4a4043d435fa5583377ece0d4ac10a37b7e8cdac455"
   },
   "presets/robusta.json": {
-   "sha256": "32aab31519d4cfd26f1bb41e47d4039a645f6d2a12145164fc592c253fc9a61a"
+   "sha256": "e83814c416d890645e334a57d954a7a319ff835486c94c96ddb7ba753c5d6ac0"
   },
   "presets/robusto.json": {
-   "sha256": "9ee10837165815309ead3f384ac409609381567d35a753f356253f3a8d3ccbce"
+   "sha256": "68fcf21bb753353dee89be1ae5477e2dd8108871b0df682dcc70062987dcfbdf"
   }
  },
  "pose": "A",

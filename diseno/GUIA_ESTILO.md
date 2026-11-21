@@ -1,14 +1,14 @@
 # Guía de estilo — la meta, medible
 
 > Guía del responsable del proyecto. El revisor la usa para comparar; no la cambia.
-> Cada valor marcado **PROPUESTA (pendiente de aprobar)** sale del conocimiento general del estilo anime y chibi, no de medidas de este proyecto. Al aprobarlo, se quita la marca.
+> Cada valor marcado **PROPUESTA (pendiente de aprobar)** sale del conocimiento general del estilo anime, no de medidas de este proyecto. Al aprobarlo, se quita la marca.
 
 ---
 
 ## 1. Objetivo
 
 - Personajes **bonitos tipo VRoid**: anime 3D, limpios, agradables, listos para un juego.
-- Además, el estilo del juego propio: **oscuro** (fantasía oscura, luz baja). "Oscuro" es el estilo del juego, no una proporción; el preset de proporciones se llama **chibi**.
+- Además, el estilo del juego propio: **oscuro** (fantasía oscura, luz baja). "Oscuro" es el estilo del juego, no una proporción.
 - El aspecto VRoid, en palabras: cabeza algo grande, ojos grandes y expresivos, nariz y boca casi invisibles, piel lisa sin músculos marcados, sombras planas en pocas bandas con bordes limpios, contorno oscuro fino, colores suaves y cálidos.
 
 ---
@@ -18,26 +18,28 @@
 Femenino y masculino: **aprobados el 2026-11-20** (paso PL.1b) con las plantillas `femenina.json` y `masculino.json`,
 medidas con `Measures.proportions()` (`godot/app/measures.gd`, en reposo): rango = lo medido ± 0,15 cabezas, ± 0,05 en
 hombros y ± 0,03 en lo demás. Cómo se mide cada una: `ruta/pasos/PL.1_plantillas.md` §4 (hombros: ancho de la malla a
-la altura de la articulación, por fuera; mano y pie: media de los dos lados). El chibi sigue sin medir.
+la altura de la articulación, por fuera; mano y pie: media de los dos lados).
 
-| Medida | Anime femenino | Anime masculino | Chibi |
-| --- | --- | --- | --- |
-| Cabezas de alto (altura ÷ barbilla–coronilla) | 7,01–7,31 (7,16) | 6,97–7,27 (7,12) | PROPUESTA (pendiente de aprobar): 2,5–3 |
-| Piernas (de la ingle al suelo ÷ altura) | 0,47–0,53 (0,503) | 0,49–0,55 (0,521) | PROPUESTA (pendiente de aprobar): 0,25–0,35 |
-| Hombros (ancho ÷ alto de la cabeza) | 1,68–1,78 (1,73) | 1,90–2,00 (1,95) | PROPUESTA (pendiente de aprobar): 1,0–1,3 |
-| Cintura (ancho ÷ ancho de hombros) | 0,51–0,57 (0,540) | 0,46–0,52 (0,490) | PROPUESTA (pendiente de aprobar): 0,80–0,95 |
-| Mano (largo ÷ alto de la cabeza) | 0,57–0,63 (0,604) | 0,70–0,76 (0,733) | PROPUESTA (pendiente de aprobar): 0,40–0,50 (algo grande para el cuerpo) |
-| Pie (largo ÷ alto de la cabeza) | 0,71–0,77 (0,744) | 0,90–0,96 (0,934) | PROPUESTA (pendiente de aprobar): 0,50–0,65 (botas algo grandes) |
+| Medida | Anime femenino | Anime masculino |
+| --- | --- | --- |
+| Cabezas de alto (altura ÷ barbilla–coronilla) | 7,01–7,31 (7,16) | 6,97–7,27 (7,12) |
+| Piernas (de la ingle al suelo ÷ altura) | 0,47–0,53 (0,503) | 0,49–0,55 (0,521) |
+| Hombros (ancho ÷ alto de la cabeza) | 1,68–1,78 (1,73) | 1,90–2,00 (1,95) |
+| Cintura (ancho ÷ ancho de hombros) | 0,51–0,57 (0,540) | 0,46–0,52 (0,490) |
+| Mano (largo ÷ alto de la cabeza) | 0,57–0,63 (0,604) | 0,70–0,76 (0,733) |
+| Pie (largo ÷ alto de la cabeza) | 0,71–0,77 (0,744) | 0,90–0,96 (0,934) |
 
-Por qué: el anime alarga las piernas y estrecha la cintura respecto a un humano real (unas 7,5 cabezas); el chibi encoge el cuerpo, no la cabeza, y agranda manos y pies para que se lean a poca resolución.
+Por qué: el anime alarga las piernas y estrecha la cintura respecto a un humano real (unas 7,5 cabezas).
 
-Medido en el 3.12: femenino 6,96, masculino 6,94, chibi 5,25 (fuera de rango, 3,46); los rangos propuestos entonces (sin medir) no encajaban con estos cuerpos y se cambiaron por lo medido en PL.1b. **El chibi no llega con los deslizadores actuales**: necesita la segunda base o formas propias.
+Medido en el 3.12: femenino 6,96, masculino 6,94; los rangos propuestos entonces (sin medir) no encajaban con estos cuerpos y se cambiaron por lo medido en PL.1b.
+
+**Chibi: sin preset ni rango** (el responsable, 2026-11-21, paso PL.9): Cabeza › Tamaño llega a ×2,5 y cada uno ajusta el resto con los deslizadores.
 
 ---
 
 ## 3. Cara (para cuando exista la pestaña Cara)
 
-- **Ojos:** PROPUESTA (pendiente de aprobar): alto del ojo = 0,12–0,18 del alto de la cara (chibi: 0,20–0,28). Por qué: los ojos grandes son el rasgo que más define el anime.
+- **Ojos:** PROPUESTA (pendiente de aprobar): alto del ojo = 0,12–0,18 del alto de la cara. Por qué: los ojos grandes son el rasgo que más define el anime.
 - **Nariz:** PROPUESTA (pendiente de aprobar): casi plana; de frente, solo una sombra o un punto. Por qué: una nariz con volumen rompe el toon en manchas.
 - **Boca:** PROPUESTA (pendiente de aprobar): pequeña, sin labios marcados; ancho ≤ 0,30 del ancho de la cara.
 - **Evitar el "valle inquietante":** ojos grandes sobre una cara realista, párpados y pestañas de MakeHuman tapando ojos de anime, pliegues de piel, ojeras, poros, dientes visibles en reposo.

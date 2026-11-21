@@ -1,13 +1,14 @@
 extends RefCounted
 # Paso PL.5: cuerpo al azar (botón «Aleatorio» de la galería y de «Nuevo personaje»). Cada deslizador Forma o Proporción
 # del cuerpo toma un valor entre LOW y HIGH, igual en los dos lados; Complexión, la cara y el alisado se quedan como
-# están, así se respeta la plantilla de partida (femenina o masculina).
+# están, así se respeta la plantilla de partida (femenina o masculina). Paso PL.9: Cabeza › Tamaño también (llega a
+# ×2,5: al azar saldrían cabezas enormes).
 # Uso: editor.load_values(Randomizer.values(editor.values, species.sliders, rng))
 
 const LOW := 0.2
 const HIGH := 0.8
 const KEEP_ZONES := ["Cara", "Base"]
-const KEEP := ["gender"]
+const KEEP := ["gender", "head_size"]
 
 
 static func values(current: Dictionary, sliders: Array, rng: RandomNumberGenerator) -> Dictionary:

@@ -107,7 +107,7 @@ func _check_live(panel, view) -> void:
 	var skeleton: Skeleton3D = view.species.skeleton
 	panel.sliders["head_size"].value = 1.0
 	var head := skeleton.get_bone_pose_scale(skeleton.find_bone("Head"))
-	check("mover Cabeza › Tamaño a 1 escala la cabeza 1,3", head.is_equal_approx(Vector3.ONE * 1.3), str(head))
+	check("mover Cabeza › Tamaño a 1 escala la cabeza 2,5", head.is_equal_approx(Vector3.ONE * 2.5), str(head))
 	check("y el valor queda en la vista", view.values["head_size"] == 1.0)
 	var before := _blend_values(view.species.mesh)
 	panel.sliders["muscle"].value = 1.0
@@ -170,8 +170,8 @@ func _check_history(panel, view) -> void:
 	check("Restablecer Cabeza: barra Tamaño a 0,5 y cabeza a escala 1", panel.sliders["head_size"].value == 0.5
 			and _scale(view, "Head").is_equal_approx(Vector3.ONE))
 	main_node.undo_button.pressed.emit()
-	check("Deshacer: vuelve a 1 y la cabeza a 1,3", panel.sliders["head_size"].value == 1.0
-			and _scale(view, "Head").is_equal_approx(Vector3.ONE * 1.3))
+	check("Deshacer: vuelve a 1 y la cabeza a 2,5", panel.sliders["head_size"].value == 1.0
+			and _scale(view, "Head").is_equal_approx(Vector3.ONE * 2.5))
 	check("Rehacer se activa", not main_node.redo_button.disabled)
 	main_node.redo_button.pressed.emit()
 	check("Rehacer: otra vez 0,5", panel.sliders["head_size"].value == 0.5)

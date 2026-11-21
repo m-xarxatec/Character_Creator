@@ -94,7 +94,7 @@ Estado: **Hecho** · **Plan** (ya está en `PLAN.md` o en la hoja de ruta) · **
 | 8 influencias al exportar | Nuevo | X.15 |
 | Cuelgue de `GLTFDocument` | Nuevo | X.16 |
 | Juego oscuro: espadas, escudos, linternas | Plan + Nuevo | AB.11 + Fase 13 |
-| Juego oscuro: base chibi | Plan | 16.2–16.3 (PL.9 lo intenta antes con la misma malla) |
+| Juego oscuro: base chibi | Plan | 16.2–16.3 (PL.9: sin chibi; la cabeza llega a ×2,5) |
 | Juego oscuro: daño por zonas | Nuevo | X.9 |
 
 ---
@@ -265,6 +265,9 @@ Estado: **Hecho** · **Plan** (ya está en `PLAN.md` o en la hoja de ruta) · **
 - **Nivel:** fuerte · **Tam.:** M · **Modelo:** Fable · **Depende de:** D42 (decidida).
 
 ### PL.9 (opcional) Chibi con la misma malla
+> **Cambiado por el responsable el 2026-11-21:** las recetas de chibi del PL.9a «están raras». Sin chibi: Cabeza › Tamaño
+> llega a ×2,5 y cada uno ajusta el resto (`ruta/pasos/PL.9_chibi.md`).
+
 - **Objetivo:** intentar el chibi (2,5–3 cabezas) sin base nueva: rangos ampliados de Proporción + formas propias de cuello y cabeza. El 3.12 llegó a 3,46 cabezas fuera de rango.
 - **Diseño:** es el 16.2 adelantado solo para Proporción. Si no llega a 3 cabezas con buen aspecto, se para y se va a 16.3 (segunda base).
 - **Nivel:** fuerte · **Tam.:** M · **Modelo:** Fable.
