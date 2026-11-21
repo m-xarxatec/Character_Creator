@@ -1,5 +1,5 @@
 extends ScrollContainer
-# Paso PL.3: galería de plantillas (pestaña «Plantillas» del panel izquierdo): una tarjeta por preset de serie con su
+# Paso PL.3: galería de la pestaña «Género» del panel izquierdo (paso PL.10): una tarjeta por preset de serie con su
 # miniatura (paso PL.2) y su nombre. Un clic emite template_chosen con sus valores: solo el cuerpo (colores, prenda y
 # acabado no cambian), un solo cambio para Deshacer y sin tocar el archivo abierto (Guardar no pisa la plantilla).
 # Uso: gallery.setup(species.folder.path_join("presets"), species.manifest["species"], species.sliders)
@@ -10,8 +10,7 @@ signal random_requested  # paso PL.5: la tarjeta «Aleatorio» (la primera)
 
 const Preset := preload("../addons/creador/preset.gd")
 ## Orden de la galería (sin campo en el preset); las que no estén aquí van detrás, por orden alfabético.
-const ORDER := ["anime", "femenina", "masculino", "atletica", "atletico", "delgada", "delgado", "robusta", "robusto",
-	"esbelta", "esbelto"]
+const ORDER := ["femenino", "masculino", "anime"]  # paso PL.10: Femenino, Masculino y Neutro
 const COLUMNS := 2
 const THUMB := 96  # px de la miniatura en la tarjeta
 

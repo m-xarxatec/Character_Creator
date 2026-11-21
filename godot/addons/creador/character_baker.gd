@@ -16,12 +16,17 @@ extends RefCounted
 ## - profile_axes (paso 5.7b; solo con pose T; lo usa GlbExporter desde el 5.16): cada hueso del perfil humanoide de Godot
 ##   sale con el giro de reposo global del perfil, que es lo que escribe «Overwrite Axis» al importar. La malla no
 ##   cambia (las bind poses son la inversa del reposo nuevo) y los anclajes, que no son del perfil, tampoco.
+## - pieces (paso AB.7): mallas que siguen al cuerpo (BodyPiece), horneadas igual y detrás del cuerpo en el esqueleto
+##   (el cuerpo sigue siendo su primer hijo). El suelo lo marca el cuerpo.
+## - rigid (paso AB.11): accesorios rígidos (BoneAttachment3D de RigidPiece), como mallas al 100 % de su hueso.
 
 const Baker := preload("mesh_baker.gd")
 const TPose := preload("t_pose.gd")
+const RigidPiece := preload("rigid_piece.gd")
 
 
-static func bake(mesh: MeshInstance3D, skeleton: Skeleton3D, t_pose: bool, profile_axes := false) -> Node3D:
+static func bake(mesh: MeshInstance3D, skeleton: Skeleton3D, t_pose: bool, profile_axes := false, pieces: Array = [],
+		rigid: Array = []) -> Node3D:
 	var editor_positions: Array[Vector3] = []
 	var editor_rotations: Array[Quaternion] = []
 	for bone in skeleton.get_bone_count():
@@ -31,7 +36,11 @@ static func bake(mesh: MeshInstance3D, skeleton: Skeleton3D, t_pose: bool, profi
 	if t_pose:
 		TPose.apply(skeleton)
 	var baked: Dictionary = Baker.bake(mesh, skeleton)
+	var baked_pieces: Array[Dictionary] = []
+	for piece: MeshInstance3D in pieces:
+		baked_pieces.append(Baker.bake(piece, skeleton))
 	var globals: Array[Transform3D] = Baker.global_poses(skeleton)
+	var posed := globals.duplicate()  # paso AB.11: con escala, para los accesorios rígidos
 	for bone in skeleton.get_bone_count():  # el editor queda como estaba
 		skeleton.set_bone_pose_position(bone, editor_positions[bone])
 		skeleton.set_bone_pose_rotation(bone, editor_rotations[bone])
@@ -61,6 +70,22 @@ static func bake(mesh: MeshInstance3D, skeleton: Skeleton3D, t_pose: bool, profi
 	new_mesh.skin = _skin(skeleton, mesh.skin, globals)
 	new_skeleton.add_child(new_mesh)
 	new_mesh.skeleton = NodePath("..")
+	for i in pieces.size():
+		var piece_vertices: PackedVector3Array = baked_pieces[i]["vertices"]
+		for v in piece_vertices.size():
+			piece_vertices[v] += to_ground
+		var new_piece := MeshInstance3D.new()
+		new_piece.name = pieces[i].name
+		new_piece.mesh = _mesh(pieces[i].mesh, piece_vertices, baked_pieces[i]["normals"])
+		new_piece.skin = _skin(skeleton, pieces[i].skin, globals)
+		new_skeleton.add_child(new_piece)
+		new_piece.skeleton = NodePath("..")
+	for holder: BoneAttachment3D in rigid:
+		var bone := skeleton.find_bone(holder.bone_name)
+		for instance in RigidPiece.meshes(holder):
+			var accessory := RigidPiece.to_skinned(instance, bone, posed[bone], globals[bone], to_ground)
+			new_skeleton.add_child(accessory)
+			accessory.skeleton = NodePath("..")
 	return root
 
 

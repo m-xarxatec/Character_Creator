@@ -6,8 +6,8 @@ extends SceneTree
 # Uso: (ulimit -v 4000000; timeout 120 godot --headless --path pruebas/godot -s probar_panel.gd 2>&1 | grep -E 'FALLO|RESULTADO|ERROR')
 
 const ZONES := ["Global", "Cabeza", "Cuello", "Hombros", "Torso", "Pecho", "Cintura", "Caderas", "Glúteos", "Brazos",
-		"Manos", "Dedos", "Piernas", "Pies"]  # las de deslizadores.csv, en su orden, sin Cara
-const ROWS := 48  # 40 deslizadores sin Cara, 8 de ellos con dos lados
+		"Manos", "Dedos", "Piernas", "Pies", "Cara"]  # las de deslizadores.csv, en su orden (Cara desde el paso 9.1)
+const ROWS := 53  # 45 deslizadores (5 de Cara), 8 de ellos con dos lados
 const TO_CREATE := []  # desde el 6.2 no queda ningún Por crear
 const TYPES := {"height": "Proporción", "gender": "Forma", "shoulder_height": "Forma", "hand_size_l": "Proporción",
 		"finger_spread_r": "Forma"}
@@ -42,7 +42,7 @@ func check(label: String, ok: bool, detail := "") -> void:
 
 
 func _check_layout(panel) -> void:
-	check("zonas en el orden de la tabla y sin Cara", panel.zones == ZONES, str(panel.zones))
+	check("zonas en el orden de la tabla, con Cara (paso 9.1)", panel.zones == ZONES, str(panel.zones))
 	check("%d filas" % ROWS, panel.sliders.size() == ROWS, str(panel.sliders.size()))
 	check("empieza desplegada la primera zona", _open_zones(panel) == ["Global"], str(_open_zones(panel)))
 	panel.open("Cabeza")

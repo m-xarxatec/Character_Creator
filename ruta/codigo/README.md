@@ -10,9 +10,7 @@
 | --- | --- | --- | --- | --- |
 | Pose como giros en el mundo | `world_pose.gd` | `probar_pose_mundo.gd` | A3 (`pasos/A3_pose_en_mundo.md`) | Ya: antes del 5.1 |
 | IK de dos huesos | `two_bone_ik.gd` | `probar_ik.gd` | 10.10 (`pasos/10_proyecto_y_estudio.md`) | Fase 10 |
-| Formato de proyecto `.gmolde` | `project_file.gd` | `probar_proyecto.gd` + `datos/proyecto_v1.gmolde` | 10.1 | Fase 10 |
 | Largo y grosor de hueso | `bone_shape.gd` | `probar_forma_hueso.gd` | 16.1 (`pasos/16_especies_y_extremos.md`) | Fase 16 |
-| Generador de cuernos | `horn_generator.gd` | `probar_cuernos.gd` | 13.5 (`pasos/13_piezas_y_accesorios.md`) | Fase 13 |
 | Transferir formas y pesos a la ropa | `shape_transfer.gd` | `probar_transferencia.gd` | 12.1 (`pasos/12_ropa.md`) | Fase 12 |
 
 `pruebas/esqueleto_de_prueba.gd` es un esqueleto humanoide mínimo hecho por código. Lo usan las pruebas de pose, IK y hueso. Va siempre **en la misma carpeta** que ellas.
@@ -25,7 +23,7 @@ Desde la raíz del repositorio. Las pruebas buscan el núcleo primero en `godot/
 
 ```sh
 R=$(pwd)
-for t in pose_mundo ik proyecto forma_hueso cuernos transferencia; do
+for t in pose_mundo ik forma_hueso transferencia; do
   echo "== $t"
   (ulimit -v 4000000; timeout 120 godot --headless --path pruebas/godot -s "$R/ruta/codigo/pruebas/probar_$t.gd" 2>&1) | grep -E 'FALLO|MEDIDA|RESULTADO|ERROR'
 done
@@ -73,27 +71,12 @@ Sigue la ficha A3, con estas diferencias, todas a más:
 - La mano o el pie conservan su giro en el mundo por defecto (`keep_tip_rotation`).
 - Falta, y es del paso 10.10: de dónde sale el polo en la interfaz (propuesta: codo hacia atrás y abajo; rodilla hacia delante), los límites de articulación del 5.9 y el arrastre con el ratón.
 
-### `project_file.gd` (10.1)
-
-- No depende de `Preset`: el preset de cada personaje se guarda tal cual. Quien abre el proyecto llama después a `Preset.from_dict` con cada uno.
-- Las claves desconocidas se **conservan** y salen como avisos. Las versiones mayores se **rechazan** (D18).
-- Los números se escriben a 6 decimales y los enteros sin decimales, para que «mismo proyecto, mismo texto» se cumpla aunque JSON lea `2` como `2.0`. Que el texto sea idéntico entre **versiones distintas de Godot**: NO VERIFICADO (depende de cómo escriba los decimales `JSON.stringify`).
-- `datos/proyecto_v1.gmolde` es el archivo fijo de regresión: **no se regenera nunca**. Al colocarlo, va a `pruebas/godot/datos/`.
-- No valida poses con `WorldPose.from_data` ni piezas contra los packs: eso lo hace quien las usa.
-
 ### `bone_shape.gd` (16.1)
 
 - Es la comprobación del diseño de `ARQUITECTURA.md` §2.2. La prueba mueve una nube de puntos con la misma fórmula que Godot (pose global × *bind pose*).
 - Mejora respecto al documento: el hijo no se traslada «a lo largo del hueso», sino a donde la escala lleva su cabeza. Así un hijo fuera del eje (los dedos respecto a la mano) también sigue pegado a la malla.
 - **No es idempotente**: hay que llamarla una vez después de cada `SkeletonRefit.apply` y antes de `Proportions.apply`.
 - Falta, y es del paso 16.1: el prefijo `largo:` / `grosor:` en `Proportions._parse` (D23), pasar los ejes desde `SkeletonRefit` (`tail − head` de `articulaciones.json`), usar `BoneShape.normal_basis` en `MeshBaker._skin`, y probar con la malla real y con el horneado.
-
-### `horn_generator.gd` (13.5)
-
-- Función pura: parámetros → malla. En el proyecto se guardan los parámetros (`clamped`), no la malla.
-- No se fía del orden de los vértices de cada triángulo: lo comprueba con el primero y, si mira hacia dentro, da la vuelta a todos.
-- `build_arrays` devuelve también `centers`, la línea central: sirve para poner huesos a lo largo (colas, paso 13.6).
-- Falta: la costura de UV (no hay texturas todavía), la ficha de pieza, el panel de deslizadores y el juicio visual con el toon y el contorno.
 
 ### `shape_transfer.gd` (12.1)
 

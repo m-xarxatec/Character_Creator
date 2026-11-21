@@ -128,6 +128,9 @@ El zip está en `referencias/` (git no lo guarda). Versión gratis: 2 cuerpos es
 - Espadas, escudos y linternas en los puntos de anclaje.
 - Base chibi (unas 2,5 cabezas) y base esbelta con partes exageradas.
 - Daño por zonas del cuerpo usando los mismos huesos.
+- Piezas (2026-11-21, tras AB.5–AB.13): ponerlas y quitarlas con Deshacer; largo de manga, pernera y falda como
+  deslizadores (bloque `parametros` del proyecto); borde de las prendas recortadas sin dientes (partir aristas);
+  borrar al exportar la piel tapada (12.5); miniaturas de las piezas en las pestañas.
 
 ---
 

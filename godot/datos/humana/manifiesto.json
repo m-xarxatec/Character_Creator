@@ -75,35 +75,11 @@
   "presets/anime.json": {
    "sha256": "53b3d76f9e8191b3f8558b4907abd284fe24ae6bcea56bc084897c49ad36db68"
   },
-  "presets/atletica.json": {
-   "sha256": "6daf565ab926e8af479e7506926f99e3bccfc772b88ec5599c8c04f3b172aa72"
-  },
-  "presets/atletico.json": {
-   "sha256": "c8e451eda96734690460265e3499370b1bf1bf970ffe2e62aa1e7109ef38c417"
-  },
-  "presets/delgada.json": {
-   "sha256": "b51a903e1038032260a5da5ec35067adf9cca1900469dcd0755d6c6e405fabda"
-  },
-  "presets/delgado.json": {
-   "sha256": "eda90cee09684a034730839743898e219e1dc6fb97b3b14bff13369667442216"
-  },
-  "presets/esbelta.json": {
-   "sha256": "8aa89c54f7b58608cb266911e04e71096c028b28fed74a22e040d0c19d3ef991"
-  },
-  "presets/esbelto.json": {
-   "sha256": "d8ab4113e097d34f55c091b9febf24c8a4b3c5817c3518c0a4f9126342f371f0"
-  },
-  "presets/femenina.json": {
-   "sha256": "becd5b85223af6a9b6169c23c0391fcffdd7838e97c2eeccb2985a0129be9343"
+  "presets/femenino.json": {
+   "sha256": "1d71c61ad6c7db269d0bd9a3b5d6bba8ab00a2462fef0ac5c789caf5b49372bd"
   },
   "presets/masculino.json": {
    "sha256": "5dee26771959f3f43788c4a4043d435fa5583377ece0d4ac10a37b7e8cdac455"
-  },
-  "presets/robusta.json": {
-   "sha256": "e83814c416d890645e334a57d954a7a319ff835486c94c96ddb7ba753c5d6ac0"
-  },
-  "presets/robusto.json": {
-   "sha256": "68fcf21bb753353dee89be1ae5477e2dd8108871b0df682dcc70062987dcfbdf"
   }
  },
  "pose": "A",

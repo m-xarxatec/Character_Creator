@@ -57,6 +57,13 @@ static func to_nodes(character: Node3D, socket_names: Array) -> Node3D:
 	mesh.skeleton = NodePath("..")
 	var new_bind := _skin(source_mesh.skin, new_index, mesh)
 	mesh.mesh = _mesh(source_mesh.mesh, new_bind)
+	for extra in source.get_children().slice(1):  # paso AB.7: las piezas que siguen al cuerpo, detrás de él
+		if extra is MeshInstance3D:
+			var piece := MeshInstance3D.new()
+			piece.name = extra.name
+			skeleton.add_child(piece)
+			piece.skeleton = NodePath("..")
+			piece.mesh = _mesh(extra.mesh, _skin(extra.skin, new_index, piece))
 	for socket: String in socket_names:
 		var bone := source.find_bone(socket)
 		var holder := BoneAttachment3D.new()

@@ -6,12 +6,11 @@ extends SceneTree
 
 const MAX_ROUNDING := 0.0000501  # 4 decimales: el error de redondeo es de 0,00005 como mucho
 const STYLE_PRESETS := ["anime_femenino", "anime_masculino", "chibi_oscuro", "chibi_fuera_de_rango"]
-const TEMPLATES := ["femenina", "masculino", "atletica", "atletico", "delgada", "delgado", "robusta", "robusto",
-	"esbelta", "esbelto"]  # pasos PL.1b y PL.1c; el neutro es anime.json
+const TEMPLATES := ["femenino", "masculino"]  # pasos PL.1b y PL.10; el neutro es anime.json
 const FACE := ["cuenca_plana", "boca_anime", "mandibula_anime", "menton_anime", "nariz_anime", "alisado"]
 ## Rangos de diseno/GUIA_ESTILO.md §2 (aprobados el 2026-11-20 con lo medido; el ± es PROVISIONAL).
 const STYLE_RANGES := {
-	"femenina": {"heads": [7.01, 7.31], "legs": [0.47, 0.53], "shoulders": [1.68, 1.78], "waist": [0.51, 0.57],
+	"femenino": {"heads": [7.01, 7.31], "legs": [0.47, 0.53], "shoulders": [1.68, 1.78], "waist": [0.51, 0.57],
 		"hand": [0.57, 0.63], "foot": [0.71, 0.77]},
 	"masculino": {"heads": [6.97, 7.27], "legs": [0.49, 0.55], "shoulders": [1.90, 2.00], "waist": [0.46, 0.52],
 		"hand": [0.70, 0.76], "foot": [0.90, 0.96]}}

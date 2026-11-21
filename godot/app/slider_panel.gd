@@ -14,7 +14,7 @@ const SymmetryDialog := preload("symmetry_dialog.gd")
 const SliderRow := preload("slider_row.gd")
 const ThemeBuilder := preload("tema/theme_builder.gd")
 const Tokens := preload("tema/tokens.gd")
-const HIDDEN_ZONES := ["Cara", "Base"]  # sin deslizadores visibles en el MVP (pasos 3.14 y 6.2)
+const HIDDEN_ZONES := ["Base"]  # sin deslizadores visibles (paso 6.2). Paso 9.1: la zona Cara ya se ve (5 formas anime)
 const SIDES := {"_l": " (izq.)", "_r": " (der.)"}
 const ACCENTS := {"á": "a", "é": "e", "í": "i", "ó": "o", "ú": "u", "ü": "u"}
 

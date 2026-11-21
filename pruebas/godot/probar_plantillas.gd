@@ -4,7 +4,7 @@ extends SceneTree
 # Que detecta el fallo: en main.gd, conectar template_chosen a body_actions.open_preset -> no es un cambio de Deshacer.
 # Paso PL.5: «Aleatorio» (randomizer.gd) en la galería y en «Nuevo personaje». Detecta el fallo: sin igualar los lados.
 
-const COUNT := 11  # anime.json (Neutro) y las 10 plantillas de PL.1
+const COUNT := 3  # paso PL.10: Femenino, Masculino y Neutro (anime.json)
 const CUSTOM_SKIN := Color(0.6, 0.4, 0.3)
 const ROLLS := 10  # cuerpos al azar con el informe en pose T
 
@@ -18,7 +18,7 @@ func _initialize() -> void:
 	await process_frame
 	var gallery = main.zone_picker.gallery
 	var ids: Array = gallery.cards.keys()
-	check("%d tarjetas en el orden de la galería, la primera «Neutro»" % COUNT, ids.size() == COUNT
+	check("%d tarjetas en el orden de la galería, la última «Neutro»" % COUNT, ids.size() == COUNT
 		and ids == gallery.ORDER and gallery.cards["anime"].text == "Neutro", str(ids))
 	check("cada tarjeta lleva su miniatura de 256 px", ids.all(func(id: String) -> bool:
 		return gallery.cards[id].icon != null and gallery.cards[id].icon.get_width() == 256))
@@ -49,7 +49,7 @@ func _check_random(main: Control, root_dir: String) -> void:
 	var gallery = main.zone_picker.gallery
 	check("la galería empieza por «Aleatorio» con el dado", gallery.grid.get_child(0) == gallery.random_card
 		and gallery.random_card.text == "Aleatorio" and gallery.random_card.icon != null)
-	gallery.cards["femenina"].pressed.emit()
+	gallery.cards["femenino"].pressed.emit()
 	var before: Dictionary = main.editor.values.duplicate()
 	gallery.random_card.pressed.emit()
 	var after: Dictionary = main.editor.values

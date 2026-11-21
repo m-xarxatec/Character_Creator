@@ -43,14 +43,12 @@ const Measures := preload("measures.gd")
 const Tokens := preload("tema/tokens.gd")
 const ZonePicker := preload("zone_picker.gd")
 const Motion := preload("motion.gd")
+const PiecesPanel := preload("pieces_panel.gd")  # paso AB.13
+const PIECE_TABS := {"Cara y ojos": "ojos", "Pelo": "pelo", "Ropa": "ropa", "Accesorios": "accesorio"}  # pestaña → tipo
 const TAB_NAMES := ["Cuerpo", "Cara y ojos", "Pelo", "Ropa", "Accesorios", "Estilo"]
 const TAB_ICONS := ["cuerpo", "cara", "pelo", "ropa", "accesorios", "estilo"]  # paso IU.2
 ## Paso IU.4: pestañas que aún no existen → qué llegará (dicen «Pronto», se pueden abrir y lo cuentan).
 const SOON := {
-	"Cara y ojos": "ojos, cejas y expresiones.",
-	"Pelo": "elegir peinados y ajustarlos a la cabeza.",
-	"Ropa": "prendas que siguen al cuerpo al moverlo.",
-	"Accesorios": "armas, gafas, cuernos y otras piezas en las manos, la espalda o la cadera.",
 }
 const FILE_REFRESH := 0.3  # s: cada cuánto se mira si hay cambios sin guardar (el • de la barra)
 const ACTIVE_TAB := 0
@@ -60,6 +58,7 @@ var body_view: SubViewportContainer
 var slider_panel: ScrollContainer
 var body_actions: HBoxContainer
 var finish_panel: VBoxContainer
+var piece_panels := {}  # paso AB.13: pestaña → PiecesPanel
 var report_panel: ScrollContainer  # ReportPanel, dentro de report_section
 var report_section: VBoxContainer
 var editor  # BodyEditor (null si la especie no cargó)
@@ -136,6 +135,8 @@ func _ready() -> void:
 		body_view.zone_touched.connect(_on_zone_touched)  # paso IU.7a: igual que elegirla en la silueta
 		body_actions.setup(body_view, editor)
 		finish_panel.setup(body_view)
+		for tab_name: String in piece_panels:  # paso AB.13
+			piece_panels[tab_name].setup(body_view, PIECE_TABS[tab_name])
 		body_actions.test_changed.connect(update_report)
 		body_actions.look_changed.connect(finish_panel.refresh)
 		report_panel.zone_chosen.connect(_on_zone_chosen)
@@ -248,7 +249,7 @@ func _fill_top_bar() -> void:
 	new_button = Button.new()  # paso PL.4
 	new_button.text = "Nuevo…"
 	new_button.icon = ThemeBuilder.icon("cuerpo")
-	new_button.tooltip_text = "Empezar desde una plantilla o un archivo reciente"
+	new_button.tooltip_text = "Empezar con Femenino, Masculino, Neutro, al azar o desde un archivo reciente"
 	new_button.pressed.connect(start_screen.show_screen)
 	top_bar.add_action(new_button)
 	for button: Button in [body_actions.open_button, body_actions.save_button, body_actions.export_button]:
@@ -309,6 +310,11 @@ func _zone_counts() -> Dictionary:
 	for row: Dictionary in editor.rows:
 		counts[row["zona"]] = counts.get(row["zona"], 0) + 1
 	return counts
+
+
+func _piece_panel(tab_name: String) -> Control:
+	piece_panels[tab_name] = PiecesPanel.new()
+	return piece_panels[tab_name]
 
 
 func _soon_page(text: String) -> Control:
@@ -472,7 +478,7 @@ func _body() -> Control:
 	finish_panel = FinishPanel.new()
 	for tab_name: String in TAB_NAMES:
 		var panel: Control = slider_panel if tab_name == "Cuerpo" else (finish_panel if tab_name == "Estilo"
-			else _soon_page(SOON[tab_name]))
+			else (_piece_panel(tab_name) if PIECE_TABS.has(tab_name) else _soon_page(SOON[tab_name])))
 		panel.name = tab_name  # el nombre de la página es el de la pestaña
 		tabs.add_child(panel)
 	return page

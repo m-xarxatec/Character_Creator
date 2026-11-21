@@ -1,7 +1,8 @@
 extends AcceptDialog
-# Paso PL.4: ventana «Nuevo personaje». Femenina, Masculino y Neutro en grande; «Más cuerpos» con el resto de
-# plantillas; «Recientes» (settings_file.gd: los 8 últimos presets abiertos o guardados que aún existen); «Abrir
+# Paso PL.4: ventana «Nuevo personaje». Paso PL.10: Femenino, Masculino, Neutro y Aleatorio en una fila (sin «Más
+# cuerpos»); «Recientes» (settings_file.gd: los 8 últimos presets abiertos o guardados que aún existen); «Abrir
 # preset…» y «Mostrar al arrancar». Usa las tarjetas de la galería (template_gallery.gd): mismos nombres y miniaturas.
+# Paso 10.2: en «Recientes», los proyectos .gmolde llevan su miniatura (project_io.gd).
 # Solo avisa con señales; main.gd la abre al arrancar (si el ajuste lo dice) y con el botón «Nuevo…».
 # Uso: screen.setup(zone_picker.gallery); screen.template_chosen.connect(editor.load_values); screen.show_screen()
 
@@ -11,14 +12,14 @@ signal open_requested
 signal random_requested  # paso PL.5
 
 const SettingsFile := preload("settings_file.gd")
-const BIG := ["femenina", "masculino", "anime"]
+const ProjectIO := preload("project_io.gd")
+const BIG := ["femenino", "masculino", "anime"]
 const BIG_THUMB := 112
-const SMALL_THUMB := 64
-const SMALL_COLUMNS := 5  # con «Aleatorio» son 9: dos filas
-const RECENT_HEIGHT := 72  # px: «Recientes» se desplaza dentro, para que la ventana quepa en 648 px de alto
+const RECENT_HEIGHT := 200  # px: «Recientes» se desplaza dentro, para que la ventana quepa en 648 px de alto
+const RECENT_ICON := 48  # px de la miniatura de un proyecto en «Recientes» (paso 10.2)
 
 var cards := {}  # id → Button
-var random_card: Button  # paso PL.5: la primera de «Más cuerpos»
+var random_card: Button  # paso PL.5; la cuarta de la fila (paso PL.10)
 var recent_box := VBoxContainer.new()
 var show_box := CheckBox.new()
 
@@ -36,20 +37,13 @@ func setup(gallery: ScrollContainer) -> void:
 	for id: String in BIG:
 		if gallery.cards.has(id):
 			big.add_child(_card(gallery, id, BIG_THUMB))
-	column.add_child(_title("Más cuerpos"))
-	var grid := GridContainer.new()
-	grid.columns = SMALL_COLUMNS
-	column.add_child(grid)
-	random_card = gallery.random_button(SMALL_THUMB + 36)
+	random_card = gallery.random_button(BIG_THUMB + 36)
 	random_card.size_flags_horizontal = Control.SIZE_FILL  # del ancho de las demás
-	random_card.custom_minimum_size.x = SMALL_THUMB + 16
+	random_card.custom_minimum_size.x = BIG_THUMB + 16
 	random_card.pressed.connect(func() -> void:
 		hide()
 		random_requested.emit())
-	grid.add_child(random_card)
-	for id: String in gallery.cards:
-		if not id in BIG:
-			grid.add_child(_card(gallery, id, SMALL_THUMB))
+	big.add_child(random_card)
 	column.add_child(_title("Recientes"))
 	var scroll := ScrollContainer.new()
 	scroll.custom_minimum_size.y = RECENT_HEIGHT
@@ -58,7 +52,7 @@ func setup(gallery: ScrollContainer) -> void:
 	scroll.add_child(recent_box)
 	column.add_child(scroll)
 	var open := Button.new()
-	open.text = "Abrir preset…"
+	open.text = "Abrir…"
 	open.pressed.connect(func() -> void:
 		hide()
 		open_requested.emit())
@@ -92,6 +86,10 @@ func refresh_recent() -> void:
 		button.tooltip_text = path
 		button.alignment = HORIZONTAL_ALIGNMENT_LEFT
 		button.theme_type_variation = "BotonFantasma"
+		button.icon = ProjectIO.thumbnail(path)  # paso 10.2: null en los presets
+		if button.icon != null:
+			button.expand_icon = true
+			button.custom_minimum_size.y = RECENT_ICON
 		button.pressed.connect(func() -> void:
 			hide()
 			recent_chosen.emit(path))

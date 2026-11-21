@@ -42,8 +42,7 @@ SOURCE = "MakeHuman system assets (CC0) con MPFB 2.0.18"
 SOCKET_LENGTH = 0.05  # metros; el hueso de anclaje apunta hacia arriba
 MIN_DELTA = 1e-6  # metros; por debajo, el hueso no se mueve con esa forma
 CORRECTION_MIN = 0.0005  # metros; una correccion mas pequena no se guarda
-TEMPLATES = ("anime", "femenina", "masculino", "atletica", "atletico", "delgada", "delgado", "robusta", "robusto",
-             "esbelta", "esbelto")  # presets/: el de personaje nuevo y las plantillas de serie (paso PL.1)
+TEMPLATES = ("anime", "femenino", "masculino")  # presets/: el de personaje nuevo (Neutro) y los de genero (PL.10)
 FILES = ("cuerpo.glb", "articulaciones.json", "deslizadores.csv") + tuple(f"presets/{t}.json" for t in TEMPLATES)
 
 

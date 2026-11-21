@@ -27,7 +27,7 @@ func _initialize() -> void:
 	check("y al soltarla vuelve", view.values == now)
 	var path := OS.get_user_data_dir().path_join("comparar_prueba.json")
 	main.body_actions.save_preset(path)
-	main.zone_picker.gallery.cards["delgada"].pressed.emit()
+	main.zone_picker.gallery.cards["femenino"].pressed.emit()
 	main.body_actions.compare_button.button_down.emit()
 	check("después de guardar, compara con lo guardado", view.values == now)
 	main.body_actions.compare_button.button_up.emit()

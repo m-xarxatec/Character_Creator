@@ -1,6 +1,6 @@
 extends TabContainer
 # Paso IU.5a: panel izquierdo (diseno/GUIA_INTERFAZ.md §2) con dos pestañas pequeñas: Zonas (silueta + lista de zonas
-# con su número de ajustes) y Plantillas (template_gallery.gd, paso PL.3). Elegir una zona emite zone_chosen; select() solo marca.
+# con su número de ajustes) y Género (template_gallery.gd, pasos PL.3 y PL.10). Elegir una zona emite zone_chosen; select() solo marca.
 # Uso: picker.setup(slider_panel.zones, counts); picker.zone_chosen.connect(slider_panel.open)
 
 signal zone_chosen(zone: String)
@@ -32,7 +32,7 @@ func _init() -> void:
 	list.size_flags_horizontal = Control.SIZE_EXPAND_FILL
 	scroll.add_child(list)
 	gallery = TemplateGallery.new()
-	gallery.name = "Plantillas"  # el nombre del nodo es el título de la pestaña
+	gallery.name = "Género"  # el nombre del nodo es el título de la pestaña
 	add_child(gallery)
 
 

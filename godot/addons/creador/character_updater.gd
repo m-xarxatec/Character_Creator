@@ -12,14 +12,17 @@ extends RefCounted
 ## Devuelve las claves que no aplicó, en una lista: desconocidas o con un valor no válido (NaN, infinito).
 ## El reajuste pisa la posición y el giro de la pose (no la escala): por eso la pose base va después de él.
 ## La pose T lee la escala de la pose: por eso la pose base va después de la escala y no depende de la llamada anterior.
+## Paso AB.4: las piezas de pieces (BodyPiece.attach) reciben después los pesos de forma y las bind poses del cuerpo.
 
 const Proportions := preload("proportions.gd")
+const BodyPiece := preload("body_piece.gd")
 const ShapeWeights := preload("shape_weights.gd")
 const SkeletonRefit := preload("skeleton_refit.gd")
 const TPose := preload("t_pose.gd")
 
 var species  # SpeciesData
 var base: Dictionary
+var pieces: Array[MeshInstance3D] = []  # paso AB.4: piezas que siguen al cuerpo
 
 
 func _init(loaded_species) -> void:
@@ -43,4 +46,6 @@ func update(values: Dictionary, pose_t: bool) -> Array[String]:
 	Proportions.apply(species.skeleton, Proportions.scales(scale_values, species.sliders))
 	if pose_t:
 		TPose.apply(species.skeleton)
+	for piece in pieces:
+		BodyPiece.follow(piece, species.mesh)
 	return rejected

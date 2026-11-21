@@ -3,7 +3,7 @@ extends SceneTree
 # Uso: (ulimit -v 4000000; timeout 300 godot --headless --path pruebas/godot -s probar_inicio.gd 2>&1 | grep -E 'FALLO|RESULTADO|ERROR')
 # Que detecta el fallo: en SettingsFile.get_recent, no mirar si el archivo existe -> «Recientes» lista uno borrado.
 
-const BIG := ["femenina", "masculino", "anime"]
+const BIG := ["femenino", "masculino", "anime"]
 const TITLE := 40  # PROVISIONAL: px de la barra de título de la ventana
 
 var failures := 0
@@ -25,11 +25,11 @@ func _initialize() -> void:
 	check("cabe en la ventana del programa (%d px de alto, %d de barra de título)" % [height, TITLE], height > 0
 		and screen.size.y + TITLE <= height, "%d px" % screen.size.y)
 	var ids: Array = screen.cards.keys()
-	check("Femenina, Masculino y Neutro en grande y las otras 8 en «Más cuerpos»", ids.slice(0, 3) == BIG
-		and ids.size() == 11 and screen.cards["anime"].text == "Neutro" and screen.cards["femenina"].icon != null, str(ids))
-	screen.cards["femenina"].pressed.emit()
-	check("elegir Femenina la cierra y pone ese cuerpo", not screen.visible
-		and main.editor.values == main.zone_picker.gallery.templates["femenina"] and main.editor.values["gender"] == 0.0)
+	check("Femenino, Masculino y Neutro, sin «Más cuerpos» (paso PL.10)", ids == BIG
+		and screen.cards["anime"].text == "Neutro" and screen.cards["femenino"].icon != null, str(ids))
+	screen.cards["femenino"].pressed.emit()
+	check("elegir Femenino la cierra y pone ese cuerpo", not screen.visible
+		and main.editor.values == main.zone_picker.gallery.templates["femenino"] and main.editor.values["gender"] == 0.0)
 
 	var folder := OS.get_user_data_dir().path_join("recientes_prueba")
 	DirAccess.make_dir_recursive_absolute(folder)

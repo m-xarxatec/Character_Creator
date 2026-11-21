@@ -11,7 +11,7 @@ Unidades y ejes de Godot: metros, Y arriba, mirando a +Z.
 | `articulaciones.json` | Dónde está cada hueso en el cuerpo base y cuánto lo mueve cada forma |
 | `deslizadores.csv` | La tabla del paso 2.1, con la columna `neutro`, las formas de cara (versión 2) y las propias (versión 3) |
 | `presets/anime.json` | Preset de personaje nuevo (paso 3.15), en el formato de `godot/addons/creador/preset.gd` |
-| `presets/<plantilla>.json` | Plantillas de serie (paso PL.1): femenina, masculino, atlética, delgada, robusta y esbelta (y sus masculinos); mismo formato |
+| `presets/<género>.json` | Presets de género (paso PL.10): `femenino` y `masculino` (el neutro es `anime.json`); mismo formato |
 
 Si el formato cambia de forma incompatible, sube `version`.
 Si `datos/` va dentro de un proyecto Godot, `deslizadores.csv` debe importarse como "Keep File (exported as is)": por defecto Godot toma los `.csv` como traducciones.
@@ -129,12 +129,11 @@ Presets **completos** (todas las claves de `valores` escritas), que no se aplica
 (piel gris) y prenda visible. **El editor lo carga al crear un personaje nuevo** (`SpeciesData.preset_text()`).
 Es la base de los futuros botones de estilo (`realista.json`, `chibi.json`…). Añadir uno es un archivo más en `files`.
 
-Plantillas de serie (paso PL.1): `femenina.json` y `masculino.json` son `anime.json` con otro cuerpo (cara, `alisado`,
-colores, prenda y acabado iguales); las demás (`atletica`, `delgada`, `robusta`, `esbelta` y sus masculinos) parten de
-una de esas dos. `nombre` es el que verá quien las elija. Cada una va en `TEMPLATES` de `exportar_datos.py`.
+Presets de género (pasos PL.1 y PL.10): `femenino.json` y `masculino.json` son `anime.json` con otro cuerpo (cara,
+`alisado`, colores, prenda y acabado iguales); sin más cuerpos de serie. `nombre` es el que verá quien los elija. Cada una va en `TEMPLATES` de `exportar_datos.py`.
 
 Miniaturas (paso PL.2): `presets/<id>.png`, 256 × 256 con fondo transparente, una por preset; las hace
-`pruebas/godot/generar_miniaturas.gd` (con ventana; volver a lanzarlo si cambia una plantilla). Van con `importer="keep"`
+`pruebas/godot/generar_miniaturas.gd` (con ventana; volver a lanzarlo si cambia un preset). Van con `importer="keep"`
 (viajan tal cual; se leen con `Image.load_from_file`) y no están en el manifiesto.
 
 ## `articulaciones.json`

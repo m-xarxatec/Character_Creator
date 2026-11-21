@@ -15,7 +15,7 @@
 
 ## 2. Proporciones por preset
 
-Femenino y masculino: **aprobados el 2026-11-20** (paso PL.1b) con las plantillas `femenina.json` y `masculino.json`,
+Femenino y masculino: **aprobados el 2026-11-20** (paso PL.1b) con los presets `femenino.json` y `masculino.json`,
 medidas con `Measures.proportions()` (`godot/app/measures.gd`, en reposo): rango = lo medido ± 0,15 cabezas, ± 0,05 en
 hombros y ± 0,03 en lo demás. Cómo se mide cada una: `ruta/pasos/PL.1_plantillas.md` §4 (hombros: ancho de la malla a
 la altura de la articulación, por fuera; mano y pie: media de los dos lados).
