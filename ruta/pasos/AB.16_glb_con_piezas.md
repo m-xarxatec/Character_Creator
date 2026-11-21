@@ -25,7 +25,7 @@ Medio: una prueba y un generador, sin tocar el núcleo.
 4. Los accesorios rígidos **también llevan piel** (`RigidPiece.to_skinned`: una articulación, peso 1), así que se comprueban igual.
 5. Los pesos se leen además **del archivo**: Godot los normaliza al importar y una suma mala no se ve en la escena.
 6. `generar_glb_piezas.gd` exporta con el editor real pelo, ropa y cuernos a `pruebas/godot/salida/glb_piezas/` (ignorada por git).
-7. Límites nuevos, `# PROVISIONAL`: bind pose y suma de pesos, 0,001.
+7. Límites nuevos: bind pose y suma de pesos, 0,001 (ya no son PROVISIONAL: aprobados por el responsable el 2026-11-21).
 
 ## 5. Pruebas
 

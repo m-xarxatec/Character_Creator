@@ -60,6 +60,7 @@
 - **Estilo como archivo de datos** (como la tabla de deslizadores): tonos de sombra (2, 3 o suave), dureza del borde, contorno (grosor y color), luz de borde y tono de la piel en sombra. Añadir un estilo = añadir un archivo.
 - **Grado de realismo**, de anime a semirrealista: cambia el sombreado (toon o PBR), las texturas de piel y la cabeza. Sin hiperrealismo: el `.glb` sale con UV limpias y malla completa para que cada uno añada sus texturas en Blender.
 - **Sombreado de la ampliación, meta estilo VRoid** (solo inspiración visual, sin su material ni assets): referencia visual `diseno/referencia_estilo_quaternius.png`; ver D44 en `ruta/DECISIONES.md`.
+- **Acabado anime por capas** (D46, 2026-11-22): toon tipo VRoid y VTuber, con piel bonita en cualquier tono. Los ojos se hacen por capas y piezas, no pintados enteros en la cara; orden: base blanca, iris, pupila, brillos, párpado, pestañas. Prototipo de toon suave descartado (SH.1 en pausa). Imágenes de IA: antes, revisar su licencia.
 - **Luz de vista previa en el editor:** control de ángulo e intensidad, solo para probar el personaje; no se exporta.
 - **Tinte de sombra** en el panel Acabado: que la sombra pueda cambiar de matiz (p. ej. más rojiza o azulada), no solo oscurecerse.
 - **Umbral del tono medio en la cara** como valor del acabado (no viaja a otros motores, por eso no es el arreglo de la franja de sombra).
@@ -130,7 +131,7 @@ El zip está en `referencias/` (git no lo guarda). Versión gratis: 2 cuerpos es
 - Espadas, escudos y linternas en los puntos de anclaje.
 - Base chibi (unas 2,5 cabezas) y base esbelta con partes exageradas.
 - Daño por zonas del cuerpo usando los mismos huesos.
-- Piezas (2026-11-21, tras AB.5–AB.13): ponerlas y quitarlas con Deshacer; largo de manga, pernera y falda como
+- Piezas (2026-11-21, tras AB.5–AB.13): ponerlas y quitarlas con Deshacer (aplazado hasta después de la expansión, 2026-11-22); largo de manga, pernera y falda como
   deslizadores (bloque `parametros` del proyecto); borde de las prendas recortadas sin dientes (partir aristas);
   borrar al exportar la piel tapada (12.5); miniaturas de las piezas en las pestañas.
 
