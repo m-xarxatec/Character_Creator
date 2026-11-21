@@ -145,6 +145,8 @@ func _ready() -> void:
 		_start_measures()
 	licenses = LicensesDialog.new()
 	add_child(licenses)
+	if body_view.library != null:  # paso AB.13b: autor y licencia de las piezas, solo aquí
+		licenses.set_packs(body_view.library)
 	var licenses_button := Button.new()
 	licenses_button.text = "Licencias"
 	licenses_button.icon = ThemeBuilder.icon("licencias")

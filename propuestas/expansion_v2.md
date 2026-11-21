@@ -442,15 +442,15 @@ Un peinado CC0 moldeado sigue siendo CC0 y puede entrar en el Pack Base 1 (D36);
 - **Nivel:** fuerte · **Tam.:** M · **Modelo:** Fable.
 
 ### AB.13 Pestañas Ropa, Pelo y Accesorios
-- **Objetivo:** cada pestaña con la galería de miniaturas (PL.2) de su tipo, colores por pieza, parámetros (largo de manga…), estampados por parámetros del shader (rayas, cuadros, degradado) y **autor y licencia siempre visibles**.
+- **Objetivo:** cada pestaña con una fila por pieza de su tipo (por ahora solo el nombre: las miniaturas, en `IDEAS.md`), colores por pieza, parámetros (largo de manga…), estampados por parámetros del shader (rayas, cuadros, degradado) y **sin autor ni licencia en las tarjetas o filas de piezas: van solo en el panel de Créditos (D45)**.
 - **Diseño:** el mismo esqueleto de ventana que Cuerpo (izquierda: categorías y miniaturas; derecha: ajustes de la pieza elegida). Una sola pieza por ranura, salvo accesorios (`ARQUITECTURA.md` §6).
-- **Prueba:** poner, cambiar y quitar piezas es un cambio para Deshacer; la licencia de cada miniatura coincide con su `pack.json`.
+- **Prueba:** poner, cambiar y quitar piezas es un cambio para Deshacer; ninguna fila de piezas muestra autor ni licencia, y Créditos lista cada pack con la licencia de su `pack.json`.
 - **Nivel:** medio · **Tam.:** L.
 
 ### AB.14 Publicar el Pack Base 1
 - `godot/packs/base/LEEME.md` (qué trae, licencia CC0, cómo se hizo), miniaturas, fila en `CREDITOS.md`. Si se aprueba D36: las piezas rígidas como pack suelto en `.glb` para OpenGameArt o itch.io (lo publica el responsable).
 
-**Hecho cuando (fase AB):** un personaje Femenina y otro Masculino, cada uno con peinado, camiseta, pantalón, botas y un accesorio, se exportan, pasan `probar_glb.gd`, se animan en un proyecto vacío sin que la piel atraviese la ropa, y todas las piezas enseñan su licencia.
+**Hecho cuando (fase AB):** un personaje Femenina y otro Masculino, cada uno con peinado, camiseta, pantalón, botas y un accesorio, se exportan, pasan `probar_glb.gd`, se animan en un proyecto vacío sin que la piel atraviese la ropa, y todos los packs aparecen con su autor y licencia en Créditos.
 
 ---
 

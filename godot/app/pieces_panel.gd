@@ -1,7 +1,8 @@
 extends ScrollContainer
 # Paso AB.13: pestañas Pelo, Ropa y Accesorios (AB.11). Una fila por pieza de ese tipo (packs que siguen al cuerpo): un clic la pone o la
-# quita (body_view.set_piece: una por ranura, así que poner una puede quitar otra), su color y, siempre a la vista, su
-# ranura, autor y licencia. Aún no entra en Deshacer ni en el proyecto .gmolde (bloque «piezas»: siguiente paso).
+# quita (body_view.set_piece: una por ranura, así que poner una puede quitar otra) y su color. Autor y licencia no se
+# enseñan aquí: van solo en el panel de Créditos (D45, paso AB.13b). Aún no entra en Deshacer ni en el proyecto .gmolde
+# (bloque «piezas»: siguiente paso).
 # Uso: panel.setup(body_view, "pelo")
 
 const BodyMaterial := preload("../addons/creador/body_material.gd")
@@ -43,7 +44,7 @@ func _add_row(card: Dictionary) -> void:
 	button.text = card["nombre"]
 	button.alignment = HORIZONTAL_ALIGNMENT_LEFT
 	button.size_flags_horizontal = SIZE_EXPAND_FILL
-	button.tooltip_text = "Poner o quitar (una pieza por ranura: %s)" % card["ranura"]
+	button.tooltip_text = "Poner o quitar"
 	button.toggled.connect(func(on: bool) -> void:
 		view.set_piece(card["pack"], card["id"], on)
 		_paint(key))
@@ -57,11 +58,6 @@ func _add_row(card: Dictionary) -> void:
 		_paint(key))
 	row.add_child(picker)
 	list.add_child(row)
-	var credit := Label.new()
-	credit.text = "%s · %s · %s" % [card["ranura"], card["autor"], card["licencia"]]
-	credit.theme_type_variation = "Pista"
-	credit.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
-	list.add_child(credit)
 	buttons[key] = button
 	pickers[key] = picker
 

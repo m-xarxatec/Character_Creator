@@ -86,6 +86,7 @@
 - Barra de título de los diálogos (Ajustes, Comandos) con el tema: hoy es la gris de Godot (revisor, IU.11).
 - Margen entre los textos del panel derecho («4 ajustes», «Más alto»…) y la barra de desplazamiento (revisor, IU.11).
 - Cambio de color de 120 ms al pasar el ratón por los botones (guía §3 «Movimiento»): Godot no lo anima solo; pide código en cada botón. Fuera de IU.10.
+- Miniaturas de piezas después del shader nuevo: imágenes comprimidas (WebP o PNG), generadas con un solo comando, sin depender del shader en tiempo de ejecución
 
 ## Pack "Universal Base Characters" de Quaternius (CC0)
 

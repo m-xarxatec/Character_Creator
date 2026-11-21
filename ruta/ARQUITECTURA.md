@@ -255,7 +255,7 @@ packs/base/
 ```
 
 - **Tipo:** `pelo`, `ropa`, `accesorio`, `ojos`, `cejas`. **Ranura:** una sola pieza por ranura (`pelo`, `cejas`, `ojos`, `ropa_interior`, `ropa_torso`, `ropa_piernas`, `ropa_pies`, `ropa_exterior`), salvo `accesorio`, que admite varias.
-- **Licencia:** obligatoria, con identificador SPDX. El cargador **rechaza** el pack si no está en la lista permitida: `["CC0-1.0", "propia"]` (CC-BY solo si se aprueba D19). Autor y licencia se muestran siempre junto a la miniatura.
+- **Licencia:** obligatoria, con identificador SPDX. El cargador **rechaza** el pack si no está en la lista permitida: `["CC0-1.0", "propia"]` (CC-BY solo si se aprueba D19). Autor y licencia se muestran solo en el panel de Créditos (D45), no junto a la pieza.
 - `sha256` por pieza: el proyecto lo copia. Si al abrir no coincide, sale un aviso.
 - **Ropa** (`"sigue_al_cuerpo": true`): el `.glb` trae formas con **los mismos nombres** que el cuerpo. En ejecución basta `ShapeWeights.apply(prenda, pesos)`. Esas formas las calcula una herramienta al crear el pack (12.1), no el editor. Las formas que no afectan a la prenda no se guardan; `ShapeWeights.apply` ya ignora las que faltan (`shape_weights.gd:61-71`).
 - **Piezas sin archivo** (2026-11-21, pasos AB.5, AB.9a y AB.11): `derivada` {mascara, separacion} (caras de la piel, `BodyDerived`), `corte` {de, brazos, piernas, torso, quitar} (recorte de otra pieza del pack, `GarmentCut`) y `generador` {tipo, parametros, simetria} (accesorio rígido, `RigidPiece`). Ver `godot/packs/base/LEEME.md`.
