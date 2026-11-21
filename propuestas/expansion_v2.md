@@ -476,6 +476,8 @@ Un peinado CC0 moldeado sigue siendo CC0 y puede entrar en el Pack Base 1 (D36);
 | X.17 | ~~Edades de 5 a 60 años con deslizador Edad y plantillas por edad~~ | — | — | **Descartado el 2026-11-21:** sin deslizador Edad: con Altura (desde ×0,65) y los demás deslizadores (PL.8, responsable, 2026-11-21) |
 | X.16 | Reproducción mínima del cuelgue de `GLTFDocument` (BoneAttachment sin malla ni piel) | medio | S | El responsable decide si lo reporta a Godot |
 
+**Meta de estilo después del MVP (2026-11-21):** el sombreado de la ampliación apunta a un estilo como el de VRoid (solo inspiración visual) y su referencia es `diseno/referencia_estilo_quaternius.png`; el MVP mantiene la sombra de 3 tonos y el contorno negro (D44 en `ruta/DECISIONES.md`).
+
 ---
 
 ## 7. Decisiones nuevas (para `ruta/DECISIONES.md`)

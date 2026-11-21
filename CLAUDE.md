@@ -32,7 +32,7 @@
 - Respuestas de unas 10 líneas, salvo que pida detalle. Muestra solo lo que cambia.
 - Lee solo los archivos y las líneas que necesitas.
 - Soy junior: cada decisión importante, en **una frase sencilla**.
-- Cada ficha dice su nivel (simple, medio o fuerte). Usa Fable para lo fuerte; si un paso es sencillo, avísame para cambiar a un modelo más barato.
+- Cada ficha dice su nivel (simple, medio o fuerte). Usa Opus 5.5 en high para lo fuerte; si un paso es sencillo, avísame para cambiar a un modelo más barato.
 - Propuesta: `PROPUESTA — Paso X.Y` / Archivos / Qué hace / Cómo se prueba / Riesgos / ¿Apruebas?
 - Al cerrar un paso: ejecuta las pruebas, marca el paso y añade una línea al registro de `PLAN.md`, e informa en 3 líneas (**hecho / cómo se probó / qué sigue**).
 - Antes de cerrar: comprueba que la prueba nueva **detecta el fallo** (rompe el código a propósito, mira que salta, deshaz el cambio).

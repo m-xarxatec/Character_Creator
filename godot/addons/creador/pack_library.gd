@@ -134,6 +134,10 @@ func _check_piece(item: Variant, folder: String, ids: Dictionary) -> String:
 	if derived == null and generator == null and cut == null and (typeof(card.get("archivo")) != TYPE_STRING
 			or not FileAccess.file_exists(folder.path_join(card["archivo"]))):
 		return "pieza %s: falta su archivo" % id
+	var covers: Variant = card.get("cubre", [])  # paso RE.1a: otras ranuras que esta pieza ocupa (un traje: ropa_piernas)
+	if typeof(covers) != TYPE_ARRAY or covers.any(func(slot: Variant) -> bool: return not slot in SLOTS):
+		return "pieza %s: «cubre» no es una lista de ranuras" % id
+	card["cubre"] = covers
 	card["archivo"] = card.get("archivo", "")
 	if typeof(card.get("especies", [])) != TYPE_ARRAY or typeof(card.get("colores", [])) != TYPE_ARRAY \
 			or typeof(card.get("fisica", [])) != TYPE_ARRAY:
@@ -154,6 +158,14 @@ func _check_piece(item: Variant, folder: String, ids: Dictionary) -> String:
 		return "pieza %s: «color» no son 3 números" % id
 	card["color"] = card.get("color", [0.8, 0.8, 0.8])  # color de partida (RGB de 0 a 1)
 	return ""
+
+
+## Paso RE.1a: ¿no pueden llevarse a la vez? Misma ranura (salvo accesorios), o una cubre la ranura de la otra
+## (un traje completo y unos shorts). Una camiseta y unos shorts sí.
+static func conflicts(a: Dictionary, b: Dictionary) -> bool:
+	if a["ranura"] == MULTI_SLOT or b["ranura"] == MULTI_SLOT:
+		return false
+	return a["ranura"] == b["ranura"] or a["ranura"] in b.get("cubre", []) or b["ranura"] in a.get("cubre", [])
 
 
 ## Color de partida de una ficha.

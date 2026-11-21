@@ -451,7 +451,7 @@ func _load_character() -> String:
 	return ""
 
 
-## Paso AB.4: pone (on) o quita una pieza que sigue al cuerpo. Quita la que ocupe su ranura (salvo accesorios).
+## Paso AB.4: pone (on) o quita una pieza que sigue al cuerpo. Quita la que ocupe su ranura o choque con ella (PackLibrary.conflicts).
 ## Devuelve false si no se pudo poner (no existe, no sigue al cuerpo o su archivo no vale).
 func set_piece(pack_id: String, piece_id: String, on: bool) -> bool:
 	var key := pack_id.path_join(piece_id)
@@ -487,7 +487,7 @@ func set_piece(pack_id: String, piece_id: String, on: bool) -> bool:
 		return false
 	if card["ranura"] != PackLibrary.MULTI_SLOT:
 		for other: String in pieces.keys():
-			if library.piece(other.get_base_dir(), other.get_file())["ranura"] == card["ranura"]:
+			if PackLibrary.conflicts(library.piece(other.get_base_dir(), other.get_file()), card):
 				set_piece(other.get_base_dir(), other.get_file(), false)
 	BodyMaterial.apply(mesh, true)  # paso AB.6: se adelanta un poco y tapa la piel que asoma
 	(mesh.material_override as ShaderMaterial).set_shader_parameter("depth_pull",

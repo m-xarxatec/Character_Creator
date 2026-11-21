@@ -11,4 +11,4 @@
 | D36 | ¿Lo nuestro sale CC0 y se publica también como pack suelto? (recomendado: sí) | `propuestas/expansion_v2.md` §7 |
 | D39 | ¿Se pueden descargar peinados y armas CC0 (Quaternius, Micket, KayKit), uno a uno y con la licencia comprobada? Necesita tu permiso de red | `propuestas/expansion_v2.md` §5.3 |
 | D41 | ¿Las expresiones salen de las «Face Units» CC0 (sin comprobar aún)? | `propuestas/expansion_v2.md` §7 |
-| RE.1a | Elegir qué peinados, trajes y zapatos de MakeHuman entran en el programa (cada uno pesa de 0,7 a 2 MB) | `pruebas/capturas/piezas/mh_prueba_hoja.png` y `ruta/pasos/RE.1_makehuman_local.md` §5–6 |
+| RE.1a | Revisar qué assets de MakeHuman se quedan (pack de 43,99 MB, límite provisional `MH_MAX_BYTES`) | `godot/packs/makehuman/` y `pruebas/capturas/piezas_mh/hoja_lote2.png` |

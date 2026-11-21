@@ -59,6 +59,7 @@
 
 - **Estilo como archivo de datos** (como la tabla de deslizadores): tonos de sombra (2, 3 o suave), dureza del borde, contorno (grosor y color), luz de borde y tono de la piel en sombra. Añadir un estilo = añadir un archivo.
 - **Grado de realismo**, de anime a semirrealista: cambia el sombreado (toon o PBR), las texturas de piel y la cabeza. Sin hiperrealismo: el `.glb` sale con UV limpias y malla completa para que cada uno añada sus texturas en Blender.
+- **Sombreado de la ampliación, meta estilo VRoid** (solo inspiración visual, sin su material ni assets): referencia visual `diseno/referencia_estilo_quaternius.png`; ver D44 en `ruta/DECISIONES.md`.
 - **Luz de vista previa en el editor:** control de ángulo e intensidad, solo para probar el personaje; no se exporta.
 - **Tinte de sombra** en el panel Acabado: que la sombra pueda cambiar de matiz (p. ej. más rojiza o azulada), no solo oscurecerse.
 - **Umbral del tono medio en la cara** como valor del acabado (no viaja a otros motores, por eso no es el arreglo de la franja de sombra).
