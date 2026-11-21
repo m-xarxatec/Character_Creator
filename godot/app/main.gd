@@ -42,6 +42,7 @@ const Tokens := preload("tema/tokens.gd")
 const ZonePicker := preload("zone_picker.gd")
 const Motion := preload("motion.gd")
 const TAB_NAMES := ["Cuerpo", "Cara y ojos", "Pelo", "Ropa", "Accesorios", "Estilo"]
+const WORKSHOP := "Taller de Assets"
 const TAB_ICONS := ["cuerpo", "cara", "pelo", "ropa", "accesorios", "estilo"]  # paso IU.2
 ## Paso IU.4: pestañas que aún no existen → qué llegará (dicen «Pronto», se pueden abrir y lo cuentan).
 const SOON := {
@@ -54,6 +55,8 @@ const FILE_REFRESH := 0.3  # s: cada cuánto se mira si hay cambios sin guardar 
 const ACTIVE_TAB := 0
 
 var tabs: TabContainer
+var character_page: Control
+var workshop_page: Label
 var body_view: SubViewportContainer
 var slider_panel: ScrollContainer
 var body_actions: HBoxContainer
@@ -95,9 +98,18 @@ func _ready() -> void:
 	column.set_anchors_and_offsets_preset(Control.PRESET_FULL_RECT)
 	add_child(column)
 	top_bar = TopBar.new()
-	top_bar.setup(TAB_NAMES, TAB_ICONS, SOON)
+	top_bar.setup(TAB_NAMES + [WORKSHOP], TAB_ICONS + ["prenda"], SOON)
 	column.add_child(top_bar)
-	column.add_child(_body())
+	character_page = _body()
+	column.add_child(character_page)
+	workshop_page = Label.new()
+	workshop_page.text = WORKSHOP
+	workshop_page.theme_type_variation = "TituloZona"
+	workshop_page.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
+	workshop_page.vertical_alignment = VERTICAL_ALIGNMENT_CENTER
+	workshop_page.size_flags_vertical = Control.SIZE_EXPAND_FILL
+	workshop_page.hide()
+	column.add_child(workshop_page)
 	body_actions = BodyActions.new()
 	body_actions.name = "Acciones"
 	column.add_child(body_actions)
@@ -106,7 +118,7 @@ func _ready() -> void:
 	column.add_child(status_bar)
 	tabs.current_tab = ACTIVE_TAB
 	top_bar.tab_bar.current_tab = ACTIVE_TAB
-	top_bar.tab_bar.tab_changed.connect(func(index: int) -> void: tabs.current_tab = index)
+	top_bar.tab_bar.tab_changed.connect(_select_page)
 	if body_view.error == "":  # la vista ya cargó la especie (su _ready va al entrar en el árbol)
 		editor = BodyEditor.new(body_view.species.sliders, body_view.values)
 		editor.changed.connect(func() -> void: body_view.set_values(editor.values))
@@ -226,9 +238,27 @@ func _fill_top_bar() -> void:
 
 ## Nombre del archivo con • si hay cambios, y Deshacer/Rehacer activos solo si se puede.
 func refresh_top_bar() -> void:
+	if workshop_page.visible:
+		return
 	top_bar.set_file(body_actions.file_name(), body_actions.has_changes())
 	undo_button.disabled = not editor.can_undo()
 	redo_button.disabled = not editor.can_redo()
+
+
+func _select_page(index: int) -> void:
+	var character := index < TAB_NAMES.size()
+	character_page.visible = character
+	workshop_page.visible = not character
+	status_bar.visible = character
+	top_bar.actions.visible = character
+	top_bar.file_label.visible = character
+	if editor != null:
+		for control: Control in [body_actions.bones_button, body_actions.animation_list, body_actions.garment_check]:
+			control.visible = character
+	if character:
+		tabs.current_tab = index
+		if editor != null:
+			refresh_top_bar()
 
 
 func _icon_button(icon_name: String, help: String, action: Callable) -> Button:
@@ -394,7 +424,7 @@ func _on_zone_chosen(zone: String) -> void:
 
 
 func _unhandled_key_input(event: InputEvent) -> void:
-	if editor == null:
+	if editor == null or workshop_page.visible:
 		return
 	if event.is_action_pressed("ui_redo"):
 		editor.redo()

@@ -4,6 +4,7 @@
 > Lo que no es del MVP va a `IDEAS.md`.
 
 **Estado actual:** MVP preparado: build de Linux, README, licencias y paquete 0.1.0 listos. Nombre definitivo: GameMolde (D28). Pulido: hecho (P.1–P.8). Publicar (7.4) espera a tus juicios. Fase IU (`propuestas/expansion_v2.md` §3): IU.1–IU.12 hechos (fase cerrada). Falta lo tuyo: mirar capturas (5.15/5.11 y 6.3), abrir el build a mano (7.1), elegir capturas y grabar el vídeo (7.2). Lista: `ruta/PENDIENTES.md`
+**Taller de Assets:** TA.1a y TA.1b cerrados en `taller_asets`. TA.2a implementado y probado. Pendiente la revisión visual del responsable antes de cerrar la [ficha de navegación](ruta/pasos/ta.2a_navegacion_taller.md).
 **Fichas:** cada paso pendiente tiene la suya en `ruta/pasos/` (traspaso del 2026-11-16; decisiones en `ruta/DECISIONES.md`).
 **Leyenda:** `[ ]` pendiente · `[~]` en curso · `[x]` hecho
 
@@ -240,6 +241,17 @@ Según `diseno/maqueta-pestana-cuerpo.html`.
 
 ---
 
+## Expansión — Taller de Assets
+
+La [hoja de ruta del Taller](<taller assets/pasos_a_seguir.md>) recoge el alcance y las dependencias.
+
+- [x] TA.0 Auditar el repositorio, las dependencias y los puntos de integración.
+- [x] TA.1a Contrato de receta v1 implementado y probado en los tres modos.
+- [x] TA.1b Validación de superficies triangulares abiertas y sólidos simples, con casos sintéticos de geometría e imagen. [Ficha](ruta/pasos/ta.1b_validacion_malla.md).
+- [ ] TA.2a Navegar entre el Taller y el personaje conservando la edición pendiente. Implementación verificada, pendiente de revisión visual. TA.2b incorporará el visor y los controles.
+
+---
+
 ## Registro
 
 > Las filas de las Fases 0 a 3 están en `REGISTRO.md`.
@@ -320,3 +332,8 @@ Según `diseno/maqueta-pestana-cuerpo.html`.
 | 2026-11-19 | Cierre de IU.10, IU.3 e IU.7 | Revisados y aprobados por el responsable. Arreglo: las casillas de Godot apenas se veían en oscuro (1,24:1 sobre el panel); `theme_builder.gd` las dibuja con los tokens (vacía: `panel_2` con borde `texto_3`; marcada: `acento` con ✓ blanco; desactivadas al 45 %). Medido: 3,21:1 en oscuro y 5,21:1 en claro (límite 3:1, el del agarrador, D43). `probar_tema.gd` (8) detecta el fallo. Captura `5_ajustes.png` |
 | 2026-11-19 | IU.11 | Ficha `ruta/pasos/IU.11_cierre_fase.md`. `capturar_hoja_iu.gd`: 6 capturas (oscuro/claro × 1280 × 720, 1920 × 1080, 150 %) y `hoja.png` en `pruebas/capturas/interfaz/iu11/`; ventana sin bordes (si no, Linux la recorta a 1009 px de alto); comprueba tamaño y que no esté vacía, y detecta el fallo. Prueba con persona ajena: hecha por el responsable. Revisor-visual (rápido): exportado sin cambios (vista_bonita, zona_rayo, autoprueba bien); 3 hallazgos menores: la etiqueta de zona sin fondo queda tapada por la malla (`9_zona_iluminada`), en claro no se ve el tirador de los deslizadores de luz (`5_ajustes_claro`) y la lupa de «Buscar ajuste…» apenas se ve en claro. Detalles: barra de título de «Ajustes» sin tema; textos del panel derecho pegados a la barra de desplazamiento. No verificado: A/B contra `aprobadas/` ni Mobile/Compatibility |
 | 2026-11-19 | IU.12 | Ficha `ruta/pasos/IU.12_retoques_revisor.md`. Los 3 hallazgos del revisor: variación `EtiquetaZona` (fondo `texto`, letra `panel`, como la ayuda) para la etiqueta de la zona; `HSlider` con el tirador del tema (el de Godot es blanco: 1,24:1); la lupa teñida (`ThemeBuilder.tinted`, Godot no tiñe el `right_icon`) y `clear_button_color`. `slider_panel` pide la lupa a sí mismo al cambiar el tema (a `search` el aviso le llega después). `probar_tema.gd` (6) y (8) detectan el fallo. Barra de título de «Ajustes» y márgenes del panel derecho: a `IDEAS.md` |
+| 2026-11-20 | TA.0 | Auditoría de lectura en `taller_asets` (`39bf896`). Godot 4.7.2 y hashes del cuerpo y las animaciones verificados. Hay cuatro sockets, espada de prueba y exportación de una malla. `helper-tights` está en la fuente local de MPFB. Faltan biblioteca de piezas, camiseta independiente y salida combinada. La auditoría no ejecutó pruebas funcionales. |
+| 2026-11-20 | TA.1a | `asset_recipe.gd` y `probar_receta_asset.gd`. Godot 4.7.2, 65 comprobaciones correctas. Admitir temporalmente v2 hizo fallar «rechaza versión futura» y «identifica versión antes de campos futuros» (salida 1). Tras restaurar, salida 0. Pasaron la autoprueba y 55 de los 56 scripts previos con recorrido sin ventana, incluidas exportación y reimportación. En el restante, `probar_ejes_perfil.gd:195` llama a `_material` con dos argumentos y el exportador espera uno. Se reprodujo sin el código del Taller. Aunque imprime TODO BIEN, interrumpe el guardado del prototipo. TA.1a queda a la espera de decisión sobre esa prueba. |
+| 2026-11-20 | Cierre de TA.1a | Reparada `probar_ejes_perfil.gd` con la función pública `GlbExporter.save`. Sobre salidas anteriores, simular un guardado que devuelve OK sin escribir da FALLO y salida 1. Un directorio en el destino del GLB también da salida 1. Restaurado el guardado, se producen el GLB y el material. Al reimportar, 53 huesos con desviación máxima de 0,000000°; al animar sin Overwrite Axis, 0,003 mm respecto a la referencia (límite 1 mm). Pasaron la autoprueba, las 65 comprobaciones de receta y los 56 scripts previos con recorrido sin ventana. |
+| 2026-11-21 | TA.1b | `asset_validator.gd` valida los arrays antes de construir la malla. La prueba reconoce 4 triángulos y dimensiones de 1 × 1 × 1 m en un tetraedro repartido en dos superficies. Quitarle una cara lo invalida como sólido y sigue siendo válido como superficie abierta. Omitir el control de aristas abiertas produjo «FALLO rechaza sólido abierto» (salida 1). Con el control restaurado pasaron las 37 comprobaciones de malla y datos sintéticos, las 65 de receta, los 56 scripts previos sin ventana y la autoprueba. |
+| 2026-11-21 | TA.2a | Séptima pestaña y página propia. Volver a Cuerpo o Estilo conserva editor, zona e historial. Pasan las 23 comprobaciones de ventana. Quitar la protección de los atajos en una copia temporal produjo dos fallos de historial (salida 1). Restaurada, pasan la autoprueba y las regresiones sin ventana, incluida la reimportación. En Forward+ se comprobó la exportación de GLB y material al volver. Ocho capturas en `pruebas/capturas/interfaz/ta2a/` a escala 100 %. En 1280 × 720 la última pestaña termina en x = 977. Pendiente el visto bueno visual. |
