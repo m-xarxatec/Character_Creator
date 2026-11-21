@@ -27,6 +27,11 @@ const MH_MAX_BYTES := 44000000  # PROVISIONAL: era 30 MB; medido 43,99 MB; lo au
 const QU_PIECES := ["hair_buns", "hair_buzzed", "hair_buzzed_female", "hair_long", "hair_simple_parted"]
 const QU_MAX_BYTES := 8000000  # PROVISIONAL: medido 2,42 MB
 
+## Paso RE.1c: las prendas de OverScore que pasan todos los límites, con su ranura.
+const OS_SLOTS := {"os_golf_shorts": "ropa_piernas", "os_vneck_top": "ropa_torso", "os_scrubs_top": "ropa_torso",
+	"os_tank_top": "ropa_torso", "os_camisole_top": "ropa_torso"}
+const OS_MAX_BYTES := 12000000  # PROVISIONAL: aceptado hasta 12 MB; medido 1,32 MB
+
 var failures := 0
 var root_dir: String
 var library_script: GDScript
@@ -39,6 +44,7 @@ func _initialize() -> void:
 	_check_base()
 	_check_makehuman()
 	_check_quaternius()
+	_check_overscore()
 	_check_conflicts()
 	_check_rejected()
 	_clean()
@@ -157,6 +163,32 @@ func _check_quaternius() -> void:
 	check("Quaternius: load_piece abre los %d (sha256 bien) con piel y formas" % QU_PIECES.size(), loaded)
 	print("  MEDIDA pack quaternius: %.2f MB" % (total / 1e6))
 	check("Quaternius: el pack pesa menos de %d MB" % (QU_MAX_BYTES / 1000000), total < QU_MAX_BYTES)
+
+
+## Paso RE.1c: prendas CC0 de OverScore, cada una en su ranura y con su sha256.
+func _check_overscore() -> void:
+	var library = library_script.new()
+	var warnings: Array = library.scan(PackedStringArray([root_dir.path_join("godot/packs")]))
+	check("el pack overscore se lee sin avisos", warnings.is_empty() and library.packs.has("overscore"), str(warnings))
+	var cards := _of_pack(library, "overscore")
+	check("OverScore: trae las %d prendas" % OS_SLOTS.size(), cards.size() == OS_SLOTS.size()
+		and cards.all(func(card: Dictionary) -> bool: return OS_SLOTS.get(card["id"], "") == card["ranura"] and card["tipo"] == "ropa"))
+	check("OverScore: todas CC0-1.0, de overscore_media, humanas y que siguen al cuerpo", cards.all(func(card: Dictionary) -> bool:
+		return _is_clean(card) and card["autor"] == "overscore_media"))
+	check("OverScore: ninguna cubre otra ranura", cards.all(func(card: Dictionary) -> bool: return card["cubre"].is_empty()))
+	var total := 0
+	var loaded := true
+	for card: Dictionary in cards:
+		var node: Node3D = library.load_piece("overscore", card["id"])
+		var meshes: Array = [] if node == null else node.find_children("*", "MeshInstance3D", true, false)
+		loaded = loaded and meshes.size() == 1 and (meshes[0] as MeshInstance3D).skin != null \
+			and (meshes[0] as MeshInstance3D).mesh.get_blend_shape_count() > 0
+		if node != null:
+			node.free()
+		total += FileAccess.get_file_as_bytes(root_dir.path_join("godot/packs/overscore").path_join(card["archivo"])).size()
+	check("OverScore: load_piece las abre (sha256 bien) con piel y formas", loaded)
+	print("  MEDIDA pack overscore: %.2f MB" % (total / 1e6))
+	check("OverScore: el pack pesa menos de %d MB" % (OS_MAX_BYTES / 1000000), total < OS_MAX_BYTES)
 
 
 ## Packs rotos: cada uno en su carpeta; scan los rechaza y dice por qué.
