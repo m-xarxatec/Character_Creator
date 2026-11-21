@@ -28,7 +28,7 @@ const QU_PIECES := ["hair_buns", "hair_buzzed", "hair_buzzed_female", "hair_long
 const QU_MAX_BYTES := 8000000  # PROVISIONAL: medido 2,42 MB
 
 ## Paso RE.1c: las prendas de OverScore que pasan todos los límites, con su ranura.
-const OS_SLOTS := {"os_golf_shorts": "ropa_piernas", "os_vneck_top": "ropa_torso", "os_scrubs_top": "ropa_torso",
+const OS_SLOTS := {"os_golf_shorts": "ropa_piernas", "os_short_shorts": "ropa_piernas", "os_vneck_top": "ropa_torso", "os_scrubs_top": "ropa_torso",
 	"os_tank_top": "ropa_torso", "os_camisole_top": "ropa_torso"}
 const OS_MAX_BYTES := 12000000  # PROVISIONAL: aceptado hasta 12 MB; medido 1,32 MB
 

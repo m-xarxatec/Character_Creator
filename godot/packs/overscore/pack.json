@@ -55,6 +55,41 @@
      1
     ]
    },
+   "archivo": "os_short_shorts.glb",
+   "color": [
+    0.3,
+    0.32,
+    0.4
+   ],
+   "colores": [
+    "principal"
+   ],
+   "especies": [
+    "humana"
+   ],
+   "fisica": [],
+   "id": "os_short_shorts",
+   "miniatura": "",
+   "nombre": "Shorts muy cortos",
+   "ranura": "ropa_piernas",
+   "sha256": "b60db6b6df5a3d33af24c505a5e20740844a40ad4aab68c5957e7ba4104f21f3",
+   "sigue_al_cuerpo": true,
+   "tipo": "ropa"
+  },
+  {
+   "anclaje": {
+    "hueso": "",
+    "transform": [
+     0,
+     0,
+     0,
+     0,
+     0,
+     0,
+     1,
+     1
+    ]
+   },
    "archivo": "os_vneck_top.glb",
    "color": [
     0.3,

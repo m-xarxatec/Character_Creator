@@ -133,7 +133,7 @@ El zip está en `referencias/` (git no lo guarda). Versión gratis: 2 cuerpos es
   deslizadores (bloque `parametros` del proyecto); borde de las prendas recortadas sin dientes (partir aristas);
   borrar al exportar la piel tapada (12.5); miniaturas de las piezas en las pestañas.
 
-- **RE.1c, prendas de OverScore que no entraron** (no pasan los límites de la ficha `ruta/pasos/RE.1c_overscore_ropa.md`): Jean Shorts («Atacar» 6,73 %), Short Shorts (hueco 2,12 mm), Scallop Trim T-Shirt («Atacar» 16,0 mm), Sports Jersey («Atacar» 5,08 % y 18,9 mm), Hoodie with Hood Down (hueco 1,46 mm, hundida 6,19 mm, «Atacar» 19,5 mm), Short-Sleeve Sweatshirt (hueco −2,22 mm, hundida 8,27 mm, «Atacar» 12,3 mm), Turtleneck Sweater (hueco −4,49 mm, 3,43 % bajo la piel, «Atacar» 5,93 % y 19,9 mm, 60 cruces con pelo corto) y Long Sleeve Athletic Top (hueco −15,93 mm, 8,18 % bajo la piel, «Atacar» 18,8 mm).
+- **RE.1c, prendas de OverScore que no entraron** (no pasan los límites de la ficha `ruta/pasos/RE.1c_overscore_ropa.md`): Jean Shorts («Atacar» 6,73 %), Scallop Trim T-Shirt («Atacar» 16,0 mm), Sports Jersey («Atacar» 5,08 % y 18,9 mm), Hoodie with Hood Down (hueco 1,46 mm, hundida 6,19 mm, «Atacar» 19,5 mm), Short-Sleeve Sweatshirt (hueco −2,22 mm, hundida 8,27 mm, «Atacar» 12,3 mm), Turtleneck Sweater (hueco −4,49 mm, 3,43 % bajo la piel, «Atacar» 5,93 % y 19,9 mm, 60 cruces con pelo corto) y Long Sleeve Athletic Top (hueco −15,93 mm, 8,18 % bajo la piel, «Atacar» 18,8 mm).
 
 ---
 

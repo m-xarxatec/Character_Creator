@@ -42,7 +42,7 @@ GARMENTS = {  # id: (objeto del .blend, nombre, ranura)
     "os_turtleneck_sweater": ("Turtleneck Sweater", "Suéter de cuello alto", "ropa_torso"),
     "os_long_sleeve_top": ("Long Sleeve Athletic Top", "Camiseta deportiva de manga larga", "ropa_torso"),
 }
-ENTRAN = ("os_golf_shorts", "os_vneck_top", "os_scrubs_top", "os_tank_top", "os_camisole_top")
+ENTRAN = ("os_golf_shorts", "os_short_shorts", "os_vneck_top", "os_scrubs_top", "os_tank_top", "os_camisole_top")
 PACK = {"formato": "gamemolde-pack", "version": 1, "id": "overscore", "nombre": "Pack OverScore",
         "autor": "overscore_media", "licencia": "CC0-1.0",
         "origen": "https://opengameart.org/content/overscore-proxy-modular-low-poly-female-character-creation-set"}
@@ -58,6 +58,7 @@ MAX_PASSES = 80
 MAX_INFLATE = 0.045  # metros: tope del inflado por vértice (sin él, una mano junto al puño lo dispara)
 POSE_MARGIN = 0.001  # metros: hueco que se busca en las poses de prueba
 POSE_PASSES = 12
+GAP_PASSES = 12  # pasadas para recuperar el hueco que keep_half quita junto a la costura
 LAYER_STEP = 0.0015  # metros por pasada: la prenda de torso sube sobre los shorts
 LAYER_PASSES = 60
 AXILLA = 0.06  # metros: tela a menos de esto del brazo y del tronco mezcla los pesos de ambos
@@ -360,6 +361,23 @@ def hem_distance(points, verts, edges):
     return out
 
 
+def close_gap(placed, normals, tris, amount, which, seam, floor, edges, ctx):
+    """keep_half puede acercar la tela a la piel junto a la costura: si el hueco medido baja de MIN_GAP, la sube."""
+    away = hem_distance(ctx.skin[which], keep_half(placed + amount[:, None] * normals, seam, floor), edges) > HEM_CLEAR
+    for _ in range(GAP_PASSES):
+        current = keep_half(placed + amount[:, None] * normals, seam, floor)
+        heights, hits = ray_heights(eq.tree_of(current, tris), ctx.skin, ctx.normals, which)
+        bad = np.nonzero((heights < MIN_GAP) & away)[0]
+        if not len(bad):
+            break
+        grow = np.zeros(len(placed))
+        for k in bad.tolist():
+            point = ctx.skin[which[k]] + ctx.normals[which[k]] * heights[k]
+            grow_from(grow, tris[hits[k]], current, point, MARGIN - heights[k])
+        amount = np.minimum(amount + grow * 0.7, MAX_INFLATE)
+    return amount
+
+
 def apply_modifiers(garment, fitted, inward, scale, piece_id):
     solidify = next(m for m in garment.modifiers if m.type == "SOLIDIFY")
     solidify.thickness = abs(solidify.thickness) * scale
@@ -478,6 +496,7 @@ def fit_garment(piece_id, path, ctx, lowers):
     amount = spread(amount, neighbors_of(len(placed), tris))
     if slot == "ropa_torso":
         amount = clear_layers(placed, normals, tris, amount, [tree for _, tree in lowers])
+    amount = close_gap(placed, normals, tris, amount, which, seam, floor, edges, ctx)
     fitted = keep_half(placed + amount[:, None] * normals, seam, floor)
     print(f"MEDIDA {piece_id}: inflado en {passes} pasadas (quedan {left} puntos), media {amount.mean() * 1000:.1f} mm, máx {amount.max() * 1000:.1f} mm")
     obj = apply_modifiers(garment, fitted, inward, scale, piece_id)
