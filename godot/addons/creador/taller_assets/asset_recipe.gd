@@ -4,6 +4,9 @@ extends RefCounted
 
 const FORMAT := "gamemolde-asset-receta"
 const REQUIRED := ["formato", "version", "id", "modo", "autor", "licencia"]
+const SWORD_SCALES := ["escala_punta", "escala_guarda", "escala_mango", "escala_pomo"]
+const MIN_SCALE := 0.5
+const MAX_SCALE := 1.5
 const HEX := "0123456789abcdefABCDEF"
 const DEFAULTS := {
 	"espada_parametrica": {
@@ -57,7 +60,8 @@ static func normalize(data: Dictionary) -> Dictionary:
 		var normalized: Dictionary = defaults[group].duplicate()
 		for key in values:
 			var field := "%s.%s" % [group, str(key)]
-			if not normalized.has(key):
+			var scale_field: bool = data.modo == "espada_parametrica" and group == "parametros" and key in SWORD_SCALES
+			if not normalized.has(key) and not scale_field:
 				return {"error": "Campo desconocido '%s'" % field}
 			var value: Variant = values[key]
 			if group == "colores":
@@ -67,6 +71,8 @@ static func normalize(data: Dictionary) -> Dictionary:
 			else:
 				if typeof(value) not in [TYPE_INT, TYPE_FLOAT] or not is_finite(value):
 					return {"error": "%s debe ser un número finito" % field}
+				if scale_field and (value < MIN_SCALE or value > MAX_SCALE):
+					return {"error": "Escala fuera de rango en %s" % field}
 				if value < 0 or (value == 0 and key != "holgura_m"):
 					return {"error": "Dimensión fuera de rango en %s" % field}
 				normalized[key] = float(value)
