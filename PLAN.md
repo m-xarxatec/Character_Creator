@@ -4,7 +4,7 @@
 > Lo que no es del MVP va a `IDEAS.md`.
 
 **Estado actual:** MVP preparado: build de Linux, README, licencias y paquete 0.1.0 listos. Nombre definitivo: GameMolde (D28). Pulido: hecho (P.1–P.8). Publicar (7.4) espera a tus juicios. Fase IU (`propuestas/expansion_v2.md` §3): IU.1–IU.12 hechos (fase cerrada). Falta lo tuyo: mirar capturas (5.15/5.11 y 6.3), abrir el build a mano (7.1), elegir capturas y grabar el vídeo (7.2). Lista: `ruta/PENDIENTES.md`
-**Taller de Assets:** TA.1, TA.2, TA.3a, TA.3b, [TA.3c](ruta/pasos/ta.3c_edicion_espada.md), [TA.3d](ruta/pasos/ta.3d_triangulos_espada.md) y [TA.4a](ruta/pasos/ta.4a_contorno_imagen.md) cerrados en `taller_asets`. [TA.4b](ruta/pasos/ta.4b_malla_extruida.md) hecho y probado, a la espera de la revisión visual del responsable. Después, TA.4c (importar y ajustar en el Taller).
+**Taller de Assets:** TA.1, TA.2, TA.3a, TA.3b, [TA.3c](ruta/pasos/ta.3c_edicion_espada.md), [TA.3d](ruta/pasos/ta.3d_triangulos_espada.md), [TA.4a](ruta/pasos/ta.4a_contorno_imagen.md) y [TA.4b](ruta/pasos/ta.4b_malla_extruida.md) cerrados en `taller_asets`. **Continuar aquí:** presentar la [ficha de TA.4c](ruta/pasos/ta.4c_importar_imagen.md) (importar y ajustar en el Taller), pendiente de aprobación con sus límites, y no escribir código hasta recibir el OK.
 **Fichas:** cada paso pendiente tiene la suya en `ruta/pasos/` (traspaso del 2026-11-16; decisiones en `ruta/DECISIONES.md`).
 **Leyenda:** `[ ]` pendiente · `[~]` en curso · `[x]` hecho
 
@@ -255,7 +255,8 @@ La [hoja de ruta del Taller](<taller assets/pasos_a_seguir.md>) recoge el alcanc
 - [x] TA.3c Editar dimensiones, proporciones y colores de la espada en el visor del Taller. Revisión visual aprobada.
 - [x] TA.3d Mantener la espada en 144 triángulos al cambiar sus proporciones. [Ficha](ruta/pasos/ta.3d_triangulos_espada.md). Revisión visual aprobada.
 - [x] TA.4a Obtener de una imagen sencilla el contorno de su objeto principal, con avisos. [Ficha](ruta/pasos/ta.4a_contorno_imagen.md). Revisión visual aprobada.
-- [~] TA.4b Convertir el contorno en un sólido extruido con altura y grosor de la receta. [Ficha](ruta/pasos/ta.4b_malla_extruida.md). Pendiente de la revisión visual.
+- [x] TA.4b Convertir el contorno en un sólido extruido con altura y grosor de la receta. [Ficha](ruta/pasos/ta.4b_malla_extruida.md). Revisión visual aprobada.
+- [ ] TA.4c Importar un PNG en el Taller y ajustar su contorno y su pieza 3D. [Ficha](ruta/pasos/ta.4c_importar_imagen.md) pendiente de aprobación.
 
 ---
 
@@ -358,3 +359,5 @@ La [hoja de ruta del Taller](<taller assets/pasos_a_seguir.md>) recoge el alcanc
 | 2026-11-21 | TA.3d | La espada queda siempre en 144 triángulos (antes, de 144 a 272). El generador exige el cierre a cada pieza y deja de soldar el conjunto, que rechazaría una espada válida con los aros del mango y el pomo coincidentes. En 5187 recetas no hay errores y cada pieza conserva caja y volumen; al 100 % los arrays son idénticos. Cambio aprobado en la prueba: «conjunto cerrado» y «variante cerrada» pasan a exigir un conjunto válido de 144 triángulos. Pasan 196 comprobaciones. En una copia, restaurar la subdivisión dio 10 fallos y volver a validar el conjunto soldado 3 (salida 1). Pasan la autoprueba, 55 scripts sin ventana, el importador y Overwrite Axis. No se lanzaron las 13 pruebas con ventana ni `probar_normales_leidas`. Hoja en `pruebas/capturas/interfaz/ta3d/hoja_antes_despues.png`. Pendiente la aprobación visual. |
 | 2026-11-21 | Cierre de TA.3d | El responsable aprueba la hoja de antes y después. No se pasó el revisor-visual. Se prepara la propuesta de TA.4b. |
 | 2026-11-21 | TA.4b | `silhouette_mesh.gd`: del contorno a un sólido cerrado de 4n - 4 triángulos, con Y invertida, base en el suelo y proporción de la imagen. `triangulate_polygon` aceptó 1137 de 29 675 contornos no simples, así que se añadió una comprobación propia de cruces: en esas 33 290 entradas no acepta ninguno no simple ni rechaza ninguno simple. Pasan 724 comprobaciones. Límite `# PROVISIONAL`: error de volumen 1e-6 (peor medido, 6e-8). En una copia, no invertir Y dio 117 fallos, quitar la comprobación de cruces 1, aceptar retrocesos 1, omitir los laterales 117 y dejar la pieza boca abajo con caras correctas 2 (salida 1). Pasan la autoprueba, 56 scripts sin ventana, el importador y Overwrite Axis. No se lanzaron las 13 pruebas con ventana ni `probar_normales_leidas`; ninguna carga este código. Hoja en `pruebas/capturas/interfaz/ta4b/hoja_mallas.png`. Pendiente la aprobación visual. |
+| 2026-11-21 | Cierre de TA.4b | El responsable aprueba la hoja de mallas y prefiere hacer la revisión visual en persona, sin revisor-visual. Se prepara la propuesta de TA.4c. |
+| 2026-11-21 | Pausa del Taller | El responsable detiene el trabajo con TA.4b cerrado. TA.4c queda como ficha pendiente de aprobación, sin código, con sus medidas, los límites por decidir y las notas para continuar en su §7. |
