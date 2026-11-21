@@ -4,6 +4,7 @@ extends SceneTree
 
 const PARTS := ["hoja", "guarda", "mango", "pomo"]
 const SCALES := ["escala_punta", "escala_guarda", "escala_mango", "escala_pomo"]
+const TRIANGLES := 144
 var generator: GDScript
 var validator: GDScript
 var failures := 0
@@ -20,6 +21,7 @@ func _initialize() -> void:
 		"colores": {"hoja": "#4968AA", "guarda": "#BB8844", "mango": "#224422"}})
 	_check_mesh(edited, Vector3(0.12, 0.7, 0.024), ["#4968AA", "#BB8844", "#224422", "#BB8844"])
 	_check_scales(edited, load(folder.path_join("asset_recipe.gd")))
+	_check_touching_rings(recipe)
 	for invalid: Dictionary in [recipe.merged({"modo": "camiseta_basica"}, true),
 			recipe.merged({"parametros": {"longitud_m": -1}}),
 			recipe.merged({"parametros": {"longitud_m": 1e100}})]:
@@ -58,10 +60,26 @@ func _check_mesh(recipe: Dictionary, dimensions: Vector3, colors: Array) -> void
 				_check("origen centrado en el mango", box.has_point(Vector3.ZERO) and box.get_center().is_zero_approx())
 			"pomo":
 				_check("pomo bajo el agarre", box.end.y < 0)
-	var report: Dictionary = validator.validate(surfaces, true)
-	_check("conjunto cerrado", report.error == "")
+	var report: Dictionary = validator.validate(surfaces, false)
+	_check("conjunto válido de %d triángulos" % TRIANGLES, report.error == "" and report.triangulos == TRIANGLES)
 	if report.error == "":
 		print("MEDIDA espada: ", report.triangulos, " triángulos, caja en metros ", report.dimensiones_m)
+
+
+## El aro del mango coincide con el del pomo: siguen siendo dos sólidos cerrados que se tocan.
+func _check_touching_rings(recipe: Dictionary) -> void:
+	var size := {"longitud_m": 1.0, "ancho_hoja_m": 0.128, "grosor_m": 0.027}
+	var scales := {"escala_mango": 0.9, "escala_pomo": 0.8}
+	var touching := recipe.merged({"parametros": size}, true)
+	_check_variant(touching, generator.generate(touching).malla, scales)
+	var result: Dictionary = generator.generate(recipe.merged({"parametros": size.merged(scales)}, true))
+	_check("genera con aros coincidentes", result.error == "")
+	if result.error != "":
+		return
+	var surfaces := []
+	for i in PARTS.size():
+		surfaces.append(result.malla.surface_get_arrays(i))
+	_check("los aros coinciden al soldar el conjunto", validator.validate(surfaces, true).error.contains("más de dos caras"))
 
 
 func _check_scales(recipe: Dictionary, contract: GDScript) -> void:
@@ -122,7 +140,7 @@ func _check_variant(recipe: Dictionary, base: ArrayMesh, scales: Dictionary) -> 
 						and is_equal_approx(box.end.y, reference.end.y))
 		_check("superficie cerrada y color de " + PARTS[i], validator.validate([arrays], true).error == ""
 			and mesh.surface_get_material(i).albedo_color == base.surface_get_material(i).albedo_color)
-	_check("variante cerrada", validator.validate(surfaces, true).error == "")
+	_check("variante de %d triángulos" % TRIANGLES, validator.validate(surfaces, false).get("triangulos", 0) == TRIANGLES)
 
 
 func _bounds(vertices: PackedVector3Array) -> AABB:

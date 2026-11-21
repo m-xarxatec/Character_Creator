@@ -4,7 +4,7 @@
 > Lo que no es del MVP va a `IDEAS.md`.
 
 **Estado actual:** MVP preparado: build de Linux, README, licencias y paquete 0.1.0 listos. Nombre definitivo: GameMolde (D28). Pulido: hecho (P.1–P.8). Publicar (7.4) espera a tus juicios. Fase IU (`propuestas/expansion_v2.md` §3): IU.1–IU.12 hechos (fase cerrada). Falta lo tuyo: mirar capturas (5.15/5.11 y 6.3), abrir el build a mano (7.1), elegir capturas y grabar el vídeo (7.2). Lista: `ruta/PENDIENTES.md`
-**Taller de Assets:** TA.1, TA.2, TA.3a, TA.3b, [TA.3c](ruta/pasos/ta.3c_edicion_espada.md) y [TA.4a](ruta/pasos/ta.4a_contorno_imagen.md) cerrados en `taller_asets`. Sigue la propuesta de un paso corto para el salto de 144 a 272 triángulos de la espada y, después, la ficha de TA.4b (contorno a malla extruida).
+**Taller de Assets:** TA.1, TA.2, TA.3a, TA.3b, [TA.3c](ruta/pasos/ta.3c_edicion_espada.md), [TA.3d](ruta/pasos/ta.3d_triangulos_espada.md) y [TA.4a](ruta/pasos/ta.4a_contorno_imagen.md) cerrados en `taller_asets`. Sigue la propuesta de TA.4b (contorno a malla extruida).
 **Fichas:** cada paso pendiente tiene la suya en `ruta/pasos/` (traspaso del 2026-11-16; decisiones en `ruta/DECISIONES.md`).
 **Leyenda:** `[ ]` pendiente · `[~]` en curso · `[x]` hecho
 
@@ -253,6 +253,7 @@ La [hoja de ruta del Taller](<taller assets/pasos_a_seguir.md>) recoge el alcanc
 - [x] TA.3a Generar y validar la primera espada 3D a partir de una receta v1. Silueta aprobada.
 - [x] TA.3b Variar punta, guarda, mango y pomo desde la receta. Variantes aprobadas en la revisión visual.
 - [x] TA.3c Editar dimensiones, proporciones y colores de la espada en el visor del Taller. Revisión visual aprobada.
+- [x] TA.3d Mantener la espada en 144 triángulos al cambiar sus proporciones. [Ficha](ruta/pasos/ta.3d_triangulos_espada.md). Revisión visual aprobada.
 - [x] TA.4a Obtener de una imagen sencilla el contorno de su objeto principal, con avisos. [Ficha](ruta/pasos/ta.4a_contorno_imagen.md). Revisión visual aprobada.
 
 ---
@@ -353,3 +354,5 @@ La [hoja de ruta del Taller](<taller assets/pasos_a_seguir.md>) recoge el alcanc
 | 2026-11-21 | TA.4a | `image_mask.gd`: de la imagen al contorno del objeto mayor con `BitMap`, con avisos de piezas, huecos, borde, reducción y fondo de color. Pasan 160 comprobaciones. Analizar 1024 × 1024 con fondo de color tarda 159 ms. Límites `# PROVISIONAL`: 4096 px, 1024 px, 4 px² y 1000 vértices. En una copia, elegir la primera isla dio 4 fallos, quitar la comprobación de cruces 3 y anular el recuento de huecos 6 (salida 1). Misma tanda de regresiones que TA.3c, con la prueba nueva incluida. Hoja en `pruebas/capturas/interfaz/ta4a/hoja_contornos.png`. Pendiente la aprobación visual. |
 | 2026-11-21 | Cierre de TA.3c | El responsable aprueba la edición de la espada en el visor. No se pasó el revisor-visual. El salto de 144 a 272 triángulos queda para un paso corto con su propuesta. |
 | 2026-11-21 | Cierre de TA.4a | El responsable aprueba la hoja de contornos. Los límites de 4096 px, 1024 px, 4 px² y 1000 vértices siguen `# PROVISIONAL`. Después del paso de los triángulos sigue la ficha de TA.4b. |
+| 2026-11-21 | TA.3d | La espada queda siempre en 144 triángulos (antes, de 144 a 272). El generador exige el cierre a cada pieza y deja de soldar el conjunto, que rechazaría una espada válida con los aros del mango y el pomo coincidentes. En 5187 recetas no hay errores y cada pieza conserva caja y volumen; al 100 % los arrays son idénticos. Cambio aprobado en la prueba: «conjunto cerrado» y «variante cerrada» pasan a exigir un conjunto válido de 144 triángulos. Pasan 196 comprobaciones. En una copia, restaurar la subdivisión dio 10 fallos y volver a validar el conjunto soldado 3 (salida 1). Pasan la autoprueba, 55 scripts sin ventana, el importador y Overwrite Axis. No se lanzaron las 13 pruebas con ventana ni `probar_normales_leidas`. Hoja en `pruebas/capturas/interfaz/ta3d/hoja_antes_despues.png`. Pendiente la aprobación visual. |
+| 2026-11-21 | Cierre de TA.3d | El responsable aprueba la hoja de antes y después. No se pasó el revisor-visual. Se prepara la propuesta de TA.4b. |
