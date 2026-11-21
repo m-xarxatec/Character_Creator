@@ -25,6 +25,7 @@ extends Control
 # (settings_dialog.gd); se aplican al momento y se recuerdan (settings_file.gd).
 
 const BodyView := preload("body_view.gd")
+const WorkshopPage := preload("taller_assets/workshop_page.gd")
 const SliderPanel := preload("slider_panel.gd")
 const BodyEditor := preload("body_editor.gd")
 const BodyActions := preload("body_actions.gd")
@@ -56,7 +57,7 @@ const ACTIVE_TAB := 0
 
 var tabs: TabContainer
 var character_page: Control
-var workshop_page: Label
+var workshop_page: WorkshopPage
 var body_view: SubViewportContainer
 var slider_panel: ScrollContainer
 var body_actions: HBoxContainer
@@ -102,11 +103,7 @@ func _ready() -> void:
 	column.add_child(top_bar)
 	character_page = _body()
 	column.add_child(character_page)
-	workshop_page = Label.new()
-	workshop_page.text = WORKSHOP
-	workshop_page.theme_type_variation = "TituloZona"
-	workshop_page.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
-	workshop_page.vertical_alignment = VERTICAL_ALIGNMENT_CENTER
+	workshop_page = WorkshopPage.new()
 	workshop_page.size_flags_vertical = Control.SIZE_EXPAND_FILL
 	workshop_page.hide()
 	column.add_child(workshop_page)

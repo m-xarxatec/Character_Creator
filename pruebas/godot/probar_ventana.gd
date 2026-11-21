@@ -1,5 +1,5 @@
 extends SceneTree
-# TA.2a: siete accesos superiores, seis paneles de personaje y navegación con cambios pendientes.
+# TA.2a y TA.2b: navegación con cambios pendientes, modos del Taller y aislamiento del visor.
 # Uso: (ulimit -v 4000000; timeout 120 godot --headless --path pruebas/godot -s probar_ventana.gd 2>&1 | grep -E 'FALLO|RESULTADO|ERROR')
 
 const EXPECTED := ["Cuerpo", "Cara y ojos", "Pelo", "Ropa", "Accesorios", "Estilo"]  # IU.4: Exportar ya no es pestaña
@@ -72,6 +72,7 @@ func _check_workshop(main: Control) -> void:
 	check("el deslizador modifica el personaje", editor.can_undo() and is_equal_approx(editor.values.height, edited))
 	bar.current_tab = 6
 	await create_timer(main.FILE_REFRESH * 2).timeout
+	_check_workspace(main)
 	check("solo se muestra la página del Taller", main.workshop_page.is_visible_in_tree()
 		and not main.body_view.is_visible_in_tree() and not main.status_bar.is_visible_in_tree()
 		and not main.report_section.is_visible_in_tree() and not actions.bones_button.is_visible_in_tree()
@@ -95,6 +96,7 @@ func _check_workshop(main: Control) -> void:
 		and not actions.has_changes() and editor.can_redo())
 	bar.current_tab = 5
 	bar.current_tab = 6
+	check("el Taller conserva Camiseta al regresar", main.workshop_page.title.text == "Camiseta")
 	await _shortcut(KEY_Y)
 	bar.current_tab = 5
 	check("Estilo recupera el acabado y conserva Rehacer", main.finish_panel.is_visible_in_tree()
@@ -104,6 +106,52 @@ func _check_workshop(main: Control) -> void:
 	check("al volver a Cuerpo Ctrl+E abre Exportar", actions.file_dialog.visible)
 	actions.file_dialog.hide()
 	await process_frame
+
+
+func _check_workspace(main: Control) -> void:
+	var page = main.workshop_page
+	check("el Taller abre en Espada", page.title.text == "Espada")
+	var expected := {"Espada": "hoja", "Desde imagen": "extrusión", "Camiseta": "mangas"}
+	for button: Button in page.modes.get_buttons():
+		button.pressed.emit()
+		var selected := 0
+		for option: Button in page.modes.get_buttons():
+			selected += int(option.button_pressed)
+		check("propiedades de " + button.text, page.title.text == button.text
+			and page.properties.text.contains(expected[button.text]) and button.button_pressed and selected == 1)
+	var names := []
+	for button: Button in page.actions.get_children():
+		if button.disabled:
+			names.append(button.text)
+	check("cuatro acciones pendientes", names == ["Generar", "Guardar", "Equipar", "Exportar"])
+	var camera = page.camera
+	var body = main.body_view.camera
+	check("mundos independientes", camera.get_world_3d() != body.get_world_3d())
+	var before: Transform3D = body.transform
+	var yaw: float = camera.yaw
+	var distance: float = camera.distance
+	var center: Vector2 = page.view.get_global_rect().get_center()
+	var press := InputEventMouseButton.new()
+	press.position = center
+	press.button_index = MOUSE_BUTTON_LEFT
+	press.pressed = true
+	root.push_input(press, true)
+	var motion := InputEventMouseMotion.new()
+	motion.position = center + Vector2(32, 0)
+	motion.relative = Vector2(32, 0)
+	motion.button_mask = MOUSE_BUTTON_MASK_LEFT
+	root.push_input(motion, true)
+	press = press.duplicate()
+	press.pressed = false
+	root.push_input(press, true)
+	var wheel := InputEventMouseButton.new()
+	wheel.position = center
+	wheel.button_index = MOUSE_BUTTON_WHEEL_UP
+	wheel.pressed = true
+	root.push_input(wheel, true)
+	check("arrastrar gira la muestra", not is_equal_approx(yaw, camera.yaw))
+	check("la rueda acerca la muestra", camera.distance < distance)
+	check("el encuadre del personaje se conserva", before.is_equal_approx(body.transform))
 
 
 func _shortcut(key: Key) -> void:
