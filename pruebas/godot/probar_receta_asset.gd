@@ -15,7 +15,7 @@ func _initialize() -> void:
 	image.fuente = {"archivo": "fuentes/dibujo.png", "sha256": "a1".repeat(32)}
 	var shirt := _recipe("camiseta_basica")
 	_round_trip(sword, {"longitud_m": 1.0, "ancho_hoja_m": 0.09, "grosor_m": 0.018},
-		{"hoja": "#B9C0C8", "guarda": "#77747A", "mango": "#514336"}, "longitud_m", "hoja")
+		{"hoja": "#B9C0C8", "guarda": "#77747A", "mango": "#514336"}, "longitud_m", "hoja", 0.75)
 	_round_trip(image, {"altura_m": 1.0, "grosor_m": 0.02}, {"principal": "#FFFFFF"}, "altura_m", "principal")
 	_round_trip(shirt, {"holgura_m": 0.0}, {"principal": "#FFFFFF"}, "holgura_m", "principal")
 
@@ -36,6 +36,7 @@ func _initialize() -> void:
 		_reject("dimensión inválida " + str(value), sword.merged({"parametros": {"longitud_m": value}}), "longitud_m")
 	for color: Variant in ["#fff", "112233", "#-12345", "#FF00xx", 123]:
 		_reject("color inválido " + str(color), shirt.merged({"colores": {"principal": color}}), "principal")
+	_check_sword_limits(sword, image)
 	_reject("dimensión de otro modo", shirt.merged({"parametros": {"altura_m": 2}}), "altura_m")
 	_reject("color de otra región", shirt.merged({"colores": {"hoja": "#123456"}}), "hoja")
 	_reject("requiere imagen", _recipe("extrusion_imagen"), "fuente")
@@ -58,17 +59,31 @@ func _recipe(mode: String) -> Dictionary:
 		"autor": "Taller", "licencia": "propia"}
 
 
-func _round_trip(data: Dictionary, params: Dictionary, colors: Dictionary, size_key: String, color_key: String) -> void:
+## TA.3c: los extremos de la hoja valen, lo que queda fuera no, y grosor_m de la extrusión no hereda el límite.
+func _check_sword_limits(sword: Dictionary, image: Dictionary) -> void:
+	var limits := {"longitud_m": [0.5, 1.5], "ancho_hoja_m": [0.045, 0.135], "grosor_m": [0.009, 0.027]}
+	for key: String in limits:
+		for value: float in limits[key]:
+			var inside: Dictionary = validator.normalize(sword.merged({"parametros": {key: value}}))
+			_check("admite %s = %s" % [key, value], inside.error == "" and inside.receta.parametros[key] == value)
+		for value: float in [limits[key][0] * 0.999, limits[key][1] * 1.001, 1e6]:
+			_reject("rechaza %s = %s" % [key, value], sword.merged({"parametros": {key: value}}), key)
+	var thin: Dictionary = validator.normalize(image.merged({"parametros": {"grosor_m": 0.002}}))
+	_check("la extrusión conserva su grosor libre", thin.error == "" and thin.receta.parametros.grosor_m == 0.002)
+
+
+func _round_trip(data: Dictionary, params: Dictionary, colors: Dictionary, size_key: String, color_key: String,
+		size_value := 0.125) -> void:
 	var result: Dictionary = validator.normalize(data)
 	var expected := data.merged({"parametros": params, "colores": colors})
 	_check("valores iniciales de " + data.modo, result == {"error": "", "receta": expected})
 	var edited := data.duplicate(true)
-	edited.parametros = {size_key: 0.125}
+	edited.parametros = {size_key: size_value}
 	edited.colores = {color_key: "#a012bc"}
 	var original := edited.duplicate(true)
 	result = validator.normalize(edited)
 	expected = expected.duplicate(true)
-	expected.parametros[size_key] = 0.125
+	expected.parametros[size_key] = size_value
 	expected.colores[color_key] = "#A012BC"
 	_check("valores editados de " + data.modo, result == {"error": "", "receta": expected})
 	if not result.has("receta"):
