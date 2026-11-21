@@ -4,7 +4,7 @@
 > Lo que no es del MVP va a `IDEAS.md`.
 
 **Estado actual:** MVP preparado: build de Linux, README, licencias y paquete 0.1.0 listos. Nombre definitivo: GameMolde (D28). Pulido: hecho (P.1–P.8). Publicar (7.4) espera a tus juicios. Fase IU (`propuestas/expansion_v2.md` §3): IU.1–IU.12 hechos (fase cerrada). Falta lo tuyo: mirar capturas (5.15/5.11 y 6.3), abrir el build a mano (7.1), elegir capturas y grabar el vídeo (7.2). Lista: `ruta/PENDIENTES.md`
-**Taller de Assets:** TA.1a y TA.1b cerrados en `taller_asets`. TA.2a implementado y probado. Pendiente la revisión visual del responsable antes de cerrar la [ficha de navegación](ruta/pasos/ta.2a_navegacion_taller.md).
+**Taller de Assets:** TA.1, TA.2, TA.3a y TA.3b cerrados en `taller_asets`. Pendiente de aprobación la [ficha de TA.3c, edición de espada en el visor](ruta/pasos/ta.3c_edicion_espada.md).
 **Fichas:** cada paso pendiente tiene la suya en `ruta/pasos/` (traspaso del 2026-11-16; decisiones en `ruta/DECISIONES.md`).
 **Leyenda:** `[ ]` pendiente · `[~]` en curso · `[x]` hecho
 
@@ -248,7 +248,11 @@ La [hoja de ruta del Taller](<taller assets/pasos_a_seguir.md>) recoge el alcanc
 - [x] TA.0 Auditar el repositorio, las dependencias y los puntos de integración.
 - [x] TA.1a Contrato de receta v1 implementado y probado en los tres modos.
 - [x] TA.1b Validación de superficies triangulares abiertas y sólidos simples, con casos sintéticos de geometría e imagen. [Ficha](ruta/pasos/ta.1b_validacion_malla.md).
-- [ ] TA.2a Navegar entre el Taller y el personaje conservando la edición pendiente. Implementación verificada, pendiente de revisión visual. TA.2b incorporará el visor y los controles.
+- [x] TA.2a Navegar entre el Taller y el personaje conservando la edición pendiente. Revisión visual aprobada.
+- [x] TA.2b Incorporar el visor orbital, el selector de modo y el panel de propiedades. Revisión visual aprobada.
+- [x] TA.3a Generar y validar la primera espada 3D a partir de una receta v1. Silueta aprobada.
+- [x] TA.3b Variar punta, guarda, mango y pomo desde la receta. Variantes aprobadas en la revisión visual.
+- [ ] TA.3c Editar dimensiones, proporciones y colores de la espada en el visor del Taller.
 
 ---
 
@@ -337,3 +341,10 @@ La [hoja de ruta del Taller](<taller assets/pasos_a_seguir.md>) recoge el alcanc
 | 2026-11-20 | Cierre de TA.1a | Reparada `probar_ejes_perfil.gd` con la función pública `GlbExporter.save`. Sobre salidas anteriores, simular un guardado que devuelve OK sin escribir da FALLO y salida 1. Un directorio en el destino del GLB también da salida 1. Restaurado el guardado, se producen el GLB y el material. Al reimportar, 53 huesos con desviación máxima de 0,000000°; al animar sin Overwrite Axis, 0,003 mm respecto a la referencia (límite 1 mm). Pasaron la autoprueba, las 65 comprobaciones de receta y los 56 scripts previos con recorrido sin ventana. |
 | 2026-11-21 | TA.1b | `asset_validator.gd` valida los arrays antes de construir la malla. La prueba reconoce 4 triángulos y dimensiones de 1 × 1 × 1 m en un tetraedro repartido en dos superficies. Quitarle una cara lo invalida como sólido y sigue siendo válido como superficie abierta. Omitir el control de aristas abiertas produjo «FALLO rechaza sólido abierto» (salida 1). Con el control restaurado pasaron las 37 comprobaciones de malla y datos sintéticos, las 65 de receta, los 56 scripts previos sin ventana y la autoprueba. |
 | 2026-11-21 | TA.2a | Séptima pestaña y página propia. Volver a Cuerpo o Estilo conserva editor, zona e historial. Pasan las 23 comprobaciones de ventana. Quitar la protección de los atajos en una copia temporal produjo dos fallos de historial (salida 1). Restaurada, pasan la autoprueba y las regresiones sin ventana, incluida la reimportación. En Forward+ se comprobó la exportación de GLB y material al volver. Ocho capturas en `pruebas/capturas/interfaz/ta2a/` a escala 100 %. En 1280 × 720 la última pestaña termina en x = 977. Pendiente el visto bueno visual. |
+| 2026-11-21 | Cierre de TA.2a | El responsable aprueba la revisión visual de la navegación. Se presenta la ficha de TA.2b. |
+| 2026-11-21 | TA.2b | Visor orbital independiente con muestra, tres modos y cuatro acciones reservadas. Pasan las 33 comprobaciones de ventana. Desconectar el selector en una copia provocó tres fallos (salida 1). Restaurado, pasan la autoprueba y los 58 scripts con recorrido sin ventana, incluidas exportación y reimportación. Acciones y Ajustes devuelven 0 al probar respectivamente una ruta inválida y una configuración corrupta. En Forward+ se verificó el guardado del GLB y su material al volver a Cuerpo. Cuatro capturas en `pruebas/capturas/interfaz/ta2b/`. Visor de 608 × 488 a 1280 × 720 y de 1248 × 848 a 1920 × 1080. Pendiente de aprobación visual. |
+| 2026-11-21 | Cierre de TA.2b | El responsable aprueba el visor y los controles. Se presenta la ficha de TA.3a para generar y validar la malla de la espada. |
+| 2026-11-21 | TA.3a | Generador de cuatro superficies cerradas desde receta v1. Las dos recetas probadas producen 144 triángulos cada una y cajas de 0,297 × 1,26 × 0,0594 y 0,396 × 0,882 × 0,0792 m (X/Y/Z). Retirar un triángulo de la hoja en una copia hizo fallar ambas recetas por arista abierta (salida 1). Restaurado, pasan las 41 comprobaciones del generador, la autoprueba y los 58 scripts previos con recorrido sin ventana. Acciones y Ajustes terminan con salida 0 al provocar sus errores de archivo previstos. Capturas de frente, perfil y tres cuartos en `pruebas/capturas/interfaz/ta3a/`. Pendiente la revisión visual. |
+| 2026-11-21 | Cierre de TA.3a | El responsable aprueba las tres vistas de la espada. Se presenta la ficha de TA.3b. |
+| 2026-11-21 | TA.3b | Cuatro escalas opcionales del 50 al 150 %. Los arrays de las dos recetas anteriores y la captura de referencia al 100 % coinciden byte por byte con TA.3a. Se corrigió la coincidencia de aristas al escalar el mango al 112,5 %. Pasan las 184 comprobaciones del generador y un barrido de 243 combinaciones. Omitir el factor de punta provocó tres fallos de longitud (salida 1). Tras restaurarlo pasan la autoprueba y los 59 scripts con recorrido sin ventana, incluida la reimportación. Capturas con cámara fija en `pruebas/capturas/interfaz/ta3b/`. Pendiente de aprobación visual. |
+| 2026-11-21 | Cierre de TA.3b | El responsable aprueba las variantes. Se presenta la ficha de edición de la espada en el visor del Taller. |
