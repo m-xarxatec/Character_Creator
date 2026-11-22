@@ -11,6 +11,7 @@ build/
 # Descargas y temporales
 *.zip
 *.tmp
+hs_err_pid*.log
 
 # Capturas de prueba (se regeneran con los scripts), salvo las aprobadas y el historial
 pruebas/**/capturas/*

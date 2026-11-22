@@ -19,7 +19,7 @@ func _initialize() -> void:
 	for table_row: Dictionary in editor.rows:
 		rows[table_row["id"]] = table_row
 	var help: Dictionary = Row.load_help()
-	check("ayudas leídas para las %d filas visibles" % help.size(), help.size() == 40 and help["gender"]["ayuda"] != "",
+	check("ayudas leídas para las %d filas visibles" % help.size(), help.size() == 60 and help["gender"]["ayuda"] != "",
 		str(help.size()))
 	var box := VBoxContainer.new()
 	box.custom_minimum_size.x = 340

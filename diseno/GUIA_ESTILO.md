@@ -79,6 +79,24 @@ Medido en el 3.12: femenino 6,96, masculino 6,94; los rangos propuestos entonces
 | Normales del torso (pasadas de suavizado) | `StyleNormals.SMOOTH_STEPS` | 10 | Elegido en el 3.12 |
 | Normales de la cara (fondo del elipsoide por delante) | `StyleNormals.FACE_DEPTH` | 0,6 | Elegido en el 3.13a-2; se revisa sobre la cara anime (`aplanado_anime_hoja.png`, 3.16) |
 
+### Equivalencia con MToon (para la fase de VRM)
+
+Solo documentación, sin código de MToon. Los nombres y fórmulas de MToon 1.0 están escritos de memoria y **sin comprobar** con su especificación: se comprueban en el paso 17.5. Los uniform con * llegan con la Fase SH (D47).
+
+| Nuestro uniform | MToon | Traducción |
+| --- | --- | --- |
+| Color de sombra calculado, con `shade_strength`* | shadeColorFactor | El color de sombra ya calculado de la zona (MToon guarda el color final) |
+| `threshold`* | shadingShiftFactor | `-threshold` |
+| `softness` | shadingToonyFactor | `1 - softness`; aproximado: MToon usa rampa lineal y nosotros `smoothstep` |
+| `rim_color` × `rim_strength` | parametricRimColorFactor | Aproximado: el nuestro también se multiplica por el color de la zona |
+| `rim_width` | parametricRimFresnelPowerFactor, parametricRimLiftFactor | Sin conversión exacta: se ajusta comparando |
+| Color de la zona × `outline_tint`* | outlineColorFactor | Con `outlineLightingMixFactor` = 0, porque nuestro contorno no recibe luz |
+| `width_px` | outlineWidthFactor, con outlineWidthMode = screenCoordinates | `width_px` ÷ alto de la pantalla en píxeles |
+| `ground_weight`*, `shadow_receive`*, `detail_tex`*, banda de brillo del pelo* (SH.6b) | Sin equivalente directo | Se decide en 17.5 |
+| `blush_amount`* (color calculado desde la piel) | Sin parámetro propio | Depende de cómo viaje el rubor (SH.8) |
+
+Piel y prenda comparten material: un solo `shadeColorFactor` no da las dos sombras, así que 17.5 necesitará una textura de sombra o un material por zona.
+
 ---
 
 ## 6. Cámara del juego

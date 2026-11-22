@@ -37,15 +37,23 @@ void vertex() {
 
 """
 static var _piece_shader: Shader
+const SOFT_SHADER := preload("toon_soft.gdshader")
+const SOFT_DEFAULTS := {
+	"skin_color": Color(0.80, 0.80, 0.80), "garment_color": Color(0.20, 0.20, 0.23), "show_garment": true, "unlit": false,
+	"threshold": 0.05, "softness": 0.09, "shade_strength": 1.0, "ground_weight": 0.025,
+	"rim_color": Color(1.0, 0.95, 0.92), "rim_strength": 0.075, "rim_width": 0.3, "detail_amount": 0.0}
+static var soft_enabled := false  # interruptor interno (SH.2), sin interfaz; se lee al crear el material
+static var _soft_piece_shader: Shader
 ## Acabado: borde entre tonos, rim (fuerza y ancho) y grosor del contorno, con su rango (el hint_range de los shaders).
 const FINISH := {"softness": [0.0, 0.5], "rim_strength": [0.0, 1.0], "rim_width": [0.0, 1.0], "width_px": [0.0, MAX_OUTLINE_PX]}
 
 
 static func apply(mesh: MeshInstance3D, piece := false) -> ShaderMaterial:
 	var material := ShaderMaterial.new()
-	material.shader = piece_shader() if piece else SHADER
-	for name: String in DEFAULTS:
-		material.set_shader_parameter(name, DEFAULTS[name])
+	material.shader = piece_shader() if piece else body_shader()
+	var defaults := SOFT_DEFAULTS if soft_enabled else DEFAULTS
+	for name: String in defaults:
+		material.set_shader_parameter(name, defaults[name])
 	if piece:
 		material.set_shader_parameter("depth_pull", PIECE_PULL)
 	var outline := ShaderMaterial.new()
@@ -98,7 +106,7 @@ static func set_outline_width(mesh: MeshInstance3D, pixels: float) -> bool:
 
 static func get_outline_width(mesh: MeshInstance3D) -> float:
 	var material := mesh.material_override as ShaderMaterial
-	if material == null or material.shader != SHADER or not material.has_meta("outline"):
+	if material == null or (material.shader != SHADER and material.shader != SOFT_SHADER) or not material.has_meta("outline"):
 		return OUTLINE_DEFAULTS["width_px"]
 	return (material.get_meta("outline") as ShaderMaterial).get_shader_parameter("width_px")
 
@@ -155,14 +163,25 @@ static func _embedded(shader: Shader) -> Shader:
 
 static func _parameter(mesh: MeshInstance3D, name: String) -> Variant:
 	var material := mesh.material_override as ShaderMaterial
-	var ours := material != null and (material.shader == SHADER or material.shader == _piece_shader)  # paso AB.6: piezas
+	var ours := material != null and (material.shader == SHADER or material.shader == _piece_shader
+		or material.shader == SOFT_SHADER or material.shader == _soft_piece_shader)  # paso AB.6: piezas
 	var value: Variant = material.get_shader_parameter(name) if ours else null
 	return value if value != null else DEFAULTS[name]
 
 
 ## Paso AB.6: toon.gdshader con PULL_CODE antes de fragment() (se hace una vez).
 static func piece_shader() -> Shader:
+	if soft_enabled:
+		if _soft_piece_shader == null:
+			_soft_piece_shader = Shader.new()
+			_soft_piece_shader.code = SOFT_SHADER.code.replace("void fragment()", PULL_CODE + "void fragment()")
+		return _soft_piece_shader
 	if _piece_shader == null:
 		_piece_shader = Shader.new()
 		_piece_shader.code = SHADER.code.replace("void fragment()", PULL_CODE + "void fragment()")
 	return _piece_shader
+
+
+## SOFT_SHADER si soft_enabled; si no, SHADER.
+static func body_shader() -> Shader:
+	return SOFT_SHADER if soft_enabled else SHADER

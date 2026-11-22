@@ -68,7 +68,7 @@ Estado: **Hecho** · **Plan** (ya está en `PLAN.md` o en la hoja de ruta) · **
 | Estilo como archivo de datos | Plan | 14.1 |
 | Grado de realismo (anime → semirrealista) | Nuevo | X.6 |
 | Luz de vista previa en el editor | Nuevo | IU.3 |
-| Tinte de sombra | Plan | 14.3 |
+| Tinte de sombra | Plan | SH.2 (D48) |
 | Umbral del tono medio en la cara | Nuevo | X.7 |
 | Aplanar más las normales de la cara (sin escalón) | Nuevo | X.7 |
 | Estilos de ojos como packs | Plan | 9.5 |
@@ -396,7 +396,7 @@ Un peinado CC0 moldeado sigue siendo CC0 y puede entrar en el Pack Base 1 (D36);
 
 ### AB.9 Pelo (cuatro subpasos)
 
-**Material común:** toon con color y una banda de brillo propia del anime (parámetro del shader; sin texturas). Se crea en AB.9a y lo usan todos.
+**Material común:** toon con color y una banda de brillo propia del anime (parámetro del shader; sin texturas). La banda se crea en SH.6b (`PLAN.md`); AB.9a y los demás peinados la usan.
 **Prueba común:** con 10 cuerpos aleatorios, ningún vértice del cráneo por fuera del pelo; cada peinado ≤ 6.000 triángulos y ≤ 12 huesos (PROVISIONAL de la ficha 11); ficha con autor y licencia.
 
 #### AB.9a Casquete
@@ -464,7 +464,7 @@ Un peinado CC0 moldeado sigue siendo CC0 y puede entrar en el Pack Base 1 (D36);
 | X.4 | Forma correctora del hombro con el brazo sobre la cabeza | fuerte | L | Hunde 21–43 mm al «Atacar» (5.8); forma guiada por el ángulo del brazo; decidir cómo la usa el juego |
 | X.5 | Selector de polígonos al exportar (Low-poly, Ligero, Medio, Completo) | fuerte | L | Mismos huesos y anclajes; pesos de la base; pruebas de deformación por nivel |
 | X.6 | Estilos nuevos: semirrealista (sombreado suave sin contorno) y pixel art (render a baja resolución con paleta) | medio | M | Como estilos de datos del 14.1; el pixel art es del estudio (imagen), no del `.glb` |
-| X.7 | Cara: umbral del tono medio y transición gradual de las normales (sin escalón en la sien) | fuerte | M | Toca `StyleNormals`; juicio visual A/B |
+| X.7 | Cara: umbral del tono medio y transición gradual de las normales (sin escalón en la sien). La sombra de la nariz debe desaparecer o bajar mucho, con `shadow_receive` (SH.4) o con estas normales | fuerte | M | Toca `StyleNormals`; juicio visual A/B; referencia: fila masculino de `pruebas/capturas/shader_ab/hoja_cara.png` |
 | X.8 | Luz de vista previa con presets (día, atardecer, mazmorra) | simple | S | Amplía IU.3; útil para el juego oscuro |
 | X.9 | Exportar cápsulas de colisión por hueso (daño por zonas) | medio | M | Junto al `.glb`: `CollisionShape3D` por hueso en la `.tscn` del 11.4, o un JSON con radios y largos |
 | X.10 | Plugin para Godot: GameMolde como pestaña del editor de Godot | medio | M | `EditorPlugin` con `_has_main_screen()`; mismo núcleo y misma interfaz |
