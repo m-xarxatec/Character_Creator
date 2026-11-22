@@ -26,11 +26,13 @@ Si `datos/` va dentro de un proyecto Godot, `deslizadores.csv` debe importarse c
   "source": "MakeHuman system assets (CC0) con MPFB 2.0.18",
   "vertex_count": 13380,
   "bones": {"deform": ["Root", "Hips", "…"], "sockets": ["socket_hand_r", "socket_hand_l", "socket_back", "socket_hip"]},
+  "zonas_solo_pc": ["Ojos", "Nariz", "Boca", "Mandíbula", "Orejas"],
   "files": {"cuerpo.glb": {"sha256": "…"}, "articulaciones.json": {"sha256": "…"}, "deslizadores.csv": {"sha256": "…"}, "presets/anime.json": {"sha256": "…"}}
 }
 ```
 
 Al cargar, el núcleo comprueba `version` y el `sha256` de cada archivo; si no coinciden, no carga.
+`zonas_solo_pc` (opcional, paso 9.2): zonas cuyas formas no se cargan en Android.
 
 ## `cuerpo.glb`
 
@@ -42,6 +44,7 @@ Al cargar, el núcleo comprueba `version` y el `sha256` de cada archivo; si no c
   Los deslizadores Proporción y Por crear no tienen formas (desde la versión 3 no queda ninguno Por crear).
 - **Formas de cara** (paso 3.14): `cuenca_plana`, `boca_anime`, `mandibula_anime`, `menton_anime` y `nariz_anime`, de un lado
   (ver más abajo).
+- **Rasgos de cara** (paso 9.2): 20 deslizadores de las zonas Ojos, Nariz, Boca, Mandíbula y Orejas, con targets de MakeHuman. Izquierda y derecha van unidas en una forma (`l-x+r-x`, `lados` = 1).
 - **Formas propias** (paso 6.1): `shoulder_height_*`, `buttocks_height_*`, `buttocks_roundness_*` y `alisado` (ver más abajo).
 - **Correcciones** de macros combinadas: nombres de formas de macro unidos por `*`, p. ej. `muscle_incr*weight_incr` (ver más abajo).
 

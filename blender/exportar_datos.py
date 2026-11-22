@@ -44,6 +44,7 @@ MIN_DELTA = 1e-6  # metros; por debajo, el hueso no se mueve con esa forma
 CORRECTION_MIN = 0.0005  # metros; una correccion mas pequena no se guarda
 TEMPLATES = ("anime", "femenino", "masculino")  # presets/: el de personaje nuevo (Neutro) y los de genero (PL.10)
 FILES = ("cuerpo.glb", "articulaciones.json", "deslizadores.csv") + tuple(f"presets/{t}.json" for t in TEMPLATES)
+PC_ONLY_ZONES = ("Ojos", "Nariz", "Boca", "Mandíbula", "Orejas")  # paso 9.2: Android no carga sus formas
 
 
 def neutral_macros():
@@ -373,6 +374,7 @@ def manifest(folder, basemesh, rig):
             "deform": [b.name for b in rig.data.bones if b.use_deform],
             "sockets": [b.name for b in rig.data.bones if not b.use_deform],
         },
+        "zonas_solo_pc": list(PC_ONLY_ZONES),
         "files": {name: {"sha256": sha256(os.path.join(folder, name))} for name in FILES},
     }
 

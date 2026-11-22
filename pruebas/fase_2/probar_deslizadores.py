@@ -20,7 +20,7 @@ import formas_propias  # noqa: E402
 
 TABLE = os.path.join(ROOT, "godot", "datos", "humana", "deslizadores.csv")
 COLUMNS = ["id", "zona", "nombre", "tipo", "decr", "incr", "lados", "neutro"]
-ZONES = 14  # sin contar «Cara» ni «Base» (pasos 3.14 y 6.2: sin deslizadores visibles en el MVP)
+ZONES = 19  # sin contar «Cara» ni «Base» (pasos 3.14 y 6.2: sin deslizadores visibles en el MVP)
 FACE_ZONE = "Cara"
 HIDDEN_ZONES = {FACE_ZONE, "Base"}
 failures = []

@@ -148,8 +148,8 @@ smoothing = [n for n in shapes if n.startswith("alisado*")]
 fixes = [n for n in shapes if "*" in n and n not in smoothing]
 face = [r["id"] for r in ed.face_rows(rows)]
 own = [f"{r['id']}_{d}" if r["decr"] else r["id"] for r in ed.own_rows(rows) for d in ("decr", "incr") if r[d]]
-check("glb: las 78 formas de la tabla",
-      len(expected) == 78 and sorted(set(shapes) - set(fixes) - set(smoothing) - set(face) - set(own)) == sorted(expected))
+check("glb: las 118 formas de la tabla",
+      len(expected) == 118 and sorted(set(shapes) - set(fixes) - set(smoothing) - set(face) - set(own)) == sorted(expected))
 check("glb: las 5 formas de cara (paso 3.14)", len(face) == 5 and set(face) <= set(shapes), face)
 check("glb: las 7 formas propias (paso 6.2)", len(own) == 7 and set(own) <= set(shapes), own)
 macro_ids = tuple(i for i, _ in ed.macro_sliders(rows))

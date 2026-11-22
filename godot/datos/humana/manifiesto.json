@@ -67,24 +67,31 @@
    "sha256": "cb4088677a396768390123d7fea94c0b10a7d3ee77afab7adcb6881195c9cdfc"
   },
   "cuerpo.glb": {
-   "sha256": "06e7aaff4a724f021206d0dfb92a48c94fc03d7b5967836dc22e106871468a05"
+   "sha256": "7203126c088f39c6d65f6b19aab4b3956db90315075fc95072e5f35e737f1841"
   },
   "deslizadores.csv": {
-   "sha256": "0a59a39e8dc99fc1117de8f96f6e45f5090cfd9a47fa5bde1f2c6e7bcc612972"
+   "sha256": "286cbbebe0b64678bc9342ceff65a93d623b00148a8ac098a992329e7183fb5f"
   },
   "presets/anime.json": {
-   "sha256": "53b3d76f9e8191b3f8558b4907abd284fe24ae6bcea56bc084897c49ad36db68"
+   "sha256": "8d54f16bb967c5f851bef9afee15848622b676412ba1b3de8702f5045b5cba24"
   },
   "presets/femenino.json": {
-   "sha256": "1d71c61ad6c7db269d0bd9a3b5d6bba8ab00a2462fef0ac5c789caf5b49372bd"
+   "sha256": "5f3b76453c9fbd679d32ad240c09ea6aaf0414dfd5c573cfdb021de97ebdd6f5"
   },
   "presets/masculino.json": {
-   "sha256": "5dee26771959f3f43788c4a4043d435fa5583377ece0d4ac10a37b7e8cdac455"
+   "sha256": "e5328b4a592d5d88cbd8f4067c770bbc3c2d3f4524ce8f3902a64b9ecfe56887"
   }
  },
  "pose": "A",
  "source": "MakeHuman system assets (CC0) con MPFB 2.0.18",
  "species": "humana",
  "version": 3,
- "vertex_count": 13380
+ "vertex_count": 13380,
+ "zonas_solo_pc": [
+  "Ojos",
+  "Nariz",
+  "Boca",
+  "Mandíbula",
+  "Orejas"
+ ]
 }
