@@ -34,7 +34,8 @@
 - Soy junior: cada decisión importante, en **una frase sencilla**.
 - Cada ficha dice su nivel (simple, medio o fuerte). Usa Opus 5.5 en high para lo fuerte; si un paso es sencillo, avísame para cambiar a un modelo más barato.
 - Propuesta: `PROPUESTA — Paso X.Y` / Archivos / Qué hace / Cómo se prueba / Riesgos / ¿Apruebas?
-- Al cerrar un paso: ejecuta las pruebas, marca el paso y añade una línea al registro de `PLAN.md`, e informa en 3 líneas (**hecho / cómo se probó / qué sigue**).
+- Al cerrar un paso: ejecuta **solo las pruebas de lo que se hizo** (lo demás lo pruebo yo a mano), marca el paso y añade una línea al registro de `PLAN.md`, e informa en 3 líneas (**hecho / cómo se probó / qué sigue**).
+- La **batería completa** no se lanza sin que yo lo diga: sugiérela cuando llevemos varios pasos hechos. Esto manda sobre `ruta/GUIA_MODELOS.md` §1.7.
 - Antes de cerrar: comprueba que la prueba nueva **detecta el fallo** (rompe el código a propósito, mira que salta, deshaz el cambio).
 - Al cerrar un paso que cambie el aspecto, la malla, los huesos o la exportación, propón pasar el revisor-visual antes de seguir.
 - Lo visual lo juzgo yo: dame la ruta de las capturas o el comando para abrir el resultado, sin describirlas ni valorarlas, y espera mi decisión.
