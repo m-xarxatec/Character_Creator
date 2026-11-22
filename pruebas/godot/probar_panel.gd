@@ -6,8 +6,8 @@ extends SceneTree
 # Uso: (ulimit -v 4000000; timeout 120 godot --headless --path pruebas/godot -s probar_panel.gd 2>&1 | grep -E 'FALLO|RESULTADO|ERROR')
 
 const ZONES := ["Global", "Cabeza", "Cuello", "Hombros", "Torso", "Pecho", "Cintura", "Caderas", "Glúteos", "Brazos",
-		"Manos", "Dedos", "Piernas", "Pies", "Cara"]  # las de deslizadores.csv, en su orden (Cara desde el paso 9.1)
-const ROWS := 53  # 45 deslizadores (5 de Cara), 8 de ellos con dos lados
+		"Manos", "Dedos", "Piernas", "Pies", "Cara", "Ojos", "Nariz", "Boca", "Mandíbula", "Orejas"]  # las de deslizadores.csv, en su orden (Cara desde el paso 9.1; rasgos, 9.2)
+const ROWS := 73  # 65 deslizadores (5 de Cara y 20 de rasgos), 8 de ellos con dos lados
 const TO_CREATE := []  # desde el 6.2 no queda ningún Por crear
 const TYPES := {"height": "Proporción", "gender": "Forma", "shoulder_height": "Forma", "hand_size_l": "Proporción",
 		"finger_spread_r": "Forma"}
@@ -82,8 +82,8 @@ func _check_search(panel) -> void:
 	var zones := {}
 	for key: String in found:
 		zones[panel.rows[key].row["zona"]] = true
-	check("buscar «ancho» encuentra 6 ajustes de 5 zonas (Torso tiene Ancho y Espalda ancha)", found.size() == 6 and zones.size() == 5
-		and panel.count_label.text == "6 ajustes", "%s %s" % [found, panel.count_label.text])
+	check("buscar «ancho» encuentra 9 ajustes de 8 zonas (Torso tiene Ancho y Espalda ancha)", found.size() == 9 and zones.size() == 8
+		and panel.count_label.text == "9 ajustes", "%s %s" % [found, panel.count_label.text])
 	panel.filter("MUSCULO")
 	check("sin mayúsculas ni tildes: «MUSCULO» encuentra Músculo", "muscle" in panel.visible_keys())
 	panel.filter("")

@@ -22,7 +22,7 @@ func _initialize() -> void:
 	var silhouette = picker.silhouette
 	var table := _visible_zones(root_dir.path_join("godot/datos/humana/deslizadores.csv"), panel.HIDDEN_ZONES)
 	check("la lista tiene las %d zonas visibles en el orden de la tabla" % table.size(), picker.buttons.keys() == table.keys()
-		and table.size() == 15, str(picker.buttons.keys()))  # 15 con Cara (paso 9.1)
+		and table.size() == 20, str(picker.buttons.keys()))  # 15 con Cara (paso 9.1) + 5 de rasgos (paso 9.2)
 	var counts_ok := table.keys().all(func(z: String) -> bool: return picker.buttons[z].text.ends_with(" %d" % table[z]))
 	check("cada zona dice su número de ajustes", counts_ok)
 	check("al empezar, la zona abierta está marcada", silhouette.selected_zone == panel.open_zone

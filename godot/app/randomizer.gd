@@ -7,7 +7,7 @@ extends RefCounted
 
 const LOW := 0.2
 const HIGH := 0.8
-const KEEP_ZONES := ["Cara", "Base"]
+const KEEP_ZONES := ["Cara", "Ojos", "Nariz", "Boca", "Mandíbula", "Orejas", "Base"]  # paso 9.2b: toda la cara
 const KEEP := ["gender", "head_size"]
 
 

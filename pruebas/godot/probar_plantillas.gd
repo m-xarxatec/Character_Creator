@@ -7,6 +7,7 @@ extends SceneTree
 const COUNT := 3  # paso PL.10: Femenino, Masculino y Neutro (anime.json)
 const CUSTOM_SKIN := Color(0.6, 0.4, 0.3)
 const ROLLS := 10  # cuerpos al azar con el informe en pose T
+const FACE_ZONES := ["Cara", "Ojos", "Nariz", "Boca", "Mandíbula", "Orejas"]  # paso 9.2b: fijas aquí, para detectar si Aleatorio deja de protegerlas
 
 var failures := 0
 
@@ -57,7 +58,7 @@ func _check_random(main: Control, root_dir: String) -> void:
 	for row: Dictionary in sliders:
 		var sides: Array = ["_l", "_r"] if row["lados"] == "2" else [""]
 		var key: String = row["id"] + sides[0]
-		var kept: bool = row["zona"] in Randomizer.KEEP_ZONES or row["id"] in Randomizer.KEEP
+		var kept: bool = row["zona"] in FACE_ZONES or row["zona"] in Randomizer.KEEP_ZONES or row["id"] in Randomizer.KEEP
 		if kept and after[key] != before[key]:
 			bad.append(key)
 		elif not kept and (after[key] < Randomizer.LOW or after[key] > Randomizer.HIGH or after[row["id"] + sides[-1]] != after[key]):
