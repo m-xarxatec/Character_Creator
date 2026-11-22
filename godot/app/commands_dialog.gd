@@ -15,7 +15,6 @@ const COMMANDS := [
 	["Ctrl + arrastrar", "Mover la cámara (arriba, abajo, a los lados)"],
 	["Rueda del ratón", "Acercar y alejar"],
 	["Inicio", "Volver a centrar la cámara"],
-	["C (mantener)", "Comparar: ver cómo estaba al abrir o guardar"],  # paso PL.7
 ]
 
 var grid: GridContainer

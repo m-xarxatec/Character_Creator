@@ -39,7 +39,6 @@ var editor  # BodyEditor
 var export_thread: Thread  # paso P.1: el hilo de exportar mientras trabaja
 var save_button: Button
 var open_button: Button
-var compare_button: Button  # paso PL.7: mantener pulsado enseña cómo estaba (show_saved)
 var saved_text := ""  # paso P.4: el preset de lo último guardado o abierto (sin nombre)
 var quit_after_save := false  # paso P.4: «Guardar…» del aviso al cerrar
 var current_path := ""  # paso IU.4: el preset guardado o abierto ("" = personaje nuevo)
@@ -56,12 +55,6 @@ func setup(body_view: SubViewportContainer, body_editor = null) -> void:
 	export_button = _button("Exportar .glb", func() -> void: popup_file_dialog(file_dialog))
 	export_button.shortcut = _shortcut(KEY_E)
 	export_button.icon = ThemeBuilder.icon("exportar")
-	compare_button = Button.new()  # paso PL.7
-	compare_button.text = "Comparar"
-	compare_button.tooltip_text = "Mantén pulsado (o la tecla C) para ver cómo estaba al abrir o guardar"
-	compare_button.button_down.connect(show_saved.bind(true))
-	compare_button.button_up.connect(show_saved.bind(false))
-	add_child(compare_button)
 	garment_check = CheckBox.new()
 	garment_check.text = "Prenda base"
 	garment_check.button_pressed = BodyMaterial.is_garment_visible(view.species.mesh)
@@ -111,14 +104,6 @@ func popup_file_dialog(dialog: FileDialog) -> void:
 
 func _remember_folder(path: String) -> void:
 	SettingsFile.set_folder(path.get_base_dir())
-
-
-## Paso PL.7: true enseña el personaje como estaba al abrir o guardar (saved_text); false vuelve al de ahora. Solo la
-## vista: los valores del editor y Deshacer no cambian.
-func show_saved(on: bool) -> void:
-	if editor == null:
-		return
-	view.set_values(JSON.parse_string(saved_text)["valores"] if on else editor.values)
 
 
 func _current_text() -> String:
