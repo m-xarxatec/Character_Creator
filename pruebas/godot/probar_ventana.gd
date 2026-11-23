@@ -1,6 +1,7 @@
 extends SceneTree
 # TA.2a y TA.2b: navegación con cambios pendientes, modos del Taller y aislamiento del visor.
 # TA.3c: edición de la espada con los controles reales, cotejada con el generador.
+# TA.4c: recorrido de «Desde imagen» con PNG de user://ta4c_ventana (carpeta de este proyecto de pruebas; se borra al final).
 # Uso: (ulimit -v 4000000; timeout 120 godot --headless --path pruebas/godot -s probar_ventana.gd 2>&1 | grep -E 'FALLO|RESULTADO|ERROR')
 
 const EXPECTED := ["Cuerpo", "Cara y ojos", "Pelo", "Ropa", "Accesorios", "Estilo"]  # IU.4: Exportar ya no es pestaña
@@ -11,6 +12,10 @@ const SWORD_PARTS := ["hoja", "guarda", "mango", "pomo"]
 var failures := 0
 var generator: GDScript
 var generations := 0
+var mask_script: GDScript
+var silhouette_script: GDScript
+var analyses := 0
+var image_builds := 0
 
 
 func _initialize() -> void:
@@ -25,6 +30,7 @@ func _initialize() -> void:
 		generator = load(root_dir.path_join("godot/addons/creador/taller_assets/sword_generator.gd"))
 		await _check_workshop(main)
 		await _check_sword_editor(main)
+		await _check_image_editor(main, root_dir)
 	_check_core_independent(root_dir.path_join("godot/addons/creador"))
 	main.free()
 	print("RESULTADO: ", "TODO BIEN" if failures == 0 else "%d FALLOS" % failures)
@@ -303,6 +309,197 @@ func _check_sword_mesh(page, label: String, params: Dictionary, colors: Dictiona
 			same = same and shown.surface_get_arrays(i) == result.malla.surface_get_arrays(i)
 			same = same and shown.surface_get_material(i).albedo_color == result.malla.surface_get_material(i).albedo_color
 	check(label, same, result.error)
+
+
+## TA.4c: cargar, editar cada control, error con la última pieza conservada, Restablecer y cambio de modo.
+func _check_image_editor(main: Control, root_dir: String) -> void:
+	var page = main.workshop_page
+	var folder := ProjectSettings.globalize_path("user://ta4c_ventana")
+	DirAccess.make_dir_recursive_absolute(folder)
+	var core := root_dir.path_join("godot/addons/creador/taller_assets")
+	mask_script = load(core.path_join("image_mask.gd"))
+	silhouette_script = load(core.path_join("silhouette_mesh.gd"))
+	page.image_analyzed.connect(func() -> void: analyses += 1)
+	page.image_generated.connect(func() -> void: image_builds += 1)
+	main.top_bar.tab_bar.current_tab = 6
+	await process_frame
+	page.modes.get_buttons()[1].pressed.emit()
+	await process_frame
+	check("Desde imagen enseña su panel y aún no tiene pieza", page.image_panel.is_visible_in_tree()
+		and not page.sword_panel.visible and page.sample.mesh is BoxMesh and not page.info.visible)
+	var alpha := _alpha_image()
+	var alpha_path := folder.path_join("con_alfa.png")
+	alpha.save_png(alpha_path)
+	check("carga un PNG con alfa", page.load_image_file(alpha_path), page.diagnosis.text)
+	_check_image_mesh(page, "la pieza sale del contorno", alpha, {}, {"altura_m": 1.0, "grosor_m": 0.02}, "#FFFFFF")
+	check("el visor indica triángulos y tamaño", page.info.visible and page.info.text.contains("triángulos"), page.info.text)
+	check("con alfa se ve Umbral y no Tolerancia", page.image_panel.rows["umbral_alfa"].visible
+		and not page.image_panel.rows["tolerancia"].visible)
+	check("Guardar, Equipar y Exportar siguen desactivados", page.actions.get_child(1).disabled
+		and page.actions.get_child(2).disabled and page.actions.get_child(3).disabled)
+	_check_image_sizes(page, alpha)
+	await _check_image_contour(page, alpha)
+	_check_image_error(page, folder)
+	_check_image_modes(page, alpha)
+	await _check_image_background(page, folder)
+	page.modes.get_buttons()[0].pressed.emit()
+	main.top_bar.tab_bar.current_tab = 0
+	await process_frame
+	for file in DirAccess.get_files_at(folder):
+		DirAccess.remove_absolute(folder.path_join(file))
+	DirAccess.remove_absolute(folder)
+
+
+## Altura, grosor y color rehacen la pieza al momento, sin recalcular el contorno.
+func _check_image_sizes(page, image: Image) -> void:
+	var panel = page.image_panel
+	var before := analyses
+	var builds := image_builds
+	panel.sliders["altura_m"].value = 1500
+	_check_image_mesh(page, "la altura cambia la pieza al momento", image, {}, {"altura_m": 1.5, "grosor_m": 0.02}, "#FFFFFF")
+	_type_number(panel, "grosor_m", "0,05")
+	_check_image_mesh(page, "el grosor escrito cambia la pieza", image, {}, {"altura_m": 1.5, "grosor_m": 0.05}, "#FFFFFF")
+	panel.color_button.color = Color("#4968AA")
+	panel.color_button.color_changed.emit(Color("#4968AA"))
+	_check_image_mesh(page, "el color cambia la pieza", image, {}, {"altura_m": 1.5, "grosor_m": 0.05}, "#4968AA")
+	check("cada cambio rehace la pieza una vez", image_builds == builds + 3, str(image_builds - builds))
+	check("medidas y color no recalculan el contorno", analyses == before, str(analyses - before))
+	_type_number(panel, "altura_m", "99")
+	check("la altura escrita se recorta al máximo", is_equal_approx(page.image_recipe.parametros.altura_m, 3.0))
+	_type_number(panel, "grosor_m", "0")
+	check("el grosor escrito se recorta al mínimo", is_equal_approx(page.image_recipe.parametros.grosor_m, 0.002))
+	panel.reset_button.pressed.emit()
+	_check_image_mesh(page, "Restablecer recupera la pieza inicial", image, {}, {"altura_m": 1.0, "grosor_m": 0.02}, "#FFFFFF")
+	check("Restablecer pone los controles", panel.numbers["altura_m"].text == "1,000" and panel.numbers["grosor_m"].text == "0,020"
+		and panel.color_button.color.is_equal_approx(Color.WHITE))
+
+
+## Los ajustes del contorno esperan: varios cambios seguidos dan un solo análisis.
+func _check_image_contour(page, image: Image) -> void:
+	var panel = page.image_panel
+	var size := {"altura_m": 1.0, "grosor_m": 0.02}
+	var before := analyses
+	panel.sliders["umbral_alfa"].value = 40
+	panel.sliders["umbral_alfa"].value = 30
+	panel.sliders["umbral_alfa"].value = 20
+	check("el contorno espera al último cambio", analyses == before, str(analyses - before))
+	await create_timer(page.CONTOUR_DELAY * 2.0).timeout
+	check("tres cambios seguidos, un solo análisis", analyses == before + 1, str(analyses - before))
+	_check_image_mesh(page, "el umbral cambia la pieza", image, {"umbral_alfa": 0.2}, size, "#FFFFFF")
+	panel.sliders["simplificacion"].value = 30
+	await create_timer(page.CONTOUR_DELAY * 2.0).timeout
+	_check_image_mesh(page, "simplificar cambia el contorno", image, {"umbral_alfa": 0.2, "simplificacion": 3.0}, size, "#FFFFFF")
+	panel.invert_box.button_pressed = true
+	await create_timer(page.CONTOUR_DELAY * 2.0).timeout
+	check("invertir llega al análisis", page.image_options.invertir == true)
+	panel.invert_box.button_pressed = false
+	panel.reset_button.pressed.emit()
+	var count := analyses
+	await create_timer(page.CONTOUR_DELAY * 2.0).timeout
+	check("Restablecer cancela la espera pendiente", analyses == count, str(analyses - count))
+	_check_image_mesh(page, "Restablecer recupera el contorno", image, {}, size, "#FFFFFF")
+
+
+## Un archivo malo no toca la última pieza válida ni su receta.
+func _check_image_error(page, folder: String) -> void:
+	var valid: Variant = page.sample.mesh
+	var saved_recipe: Dictionary = page.image_recipe.duplicate(true)
+	var bad_path := folder.path_join("danado.png")
+	var file := FileAccess.open(bad_path, FileAccess.WRITE)
+	file.store_string("esto no es un png")
+	file.close()
+	check("un archivo dañado no se carga", not page.load_image_file(bad_path))
+	check("el error conserva la pieza y da el motivo", page.sample.mesh == valid and page.image_recipe == saved_recipe
+		and page.diagnosis.visible and page.diagnosis.text.contains("PNG"), page.diagnosis.text)
+	var heavy_path := folder.path_join("pesado.png")
+	var heavy := FileAccess.open(heavy_path, FileAccess.WRITE)
+	heavy.store_buffer(FileAccess.get_file_as_bytes(folder.path_join("con_alfa.png")))
+	heavy.seek(256 * 1024 * 1024)
+	heavy.store_8(0)
+	heavy.close()
+	check("un archivo de más de 256 MB no se carga", not page.load_image_file(heavy_path))
+	DirAccess.remove_absolute(heavy_path)
+	check("avisa del tope y conserva la pieza", page.sample.mesh == valid and page.image_recipe == saved_recipe
+		and page.diagnosis.visible and page.diagnosis.text.contains("máximo es 256 MB")
+		and page.diagnosis.get_theme_color("font_color") == page.get_theme_color("font_color", "NivelAviso"), page.diagnosis.text)
+	var noisy := Image.create_empty(16, 16, false, Image.FORMAT_RGB8)
+	for x in 16:
+		for y in 16:
+			noisy.set_pixel(x, y, Color.BLACK if (x + y) % 2 == 0 else Color.WHITE)
+	noisy.set_pixel(0, 0, Color.RED)
+	noisy.set_pixel(15, 15, Color.GREEN)
+	var noisy_path := folder.path_join("sin_fondo.png")
+	noisy.save_png(noisy_path)
+	check("una imagen sin fondo claro no da pieza", not page.load_image_file(noisy_path))
+	check("el análisis fallido conserva la pieza y su receta", page.sample.mesh == valid
+		and page.image_recipe == saved_recipe and page.diagnosis.text.contains("contorno"), page.diagnosis.text)
+	check("tras ese fallo se puede ajustar la tolerancia", page.image_panel.rows["tolerancia"].visible)
+	check("una imagen válida retira el aviso", page.load_image_file(folder.path_join("con_alfa.png"))
+		and not page.diagnosis.visible, page.diagnosis.text)
+
+
+## Cambiar de modo no pierde la imagen ni la espada.
+func _check_image_modes(page, image: Image) -> void:
+	var shown: Variant = page.sample.mesh
+	page.modes.get_buttons()[0].pressed.emit()
+	_check_sword_mesh(page, "Espada sigue igual tras usar la imagen", SWORD_PARAMS, SWORD_COLORS)
+	check("en Espada no se ve el panel de imagen", not page.image_panel.visible)
+	page.modes.get_buttons()[2].pressed.emit()
+	check("Camiseta enseña su muestra", page.sample.mesh is BoxMesh and page.planned.visible and not page.info.visible)
+	page.modes.get_buttons()[1].pressed.emit()
+	check("al volver sigue la misma pieza", page.sample.mesh == shown and page.image_panel.visible and page.info.visible)
+	_check_image_mesh(page, "y coincide con su contorno", image, {}, {"altura_m": 1.0, "grosor_m": 0.02}, "#FFFFFF")
+
+
+## Sin transparencia manda la tolerancia.
+func _check_image_background(page, folder: String) -> void:
+	var opaque := Image.create_empty(64, 64, false, Image.FORMAT_RGB8)
+	opaque.fill(Color(0.0, 0.0, 1.0))
+	opaque.fill_rect(Rect2i(16, 8, 32, 48), Color.WHITE)
+	opaque.fill_rect(Rect2i(48, 20, 10, 12), Color(0.2, 0.2, 1.0))
+	var path := folder.path_join("fondo_color.png")
+	opaque.save_png(path)
+	check("carga un PNG con fondo de color", page.load_image_file(path), page.diagnosis.text)
+	check("sin alfa se ve Tolerancia y no Umbral", page.image_panel.rows["tolerancia"].visible
+		and not page.image_panel.rows["umbral_alfa"].visible)
+	check("avisa de que el fondo sale del color", page.image_panel.notes.visible
+		and page.image_panel.notes.text.contains("esquinas"), page.image_panel.notes.text)
+	var size := {"altura_m": 1.0, "grosor_m": 0.02}
+	_check_image_mesh(page, "la tolerancia inicial incluye la franja", opaque, {}, size, "#FFFFFF")
+	var wide: AABB = page.sample.mesh.get_aabb()
+	page.image_panel.sliders["tolerancia"].value = 50
+	await create_timer(page.CONTOUR_DELAY * 2.0).timeout
+	_check_image_mesh(page, "la tolerancia cambia la pieza", opaque, {"tolerancia": 0.5}, size, "#FFFFFF")
+	check("más tolerancia deja fuera la franja", page.sample.mesh.get_aabb().size.x < wide.size.x,
+		"%s < %s" % [page.sample.mesh.get_aabb().size.x, wide.size.x])
+	page.image_panel.reset_button.pressed.emit()
+
+
+## Una silueta con una zona semitransparente: el umbral decide si entra.
+func _alpha_image() -> Image:
+	var image := Image.create_empty(64, 64, false, Image.FORMAT_RGBA8)
+	image.fill(Color.TRANSPARENT)
+	image.fill_rect(Rect2i(16, 8, 24, 48), Color.WHITE)
+	image.fill_rect(Rect2i(40, 20, 14, 12), Color(1.0, 1.0, 1.0, 0.4))
+	return image
+
+
+## Coteja la pieza del visor con la que dan el análisis y el generador para valores decididos por la prueba.
+func _check_image_mesh(page, label: String, image: Image, options: Dictionary, params: Dictionary, color: String) -> void:
+	var analysis: Dictionary = mask_script.analyze(image, options)
+	var same: bool = analysis.error == ""
+	var detail: String = analysis.error
+	if same:
+		var result: Dictionary = silhouette_script.generate({"formato": "gamemolde-asset-receta", "version": 1, "id": "imagen",
+			"modo": "extrusion_imagen", "autor": "Taller", "licencia": "propia",
+			"fuente": {"archivo": "fuentes/prueba.png", "sha256": "ab".repeat(32)},
+			"parametros": params, "colores": {"principal": color}}, analysis.contorno)
+		var shown: Mesh = page.sample.mesh
+		detail = result.error
+		same = result.error == "" and shown is ArrayMesh and shown.get_surface_count() == 1
+		same = same and shown.surface_get_arrays(0) == result.malla.surface_get_arrays(0)
+		same = same and shown.surface_get_material(0).albedo_color == result.malla.surface_get_material(0).albedo_color
+	check(label, same, detail)
 
 
 func _shortcut(key: Key) -> void:

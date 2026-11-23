@@ -7,6 +7,9 @@ const REQUIRED := ["formato", "version", "id", "modo", "autor", "licencia"]
 const SWORD_SCALES := ["escala_punta", "escala_guarda", "escala_mango", "escala_pomo"]
 ## TA.3c: medidas admitidas de la hoja, en metros (50–150 % de los valores iniciales).
 const SWORD_LIMITS := {"longitud_m": [0.5, 1.5], "ancho_hoja_m": [0.045, 0.135], "grosor_m": [0.009, 0.027]}
+## TA.4c: medidas admitidas de la pieza hecha desde una imagen, en metros.
+const EXTRUSION_LIMITS := {"altura_m": [0.10, 3.00], "grosor_m": [0.002, 0.200]}
+const LIMITS := {"espada_parametrica": SWORD_LIMITS, "extrusion_imagen": EXTRUSION_LIMITS}
 const MIN_SCALE := 0.5
 const MAX_SCALE := 1.5
 const HEX := "0123456789abcdefABCDEF"
@@ -75,18 +78,19 @@ static func normalize(data: Dictionary) -> Dictionary:
 					return {"error": "%s debe ser un número finito" % field}
 				if scale_field and (value < MIN_SCALE or value > MAX_SCALE):
 					return {"error": "Escala fuera de rango en %s" % field}
-				if value < 0 or (value == 0 and key != "holgura_m") or _outside_sword_limits(data.modo, key, value):
+				if value < 0 or (value == 0 and key != "holgura_m") or _outside_limits(data.modo, key, value):
 					return {"error": "Dimensión fuera de rango en %s" % field}
 				normalized[key] = float(value)
 		recipe[group] = normalized
 	return {"error": "", "receta": recipe}
 
 
-## grosor_m también existe en la extrusión: el límite es solo de la espada.
-static func _outside_sword_limits(mode: String, key: Variant, value: float) -> bool:
-	if mode != "espada_parametrica" or not SWORD_LIMITS.has(key):
+## grosor_m existe en la espada y en la extrusión: cada modo tiene su propio límite.
+static func _outside_limits(mode: String, key: Variant, value: float) -> bool:
+	var limits: Dictionary = LIMITS.get(mode, {})
+	if not limits.has(key):
 		return false
-	return value < SWORD_LIMITS[key][0] or value > SWORD_LIMITS[key][1]
+	return value < limits[key][0] or value > limits[key][1]
 
 
 static func _source_error(source: Variant) -> String:

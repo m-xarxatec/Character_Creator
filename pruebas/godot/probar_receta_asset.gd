@@ -68,8 +68,21 @@ func _check_sword_limits(sword: Dictionary, image: Dictionary) -> void:
 			_check("admite %s = %s" % [key, value], inside.error == "" and inside.receta.parametros[key] == value)
 		for value: float in [limits[key][0] * 0.999, limits[key][1] * 1.001, 1e6]:
 			_reject("rechaza %s = %s" % [key, value], sword.merged({"parametros": {key: value}}), key)
-	var thin: Dictionary = validator.normalize(image.merged({"parametros": {"grosor_m": 0.002}}))
-	_check("la extrusión conserva su grosor libre", thin.error == "" and thin.receta.parametros.grosor_m == 0.002)
+	_check_extrusion_limits(sword, image)
+
+
+## TA.4c: la pieza desde imagen tiene sus límites, y el grosor de cada modo no hereda el del otro.
+func _check_extrusion_limits(sword: Dictionary, image: Dictionary) -> void:
+	var limits := {"altura_m": [0.10, 3.00], "grosor_m": [0.002, 0.200]}
+	for key: String in limits:
+		for value: float in limits[key]:
+			var inside: Dictionary = validator.normalize(image.merged({"parametros": {key: value}}))
+			_check("extrusión admite %s = %s" % [key, value], inside.error == "" and inside.receta.parametros[key] == value)
+		for value: float in [limits[key][0] * 0.999, limits[key][1] * 1.001, 1e6]:
+			_reject("extrusión rechaza %s = %s" % [key, value], image.merged({"parametros": {key: value}}), key)
+	var thick: Dictionary = validator.normalize(image.merged({"parametros": {"grosor_m": 0.1}}))
+	_check("la extrusión admite un grosor que la espada no", thick.error == "")
+	_reject("la espada conserva su límite de grosor", sword.merged({"parametros": {"grosor_m": 0.1}}), "grosor_m")
 
 
 func _round_trip(data: Dictionary, params: Dictionary, colors: Dictionary, size_key: String, color_key: String,
