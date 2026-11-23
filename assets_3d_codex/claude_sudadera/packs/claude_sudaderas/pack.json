@@ -1,0 +1,46 @@
+{
+ "formato": "gamemolde-pack",
+ "version": 1,
+ "id": "claude_sudaderas",
+ "nombre": "Sudaderas (pruebas)",
+ "autor": "GameMolde",
+ "licencia": "propia",
+ "origen": "",
+ "piezas": [
+  {
+   "id": "sudadera_capucha",
+   "nombre": "Sudadera oversize con capucha",
+   "archivo": "sudadera_capucha.glb",
+   "sha256": "76fddb4bbd9b3a58baba6d6e569992cbdb9296eadb3806e1821e731a93af58df",
+   "tipo": "ropa",
+   "ranura": "ropa_exterior",
+   "especies": [
+    "humana"
+   ],
+   "colores": [
+    "principal"
+   ],
+   "color": [
+    0.27,
+    0.29,
+    0.33
+   ],
+   "sigue_al_cuerpo": true,
+   "fisica": [],
+   "miniatura": "",
+   "anclaje": {
+    "hueso": "",
+    "transform": [
+     0,
+     0,
+     0,
+     0,
+     0,
+     0,
+     1,
+     1
+    ]
+   }
+  }
+ ]
+}

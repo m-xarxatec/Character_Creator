@@ -1,0 +1,151 @@
+{
+ "formato": "gamemolde-pack",
+ "version": 1,
+ "id": "claude_gorras",
+ "nombre": "Gorras (pruebas)",
+ "autor": "GameMolde",
+ "licencia": "propia",
+ "origen": "",
+ "piezas": [
+  {
+   "id": "gorra_plana",
+   "nombre": "Gorra plana",
+   "archivo": "gorra_plana.glb",
+   "sha256": "0ff89f4ebf62a0fc96da1991c214fe29dbab89301b6d5a9c5e26460f3901811a",
+   "tipo": "accesorio",
+   "ranura": "accesorio",
+   "especies": [
+    "humana"
+   ],
+   "colores": [
+    "principal"
+   ],
+   "color": [
+    0.106,
+    0.137,
+    0.2
+   ],
+   "sigue_al_cuerpo": true,
+   "fisica": [],
+   "miniatura": "",
+   "anclaje": {
+    "hueso": "",
+    "transform": [
+     0,
+     0,
+     0,
+     0,
+     0,
+     0,
+     1,
+     1
+    ]
+   }
+  },
+  {
+   "id": "gorra_plana_ajustada",
+   "nombre": "Gorra plana ajustada",
+   "archivo": "gorra_plana_ajustada.glb",
+   "sha256": "cfd137510726adf45b888f207f5a62a16a5b5f4db10669691808864ac1928759",
+   "tipo": "accesorio",
+   "ranura": "accesorio",
+   "especies": [
+    "humana"
+   ],
+   "colores": [
+    "principal"
+   ],
+   "color": [
+    0.106,
+    0.137,
+    0.2
+   ],
+   "sigue_al_cuerpo": true,
+   "fisica": [],
+   "miniatura": "",
+   "anclaje": {
+    "hueso": "",
+    "transform": [
+     0,
+     0,
+     0,
+     0,
+     0,
+     0,
+     1,
+     1
+    ]
+   }
+  },
+  {
+   "id": "gorra_plana_ajustada_gm",
+   "nombre": "Gorra plana ajustada: monograma GM",
+   "archivo": "gorra_plana_ajustada_gm.glb",
+   "sha256": "70200ecf90502d6c3cecb79a95ca1c08ce9197b565f0a415a800eee4b3f2f9c1",
+   "tipo": "accesorio",
+   "ranura": "accesorio",
+   "especies": [
+    "humana"
+   ],
+   "colores": [
+    "principal"
+   ],
+   "color": [
+    0.96,
+    0.96,
+    0.96
+   ],
+   "sigue_al_cuerpo": true,
+   "fisica": [],
+   "miniatura": "",
+   "anclaje": {
+    "hueso": "",
+    "transform": [
+     0,
+     0,
+     0,
+     0,
+     0,
+     0,
+     1,
+     1
+    ]
+   }
+  },
+  {
+   "id": "gorra_plana_gm",
+   "nombre": "Gorra plana: monograma GM",
+   "archivo": "gorra_plana_gm.glb",
+   "sha256": "f00ed4b74bb104e0a4c98373c9aad458af7260bb197d9f99f7b6c6b8d78e69b7",
+   "tipo": "accesorio",
+   "ranura": "accesorio",
+   "especies": [
+    "humana"
+   ],
+   "colores": [
+    "principal"
+   ],
+   "color": [
+    0.96,
+    0.96,
+    0.96
+   ],
+   "sigue_al_cuerpo": true,
+   "fisica": [],
+   "miniatura": "",
+   "anclaje": {
+    "hueso": "",
+    "transform": [
+     0,
+     0,
+     0,
+     0,
+     0,
+     0,
+     1,
+     1
+    ]
+   }
+  }
+ ]
+}
