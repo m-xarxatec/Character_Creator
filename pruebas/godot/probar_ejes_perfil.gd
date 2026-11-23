@@ -44,7 +44,10 @@ func _initialize() -> void:
 		quit(1)
 		return
 	root.add_child(species.scene)
-	_set_up(root_dir, addon)
+	if not _set_up(root_dir, addon):
+		print("RESULTADO: 1 FALLO")
+		quit(1)
+		return
 	bases = _profile_bases()
 	check("CharacterBaker.profile_global_bases da los 56 huesos del perfil", baker.profile_global_bases().size() == 56)
 	var plain: Node3D = baker.bake(species.mesh, species.skeleton, true)
@@ -77,22 +80,31 @@ func check(label: String, ok: bool, detail := "") -> void:
 
 
 ## El cuerpo «al_azar» de probar_exportar.gd.
-func _set_up(root_dir: String, addon: String) -> void:
+func _set_up(root_dir: String, addon: String) -> bool:
 	var refit: GDScript = load(addon.path_join("skeleton_refit.gd"))
 	var proportions: GDScript = load(addon.path_join("proportions.gd"))
-	var reference: Dictionary = JSON.parse_string(
-		FileAccess.get_file_as_string(root_dir.path_join("pruebas/fase_2/salida/referencia_reajuste.json")))
+	var path := root_dir.path_join("pruebas/fase_2/salida/referencia_reajuste.json")
+	if not FileAccess.file_exists(path):
+		check("existe la referencia de Blender", false, path)
+		return false
+	var reference: Variant = JSON.parse_string(FileAccess.get_file_as_string(path))
+	if not reference is Dictionary or not reference.get("bodies") is Array:
+		check("se pueden leer los cuerpos de la referencia", false, path)
+		return false
 	var weights := {}
 	for candidate: Dictionary in reference["bodies"]:
 		if candidate["name"] == "al_azar":
 			weights = candidate["weights"]
 	check("existe el cuerpo al_azar de la referencia", not weights.is_empty())
+	if weights.is_empty():
+		return false
 	var base: Dictionary = refit.capture_base(species.skeleton)
 	load(addon.path_join("shape_weights.gd")).apply(species.mesh, weights)
 	refit.apply(species.skeleton, species.mesh.skin, species.joints, weights, base)
 	var values: Dictionary = proportions.neutral_values(species.sliders)
 	values.merge(SCALES, true)
 	proportions.apply(species.skeleton, proportions.scales(values, species.sliders))
+	return true
 
 
 ## Giro global de cada hueso del perfil, calculado aquí (no con la función que se prueba): padre antes que hijo.
