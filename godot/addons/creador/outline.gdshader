@@ -1,6 +1,8 @@
 // Contorno exterior con malla invertida (prueba del paso 3.12; se completa en el 3.10): se dibujan las caras de
 // atrás, empujadas hacia fuera en pantalla. Grosor en píxeles: igual de cerca que de lejos.
 // Uso: next_pass del material del cuerpo (sigue a las formas y al esqueleto, porque es la misma malla).
+// AC.3c: UV2.x es la máscara del ojo (TEXCOORD_1 de cuerpo.glb; 0 en la piel y en mallas sin ese canal): anula el grosor
+// y lleva el casco hacia el fondo, para no pintar contorno dentro de la abertura. La sombra no cambia.
 shader_type spatial;
 render_mode unshaded, cull_front;
 
@@ -11,7 +13,10 @@ void vertex() {
 	vec4 clip = PROJECTION_MATRIX * (MODELVIEW_MATRIX * vec4(VERTEX, 1.0));
 	vec3 normal = (PROJECTION_MATRIX * vec4(MODELVIEW_NORMAL_MATRIX * NORMAL, 0.0)).xyz;
 	vec2 direction = normalize(normal.xy + vec2(1e-6));
-	clip.xy += direction * width_px * 2.0 / VIEWPORT_SIZE * clip.w;
+	clip.xy += direction * width_px * (1.0 - UV2.x) * 2.0 / VIEWPORT_SIZE * clip.w;
+	if (!IN_SHADOW_PASS) {
+		clip.z *= 1.0 - 0.99 * UV2.x;
+	}
 	POSITION = clip;
 }
 

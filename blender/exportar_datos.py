@@ -2,7 +2,7 @@
 """Genera los datos de una especie para Godot (paso 2.3), segun datos/FORMATO.md.
 
 Uso: blender -b -P blender/exportar_datos.py -- godot/datos/humana
-Lee <carpeta>/deslizadores.csv y escribe cuerpo.glb, articulaciones.json y manifiesto.json.
+Lee <carpeta>/deslizadores.csv y escribe cuerpo.glb, ojos.json (AC.3b), articulaciones.json y manifiesto.json.
 presets/anime.json (paso 3.15) se escribe aparte, como deslizadores.csv; aqui solo entra en el manifiesto.
 Las formas de cara (filas «cara:<forma>», paso 3.14) salen de blender/cara_anime.py y las propias (filas
 «propia:<forma>», paso 6.2), de blender/formas_propias.py, con las correcciones de «alisado» (ver own_shapes).
@@ -44,6 +44,7 @@ MIN_DELTA = 1e-6  # metros; por debajo, el hueso no se mueve con esa forma
 CORRECTION_MIN = 0.0005  # metros; una correccion mas pequena no se guarda
 TEMPLATES = ("anime", "femenino", "masculino")  # presets/: el de personaje nuevo (Neutro) y los de genero (PL.10)
 FILES = ("cuerpo.glb", "articulaciones.json", "deslizadores.csv") + tuple(f"presets/{t}.json" for t in TEMPLATES)
+EYES_FILE = "ojos.json"  # opcional: una especie sin este archivo no tiene capas de ojo (AC.3b)
 PC_ONLY_ZONES = ("Ojos", "Nariz", "Boca", "Mandíbula", "Orejas")  # paso 9.2: Android no carga sus formas
 
 
@@ -258,10 +259,10 @@ def shape_weights(values, names, neutrals, fixed=None):
     return weights
 
 
-def face_shapes(basemesh, rows):
+def face_shapes(basemesh, rows, fit=None):
     """{id: (desplazamiento de cada vertice, huesos sin mover)} de las filas «cara:<forma>»: no mueven huesos."""
     import cara_anime  # aqui y no arriba: cara_anime importa este archivo
-    deltas = cara_anime.feature_shapes(basemesh)
+    deltas = cara_anime.feature_shapes(basemesh, fit)
     still = {b.name: (np.zeros(3), np.zeros(3)) for b in basemesh.parent.data.bones}
     return {r["id"]: (deltas[r["incr"][len(FACE):]], still) for r in face_rows(rows)}
 
@@ -364,6 +365,7 @@ def joints_json(rig, shapes, socket_rules):
 
 
 def manifest(folder, basemesh, rig):
+    files = FILES + (EYES_FILE,) if os.path.exists(os.path.join(folder, EYES_FILE)) else FILES
     return {
         "version": FORMAT_VERSION,
         "species": SPECIES,
@@ -375,7 +377,7 @@ def manifest(folder, basemesh, rig):
             "sockets": [b.name for b in rig.data.bones if not b.use_deform],
         },
         "zonas_solo_pc": list(PC_ONLY_ZONES),
-        "files": {name: {"sha256": sha256(os.path.join(folder, name))} for name in FILES},
+        "files": {name: {"sha256": sha256(os.path.join(folder, name))} for name in files},
     }
 
 
@@ -396,11 +398,21 @@ def export_species(folder):
     rows = read_sliders(folder)
     _, shapes, bodies = measure_shapes(rows)
     basemesh, socket_rules = build_base()
-    shapes.update(face_shapes(basemesh, rows))
+    import cara_anime  # aqui y no arriba: cara_anime importa este archivo
+    fit = cara_anime.EyeFit(basemesh)
+    fit.fix_eye_shapes(shapes)
+    shapes.update(face_shapes(basemesh, rows, fit))
     shapes.update(own_shapes(basemesh, rows, bodies))
     add_shape_keys(basemesh, shapes)
+    cara_anime.add_mask_uv(basemesh, fit.mask())
     export_glb(basemesh, [], os.path.join(folder, "cuerpo.glb"), morph=True, deform_only=False)
     write_full_names(os.path.join(folder, "cuerpo.glb"), list(shapes))
+    with open(os.path.join(folder, "presets", "anime.json"), encoding="utf-8") as file:
+        preset = json.load(file)["valores"]
+    eyes = cara_anime.eye_data(fit, os.path.join(folder, "cuerpo.glb"), preset)
+    with open(os.path.join(folder, EYES_FILE), "w", encoding="utf-8") as file:
+        json.dump(eyes, file, sort_keys=True, separators=(",", ":"))
+        file.write("\n")
     write_json(os.path.join(folder, "articulaciones.json"), joints_json(basemesh.parent, shapes, socket_rules))
     data = manifest(folder, basemesh, basemesh.parent)
     write_json(os.path.join(folder, "manifiesto.json"), data)

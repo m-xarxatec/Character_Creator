@@ -67,10 +67,13 @@
    "sha256": "cb4088677a396768390123d7fea94c0b10a7d3ee77afab7adcb6881195c9cdfc"
   },
   "cuerpo.glb": {
-   "sha256": "7203126c088f39c6d65f6b19aab4b3956db90315075fc95072e5f35e737f1841"
+   "sha256": "b89bd2f437f90fb5d4d68b0c64b8e82c3b241da2341220c0d2401318b54ab805"
   },
   "deslizadores.csv": {
    "sha256": "286cbbebe0b64678bc9342ceff65a93d623b00148a8ac098a992329e7183fb5f"
+  },
+  "ojos.json": {
+   "sha256": "782cbc07eb8efc73424371f73d0317f0a4f8b1859a4d5186957f223500a2885e"
   },
   "presets/anime.json": {
    "sha256": "8d54f16bb967c5f851bef9afee15848622b676412ba1b3de8702f5045b5cba24"

@@ -46,6 +46,7 @@ const ZoneRay := preload("zone_ray.gd")
 const PackLibrary := preload("../addons/creador/pack_library.gd")  # paso AB.4
 const BodyPiece := preload("../addons/creador/body_piece.gd")
 const BodyDerived := preload("../addons/creador/body_derived.gd")  # paso AB.9a
+const EyeMesh := preload("../addons/creador/eye_mesh.gd")  # paso AC.3c
 const RigidPiece := preload("../addons/creador/rigid_piece.gd")  # paso AB.11
 const GarmentCut := preload("../addons/creador/garment_cut.gd")  # paso AB.5
 ## Paso AB.6: capa de cada ranura (más alta = más por fuera): se adelanta BodyMaterial.PIECE_PULL × capa.
@@ -441,6 +442,9 @@ func _load_character() -> String:
 	BodyMaterial.apply(species.mesh)
 	Preset.apply_look(species.mesh, loaded)
 	set_values(loaded["valores"])
+	for eye in EyeMesh.build(species.mesh, species.skeleton, species.eyes):  # siguen a las formas; no son piezas del pack
+		updater.pieces.append(eye)
+		BodyPiece.follow(eye, species.mesh)
 	style = StyleView.new()
 	style.setup(species.mesh, species.skeleton)
 	style.refresh()

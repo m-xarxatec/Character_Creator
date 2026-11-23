@@ -12,6 +12,7 @@ extends RefCounted
 
 const VERSION := 3
 const NEW_CHARACTER_PRESET := "presets/anime.json"
+const EYES_FILE := "ojos.json"  # opcional (AC.3c): sin él, la especie no tiene capas de ojo
 
 var error := ""
 var folder: String
@@ -21,6 +22,7 @@ var skeleton: Skeleton3D
 var mesh: MeshInstance3D
 var joints: Dictionary  ## el diccionario "bones" de articulaciones.json
 var sliders: Array[Dictionary]  ## una fila de deslizadores.csv por elemento: {columna: valor}
+var eyes: Dictionary  ## ojos.json (vacío si la especie no lo tiene)
 
 
 ## Devuelve el error ("" si todo va bien); también queda en error.
@@ -44,6 +46,7 @@ func _load() -> String:
 			return "El sha256 de %s no coincide con el manifiesto" % file
 	joints = _read_json(folder.path_join("articulaciones.json")).get("bones", {})
 	sliders = _read_csv(folder.path_join("deslizadores.csv"))
+	eyes = _read_json(folder.path_join(EYES_FILE)) if FileAccess.file_exists(folder.path_join(EYES_FILE)) else {}
 	return _load_scene(folder.path_join("cuerpo.glb"))
 
 

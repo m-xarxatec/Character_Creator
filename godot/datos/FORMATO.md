@@ -9,6 +9,7 @@ Unidades y ejes de Godot: metros, Y arriba, mirando a +Z.
 | `manifiesto.json` | Versión, especie y lista de archivos con su `sha256` |
 | `cuerpo.glb` | Malla base completa en **pose A**, esqueleto, pesos, color `garment` y formas |
 | `articulaciones.json` | Dónde está cada hueso en el cuerpo base y cuánto lo mueve cada forma |
+| `ojos.json` | Opcional (AC.3b): lazo, bolsa y datos fijos de cada ojo, en el estado anime. Sin él, la especie no tiene capas de ojo |
 | `deslizadores.csv` | La tabla del paso 2.1, con la columna `neutro`, las formas de cara (versión 2) y las propias (versión 3) |
 | `presets/anime.json` | Preset de personaje nuevo (paso 3.15), en el formato de `godot/addons/creador/preset.gd` |
 | `presets/<género>.json` | Presets de género (paso PL.10): `femenino` y `masculino` (el neutro es `anime.json`); mismo formato |
@@ -124,6 +125,23 @@ Filas de tipo Forma con `incr` = `propia:<forma>` (y `decr` = `propia:<forma>` s
   así que sigue al cuerpo. Sin ellas, el alisado fijo del neutro hundía el pezón de los cuerpos que ya lo traen más
   plano. Donde un triángulo se daría la vuelta, el alisado se queda a medias (PL.0c). Su peso es el producto de sus partes.
 - El preset `anime.json` lleva `alisado` = 1 («sin detalle anatómico» desde el primer momento). Un preset sin la clave la deja en 0.
+
+## `ojos.json` (paso AC.3b)
+
+Lo escribe `blender/cara_anime.py` (`eye_data`) tras exportar `cuerpo.glb`. Si existe, va en el manifiesto. `version` propia: 1.
+
+```json
+{"version": 1, "l": {"lazo": [0], "esquinas": [0, 20], "arco_superior": [20], "arco_inferior": [20], "bolsa": [0],
+  "uv": [[0.0, 0.0]], "altura": [0.0], "elevacion": [0.0], "centro": [0.0, 0.0, 0.0], "normal": [0.0, 0.0, 1.0]}, "r": {}}
+```
+
+- `lazo`: 36 índices de vértice del `.glb`. `esquinas`, `arco_superior` y `arco_inferior`: posiciones dentro de `lazo`.
+- `bolsa`: índices del `.glb`, con los repetidos de las costuras (412 por ojo; sus triángulos son 730). `uv`, `altura` y `elevacion` van con cada índice de `bolsa`.
+- `uv`: posición anime (x, y) menos `centro`, en metros. `altura`: de 0 (párpado de abajo) a 1 (de arriba). `elevacion`: metros en +Z hasta la membrana del lazo.
+- `normal`: la de estilo (`StyleNormals`), media del lazo en el estado anime.
+- Si cambia el número de vértices del `.glb` (14.517), cambian estos índices.
+
+`cuerpo.glb` lleva en `TEXCOORD_1` (x) la máscara del contorno, por vértice: 1 en bolsa, lazo y anillos 1–5; 0,5 en el anillo 6; 0 en el resto.
 
 ## `presets/`
 
