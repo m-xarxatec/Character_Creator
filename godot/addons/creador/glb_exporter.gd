@@ -10,6 +10,8 @@ extends RefCounted
 ## Normales del estilo (paso 3.16, style_normals.gd): torso suavizado y cara de elipsoide; viajan en el .glb.
 ## En el archivo: Character → Armature → huesos, malla y anclajes (misma estructura que los .glb de Blender).
 ## El personaje del editor no cambia.
+## Paso AB.7: pieces (BodyPiece) salen como mallas aparte del mismo esqueleto, horneadas igual, con un
+## StandardMaterial3D de su color (el toon del .tres es el del cuerpo; en el juego se puede poner también a ellas).
 ## Material: StandardMaterial3D con luz, sin brillo (metálico 0, rugosidad 1; paso 3.11a), para que reciba sombra fuera
 ## del editor, con la prenda horneada en una textura (garment_texture.gd). Con la prenda oculta, sin textura: todo color piel.
 ## El estilo toon no viaja en el .glb: al lado se guarda heroe.tres (paso 3.11b), el material toon con el contorno y
@@ -28,18 +30,25 @@ const TEXTURE_SIZE := 2048  # 1 píxel ≈ 0,9 mm en el borde de la prenda (medi
 
 ## El personaje que se exporta, en memoria (quien llama lo libera). null si no se puede (ver Sockets.error).
 ## En pose T, los huesos salen con los ejes del perfil humanoide (D11, paso 5.16): un juego lo anima sin «Overwrite Axis».
-static func build(mesh: MeshInstance3D, skeleton: Skeleton3D, socket_names: Array, t_pose: bool) -> Node3D:
-	var job := prepare(mesh, skeleton, socket_names, t_pose)
+static func build(mesh: MeshInstance3D, skeleton: Skeleton3D, socket_names: Array, t_pose: bool, pieces: Array = [],
+		rigid: Array = []) -> Node3D:
+	var job := prepare(mesh, skeleton, socket_names, t_pose, pieces, rigid)
 	compute(job)
 	return finish(job)
 
 
 ## Paso P.1: exportar en tres partes, para que lo pesado (compute, ~1,3 s) vaya en un hilo.
 ## prepare: hilo principal. Hornea y lee del editor todo lo que hace falta; lo que cambie después no entra.
-static func prepare(mesh: MeshInstance3D, skeleton: Skeleton3D, socket_names: Array, t_pose: bool) -> Dictionary:
-	var baked: Node3D = CharacterBaker.bake(mesh, skeleton, t_pose, t_pose)
+static func prepare(mesh: MeshInstance3D, skeleton: Skeleton3D, socket_names: Array, t_pose: bool,
+		pieces: Array = [], rigid: Array = []) -> Dictionary:
+	var baked: Node3D = CharacterBaker.bake(mesh, skeleton, t_pose, t_pose, pieces, rigid)
 	var character: Node3D = Sockets.to_nodes(baked, socket_names)
 	baked.free()
+	if character != null:
+		var colored: Array = pieces.duplicate()
+		for holder: Node in rigid:  # paso AB.11
+			colored.append_array(holder.get_children().filter(func(n: Node) -> bool: return n is MeshInstance3D))
+		_color_pieces(character, colored)
 	var job := {"character": character, "toon": BodyMaterial.standalone(mesh),
 		"skin": BodyMaterial.get_color(mesh, "skin_color"), "garment": BodyMaterial.get_color(mesh, "garment_color"),
 		"garment_visible": BodyMaterial.is_garment_visible(mesh)}
@@ -91,8 +100,23 @@ static func _material(job: Dictionary) -> StandardMaterial3D:
 	return material
 
 
-static func save(mesh: MeshInstance3D, skeleton: Skeleton3D, socket_names: Array, path: String, t_pose: bool) -> Error:
-	return write(build(mesh, skeleton, socket_names, t_pose), BodyMaterial.standalone(mesh), path)
+static func save(mesh: MeshInstance3D, skeleton: Skeleton3D, socket_names: Array, path: String, t_pose: bool,
+		pieces: Array = []) -> Error:
+	return write(build(mesh, skeleton, socket_names, t_pose, pieces), BodyMaterial.standalone(mesh), path)
+
+
+## Paso AB.7: material de cada pieza exportada (todas las mallas detrás de la primera), con el color del editor.
+static func _color_pieces(character: Node3D, pieces: Array) -> void:
+	var colors := {}
+	for piece: MeshInstance3D in pieces:
+		colors[piece.name] = BodyMaterial.get_color(piece, "skin_color")
+	for exported: MeshInstance3D in character.find_children("*", "MeshInstance3D", true, false).slice(1):
+		var material := StandardMaterial3D.new()
+		material.resource_name = String(exported.name).to_lower()
+		material.metallic = 0.0
+		material.roughness = 1.0
+		material.albedo_color = colors.get(exported.name, Color.WHITE)
+		exported.mesh.surface_set_material(0, material)
 
 
 ## write: hilo principal. Escribe el .glb y, al lado, el material toon (.tres). Libera el personaje.

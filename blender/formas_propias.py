@@ -8,8 +8,9 @@ Formas (cada deslizador da _decr e _incr; alisado, solo una):
 - buttocks_height: sube o baja 2,5 cm los gluteos, con caida suave hacia el borde (falloff).
 - buttocks_roundness: _incr empuja por la normal, mas en el centro; _decr relaja hacia una membrana tensa.
 - alisado: quita relieve de pecho y entrepierna (membrana con borde fijo que conserva una parte del relieve), con
-  correcciones «alisado*<esquina de musculo, grasa y pecho>» que calcula exportar_datos.py (smoothing_corrections):
-  el alisado del neutro, fijo, hundia el pezon de los cuerpos que ya lo traen mas plano.
+  correcciones «alisado*<esquina de las macros>» que calcula exportar_datos.py (smoothing_corrections):
+  el alisado del neutro, fijo, hundia el pezon de los cuerpos que ya lo traen mas plano. Donde un triangulo se da
+  la vuelta, el alisado se reduce a la mitad hasta que no quede ninguno (unflip, paso PL.0c).
 Todo en ejes de Blender (Z arriba) y simetrico (cada forma se promedia con su reflejo en X).
 Salida determinista y CC0 (como la cara, ver README.md).
 
@@ -46,6 +47,7 @@ SMOOTH_KEEP = 0.2  # alisado: parte del relieve que conserva
 BORDER_PASSES = 3
 FALLOFF_STEPS = 8
 FULL = 3000  # pasadas para llegar a la membrana
+UNFLIP_PASSES = 30  # alisado: veces, como mucho, que se reduce a la mitad donde hay triangulos invertidos
 SMOOTHING = "alisado"
 SHAPES = ("shoulder_height_decr", "shoulder_height_incr", "buttocks_height_decr", "buttocks_height_incr",
           "buttocks_roundness_incr", "buttocks_roundness_decr", SMOOTHING)  # las que da world_shapes, en su orden
@@ -166,16 +168,37 @@ def world_shapes(basemesh):
     shapes["buttocks_roundness_incr"] = (symmetric(BUTTOCKS_PUSH * push[:, None] * normals, mirror), still)
     shapes["buttocks_roundness_decr"] = (symmetric(relax(points, edges, buttocks, FULL, ROUND_KEEP) - points, mirror), still)
 
-    shapes[SMOOTHING] = (smoothing(points, edges, zones, mirror), still)
+    shapes[SMOOTHING] = (smoothing(points, edges, triangles, zones, mirror), still)
     return shapes
 
 
-def smoothing(points, edges, zones, mirror):
+def smoothing(points, edges, triangles, zones, mirror):
     """Desplazamiento de alisado sobre esos puntos (membrana en pecho y entrepierna, sin escalon en el borde)."""
     smooth = zone_mask(zones, ["chest", "crotch"], len(points))
     moved = relax(points, edges, smooth, FULL, SMOOTH_KEEP)
     moved = relax(moved, edges, grow(smooth, edges, 1), BORDER_PASSES, 0.0)
-    return symmetric(moved - points, mirror)
+    return unflip(points, symmetric(moved - points, mirror), triangles, mirror)
+
+
+def flipped(before, after, triangles):
+    """Mascara de los triangulos cuya normal se da la vuelta (producto escalar con la original <= 0)."""
+    def normals(points):
+        a, b, c = (points[triangles[:, i]] for i in range(3))
+        return np.cross(b - a, c - a)
+    return np.einsum("ij,ij->i", normals(before), normals(after)) <= 0
+
+
+def unflip(points, delta, triangles, mirror):
+    """delta con la mitad del desplazamiento en los vertices (y sus simetricos) de cada triangulo que se da la
+    vuelta, repetido hasta que no quede ninguno o UNFLIP_PASSES veces. Sigue simetrico."""
+    delta = delta.copy()
+    for _ in range(UNFLIP_PASSES):
+        bad = flipped(points, points + delta, triangles)
+        if not bad.any():
+            break
+        verts = np.unique(triangles[bad])
+        delta[np.union1d(verts, mirror[verts])] *= 0.5
+    return delta
 
 
 def own_shapes(basemesh):

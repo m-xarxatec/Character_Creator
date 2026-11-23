@@ -24,12 +24,17 @@ static func save(path: String, view: SubViewportContainer, values: Dictionary) -
 
 ## El preset del personaje de la vista, como texto (paso P.4: también sirve para saber si hay cambios).
 static func to_text(preset_name: String, view: SubViewportContainer, values: Dictionary) -> String:
+	return Preset.to_text(to_dict(preset_name, view, values))
+
+
+## Paso 10.2: el mismo preset como diccionario (va dentro del proyecto .gmolde).
+static func to_dict(preset_name: String, view: SubViewportContainer, values: Dictionary) -> Dictionary:
 	var mesh: MeshInstance3D = view.species.mesh
 	var colors := {}
 	for key: String in COLORS:
 		colors[key] = BodyMaterial.get_color(mesh, key)
-	return Preset.to_text(Preset.to_dict(preset_name, view.SPECIES, values, colors,
-		BodyMaterial.is_garment_visible(mesh), BodyMaterial.get_finish(mesh)))
+	return Preset.to_dict(preset_name, view.SPECIES, values, colors, BodyMaterial.is_garment_visible(mesh),
+		BodyMaterial.get_finish(mesh))
 
 
 static func read(path: String, view: SubViewportContainer) -> Dictionary:

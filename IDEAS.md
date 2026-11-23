@@ -7,7 +7,6 @@
 ## Antes del MVP (solo si sobra tiempo, sin desviar el plan)
 
 - Presets de cuerpo: atlético, delgado, robusto, mayor.
-- `probar_rendimiento.gd` debería aceptar rutas relativas al `.glb` (hoy pide la absoluta; con `datos/humana/cuerpo.glb` no lo abre).
 - Botón "aleatorio" con límites razonables.
 - Comparar antes y después (dos maniquíes lado a lado).
 - Medidas reales (altura en cm) junto a los deslizadores.
@@ -20,7 +19,6 @@
 
 - Ir añadiendo filas a la tabla del paso 2.1 hasta cubrir cada detalle del cuerpo (MakeHuman trae unas 800 formas listas: orejas, nariz, mandíbula, dedos, pies…).
 - Deslizador **Edad** (primera parte, de joven a mayor): la macro `age` de MakeHuman, con sus correcciones.
-- **Futuro: edades de 5 a 60 años, como Anny.** Deslizador Edad completo y plantillas prehechas por edad que después se ajustan con los deslizadores. D42 aprobada el 2026-11-19 (ver X.17 en `propuestas/expansion_v2.md`).
 
 ---
 
@@ -33,6 +31,7 @@
 - **Materiales:** texturas de piel, estilo pixel art. (El color de piel pasó al MVP el 2026-11-12, solo el color: paso 4.7 de `PLAN.md`.) (El estilo ilustración con contorno ya está en `PLAN.md`.)
 - **Exportar:** VRM 1.0, niveles de detalle (LOD).
 - **Hombro con el brazo sobre la cabeza:** la piel se hunde 21 mm (neutro) y 43 mm (extremo) al «Atacar» (5.8); la clavícula al 25 % (5.15) arregla la pose T, no esto. Haría falta una forma correctora guiada por el ángulo del brazo (o pesos mejores en el hombro), y que el juego la use.
+- **`shoulder_height_decr` en la mujer musculada y grasa:** con `gender` 0 y `muscle` y `weight` a 1 invierte 4 triángulos, sea cual sea el pecho (4 de las 32 esquinas; medido en PL.0b, 2026-11-20). `probar_formas_propias.py` lo enseña como `MEDIDA` y hace fallar «macros extremas».
 - **Selector de polígonos al exportar:** Low-poly (proxy741), Ligero (proxy ~1.600), Medio (reducción automática de la base), Completo (base). Opción de sombreado plano. Mismos huesos y anclajes; pesos heredados de la base; textura de prenda horneada por nivel; pruebas de deformación por nivel.
 
 ---
@@ -53,7 +52,6 @@
 
 - Contorno tipo ilustración regulable: desde quitarlo del todo hasta muy grueso, con un deslizador; quizá también color del contorno y grosor distinto por zona (cara más fino, silueta más grueso).
 - Hace grumos en los dedos de manos y pies (grosor en píxeles mayor que el dedo en pantalla): hace falta grosor por zona.
-- El borde de la prenda sale ondulado en primeros planos: revisarlo.
 
 ---
 
@@ -61,8 +59,10 @@
 
 - **Estilo como archivo de datos** (como la tabla de deslizadores): tonos de sombra (2, 3 o suave), dureza del borde, contorno (grosor y color), luz de borde y tono de la piel en sombra. Añadir un estilo = añadir un archivo.
 - **Grado de realismo**, de anime a semirrealista: cambia el sombreado (toon o PBR), las texturas de piel y la cabeza. Sin hiperrealismo: el `.glb` sale con UV limpias y malla completa para que cada uno añada sus texturas en Blender.
+- **Sombreado de la ampliación, meta estilo VRoid** (solo inspiración visual, sin su material ni assets): referencia visual `diseno/referencia_estilo_quaternius.png`; ver D44 en `ruta/DECISIONES.md`.
+- **Acabado anime por capas** (D46, 2026-11-22): toon tipo VRoid y VTuber, con piel bonita en cualquier tono. Los ojos se hacen por capas y piezas, no pintados enteros en la cara; orden: base blanca, iris, pupila, brillos, párpado, pestañas. El shader sigue en la Fase SH de `PLAN.md` (D47); el toon suave queda solo como columna de comparación en SH.1. Imágenes de IA: antes, revisar su licencia.
 - **Luz de vista previa en el editor:** control de ángulo e intensidad, solo para probar el personaje; no se exporta.
-- **Tinte de sombra** en el panel Acabado: que la sombra pueda cambiar de matiz (p. ej. más rojiza o azulada), no solo oscurecerse.
+- **Sombra elegida a mano**, como mucho en un apartado «avanzado» (D48; no se hace ahora). Por defecto la sombra se calcula desde el color de cada zona (SH.2), sin galería.
 - **Umbral del tono medio en la cara** como valor del acabado (no viaja a otros motores, por eso no es el arreglo de la franja de sombra).
 - **Aplanar más las normales de la cara:** con fondo 0,35 sale una línea dura en la sien, probablemente por el escalón entre el medio elipsoide trasero y el delantero. Probar una transición gradual de la profundidad (sin escalón).
 - **Estilos de ojos como packs** (iris, pestañas, brillos), según "Sistema de piezas".
@@ -83,11 +83,11 @@
 ## Después del MVP: interfaz
 
 - Estética de la ventana del editor (tema, colores, tipografía, espaciado), según la maqueta. Hoy son los controles de Godot por defecto.
-- Cuando el editor esté como queremos: un comando en el PATH que lo abra con una sola orden.
 - Elegir tocando el cuerpo (IU.7) para partes pequeñas: rasgos de la cara (nariz, labios, cejas) u otras piezas, cuando el proyecto crezca.
 - Barra de título de los diálogos (Ajustes, Comandos) con el tema: hoy es la gris de Godot (revisor, IU.11).
 - Margen entre los textos del panel derecho («4 ajustes», «Más alto»…) y la barra de desplazamiento (revisor, IU.11).
 - Cambio de color de 120 ms al pasar el ratón por los botones (guía §3 «Movimiento»): Godot no lo anima solo; pide código en cada botón. Fuera de IU.10.
+- Miniaturas de piezas después del shader nuevo: imágenes comprimidas (WebP o PNG), generadas con un solo comando, sin depender del shader en tiempo de ejecución
 
 ## Pack "Universal Base Characters" de Quaternius (CC0)
 
@@ -118,6 +118,7 @@ El zip está en `referencias/` (git no lo guarda). Versión gratis: 2 cuerpos es
 - **Android** (tablet).
 - **Rig automático con IA** (UniRig) para mallas importadas sin huesos, cuando haya una GPU con más de 8 GB.
 - **Comunidad:** repositorio de packs, guía para crear piezas, traducciones.
+- **Aleatorio con candados y semilla** (de PL.5, quitado por el responsable el 2026-11-20): candado por zona para que el azar no la cambie, «Atrevido» (0–1) y la semilla visible para repetir una tirada.
 - **Simetría relativa:** mover un lado suma lo mismo al otro y conserva la diferencia.
 - **8 influencias:** opción de exportar con 8 influencias por vértice (sin pérdida; Godot lo admite, algunos motores solo leen 4).
 - **Genitales (opcional):** cuando el cuerpo sea razonable, después del MVP. apagado por defecto y como pieza aparte; choca con «sin detalle anatómico», así que pide su propia decisión antes de entrar en un plan.
@@ -130,6 +131,11 @@ El zip está en `referencias/` (git no lo guarda). Versión gratis: 2 cuerpos es
 - Espadas, escudos y linternas en los puntos de anclaje.
 - Base chibi (unas 2,5 cabezas) y base esbelta con partes exageradas.
 - Daño por zonas del cuerpo usando los mismos huesos.
+- Piezas (2026-11-21, tras AB.5–AB.13): ponerlas y quitarlas con Deshacer (aplazado hasta después de la expansión, 2026-11-22); largo de manga, pernera y falda como
+  deslizadores (bloque `parametros` del proyecto); borde de las prendas recortadas sin dientes (partir aristas);
+  borrar al exportar la piel tapada (12.5); miniaturas de las piezas en las pestañas.
+
+- **RE.1c, prendas de OverScore que no entraron** (no pasan los límites de la ficha `ruta/pasos/RE.1c_overscore_ropa.md`): Jean Shorts («Atacar» 6,73 %), Scallop Trim T-Shirt («Atacar» 16,0 mm), Sports Jersey («Atacar» 5,08 % y 18,9 mm), Hoodie with Hood Down (hueco 1,46 mm, hundida 6,19 mm, «Atacar» 19,5 mm), Short-Sleeve Sweatshirt (hueco −2,22 mm, hundida 8,27 mm, «Atacar» 12,3 mm), Turtleneck Sweater (hueco −4,49 mm, 3,43 % bajo la piel, «Atacar» 5,93 % y 19,9 mm, 60 cruces con pelo corto) y Long Sleeve Athletic Top (hueco −15,93 mm, 8,18 % bajo la piel, «Atacar» 18,8 mm).
 
 ---
 

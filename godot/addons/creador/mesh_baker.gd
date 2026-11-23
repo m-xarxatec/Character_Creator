@@ -13,6 +13,27 @@ extends RefCounted
 ## - No se calculan tangentes: en el MVP no hay mapas de normales.
 
 
+static var _shapes_mesh: Mesh = null  # paso OPT.1: de qué malla son _shapes
+static var _shapes: Array = []
+
+
+## Paso OPT.1: las formas de la malla (surface_get_blend_shape_arrays, ~200 ms con 286). En el mismo fotograma se
+## reutilizan (al abrir las piden la vista del estilo, el encuadre y las medidas); en el siguiente se sueltan (~100 MB).
+static func shape_arrays(mesh: Mesh) -> Array:
+	if _shapes_mesh != mesh:
+		_shapes = (mesh as ArrayMesh).surface_get_blend_shape_arrays(0)
+		_shapes_mesh = mesh
+		var tree := Engine.get_main_loop() as SceneTree
+		if tree != null and not tree.process_frame.is_connected(_forget_shapes):
+			tree.process_frame.connect(_forget_shapes, CONNECT_ONE_SHOT)
+	return _shapes
+
+
+static func _forget_shapes() -> void:
+	_shapes = []
+	_shapes_mesh = null
+
+
 static func bake(mesh: MeshInstance3D, skeleton: Skeleton3D) -> Dictionary:
 	var arrays := mesh.mesh.surface_get_arrays(0)
 	var vertices: PackedVector3Array = arrays[Mesh.ARRAY_VERTEX]
@@ -54,20 +75,45 @@ static func _global_pose(skeleton: Skeleton3D, bone: int, globals: Array[Transfo
 	return globals[bone]
 
 
-static func _add_shapes(mesh: MeshInstance3D, vertices: PackedVector3Array, normals: PackedVector3Array) -> void:
+## cache (opcional, paso OPT.1): {forma: [vértices, normales]}, que se rellena con las formas activas que falten. Pedir
+## las formas a la malla las trae todas (~200 ms con 286): quien hornea a menudo (style_view.gd) guarda el suyo.
+static func _add_shapes(mesh: MeshInstance3D, vertices: PackedVector3Array, normals: PackedVector3Array,
+		cache: Variant = null) -> void:
+	var active := active_shapes(mesh)
+	var shapes := {} if cache == null else cache as Dictionary
+	cache_shapes(mesh, active, shapes)
+	add_shape_arrays(vertices, normals, active, shapes)
+
+
+## {forma: peso} de las formas con peso distinto de 0 (hilo principal: lee la malla).
+static func active_shapes(mesh: MeshInstance3D) -> Dictionary:
 	var active := {}
 	for shape in mesh.mesh.get_blend_shape_count():
 		if mesh.get_blend_shape_value(shape) != 0.0:
 			active[shape] = mesh.get_blend_shape_value(shape)
+	return active
+
+
+## Pone en cache {forma: [vértices, normales]} las de active que falten (hilo principal: pide las formas a la malla).
+static func cache_shapes(mesh: MeshInstance3D, active: Dictionary, cache: Dictionary) -> void:
+	if active.keys().any(func(shape: int) -> bool: return not cache.has(shape)):
+		var all := shape_arrays(mesh.mesh)
+		for shape: int in active:
+			if not cache.has(shape):
+				cache[shape] = [all[shape][Mesh.ARRAY_VERTEX], all[shape][Mesh.ARRAY_NORMAL]]
+
+
+## Suma las formas a vértices y normales con sus pesos. Solo arrays: vale en un hilo (paso OPT.2).
+static func add_shape_arrays(vertices: PackedVector3Array, normals: PackedVector3Array, active: Dictionary,
+		shapes: Dictionary) -> void:
 	if active.is_empty():
 		return
 	var base_vertices := vertices.duplicate()
 	var base_normals := normals.duplicate()
-	var shapes := (mesh.mesh as ArrayMesh).surface_get_blend_shape_arrays(0)
 	for shape: int in active:
 		var weight: float = active[shape]
-		var shape_vertices: PackedVector3Array = shapes[shape][Mesh.ARRAY_VERTEX]
-		var shape_normals: PackedVector3Array = shapes[shape][Mesh.ARRAY_NORMAL]
+		var shape_vertices: PackedVector3Array = shapes[shape][0]
+		var shape_normals: PackedVector3Array = shapes[shape][1]
 		for i in vertices.size():
 			vertices[i] += weight * (shape_vertices[i] - base_vertices[i])
 			normals[i] += weight * (shape_normals[i] - base_normals[i])

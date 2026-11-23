@@ -1,14 +1,12 @@
-# Lo que espera al responsable (2026-11-19)
+# Lo que espera al responsable (2026-11-21)
 
 > Los pasos con `[~]` están hechos salvo esta decisión. Cuando se decida, se cierra el paso y se borra su línea de aquí.
 
 | Paso | Qué decidir | Dónde mirar |
 | --- | --- | --- |
-| 5.15 / 5.11 | Las capturas de referencia cambian con la pose T nueva (1,6–3,8 %). ¿Pasan las nuevas a `aprobadas/`? | `pruebas/capturas/referencia/vuelta_2/` (y `dif/`); el hombro: `pruebas/capturas/hombro_natural/hombro_natural.png` |
-| 6.3 | ¿Se ven bien las formas nuevas al moverse? ¿Aceptas los 2 cruces justificados (manos con brazos delante; muslo–pecho en sentadilla con glúteo redondo)? Propongo pasar el revisor-visual | `pruebas/capturas/formas_propias_banco/` (una carpeta por cuerpo) y registro (6.3) |
-| 7.0 | Pruébalo a mano: Guardar preset…, cambia algo, Abrir preset… | `(ulimit -v 4000000; timeout 900 godot --path godot)` |
-| 7.1 | Abre el build y compáralo con el editor: ¿alguna diferencia de color, contorno o letra? El build es de antes de la interfaz nueva: rehacerlo antes de mirar | `build/linux/gamemolde.x86_64` frente a `godot --path godot` |
-| 7.2 | ¿Qué 3 o 4 capturas van al README y en qué orden? ¿Grabas un vídeo de 30–60 s (mover deslizadores, probar huesos, exportar, abrir en Godot)? Las candidatas son de antes de la interfaz nueva | `pruebas/capturas/readme_candidatas/` |
-| 7.4 | Cuando estén los de arriba, publicar como versión preliminar (D29): `git tag v0.1.0 && git push origin v0.1.0` y `gh release create v0.1.0 build/GameMolde-0.1.0-linux.zip build/GameMolde-0.1.0-linux.zip.sha256 --title "GameMolde 0.1.0" --notes-file build/NOTAS_0.1.0.md --prerelease`. Después, que lo pruebe otra persona sin ayuda | `build/NOTAS_0.1.0.md` |
-| Bloque 0 | `propuestas/expansion_v2.md` §2: ¿entran en el plan 0.3 (`probar_rendimiento` con rutas relativas), 0.4 (borde de la prenda en primeros planos) y 0.5 (comando en el PATH)? | `propuestas/expansion_v2.md` §2 |
-| Pruebas | Las que necesitan ventana o la salida de Blender no se lanzaron tras integrar `traspaso` | Lista en `ruta/TRABAJO_WINDOWS.md` («En Linux») |
+| 7.2 | ¿Qué 3 o 4 capturas van al README y en qué orden? El vídeo, cuando el editor esté como quieres | `pruebas/capturas/interfaz/iu11/` y `pruebas/capturas/readme_candidatas/` |
+| 7.4 | Cuando estén los de arriba, publicar la 0.2.0 como versión preliminar (D29): `git tag v0.2.0 && git push origin v0.2.0` y `gh release create v0.2.0 build/GameMolde-0.2.0-linux.zip build/GameMolde-0.2.0-linux.zip.sha256 --title "GameMolde 0.2.0" --notes-file build/NOTAS_0.2.0.md --prerelease`. Después, que lo pruebe otra persona sin ayuda Si el `.zip` (62,5 MB) no se puede subir a GitHub, se publica con un enlace externo (decisión del responsable, 2026-11-21). | `build/NOTAS_0.2.0.md` |
+| AB, 9.4 | Juicio visual que falta: las piezas sueltas y los ojos (interfaz y uso de piezas ya juzgados el 2026-11-22) | `pruebas/capturas/piezas/` (y abrir el editor: pestañas Pelo, Ropa, Accesorios y Cara y ojos) |
+| D36 | ¿Lo nuestro sale CC0 y se publica también como pack suelto? (recomendado: sí) | `propuestas/expansion_v2.md` §7 |
+| D39 | ¿Se pueden descargar peinados y armas CC0 (Quaternius, Micket, KayKit), uno a uno y con la licencia comprobada? Necesita tu permiso de red | `propuestas/expansion_v2.md` §5.3 |
+| D41 | ¿Las expresiones salen de las «Face Units» CC0 (sin comprobar aún)? | `propuestas/expansion_v2.md` §7 |

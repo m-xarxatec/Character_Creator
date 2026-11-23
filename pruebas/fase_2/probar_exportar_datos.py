@@ -78,7 +78,10 @@ def read_glb(path):
         return local @ to_world[:3, :3].T + to_world[:3, 3]
 
     keys = mesh.data.shape_keys.key_blocks
-    return mesh, rig, coords(keys[0]), {k.name: coords(k) for k in keys[1:]}
+    names = ed.target_names(path)  # los del .glb: Blender corta los largos al importar (PL.0b)
+    if len(names) != len(keys) - 1:
+        raise ValueError(f"{len(names)} nombres en el .glb y {len(keys) - 1} formas importadas")
+    return mesh, rig, coords(keys[0]), {name: coords(k) for name, k in zip(names, keys[1:])}
 
 
 def deltas_by_skin_index(base, shapes, reference):
@@ -145,15 +148,15 @@ smoothing = [n for n in shapes if n.startswith("alisado*")]
 fixes = [n for n in shapes if "*" in n and n not in smoothing]
 face = [r["id"] for r in ed.face_rows(rows)]
 own = [f"{r['id']}_{d}" if r["decr"] else r["id"] for r in ed.own_rows(rows) for d in ("decr", "incr") if r[d]]
-check("glb: las 78 formas de la tabla",
-      len(expected) == 78 and sorted(set(shapes) - set(fixes) - set(smoothing) - set(face) - set(own)) == sorted(expected))
+check("glb: las 118 formas de la tabla",
+      len(expected) == 118 and sorted(set(shapes) - set(fixes) - set(smoothing) - set(face) - set(own)) == sorted(expected))
 check("glb: las 5 formas de cara (paso 3.14)", len(face) == 5 and set(face) <= set(shapes), face)
 check("glb: las 7 formas propias (paso 6.2)", len(own) == 7 and set(own) <= set(shapes), own)
 macro_ids = tuple(i for i, _ in ed.macro_sliders(rows))
 check("glb: correcciones hechas de formas de macro", fixes and all(
     p in expected and p.startswith(macro_ids) for n in fixes for p in n.split("*")),
     f"{len(fixes)} correcciones, {len(shapes)} formas en total")
-check("glb: correcciones de alisado sobre músculo, grasa y pecho", smoothing and all(
+check("glb: correcciones de alisado sobre las macros de SMOOTHING_SLIDERS", smoothing and all(
     p in expected and p.startswith(ed.SMOOTHING_SLIDERS) for n in smoothing for p in n.split("*")[1:]),
     f"{len(smoothing)} correcciones")
 check("glb: nombres _decr / _incr (y _l / _r)", all(p.rsplit("_", 2)[-1] in ("decr", "incr", "l", "r")

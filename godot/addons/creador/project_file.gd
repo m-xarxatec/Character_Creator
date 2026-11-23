@@ -17,7 +17,7 @@ extends RefCounted
 ##
 ## Cómo subir de versión (cuando haga falta cambiar el formato de forma incompatible):
 ##   1. VERSION += 1.   2. Escribir `static func _v1_to_v2(data: Dictionary) -> String` (devuelve "" o el error).
-##   3. Añadir su línea en _step().   4. NO regenerar pruebas/…/proyecto_v1.gmolde: debe seguir abriéndose.
+##   3. Añadir su línea en _step().   4. NO regenerar pruebas/godot/datos/proyecto_v1.gmolde: debe seguir abriéndose.
 
 const FORMAT := "gamemolde-proyecto"
 const VERSION := 1

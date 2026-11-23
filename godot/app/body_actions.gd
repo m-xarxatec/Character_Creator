@@ -12,6 +12,8 @@ extends HBoxContainer
 # Paso P.4: atajos Ctrl+S, Ctrl+O y Ctrl+E (Cmd en Mac) en los botones; has_changes() dice si lo que entraría en el
 #   preset es distinto de lo último guardado o abierto (exportar no cuenta). save_and_quit() guarda y cierra (main.gd).
 # Paso P.5c: los tres diálogos de archivo se abren en la última carpeta usada (settings_file.gd).
+# Paso 10.2: Guardar y Abrir valen para proyectos .gmolde (project_io.gd, por defecto) y presets .json, según la
+#   extensión; el proyecto abierto se guarda entero (piezas, pose, escena). Sin carpeta usada: user://proyectos.
 # Uso: var bar := BodyActions.new(); bar.setup(body_view, editor)
 
 signal test_changed
@@ -19,6 +21,7 @@ signal look_changed
 
 const BodyMaterial := preload("../addons/creador/body_material.gd")
 const PresetFile := preload("preset_file.gd")
+const ProjectIO := preload("project_io.gd")  # paso 10.2
 const GlbExporter := preload("../addons/creador/glb_exporter.gd")
 const SettingsFile := preload("settings_file.gd")
 const ThemeBuilder := preload("tema/theme_builder.gd")  # paso IU.2: iconos
@@ -39,6 +42,7 @@ var open_button: Button
 var saved_text := ""  # paso P.4: el preset de lo último guardado o abierto (sin nombre)
 var quit_after_save := false  # paso P.4: «Guardar…» del aviso al cerrar
 var current_path := ""  # paso IU.4: el preset guardado o abierto ("" = personaje nuevo)
+var project := {}  # paso 10.2: el último proyecto abierto o guardado ({} si fue un preset)
 
 
 func setup(body_view: SubViewportContainer, body_editor = null) -> void:
@@ -61,10 +65,12 @@ func setup(body_view: SubViewportContainer, body_editor = null) -> void:
 		save_dialog = _preset_dialog(FileDialog.FILE_MODE_SAVE_FILE, save_preset)
 		open_dialog = _preset_dialog(FileDialog.FILE_MODE_OPEN_FILE, open_preset)
 		save_dialog.canceled.connect(func() -> void: quit_after_save = false)
-		save_button = _button("Guardar preset…", func() -> void: popup_file_dialog(save_dialog))
+		save_button = _button("Guardar…", func() -> void: popup_file_dialog(save_dialog))
+		save_button.tooltip_text = "Guardar el personaje como proyecto (.gmolde) o como preset (.json)"
 		save_button.shortcut = _shortcut(KEY_S)
 		save_button.icon = ThemeBuilder.icon("guardar")
-		open_button = _button("Abrir preset…", func() -> void: popup_file_dialog(open_dialog))
+		open_button = _button("Abrir…", func() -> void: popup_file_dialog(open_dialog))
+		open_button.tooltip_text = "Abrir un proyecto (.gmolde) o un preset (.json)"
 		open_button.shortcut = _shortcut(KEY_O)
 		open_button.icon = ThemeBuilder.icon("abrir")
 		saved_text = _current_text()
@@ -89,6 +95,8 @@ func save_and_quit() -> void:
 ## Paso P.5c: abre un diálogo de archivo en la última carpeta usada (si sigue existiendo).
 func popup_file_dialog(dialog: FileDialog) -> void:
 	var folder := SettingsFile.get_folder()
+	if folder == "" and dialog != file_dialog:
+		folder = ProjectIO.default_folder()  # paso 10.2
 	if folder != "":
 		dialog.current_dir = folder
 	dialog.popup_centered_ratio(0.6)
@@ -112,33 +120,48 @@ func _shortcut(key: Key) -> Shortcut:
 	return shortcut
 
 
-## Guarda el personaje como preset y avisa. Devuelve el error.
+## Guarda el personaje como proyecto (.gmolde) o como preset (.json), según la extensión, y avisa. Devuelve el error.
 func save_preset(path: String) -> Error:
-	var error := PresetFile.save(path, view, editor.values)
+	var error: Error
+	if ProjectIO.is_project(path):  # paso 10.2
+		var built := ProjectIO.build(path, view, editor.values, project)
+		error = ProjectIO.write(path, built)
+		if error == OK:
+			project = built
+	else:
+		error = PresetFile.save(path, view, editor.values)
 	if error == OK:
 		saved_text = _current_text()
 		current_path = path
+		SettingsFile.add_recent(path)  # paso PL.4
 		if quit_after_save:
 			get_tree().quit()
 			return error
 	quit_after_save = false
-	_tell("Guardar preset", "Guardado:\n%s" % path if error == OK else "No se pudo guardar\n%s\n(%s)" % [path, error_string(error)])
+	_tell("Guardar", "Guardado:\n%s" % path if error == OK else "No se pudo guardar\n%s\n(%s)" % [path, error_string(error)])
 	return error
 
 
-## Abre un preset; si falla, avisa y no cambia nada. Devuelve el error ("" si fue bien).
+## Abre un proyecto (.gmolde) o un preset (.json); si falla, avisa y no cambia nada. Devuelve el error ("" si fue bien).
 func open_preset(path: String) -> String:
-	var loaded := PresetFile.read(path, view)
+	var is_project := ProjectIO.is_project(path)  # paso 10.2
+	var loaded := ProjectIO.read(path, view) if is_project else PresetFile.read(path, view)
 	if loaded["error"] != "":
-		_tell("Abrir preset", "No se pudo abrir\n%s\n%s" % [path, loaded["error"]])
+		_tell("Abrir", "No se pudo abrir\n%s\n%s" % [path, loaded["error"]])
 		return loaded["error"]
-	PresetFile.apply(loaded, view, editor)
+	PresetFile.apply(loaded["preset"] if is_project else loaded, view, editor)
+	project = loaded["proyecto"] if is_project else {}
+	if is_project:  # paso AB.13: sus piezas, en lugar de las puestas
+		loaded["avisos"].append_array(ProjectIO.wear_pieces(view, project["personajes"][0]["piezas"]))
 	saved_text = _current_text()
 	current_path = path
+	SettingsFile.add_recent(path)  # paso PL.4
 	garment_check.set_pressed_no_signal(BodyMaterial.is_garment_visible(view.species.mesh))
 	look_changed.emit()
-	if not loaded["desconocidas"].is_empty():
-		_tell("Abrir preset", "Abierto. Se ignoraron estas claves desconocidas:\n%s" % ", ".join(loaded["desconocidas"]))
+	if is_project and not loaded["avisos"].is_empty():
+		_tell("Abrir", "Abierto, con estos avisos:\n%s" % "\n".join(loaded["avisos"]))
+	elif not is_project and not loaded["desconocidas"].is_empty():
+		_tell("Abrir", "Abierto. Se ignoraron estas claves desconocidas:\n%s" % ", ".join(loaded["desconocidas"]))
 	return ""
 
 
@@ -152,8 +175,10 @@ func _preset_dialog(mode: FileDialog.FileMode, action: Callable) -> FileDialog:
 	var dialog := FileDialog.new()
 	dialog.file_mode = mode
 	dialog.access = FileDialog.ACCESS_FILESYSTEM
-	dialog.filters = PackedStringArray(["*.json ; Preset de personaje"])
-	dialog.current_file = "personaje.json"
+	dialog.filters = PackedStringArray(["*.gmolde ; Proyecto de GameMolde", "*.json ; Preset de personaje"])  # paso 10.2
+	if mode == FileDialog.FILE_MODE_OPEN_FILE:
+		dialog.filters = PackedStringArray(["*.gmolde, *.json ; Proyecto o preset"]) + dialog.filters
+	dialog.current_file = "personaje.gmolde"
 	dialog.file_selected.connect(_remember_folder)
 	dialog.file_selected.connect(action)
 	add_child(dialog)

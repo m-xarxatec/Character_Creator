@@ -39,7 +39,7 @@ func _init(mesh: MeshInstance3D, extra := PackedInt32Array()) -> void:
 		for k in 4:
 			bones.append(all_bones[4 * i + k])
 			weights.append(all_weights[4 * i + k])
-	for shape: Array in (mesh.mesh as ArrayMesh).surface_get_blend_shape_arrays(0):
+	for shape: Array in MeshBaker.shape_arrays(mesh.mesh):  # paso OPT.1: una sola vez por fotograma
 		var shape_vertices: PackedVector3Array = shape[Mesh.ARRAY_VERTEX]
 		var offset := PackedVector3Array()
 		for s in samples.size():

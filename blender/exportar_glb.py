@@ -38,10 +38,11 @@ def rename_to_humanoid(basemesh):
     rig.name = rig.data.name = RIG_NAME
 
 
-def export_glb(basemesh, sockets, path, morph=False, deform_only=True):
+def export_glb(basemesh, sockets, path, morph=False, deform_only=True, morph_normals=True):
     """Escribe el .glb: Y arriba, mirando a +Z, sin Draco, 4 influencias y el color 'garment'.
 
     morph: incluye las shape keys como formas. deform_only=False: incluye huesos sin peso (anclajes de datos/).
+    morph_normals=False: las formas sin normales (piezas de packs: la mitad de tamaño).
     """
     bpy.ops.object.select_all(action="DESELECT")
     for obj in (basemesh, basemesh.parent, *sockets):
@@ -58,6 +59,7 @@ def export_glb(basemesh, sockets, path, morph=False, deform_only=True):
         export_all_influences=False,
         export_animations=False,
         export_morph=morph,
+        export_morph_normal=morph_normals,
         export_materials="NONE",
         export_vertex_color="ACTIVE",
         export_all_vertex_colors=False,

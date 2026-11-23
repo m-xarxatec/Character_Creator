@@ -1,0 +1,261 @@
+{
+ "autor": "GameMolde (de la malla base de MakeHuman)",
+ "formato": "gamemolde-pack",
+ "id": "base",
+ "licencia": "CC0-1.0",
+ "nombre": "Pack base",
+ "origen": "https://static.makehumancommunity.org/makehuman/faq/are_makehuman_files_free.html",
+ "piezas": [
+  {
+   "anclaje": {
+    "hueso": "",
+    "transform": [
+     0,
+     0,
+     0,
+     0,
+     0,
+     0,
+     1,
+     1
+    ]
+   },
+   "archivo": "tights.glb",
+   "color": [
+    0.22,
+    0.26,
+    0.4
+   ],
+   "colores": [
+    "principal"
+   ],
+   "especies": [
+    "humana"
+   ],
+   "fisica": [],
+   "id": "tights",
+   "miniatura": "",
+   "nombre": "Malla de cuerpo completo",
+   "ranura": "ropa_interior",
+   "sha256": "59f3322b6da1448d1ec06cebe84e8030ee2a80dd3b802deac4b87989252d5e60",
+   "sigue_al_cuerpo": true,
+   "tipo": "ropa"
+  },
+  {
+   "anclaje": {
+    "hueso": "",
+    "transform": [
+     0,
+     0,
+     0,
+     0,
+     0,
+     0,
+     1,
+     1
+    ]
+   },
+   "archivo": "hair.glb",
+   "color": [
+    0.24,
+    0.16,
+    0.12
+   ],
+   "colores": [
+    "principal"
+   ],
+   "especies": [
+    "humana"
+   ],
+   "fisica": [],
+   "id": "hair",
+   "miniatura": "",
+   "nombre": "Volumen de melena (base)",
+   "ranura": "pelo",
+   "sha256": "c52e789ef4f1258be49bbce424c9852a1a4bc21826d1ca83edac20b1099765ea",
+   "sigue_al_cuerpo": true,
+   "tipo": "pelo"
+  },
+  {
+   "color": [
+    0.24,
+    0.16,
+    0.12
+   ],
+   "colores": [
+    "principal"
+   ],
+   "derivada": {
+    "mascara": "casquete",
+    "separacion": 0.004
+   },
+   "especies": [
+    "humana"
+   ],
+   "id": "casquete",
+   "nombre": "Casquete",
+   "ranura": "pelo",
+   "sigue_al_cuerpo": true,
+   "tipo": "pelo"
+  },
+  {
+   "anclaje": {
+    "hueso": "Head",
+    "transform": [
+     0.045,
+     0.125,
+     0.04,
+     0,
+     0,
+     -0.1736,
+     0.9848,
+     1
+    ]
+   },
+   "color": [
+    0.85,
+    0.82,
+    0.72
+   ],
+   "colores": [
+    "principal"
+   ],
+   "especies": [
+    "humana"
+   ],
+   "generador": {
+    "parametros": {
+     "afilado": 1.2,
+     "anillos": 4,
+     "curva": 70,
+     "lados": 10,
+     "largo": 0.12,
+     "radio": 0.016,
+     "relieve": 0.12,
+     "segmentos": 14
+    },
+    "simetria": true,
+    "tipo": "cuernos"
+   },
+   "id": "cuernos",
+   "nombre": "Cuernos",
+   "ranura": "accesorio",
+   "sigue_al_cuerpo": false,
+   "tipo": "accesorio"
+  },
+  {
+   "color": [
+    0.24,
+    0.16,
+    0.12
+   ],
+   "colores": [
+    "principal"
+   ],
+   "corte": {
+    "de": "hair",
+    "quitar": [
+     [
+      -0.07,
+      0.9,
+      0.04,
+      0.07,
+      1.585,
+      0.3
+     ]
+    ]
+   },
+   "especies": [
+    "humana"
+   ],
+   "id": "melena",
+   "nombre": "Melena con flequillo",
+   "ranura": "pelo",
+   "sigue_al_cuerpo": true,
+   "tipo": "pelo"
+  },
+  {
+   "anclaje": {
+    "hueso": "Head",
+    "transform": [
+     0.055,
+     0.12,
+     0.0,
+     0,
+     0,
+     -0.1305,
+     0.9914,
+     1
+    ]
+   },
+   "color": [
+    0.24,
+    0.16,
+    0.12
+   ],
+   "colores": [
+    "principal"
+   ],
+   "especies": [
+    "humana"
+   ],
+   "generador": {
+    "parametros": {
+     "afilado": 1.0,
+     "anillos": 0,
+     "curva": 0,
+     "lados": 3,
+     "largo": 0.07,
+     "radio": 0.028,
+     "segmentos": 4
+    },
+    "simetria": true,
+    "tipo": "cuernos"
+   },
+   "id": "orejas_gato",
+   "nombre": "Orejas de gato",
+   "ranura": "accesorio",
+   "sigue_al_cuerpo": false,
+   "tipo": "accesorio"
+  },
+  {
+   "anclaje": {
+    "hueso": "Head",
+    "transform": [
+     0,
+     0.205,
+     -0.01,
+     -0.1305,
+     0,
+     0,
+     0.9914,
+     1
+    ]
+   },
+   "color": [
+    0.95,
+    0.82,
+    0.4
+   ],
+   "colores": [
+    "principal"
+   ],
+   "especies": [
+    "humana"
+   ],
+   "generador": {
+    "parametros": {
+     "grosor": 0.007,
+     "radio": 0.08
+    },
+    "tipo": "aro"
+   },
+   "id": "halo",
+   "nombre": "Halo",
+   "ranura": "accesorio",
+   "sigue_al_cuerpo": false,
+   "tipo": "accesorio"
+  }
+ ],
+ "version": 1
+}

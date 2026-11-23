@@ -1,7 +1,6 @@
 extends SceneTree
 # Paso 13.5: generador de cuernos (horn_generator.gd). Sin ventana y sin datos/.
-# Uso: godot --headless --path pruebas/godot -s <ruta a este archivo> 2>&1 | grep -E 'FALLO|MEDIDA|RESULTADO|ERROR'
-# Busca horn_generator.gd en godot/addons/creador/ y, si no está, en ruta/codigo/nucleo/ (borrador).
+# Uso: (ulimit -v 4000000; timeout 120 godot --headless --path pruebas/godot -s probar_cuernos.gd 2>&1 | grep -E 'FALLO|MEDIDA|RESULTADO|ERROR')
 # Que detecta el fallo: (1) quitar el bloque 5 de build_arrays y cambiar `[a, b, c, b, d, c]` por `[a, c, b, b, c, d]`
 # -> falla «todas las caras miran hacia fuera»; (2) en la tapa, cambiar `(j + 1) % sides, j` por `j, (j + 1) % sides`
 # -> falla la misma comprobación.
@@ -23,10 +22,9 @@ var horn: GDScript
 
 func _initialize() -> void:
 	var root_dir := ProjectSettings.globalize_path("res://").path_join("../..").simplify_path()
-	for folder: String in ["godot/addons/creador", "ruta/codigo/nucleo"]:
-		var path := root_dir.path_join(folder).path_join("horn_generator.gd")
-		if horn == null and FileAccess.file_exists(path):
-			horn = load(path)
+	var path := root_dir.path_join("godot/addons/creador/horn_generator.gd")
+	if FileAccess.file_exists(path):
+		horn = load(path)
 	if horn == null:
 		print("ERROR: no se encuentra horn_generator.gd")
 		quit(1)

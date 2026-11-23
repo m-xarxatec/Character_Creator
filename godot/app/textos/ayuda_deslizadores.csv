@@ -39,3 +39,23 @@ leg_length,Largo de las piernas,,
 thigh,Grosor del muslo,,
 calf,Grosor de la pantorrilla,,
 foot_size,Tamaño de los pies,,
+eye_size,Tamaño de los ojos,Pequeños,Grandes
+eye_spacing,Distancia entre los dos ojos,Juntos,Separados
+eye_position,Altura de los ojos en la cara,Abajo,Arriba
+eye_tall,Alto de los ojos,Menos,Más
+eye_corner,Sube o baja el rabillo de los ojos,Rabillo abajo,Rabillo arriba
+nose_width,Ancho de la nariz,Estrecha,Ancha
+nose_tall,Largo de la nariz,Corta,Larga
+nose_depth,Cuánto sale la nariz de la cara,Menos,Más
+nose_position,Altura de la nariz en la cara,Abajo,Arriba
+mouth_width,Ancho de la boca,Estrecha,Ancha
+mouth_tall,Alto de la boca,Menos,Más
+mouth_position,Altura de la boca en la cara,Abajo,Arriba
+lip_upper,Grosor del labio superior,Fino,Grueso
+lip_lower,Grosor del labio inferior,Fino,Grueso
+chin_width,Ancho del mentón,Estrecho,Ancho
+chin_tall,Alto del mentón,Corto,Largo
+chin_forward,Cuánto sale el mentón hacia delante,Menos,Más
+ear_size,Tamaño de las orejas,Pequeñas,Grandes
+ear_shape,Forma de la punta de las orejas,Puntiaguda,Triangular
+ear_wing,Cuánto se separan las orejas de la cabeza,Pegadas,Despegadas

@@ -6,8 +6,8 @@ extends AcceptDialog
 ## [teclas, qué hace], en el orden en que se enseñan.
 const COMMANDS := [
 	["F1", "Ver esta lista"],  # paso IU.10b: la primera, es la puerta a las demás
-	["Ctrl + S", "Guardar preset"],
-	["Ctrl + O", "Abrir preset"],
+	["Ctrl + S", "Guardar (proyecto o preset)"],
+	["Ctrl + O", "Abrir (proyecto o preset)"],
 	["Ctrl + E", "Exportar .glb"],
 	["Ctrl + Z", "Deshacer"],
 	["Ctrl + Y  ·  Ctrl + Mayús + Z", "Rehacer"],

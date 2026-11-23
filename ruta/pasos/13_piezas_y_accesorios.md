@@ -28,7 +28,7 @@
 - **13.6:** `PieceAttacher.merge()` (§3). Reglas: huesos `x_…`, siempre al final, nunca entre dos humanoides. Prueba: tras poner y quitar la cola, la lista de huesos es idéntica a la original.
 - **13.7:** cada pieza de tipo arma declara `"agarre": "puño" | "pinza" | "dos_manos"` en su ficha. Al anclarla en una mano, se aplica el gesto del 10.11 a esa mano. Nada de IK.
 - **Luces y efectos como pieza** (antorcha, orbe, aura): una pieza puede declarar `"luz": {color, energia, radio}` y `"particulas": "<id>"`. En el estudio se crean los nodos; en el `.glb` exportado la luz viaja con la extensión `KHR_lights_punctual` (Godot la exporta: **NO VERIFICADO**) y las partículas **no viajan** (glTF no las tiene): van en la `.tscn` del 11.4. `GPUParticles3D` en Compatibility: **NO VERIFICADO**; alternativa `CPUParticles3D`.
-- **Piezas de serie:** hechas por nosotros (generadores o Blender) o CC0 con fila en `CREDITOS.md`. La biblioteca enseña siempre autor y licencia.
+- **Piezas de serie:** hechas por nosotros (generadores o Blender) o CC0 con fila en `CREDITOS.md`. Autor y licencia van solo en el panel de Créditos (D45), no en la biblioteca.
 
 ## Juicio visual
 

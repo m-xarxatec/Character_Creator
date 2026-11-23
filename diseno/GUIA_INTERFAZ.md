@@ -10,7 +10,7 @@
 ## 1. Siete principios
 
 1. **El personaje es lo principal.** La vista 3D ocupa el centro y es la zona más grande y luminosa. Los paneles la rodean sin taparla.
-2. **Primero se elige y después se ajusta.** Las miniaturas (plantillas, peinados, prendas) van antes que los deslizadores. Quien empieza no tiene que entender 48 barras.
+2. **Primero se elige y después se ajusta.** Las miniaturas (género, peinados, prendas) van antes que los deslizadores. Quien empieza no tiene que entender 48 barras.
 3. **Pocos controles a la vista.** Se ve solo la zona elegida; lo demás está plegado o en otra pestaña.
 4. **Cada control dice qué hace.** Nombre claro en español y una ayuda (tooltip) de una línea. Sin palabras técnicas en la ventana: «Rim» pasa a «Brillo de borde».
 5. **Respuesta inmediata.** Todo lo que se puede pulsar cambia al pasar el ratón por encima, y las transiciones duran entre 120 y 180 ms. Nada parpadea ni salta.
@@ -43,8 +43,8 @@ Tamaño mínimo: 1280 × 720. Referencia de diseño: 1440 × 900.
 ```
 
 - **Barra superior:** marca, nombre del archivo (un punto `•` si hay cambios sin guardar), pestañas principales, Deshacer/Rehacer, Abrir, Guardar y **Exportar** (botón principal).
-- **Pestañas principales:** Cuerpo, Cara y ojos, Pelo, Ropa, Accesorios, Estilo. Las que aún no existen se ven con una etiqueta pequeña «Pronto» y su ayuda dice qué llegará; no se ven grises y muertas. La pestaña **Exportar** deja de ser pestaña: pasa a ser el botón principal, que abre un diálogo con opciones.
-- **Panel izquierdo (280 px):** dos pestañas pequeñas. **Zonas**: una silueta del cuerpo en la que cada zona se ilumina al pasar el ratón y se elige con un clic, y debajo la lista de zonas con su número de ajustes. **Plantillas**: miniaturas de cuerpos de serie (fase PL).
+- **Pestañas principales:** Cuerpo, Cara y ojos, Pelo, Ropa, Accesorios, Estilo (Pelo, Ropa y Accesorios: una fila por pieza, con su nombre y su color; autor y licencia, solo en Créditos (D45); paso AB.13). Las que aún no existen se ven con una etiqueta pequeña «Pronto» y su ayuda dice qué llegará; no se ven grises y muertas. La pestaña **Exportar** deja de ser pestaña: pasa a ser el botón principal, que abre un diálogo con opciones.
+- **Panel izquierdo (280 px):** dos pestañas pequeñas. **Zonas**: una silueta del cuerpo en la que cada zona se ilumina al pasar el ratón y se elige con un clic, y debajo la lista de zonas con su número de ajustes. **Género**: Aleatorio, Femenino, Masculino y Neutro (paso PL.10); lo demás, con los deslizadores.
 - **Vista 3D (centro):** fondo degradado, sombra de suelo, botones flotantes (vistas rápidas arriba a la izquierda, interruptores arriba a la derecha y barra de poses abajo). La primera vez, una pista: «Arrastra para girar · Rueda para acercar · Clic en el cuerpo para elegir zona».
 - **Panel derecho (360 px):** los ajustes de la zona elegida. Arriba, el nombre de la zona y un buscador que filtra entre todos los ajustes.
 - **Informe de deformación:** el desplegable del P.2 se queda bajo la vista, y además la barra de estado enseña su resumen como una pastilla de color que lo abre.

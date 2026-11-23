@@ -36,21 +36,22 @@ const ThemeBuilder := preload("tema/theme_builder.gd")
 const CommandsDialog := preload("commands_dialog.gd")
 const SettingsDialog := preload("settings_dialog.gd")
 const SettingsFile := preload("settings_file.gd")
+const StartScreen := preload("start_screen.gd")
+const Randomizer := preload("randomizer.gd")
 const TopBar := preload("top_bar.gd")
 const StatusBar := preload("status_bar.gd")
 const Measures := preload("measures.gd")
 const Tokens := preload("tema/tokens.gd")
 const ZonePicker := preload("zone_picker.gd")
 const Motion := preload("motion.gd")
+const PiecesPanel := preload("pieces_panel.gd")  # paso AB.13
+const PIECE_TABS := {"Pelo": "pelo", "Ropa": "ropa", "Accesorios": "accesorio"}  # pestaña → tipo de pieza
 const TAB_NAMES := ["Cuerpo", "Cara y ojos", "Pelo", "Ropa", "Accesorios", "Estilo"]
 const WORKSHOP := "Taller de Assets"
 const TAB_ICONS := ["cuerpo", "cara", "pelo", "ropa", "accesorios", "estilo"]  # paso IU.2
 ## Paso IU.4: pestañas que aún no existen → qué llegará (dicen «Pronto», se pueden abrir y lo cuentan).
 const SOON := {
 	"Cara y ojos": "ojos, cejas y expresiones.",
-	"Pelo": "elegir peinados y ajustarlos a la cabeza.",
-	"Ropa": "prendas que siguen al cuerpo al moverlo.",
-	"Accesorios": "armas, gafas, cuernos y otras piezas en las manos, la espalda o la cadera.",
 }
 const FILE_REFRESH := 0.3  # s: cada cuánto se mira si hay cambios sin guardar (el • de la barra)
 const ACTIVE_TAB := 0
@@ -62,6 +63,7 @@ var body_view: SubViewportContainer
 var slider_panel: ScrollContainer
 var body_actions: HBoxContainer
 var finish_panel: VBoxContainer
+var piece_panels := {}  # paso AB.13: pestaña → PiecesPanel
 var report_panel: ScrollContainer  # ReportPanel, dentro de report_section
 var report_section: VBoxContainer
 var editor  # BodyEditor (null si la especie no cargó)
@@ -72,6 +74,9 @@ var commands_button: Button  # paso P.8b
 var commands: AcceptDialog  # paso P.8b
 var settings_button: Button  # paso IU.9
 var settings: AcceptDialog  # paso IU.9
+var start_screen: AcceptDialog  # paso PL.4: «Nuevo personaje»
+var new_button: Button
+var rng := RandomNumberGenerator.new()  # paso PL.5: «Aleatorio»
 var ui_scale := 1.0  # paso IU.9
 var reduce_motion := false  # paso IU.9
 var grid := false  # paso IU.3: rejilla en el suelo de la vista
@@ -88,6 +93,7 @@ var measures  # paso IU.8: Measures (null si la especie no cargó)
 
 
 func _ready() -> void:
+	rng.randomize()  # paso PL.5
 	set_anchors_and_offsets_preset(Control.PRESET_FULL_RECT)
 	dark = SettingsFile.get_dark()
 	theme = ThemeBuilder.build(dark)
@@ -124,10 +130,23 @@ func _ready() -> void:
 		zone_picker.setup(slider_panel.zones, _zone_counts())
 		zone_picker.select(slider_panel.open_zone)
 		zone_picker.zone_chosen.connect(slider_panel.open)
+		var species = body_view.species  # paso PL.3: galería de plantillas
+		zone_picker.gallery.setup(species.folder.path_join("presets"), species.manifest["species"], species.sliders)
+		zone_picker.gallery.template_chosen.connect(editor.load_values)
+		start_screen = StartScreen.new()  # paso PL.4
+		add_child(start_screen)
+		start_screen.setup(zone_picker.gallery)
+		start_screen.template_chosen.connect(editor.load_values)
+		start_screen.recent_chosen.connect(body_actions.open_preset)
+		zone_picker.gallery.random_requested.connect(randomize_body)  # paso PL.5
+		start_screen.random_requested.connect(randomize_body)
+		start_screen.open_requested.connect(func() -> void: body_actions.popup_file_dialog(body_actions.open_dialog))
 		zone_picker.zone_chosen.connect(func(_zone: String) -> void: top_bar.tab_bar.current_tab = ACTIVE_TAB)
 		body_view.zone_touched.connect(_on_zone_touched)  # paso IU.7a: igual que elegirla en la silueta
 		body_actions.setup(body_view, editor)
 		finish_panel.setup(body_view)
+		for tab_name: String in piece_panels:  # paso AB.13
+			piece_panels[tab_name].setup(body_view, PIECE_TABS[tab_name])
 		body_actions.test_changed.connect(update_report)
 		body_actions.look_changed.connect(finish_panel.refresh)
 		report_panel.zone_chosen.connect(_on_zone_chosen)
@@ -135,6 +154,8 @@ func _ready() -> void:
 		_start_measures()
 	licenses = LicensesDialog.new()
 	add_child(licenses)
+	if body_view.library != null:  # paso AB.13b: autor y licencia de las piezas, solo aquí
+		licenses.set_packs(body_view.library)
 	var licenses_button := Button.new()
 	licenses_button.text = "Licencias"
 	licenses_button.icon = ThemeBuilder.icon("licencias")
@@ -185,6 +206,13 @@ func _ready() -> void:
 	elif editor != null:
 		_add_close_dialog()
 		get_tree().auto_accept_quit = false
+		if SettingsFile.get_start_screen() and get_tree().current_scene == self:  # paso PL.4: no en las pruebas
+			start_screen.show_screen.call_deferred()
+
+
+## Paso PL.5: un cuerpo al azar desde el de ahora (Randomizer); un cambio de Deshacer.
+func randomize_body() -> void:
+	editor.load_values(Randomizer.values(editor.values, body_view.species.sliders, rng))
 
 
 ## Paso P.4: cerrar la ventana pasa por aquí (auto_accept_quit = false).
@@ -221,6 +249,12 @@ func _on_close_action(action: StringName) -> void:
 func _fill_top_bar() -> void:
 	undo_button = _icon_button("deshacer", "Deshacer (Ctrl+Z)", editor.undo)
 	redo_button = _icon_button("rehacer", "Rehacer (Ctrl+Y)", editor.redo)
+	new_button = Button.new()  # paso PL.4
+	new_button.text = "Nuevo…"
+	new_button.icon = ThemeBuilder.icon("cuerpo")
+	new_button.tooltip_text = "Empezar con Femenino, Masculino, Neutro, al azar o desde un archivo reciente"
+	new_button.pressed.connect(start_screen.show_screen)
+	top_bar.add_action(new_button)
 	for button: Button in [body_actions.open_button, body_actions.save_button, body_actions.export_button]:
 		top_bar.add_action(button)
 	body_actions.export_button.theme_type_variation = "BotonPrincipal"
@@ -297,6 +331,11 @@ func _zone_counts() -> Dictionary:
 	for row: Dictionary in editor.rows:
 		counts[row["zona"]] = counts.get(row["zona"], 0) + 1
 	return counts
+
+
+func _piece_panel(tab_name: String) -> Control:
+	piece_panels[tab_name] = PiecesPanel.new()
+	return piece_panels[tab_name]
 
 
 func _soon_page(text: String) -> Control:
@@ -460,7 +499,7 @@ func _body() -> Control:
 	finish_panel = FinishPanel.new()
 	for tab_name: String in TAB_NAMES:
 		var panel: Control = slider_panel if tab_name == "Cuerpo" else (finish_panel if tab_name == "Estilo"
-			else _soon_page(SOON[tab_name]))
+			else (_piece_panel(tab_name) if PIECE_TABS.has(tab_name) else _soon_page(SOON[tab_name])))
 		panel.name = tab_name  # el nombre de la página es el de la pestaña
 		tabs.add_child(panel)
 	return page

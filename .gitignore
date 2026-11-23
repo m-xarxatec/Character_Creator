@@ -11,6 +11,7 @@ build/
 # Descargas y temporales
 *.zip
 *.tmp
+hs_err_pid*.log
 
 # Capturas de prueba (se regeneran con los scripts), salvo las aprobadas y el historial
 pruebas/**/capturas/*
@@ -32,3 +33,6 @@ pruebas/godot/bonemap_personaje.tres
 
 # Personajes exportados a mano desde el editor
 godot/personaje.*
+
+# Recursos descargados sin revisar (propuestas/recursos_3d.md §2-3)
+recursos_externos/

@@ -6,7 +6,7 @@ extends SceneTree
 
 const MAX_WEIGHT_ERROR := 1e-6
 const MAX_MM := 0.1
-const CORRECTIONS := 102  # 81 de macros + 21 de alisado (paso 6.2)
+const CORRECTIONS := 196  # 81 de macros + 115 de alisado (pasos 6.2 y PL.0b)
 const MACRO_CORRECTIONS := 81  # las de alisado no salen en la referencia: MPFB no tiene las formas propias
 
 var failures := 0
@@ -82,7 +82,7 @@ func _check_weights(reference: Dictionary) -> void:
 
 func _check_values(sliders: Array) -> void:
 	var values: Dictionary = shapes.neutral_values(sliders)
-	check("48 valores (42 Forma, 6 con dos lados)", values.size() == 48, str(values.size()))
+	check("68 valores (62 Forma, 6 con dos lados)", values.size() == 68, str(values.size()))
 	shapes.set_value(values, "arm_muscle_l", 0.8, true)
 	check("con simetría, el izquierdo mueve el derecho", values["arm_muscle_r"] == 0.8)
 	shapes.set_value(values, "arm_muscle_l", 0.3, false)

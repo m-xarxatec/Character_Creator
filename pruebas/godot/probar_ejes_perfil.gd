@@ -1,7 +1,7 @@
 extends SceneTree
 # Paso 5.7b: prototipo «pose T + ejes del perfil humanoide» (CharacterBaker.bake con profile_axes = true). Sin ventana.
 # Antes: blender -b -P pruebas/fase_2/referencia_reajuste.py  (escribe pruebas/fase_2/salida/referencia_reajuste.json)
-# Uso: (ulimit -v 4000000; timeout 300 godot --headless --path pruebas/godot -s probar_ejes_perfil.gd)
+# Uso: (ulimit -v 4000000; timeout 300 godot --headless --path pruebas/godot -s probar_ejes_perfil.gd 2>&1 | grep -E 'FALLO|MEDIDA|RESULTADO|ERROR')
 # Escribe pruebas/fase_5/salida/t_perfil.glb (el mismo cuerpo que pruebas/fase_3/salida/t/al_azar.glb) y su .tres:
 # después, sh pruebas/fase_5/probar_overwrite_axis.sh lo importa sin Overwrite Axis y lo compara con la T de hoy.
 # Que detecta el fallo: en CharacterBaker.profile_global_bases, usar solo el giro local (sin encadenar los padres)
@@ -20,6 +20,7 @@ const SOCKET_MM := 0.1  # el límite del 3.6.4
 const FILE_AXES_DEG := 0.01  # PROVISIONAL: el .glb guarda los giros con 32 bits
 
 var failures := 0
+var saved := false
 var species
 var baker: GDScript
 var mesh_baker: GDScript
@@ -43,10 +44,7 @@ func _initialize() -> void:
 		quit(1)
 		return
 	root.add_child(species.scene)
-	if not _set_up(root_dir, addon):
-		print("RESULTADO: 1 FALLO")
-		quit(1)
-		return
+	_set_up(root_dir, addon)
 	bases = _profile_bases()
 	check("CharacterBaker.profile_global_bases da los 56 huesos del perfil", baker.profile_global_bases().size() == 56)
 	var plain: Node3D = baker.bake(species.mesh, species.skeleton, true)
@@ -64,10 +62,10 @@ func _initialize() -> void:
 		if result["nivel"] != "bien":
 			bad.append("%s: %s" % [result["id"], result["texto"]])
 	check("las comprobaciones del 5.3 dan todo bien", bad.is_empty(), ", ".join(bad))
-	character.free()
-	# Registrar el resultado aquí: si el guardado se interrumpe dentro de la función, falta esta comprobación.
-	check("GLB y material escritos en esta ejecución, con los 53 ejes verificados",
-		_save_and_check(socket_names, root_dir.path_join("pruebas/fase_5/salida")))
+	var folder := root_dir.path_join("pruebas/fase_5/salida")
+	DirAccess.remove_absolute(folder.path_join("t_perfil.glb"))  # que un archivo viejo no valga
+	_save(character, folder)
+	check("el guardado llegó al final y el .glb existe", saved and FileAccess.file_exists(folder.path_join("t_perfil.glb")))
 	print("RESULTADO: ", "TODO BIEN" if failures == 0 else "%d FALLOS" % failures)
 	quit(1 if failures else 0)
 
@@ -79,31 +77,22 @@ func check(label: String, ok: bool, detail := "") -> void:
 
 
 ## El cuerpo «al_azar» de probar_exportar.gd.
-func _set_up(root_dir: String, addon: String) -> bool:
+func _set_up(root_dir: String, addon: String) -> void:
 	var refit: GDScript = load(addon.path_join("skeleton_refit.gd"))
 	var proportions: GDScript = load(addon.path_join("proportions.gd"))
-	var path := root_dir.path_join("pruebas/fase_2/salida/referencia_reajuste.json")
-	if not FileAccess.file_exists(path):
-		check("existe la referencia de Blender", false, path)
-		return false
-	var reference: Variant = JSON.parse_string(FileAccess.get_file_as_string(path))
-	if not reference is Dictionary or not reference.get("bodies") is Array:
-		check("se pueden leer los cuerpos de la referencia", false, path)
-		return false
+	var reference: Dictionary = JSON.parse_string(
+		FileAccess.get_file_as_string(root_dir.path_join("pruebas/fase_2/salida/referencia_reajuste.json")))
 	var weights := {}
 	for candidate: Dictionary in reference["bodies"]:
 		if candidate["name"] == "al_azar":
 			weights = candidate["weights"]
 	check("existe el cuerpo al_azar de la referencia", not weights.is_empty())
-	if weights.is_empty():
-		return false
 	var base: Dictionary = refit.capture_base(species.skeleton)
 	load(addon.path_join("shape_weights.gd")).apply(species.mesh, weights)
 	refit.apply(species.skeleton, species.mesh.skin, species.joints, weights, base)
 	var values: Dictionary = proportions.neutral_values(species.sliders)
 	values.merge(SCALES, true)
 	proportions.apply(species.skeleton, proportions.scales(values, species.sliders))
-	return true
 
 
 ## Giro global de cada hueso del perfil, calculado aquí (no con la función que se prueba): padre antes que hijo.
@@ -202,48 +191,29 @@ func _check_sockets(plain: Node3D, proto: Node3D, socket_names: Array) -> Node3D
 	return b
 
 
-## Desde 5.16, la exportación pública en T incluye los ejes del perfil (D11).
-func _save_and_check(socket_names: Array, folder: String) -> bool:
+## Escribe el .glb con el exportador real (prepare, compute, finish, write); un error o un archivo sin escribir es FALLO.
+func _save(character: Node3D, folder: String) -> void:
+	DirAccess.make_dir_recursive_absolute(folder)
 	var path := folder.path_join("t_perfil.glb")
-	var material_path := folder.path_join("t_perfil.tres")
-	var error := DirAccess.make_dir_recursive_absolute(folder)
-	if error != OK:
-		print("  No se pudo preparar ", folder, ": ", error_string(error))
-		return false
-	for output: String in [path, material_path]:
-		if FileAccess.file_exists(output) and DirAccess.remove_absolute(output) != OK:
-			print("  No se pudo retirar la salida anterior: ", output)
-			return false
-	error = exporter.save(species.mesh, species.skeleton, socket_names, path, true)
-	if error != OK or not FileAccess.file_exists(path) or not FileAccess.file_exists(material_path):
-		print("  El guardado no produjo el GLB y su material: ", path, " (", error_string(error), ")")
-		return false
+	character.free()  # el que se comprobó; se exporta uno igual, hecho como lo hace el exportador real
+	var job: Dictionary = exporter.prepare(species.mesh, species.skeleton, species.manifest["bones"]["sockets"], true)
+	exporter.compute(job)
+	var error: Error = exporter.write(exporter.finish(job), job["toon"], path)
+	check("se escribe " + path, error == OK, error_string(error))
 	var document := GLTFDocument.new()
 	var state := GLTFState.new()
 	if document.append_from_file(path, state) != OK:
-		print("  No se pudo reimportar ", path)
-		return false
+		check("el archivo se vuelve a leer", false)
+		return
 	var scene := document.generate_scene(state)
-	if scene == null:
-		return false
-	var skeletons := scene.find_children("*", "Skeleton3D", true, false)
-	if skeletons.size() != 1:
-		print("  Esqueletos encontrados: ", skeletons.size())
-		scene.free()
-		return false
-	var skeleton: Skeleton3D = skeletons[0]
+	var skeleton: Skeleton3D = scene.find_children("*", "Skeleton3D", true, false)[0]
 	var turned := 0.0
 	for bone in skeleton.get_bone_count():
-		var name := skeleton.get_bone_name(bone)
-		if not bases.has(name):
-			print("  Hueso ajeno al perfil: ", name)
-			scene.free()
-			return false
-		turned = maxf(turned, _angle(skeleton.get_bone_global_rest(bone).basis, bases[name]))
-	var count := skeleton.get_bone_count()
-	print("  MEDIDA ejes del GLB: %.6f° en %d huesos (límite %s°)" % [turned, count, FILE_AXES_DEG])
+		turned = maxf(turned, _angle(skeleton.get_bone_global_rest(bone).basis, bases[skeleton.get_bone_name(bone)]))
+	check("en el archivo, los 53 huesos conservan los ejes del perfil (< %s°)" % FILE_AXES_DEG,
+		turned < FILE_AXES_DEG and skeleton.get_bone_count() == 53, "%.6f°" % turned)
 	scene.free()
-	return turned < FILE_AXES_DEG and count == 53
+	saved = true
 
 
 func _angle(a: Basis, b: Basis) -> float:

@@ -59,7 +59,7 @@ func _check_live(view) -> void:
 	changed["head_size"] = 1.0
 	check("set_values acepta todas las claves", view.set_values(changed).is_empty())
 	var scale := skeleton.get_bone_pose_scale(head)
-	check("cabeza al máximo: escala 1,3", scale.is_equal_approx(Vector3.ONE * 1.3), str(scale))
+	check("cabeza al máximo: escala 2,5", scale.is_equal_approx(Vector3.ONE * 2.5), str(scale))
 	view.set_values(preset)
 	check("volver al preset deja el esqueleto igual", _poses(skeleton) == before)
 

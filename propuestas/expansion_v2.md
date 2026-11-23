@@ -48,8 +48,8 @@ Estado: **Hecho** · **Plan** (ya está en `PLAN.md` o en la hoja de ruta) · **
 | Pies al suelo al animar (IK de pies) | Nuevo | X.1 |
 | Recortar `UAL1_Standard.glb` | Plan | P.6 |
 | Más deslizadores de MakeHuman | Plan + Nuevo | 9.2 (cara); X.2 (cuerpo: pies, dedos, orejas…) |
-| Deslizador Edad (de joven a mayor; las demás edades, X.17) | Nuevo | PL.8 |
-| Edades de 5 a 60 años, como Anny | Nuevo | X.17 (D42 aprobada) |
+| Deslizador Edad | Descartado (2026-11-21) | PL.8: Altura desde ×0,65 |
+| Edades de 5 a 60 años, como Anny | Con los deslizadores (2026-11-21) | PL.8 (D42) |
 | Pestaña Cara y ojos | Plan | Fase 9 |
 | Pestaña Pelo | Plan + Nuevo | AB.9a–AB.9d (casquete, peinados CC0 moldeados, peinados propios, pelo de MakeHuman) + Fase 11 (física) |
 | Pestaña Ropa | Plan + Nuevo | AB.4–AB.8, AB.10 + Fase 12 |
@@ -68,7 +68,7 @@ Estado: **Hecho** · **Plan** (ya está en `PLAN.md` o en la hoja de ruta) · **
 | Estilo como archivo de datos | Plan | 14.1 |
 | Grado de realismo (anime → semirrealista) | Nuevo | X.6 |
 | Luz de vista previa en el editor | Nuevo | IU.3 |
-| Tinte de sombra | Plan | 14.3 |
+| Tinte de sombra | Plan | SH.2 (D48) |
 | Umbral del tono medio en la cara | Nuevo | X.7 |
 | Aplanar más las normales de la cara (sin escalón) | Nuevo | X.7 |
 | Estilos de ojos como packs | Plan | 9.5 |
@@ -94,7 +94,7 @@ Estado: **Hecho** · **Plan** (ya está en `PLAN.md` o en la hoja de ruta) · **
 | 8 influencias al exportar | Nuevo | X.15 |
 | Cuelgue de `GLTFDocument` | Nuevo | X.16 |
 | Juego oscuro: espadas, escudos, linternas | Plan + Nuevo | AB.11 + Fase 13 |
-| Juego oscuro: base chibi | Plan | 16.2–16.3 (PL.9 lo intenta antes con la misma malla) |
+| Juego oscuro: base chibi | Plan | 16.2–16.3 (PL.9: sin chibi; la cabeza llega a ×2,5) |
 | Juego oscuro: daño por zonas | Nuevo | X.9 |
 
 ---
@@ -254,14 +254,20 @@ Estado: **Hecho** · **Plan** (ya está en `PLAN.md` o en la hoja de ruta) · **
 - **Nivel:** medio · **Tam.:** S–M.
 
 ### PL.8 Deslizador Edad (primera parte: de joven a mayor)
-- **Objetivo:** fila nueva `age,Global,Edad,Forma,macro:age=<mín>,macro:age=1,1,0` con sus correcciones, y las plantillas **Mayor** y **Mayora**.
+> **Descartado por el responsable el 2026-11-21:** sin deslizador Edad (exacto pedía ~150 formas más). En su lugar,
+> Global › Altura baja hasta ×0,65 y cada uno ajusta la figura (`ruta/pasos/PL.8_figura_pequena.md`).
+
+- **Objetivo:** fila nueva `age` (Global › Edad) de joven (25 años) a 60 años (D42: nada por encima de 60), con sus correcciones, y las plantillas **Mayor** y **Mayora** (60 años).
 - **Archivos:** `blender/exportar_datos.py`, `godot/datos/humana/*` (sube la `version` del manifiesto), `deslizadores.csv`, pruebas de la fase 2 y `probar_rendimiento.gd`.
-- **Diseño:** el deslizador mezcla **solo las variaciones `young` y `old`** de MakeHuman (con sus correcciones), como hace Anny (`propuestas/proyectos_parecidos.md` §1.2). **Comprobar** en MPFB que `young` corresponde a unos 25 años. La edad queda **fuera** de «Exageración» (16.2) y del aleatorio. **Después (X.17):** el rango se amplía hasta los 5 años. Medir la memoria que añade (`RENDIMIENTO.md` O6).
+- **Diseño:** el deslizador va de la macro `age` 0,5 (`young`, 25 años) a la que da 60 años (con sus correcciones), como hace Anny (`propuestas/proyectos_parecidos.md` §1.2). **Comprobar** en MPFB la equivalencia en años. La edad queda **fuera** de «Exageración» (16.2) y del aleatorio. **Después (X.17):** el rango se amplía hasta los 5 años. Medir la memoria que añade (`RENDIMIENTO.md` O6).
 - **Prueba:** el deslizador a 0 da exactamente la variación `young`; las pruebas de reajuste de huesos (fase 2) siguen < 1 mm.
 - **Juicio visual:** sí.
-- **Nivel:** fuerte · **Tam.:** M · **Modelo:** Fable · **Depende de:** D38.
+- **Nivel:** fuerte · **Tam.:** M · **Modelo:** Fable · **Depende de:** D42 (decidida).
 
 ### PL.9 (opcional) Chibi con la misma malla
+> **Cambiado por el responsable el 2026-11-21:** las recetas de chibi del PL.9a «están raras». Sin chibi: Cabeza › Tamaño
+> llega a ×2,5 y cada uno ajusta el resto (`ruta/pasos/PL.9_chibi.md`).
+
 - **Objetivo:** intentar el chibi (2,5–3 cabezas) sin base nueva: rangos ampliados de Proporción + formas propias de cuello y cabeza. El 3.12 llegó a 3,46 cabezas fuera de rango.
 - **Diseño:** es el 16.2 adelantado solo para Proporción. Si no llega a 3 cabezas con buen aspecto, se para y se va a 16.3 (segunda base).
 - **Nivel:** fuerte · **Tam.:** M · **Modelo:** Fable.
@@ -390,7 +396,7 @@ Un peinado CC0 moldeado sigue siendo CC0 y puede entrar en el Pack Base 1 (D36);
 
 ### AB.9 Pelo (cuatro subpasos)
 
-**Material común:** toon con color y una banda de brillo propia del anime (parámetro del shader; sin texturas). Se crea en AB.9a y lo usan todos.
+**Material común:** toon con color y una banda de brillo propia del anime (parámetro del shader; sin texturas). La banda se crea en SH.6b (`PLAN.md`); AB.9a y los demás peinados la usan.
 **Prueba común:** con 10 cuerpos aleatorios, ningún vértice del cráneo por fuera del pelo; cada peinado ≤ 6.000 triángulos y ≤ 12 huesos (PROVISIONAL de la ficha 11); ficha con autor y licencia.
 
 #### AB.9a Casquete
@@ -436,15 +442,15 @@ Un peinado CC0 moldeado sigue siendo CC0 y puede entrar en el Pack Base 1 (D36);
 - **Nivel:** fuerte · **Tam.:** M · **Modelo:** Fable.
 
 ### AB.13 Pestañas Ropa, Pelo y Accesorios
-- **Objetivo:** cada pestaña con la galería de miniaturas (PL.2) de su tipo, colores por pieza, parámetros (largo de manga…), estampados por parámetros del shader (rayas, cuadros, degradado) y **autor y licencia siempre visibles**.
+- **Objetivo:** cada pestaña con una fila por pieza de su tipo (por ahora solo el nombre: las miniaturas, en `IDEAS.md`), colores por pieza, parámetros (largo de manga…), estampados por parámetros del shader (rayas, cuadros, degradado) y **sin autor ni licencia en las tarjetas o filas de piezas: van solo en el panel de Créditos (D45)**.
 - **Diseño:** el mismo esqueleto de ventana que Cuerpo (izquierda: categorías y miniaturas; derecha: ajustes de la pieza elegida). Una sola pieza por ranura, salvo accesorios (`ARQUITECTURA.md` §6).
-- **Prueba:** poner, cambiar y quitar piezas es un cambio para Deshacer; la licencia de cada miniatura coincide con su `pack.json`.
+- **Prueba:** poner, cambiar y quitar piezas es un cambio para Deshacer; ninguna fila de piezas muestra autor ni licencia, y Créditos lista cada pack con la licencia de su `pack.json`.
 - **Nivel:** medio · **Tam.:** L.
 
 ### AB.14 Publicar el Pack Base 1
 - `godot/packs/base/LEEME.md` (qué trae, licencia CC0, cómo se hizo), miniaturas, fila en `CREDITOS.md`. Si se aprueba D36: las piezas rígidas como pack suelto en `.glb` para OpenGameArt o itch.io (lo publica el responsable).
 
-**Hecho cuando (fase AB):** un personaje Femenina y otro Masculino, cada uno con peinado, camiseta, pantalón, botas y un accesorio, se exportan, pasan `probar_glb.gd`, se animan en un proyecto vacío sin que la piel atraviese la ropa, y todas las piezas enseñan su licencia.
+**Hecho cuando (fase AB):** un personaje Femenina y otro Masculino, cada uno con peinado, camiseta, pantalón, botas y un accesorio, se exportan, pasan `probar_glb.gd`, se animan en un proyecto vacío sin que la piel atraviese la ropa, y todos los packs aparecen con su autor y licencia en Créditos.
 
 ---
 
@@ -458,7 +464,7 @@ Un peinado CC0 moldeado sigue siendo CC0 y puede entrar en el Pack Base 1 (D36);
 | X.4 | Forma correctora del hombro con el brazo sobre la cabeza | fuerte | L | Hunde 21–43 mm al «Atacar» (5.8); forma guiada por el ángulo del brazo; decidir cómo la usa el juego |
 | X.5 | Selector de polígonos al exportar (Low-poly, Ligero, Medio, Completo) | fuerte | L | Mismos huesos y anclajes; pesos de la base; pruebas de deformación por nivel |
 | X.6 | Estilos nuevos: semirrealista (sombreado suave sin contorno) y pixel art (render a baja resolución con paleta) | medio | M | Como estilos de datos del 14.1; el pixel art es del estudio (imagen), no del `.glb` |
-| X.7 | Cara: umbral del tono medio y transición gradual de las normales (sin escalón en la sien) | fuerte | M | Toca `StyleNormals`; juicio visual A/B |
+| X.7 | Cara: umbral del tono medio y transición gradual de las normales (sin escalón en la sien). La sombra de la nariz debe desaparecer o bajar mucho, con `shadow_receive` (SH.4) o con estas normales | fuerte | M | Toca `StyleNormals`; juicio visual A/B; referencia: fila masculino de `pruebas/capturas/shader_ab/hoja_cara.png` |
 | X.8 | Luz de vista previa con presets (día, atardecer, mazmorra) | simple | S | Amplía IU.3; útil para el juego oscuro |
 | X.9 | Exportar cápsulas de colisión por hueso (daño por zonas) | medio | M | Junto al `.glb`: `CollisionShape3D` por hueso en la `.tscn` del 11.4, o un JSON con radios y largos |
 | X.10 | Plugin para Godot: GameMolde como pestaña del editor de Godot | medio | M | `EditorPlugin` con `_has_main_screen()`; mismo núcleo y misma interfaz |
@@ -467,8 +473,10 @@ Un peinado CC0 moldeado sigue siendo CC0 y puede entrar en el Pack Base 1 (D36);
 | X.13 | Traducciones (español base, inglés) | simple–medio | M | `TranslationServer` + CSV de traducciones; los textos salen del código |
 | X.14 | Simetría relativa (mover un lado suma lo mismo al otro) | simple | S | Opción en `BodyEditor` |
 | X.15 | Opción de 8 influencias al exportar | medio | S | Aviso: algunos motores solo leen 4 |
-| X.17 | **Edades de 5 a 60 años, como Anny:** deslizador Edad completo (`child` ↔ `young` ↔ `old`) y plantillas prehechas por edad (Niña, Niño, Adolescente, Adulta, Adulto, Mayor) que después se ajustan con los deslizadores | fuerte | L | D42 aprobada. Salvaguardas: por debajo de adulto la prenda base no se puede ocultar, sin chibi ni «Exageración», sin poses del estudio que no sean neutras, y la edad nunca entra en el aleatorio. **Comprobar** en MPFB qué edad da cada variación |
+| X.17 | ~~Edades de 5 a 60 años con deslizador Edad y plantillas por edad~~ | — | — | **Descartado el 2026-11-21:** sin deslizador Edad: con Altura (desde ×0,65) y los demás deslizadores (PL.8, responsable, 2026-11-21) |
 | X.16 | Reproducción mínima del cuelgue de `GLTFDocument` (BoneAttachment sin malla ni piel) | medio | S | El responsable decide si lo reporta a Godot |
+
+**Meta de estilo después del MVP (2026-11-21):** el sombreado de la ampliación apunta a un estilo como el de VRoid (solo inspiración visual) y su referencia es `diseno/referencia_estilo_quaternius.png`; el MVP mantiene la sombra de 3 tonos y el contorno negro (D44 en `ruta/DECISIONES.md`).
 
 ---
 
@@ -486,7 +494,7 @@ Un peinado CC0 moldeado sigue siendo CC0 y puede entrar en el Pack Base 1 (D36);
 | D40 | Código de Anny (Apache 2.0) y Character Studio (MIT): ¿se porta con su cabecera o se reimplementa? | a) Reimplementar en GDScript y citar en `CREDITOS.md` · b) Portar con cabecera y aviso | **a)** Están en Python y JavaScript: portar ya es reescribir. Se citan igual |
 | D41 | ¿Las 52 expresiones «Face Units» (CC0) entran en `datos/` cuando llegue la Fase 9? | a) Sí, con D31 · b) No, expresiones propias | **a)** Origen limpio y estándar ARKit; ahorra la parte más difícil del 9.7 |
 | D37 | ¿El pipeline vuelve a exportar los helpers de MakeHuman como piezas (AB.3)? | a) Sí · b) No, solo el camino del 12.1 | **a)** Es el camino más barato y fiable para la ropa ceñida, la falda y el pelo |
-| D38 | Rango del deslizador Edad | a) 25 a 90 años · b) 25 a 70 años | **a)**, con el mínimo fijo en los datos |
+| D38 | Rango del deslizador Edad | — | **Sustituida por D42** (responsable, 2026-11-20): de 5 a 60 años. El deslizador Edad se descartó el 2026-11-21 |
 | D42 | ¿Se permiten personajes de 5 a 60 años, como Anny (X.17)? | a) No · b) Sí, con las salvaguardas de X.17 | **Decidida el 2026-11-19: b)** |
 
 ---

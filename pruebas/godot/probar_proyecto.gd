@@ -1,7 +1,6 @@
 extends SceneTree
 # Paso 10.1: formato de proyecto .gmolde (project_file.gd). Sin ventana y sin datos/.
-# Uso: godot --headless --path pruebas/godot -s <ruta a este archivo> 2>&1 | grep -E 'FALLO|RESULTADO|ERROR'
-# Busca project_file.gd en godot/addons/creador/ y, si no está, en ruta/codigo/nucleo/ (borrador).
+# Uso: (ulimit -v 4000000; timeout 120 godot --headless --path pruebas/godot -s probar_proyecto.gd 2>&1 | grep -E 'FALLO|RESULTADO|ERROR')
 # Lee datos/proyecto_v1.gmolde (junto a esta prueba): ese archivo NO SE REGENERA NUNCA. Si un cambio del formato
 # hace que deje de abrirse, falta una migración.
 # Que detecta el fallo: (1) en to_text, pasar `false` como tercer argumento de JSON.stringify -> falla «otro orden de claves»;
@@ -15,10 +14,9 @@ var here: String
 func _initialize() -> void:
 	var root_dir := ProjectSettings.globalize_path("res://").path_join("../..").simplify_path()
 	here = (get_script() as Script).resource_path.get_base_dir()
-	for folder: String in ["godot/addons/creador", "ruta/codigo/nucleo"]:
-		var path := root_dir.path_join(folder).path_join("project_file.gd")
-		if project_file == null and FileAccess.file_exists(path):
-			project_file = load(path)
+	var path := root_dir.path_join("godot/addons/creador/project_file.gd")
+	if FileAccess.file_exists(path):
+		project_file = load(path)
 	if project_file == null:
 		print("ERROR: no se encuentra project_file.gd")
 		quit(1)

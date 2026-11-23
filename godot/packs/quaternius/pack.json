@@ -1,0 +1,186 @@
+{
+ "autor": "Quaternius",
+ "formato": "gamemolde-pack",
+ "id": "quaternius",
+ "licencia": "CC0-1.0",
+ "nombre": "Pack Quaternius",
+ "origen": "https://quaternius.com/packs/universalbasecharacters.html",
+ "piezas": [
+  {
+   "anclaje": {
+    "hueso": "",
+    "transform": [
+     0,
+     0,
+     0,
+     0,
+     0,
+     0,
+     1,
+     1
+    ]
+   },
+   "archivo": "hair_buns.glb",
+   "color": [
+    0.24,
+    0.16,
+    0.12
+   ],
+   "colores": [
+    "principal"
+   ],
+   "especies": [
+    "humana"
+   ],
+   "fisica": [],
+   "id": "hair_buns",
+   "miniatura": "",
+   "nombre": "Moños",
+   "ranura": "pelo",
+   "sha256": "59dc2a8b9d7c5fd6c79c919e691e61a31d7afa1cf743099dfa7f2eaa1aaee336",
+   "sigue_al_cuerpo": true,
+   "tipo": "pelo"
+  },
+  {
+   "anclaje": {
+    "hueso": "",
+    "transform": [
+     0,
+     0,
+     0,
+     0,
+     0,
+     0,
+     1,
+     1
+    ]
+   },
+   "archivo": "hair_long.glb",
+   "color": [
+    0.24,
+    0.16,
+    0.12
+   ],
+   "colores": [
+    "principal"
+   ],
+   "especies": [
+    "humana"
+   ],
+   "fisica": [],
+   "id": "hair_long",
+   "miniatura": "",
+   "nombre": "Pelo largo",
+   "ranura": "pelo",
+   "sha256": "4213fe358b29a38af183fe29e23189650554582451ca8827c4912310ba7bcaf3",
+   "sigue_al_cuerpo": true,
+   "tipo": "pelo"
+  },
+  {
+   "anclaje": {
+    "hueso": "",
+    "transform": [
+     0,
+     0,
+     0,
+     0,
+     0,
+     0,
+     1,
+     1
+    ]
+   },
+   "archivo": "hair_buzzed_female.glb",
+   "color": [
+    0.24,
+    0.16,
+    0.12
+   ],
+   "colores": [
+    "principal"
+   ],
+   "especies": [
+    "humana"
+   ],
+   "fisica": [],
+   "id": "hair_buzzed_female",
+   "miniatura": "",
+   "nombre": "Rapado (F)",
+   "ranura": "pelo",
+   "sha256": "1b1e63e747d8482a5ffef79dedbfef3c2d498388f53ca2140b6dec4b49e9e25c",
+   "sigue_al_cuerpo": true,
+   "tipo": "pelo"
+  },
+  {
+   "anclaje": {
+    "hueso": "",
+    "transform": [
+     0,
+     0,
+     0,
+     0,
+     0,
+     0,
+     1,
+     1
+    ]
+   },
+   "archivo": "hair_buzzed.glb",
+   "color": [
+    0.24,
+    0.16,
+    0.12
+   ],
+   "colores": [
+    "principal"
+   ],
+   "especies": [
+    "humana"
+   ],
+   "fisica": [],
+   "id": "hair_buzzed",
+   "miniatura": "",
+   "nombre": "Rapado (M)",
+   "ranura": "pelo",
+   "sha256": "373982e984058e8e49b71b8b8262cc8f05565baa7502b1235c10b53ddc669f0f",
+   "sigue_al_cuerpo": true,
+   "tipo": "pelo"
+  },
+  {
+   "anclaje": {
+    "hueso": "",
+    "transform": [
+     0,
+     0,
+     0,
+     0,
+     0,
+     0,
+     1,
+     1
+    ]
+   },
+   "archivo": "hair_simple_parted.glb",
+   "color": [
+    0.24,
+    0.16,
+    0.12
+   ],
+   "colores": [
+    "principal"
+   ],
+   "especies": [
+    "humana"
+   ],
+   "fisica": [],
+   "id": "hair_simple_parted",
+   "miniatura": "",
+   "nombre": "Raya al lado",
+   "ranura": "pelo",
+   "sha256": "b4d3c1bb6baf5188f8ca30b72814db0bcefd0bfef84ff86570f9da4998f190b8",
+   "sigue_al_cuerpo": true,
+   "tipo": "pelo"
+  }
+ ],
+ "version": 1
+}

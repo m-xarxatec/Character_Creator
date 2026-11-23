@@ -11,6 +11,7 @@ Unidades y ejes de Godot: metros, Y arriba, mirando a +Z.
 | `articulaciones.json` | Dónde está cada hueso en el cuerpo base y cuánto lo mueve cada forma |
 | `deslizadores.csv` | La tabla del paso 2.1, con la columna `neutro`, las formas de cara (versión 2) y las propias (versión 3) |
 | `presets/anime.json` | Preset de personaje nuevo (paso 3.15), en el formato de `godot/addons/creador/preset.gd` |
+| `presets/<género>.json` | Presets de género (paso PL.10): `femenino` y `masculino` (el neutro es `anime.json`); mismo formato |
 
 Si el formato cambia de forma incompatible, sube `version`.
 Si `datos/` va dentro de un proyecto Godot, `deslizadores.csv` debe importarse como "Keep File (exported as is)": por defecto Godot toma los `.csv` como traducciones.
@@ -25,11 +26,13 @@ Si `datos/` va dentro de un proyecto Godot, `deslizadores.csv` debe importarse c
   "source": "MakeHuman system assets (CC0) con MPFB 2.0.18",
   "vertex_count": 13380,
   "bones": {"deform": ["Root", "Hips", "…"], "sockets": ["socket_hand_r", "socket_hand_l", "socket_back", "socket_hip"]},
+  "zonas_solo_pc": ["Ojos", "Nariz", "Boca", "Mandíbula", "Orejas"],
   "files": {"cuerpo.glb": {"sha256": "…"}, "articulaciones.json": {"sha256": "…"}, "deslizadores.csv": {"sha256": "…"}, "presets/anime.json": {"sha256": "…"}}
 }
 ```
 
 Al cargar, el núcleo comprueba `version` y el `sha256` de cada archivo; si no coinciden, no carga.
+`zonas_solo_pc` (opcional, paso 9.2): zonas cuyas formas no se cargan en Android.
 
 ## `cuerpo.glb`
 
@@ -41,6 +44,7 @@ Al cargar, el núcleo comprueba `version` y el `sha256` de cada archivo; si no c
   Los deslizadores Proporción y Por crear no tienen formas (desde la versión 3 no queda ninguno Por crear).
 - **Formas de cara** (paso 3.14): `cuenca_plana`, `boca_anime`, `mandibula_anime`, `menton_anime` y `nariz_anime`, de un lado
   (ver más abajo).
+- **Rasgos de cara** (paso 9.2): 20 deslizadores de las zonas Ojos, Nariz, Boca, Mandíbula y Orejas, con targets de MakeHuman. Izquierda y derecha van unidas en una forma (`l-x+r-x`, `lados` = 1).
 - **Formas propias** (paso 6.1): `shoulder_height_*`, `buttocks_height_*`, `buttocks_roundness_*` y `alisado` (ver más abajo).
 - **Correcciones** de macros combinadas: nombres de formas de macro unidos por `*`, p. ej. `muscle_incr*weight_incr` (ver más abajo).
 
@@ -115,9 +119,10 @@ Filas de tipo Forma con `incr` = `propia:<forma>` (y `decr` = `propia:<forma>` s
   el conversor llama a `own_shapes()`. Son datos **CC0** (script propio sobre malla CC0).
 - `shoulder_height` (±3 cm) es la única que **mueve huesos**: la cola del hombro y todo el brazo (sale en `articulaciones.json`).
 - `alisado` (zona `Base`, de un lado, neutro 0, oculta en la interfaz) quita el relieve de pecho y entrepierna. Lleva
-  **correcciones** `alisado*<esquina>` sobre músculo, grasa y pecho (`muscle`, `weight`, `breast_volume`), calculadas
-  como las de las macros: el alisado se mide también sobre cada esquina, así que sigue al cuerpo. Sin ellas, el
-  alisado fijo del neutro hundía el pezón de los cuerpos que ya lo traen más plano. Su peso es el producto de sus partes.
+  **correcciones** `alisado*<esquina>` sobre las 5 macros (`gender`, `muscle`, `weight`, `breast_volume`,
+  `breast_firmness`; paso PL.0b), calculadas como las de las macros: el alisado se mide también sobre cada esquina,
+  así que sigue al cuerpo. Sin ellas, el alisado fijo del neutro hundía el pezón de los cuerpos que ya lo traen más
+  plano. Donde un triángulo se daría la vuelta, el alisado se queda a medias (PL.0c). Su peso es el producto de sus partes.
 - El preset `anime.json` lleva `alisado` = 1 («sin detalle anatómico» desde el primer momento). Un preset sin la clave la deja en 0.
 
 ## `presets/`
@@ -126,6 +131,13 @@ Presets **completos** (todas las claves de `valores` escritas), que no se aplica
 `anime.json`: cuerpo neutro, las 4 formas de cara a 1, `nariz_anime` a 0, `alisado` a 1, colores por defecto de `BodyMaterial`
 (piel gris) y prenda visible. **El editor lo carga al crear un personaje nuevo** (`SpeciesData.preset_text()`).
 Es la base de los futuros botones de estilo (`realista.json`, `chibi.json`…). Añadir uno es un archivo más en `files`.
+
+Presets de género (pasos PL.1 y PL.10): `femenino.json` y `masculino.json` son `anime.json` con otro cuerpo (cara,
+`alisado`, colores, prenda y acabado iguales); sin más cuerpos de serie. `nombre` es el que verá quien los elija. Cada una va en `TEMPLATES` de `exportar_datos.py`.
+
+Miniaturas (paso PL.2): `presets/<id>.png`, 256 × 256 con fondo transparente, una por preset; las hace
+`pruebas/godot/generar_miniaturas.gd` (con ventana; volver a lanzarlo si cambia un preset). Van con `importer="keep"`
+(viajan tal cual; se leen con `Image.load_from_file`) y no están en el manifiesto.
 
 ## `articulaciones.json`
 

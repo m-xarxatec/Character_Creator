@@ -55,9 +55,9 @@ func _check_top_tabs(main: Control) -> void:
 	var soon := 0
 	for i in bar.get_tab_count():
 		soon += int(bar.get_tab_title(i).ends_with("Pronto") and not bar.is_tab_disabled(i))
-	check("siete accesos, cuatro «Pronto» y Taller al final",
-		bar.get_tab_count() == 7 and bar.get_tab_title(6) == "Taller de Assets" and soon == 4 and not bar.get_tab_title(0).contains("Pronto")
-		and not bar.get_tab_title(5).contains("Pronto"), str(soon))
+	check("siete accesos, solo Cara y ojos dice «Pronto» (AB.13) y Taller al final",
+		bar.get_tab_count() == 7 and bar.get_tab_title(6) == "Taller de Assets" and soon == 1
+		and bar.get_tab_title(1).contains("Pronto"), str(soon))
 	check("la pestaña de la ventana no se ve: está arriba", not main.tabs.tabs_visible)
 	bar.current_tab = 2
 	check("elegir Pelo arriba cambia la página", main.tabs.current_tab == 2)

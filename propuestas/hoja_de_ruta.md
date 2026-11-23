@@ -18,7 +18,7 @@ Estado: **Hecho** · **MVP** (pendiente en `PLAN.md`) · **IDEAS** (apuntado) ·
 | Deslizadores de cuerpo (40 filas) | Hecho | Formas + escala de hueso | MakeHuman CC0 | — | — | — |
 | Formas «Por crear» (3) y alisado bajo la prenda | MVP (6.1) | Formas nuevas en `datos/` | Propias (MakeTarget) | Medio: esculpir a mano | M | Fase 5 |
 | Más deslizadores de cuerpo | IDEAS | Filas nuevas en el CSV | MakeHuman CC0 | Bajo | S | — |
-| Edad (de 5 a 60 años, D42) | IDEAS | Macro `age` de MakeHuman | MakeHuman CC0 | Medio: suma correcciones | M | 6.2 |
+| Edad (de 5 a 60 años, D42) | Hecho de otra forma | sin deslizador Edad: con Altura (desde ×0,65) y los demás deslizadores (PL.8, responsable, 2026-11-21) | — | — | — | PL.8 |
 | Chibi (2,5–3 cabezas) | IDEAS | Formas propias o segunda base | Propias o Quaternius CC0 | **Alto**: hoy 5,25 cabezas | L | Fase 6, decisión D1 |
 | Presets con miniatura | Falta | Render en `SubViewport` al guardar | Propios | Bajo | S | Guardar/cargar en ventana |
 | Guardar y cargar personaje en la ventana | Falta | `Preset` ya existe; falta el diálogo | — | Bajo | S | — |

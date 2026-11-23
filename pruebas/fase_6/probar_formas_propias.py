@@ -5,6 +5,8 @@ Uso: (ulimit -v 4000000; timeout 900 blender -b -P pruebas/fase_6/probar_formas_
 Con «-- --capturas» guarda ademas las hojas del juicio visual en pruebas/capturas/formas_propias/:
   <deslizador>.png  filas (de arriba abajo) neutro, _decr y _incr al 100 %; columnas frente, perfil y espalda
   alisado.png       torso sin prenda; filas antes y despues; columnas frente y tres cuartos
+  complexion.png    como alisado.png, con gender y firmness a 0 y a 1 (paso PL.0); filas: cada cuerpo antes y despues
+                    (despues = alisado con sus correcciones, paso PL.0b)
 Sombreado normal (difuso), que marca mas el relieve que el toon.
 """
 import itertools
@@ -21,13 +23,15 @@ import formas_propias as fp  # noqa: E402
 import render_vistas as rv  # noqa: E402
 
 CAPTURES = os.path.join(ROOT, "pruebas", "capturas", "formas_propias")
+DATA = os.path.join(ROOT, "godot", "datos", "humana")
 MOVED_MM = 0.01
 SYMMETRY_MM = 0.01
 JOINT_MM = 0.1
 RIGID_MM = 1.0  # PROVISIONAL
 SMOOTH_DROP = 0.5  # PROVISIONAL: la curvatura media de cada zona baja al menos esto
 VOLUME_SHARE = 0.02  # PROVISIONAL (del volumen del cuerpo entero; la ficha dice «del torso»)
-EXTREME_MACROS = ("muscle", "weight", "cupsize")
+COMPLEXION = ("gender", "breast_firmness")  # PL.0: estos a 0 o a 1 y las demas macros neutras
+EXTREME = ("muscle", "weight", "breast_volume")  # 6.2: todas las formas en estos a 0 y a 1
 failures = []
 
 
@@ -93,41 +97,72 @@ def check_shapes(basemesh, shapes):
     check(f"shoulder_height_incr: el brazo ({rigid.sum()} vertices con peso 1) sube rigido (< {RIGID_MM} mm)",
           error < RIGID_MM, "%.4f mm" % error)
 
-    smoothed = points + shapes["alisado"][0]
+    check_smoothing("alisado", points, shapes["alisado"][0], edges, triangles)
+
+
+def check_smoothing(label, points, delta, edges, triangles):
+    """Medidas del alisado del 6.2: curvatura de pecho y entrepierna y volumen del cuerpo."""
+    zones, smoothed = fp.load_zones(), points + delta
     for zone in ("chest", "crotch"):
-        mask = fp.zone_mask(zones, [zone], count)
+        mask = fp.zone_mask(zones, [zone], len(points))
         before, after = curvature(points, edges, mask), curvature(smoothed, edges, mask)
         drop = 1 - after / before
-        check(f"alisado: la curvatura de {zone} baja al menos un {100 * SMOOTH_DROP:.0f} %", drop >= SMOOTH_DROP,
+        check(f"{label}: la curvatura de {zone} baja al menos un {100 * SMOOTH_DROP:.0f} %", drop >= SMOOTH_DROP,
               "%.4f -> %.4f mm (%.1f %%)" % (1000 * before, 1000 * after, 100 * drop))
     change = volume(smoothed, triangles) / volume(points, triangles) - 1
-    check(f"alisado: el volumen del cuerpo cambia menos de un {100 * VOLUME_SHARE:.0f} %", abs(change) < VOLUME_SHARE,
+    check(f"{label}: el volumen del cuerpo cambia menos de un {100 * VOLUME_SHARE:.0f} %", abs(change) < VOLUME_SHARE,
           "%.3f %%" % (100 * change))
 
 
-def check_extremes(shapes, edges, triangles):
-    """Cada forma al 100 % sobre los cuerpos con musculo, grasa y pecho a 0 y a 1 (en el espacio de la malla).
-    alisado lleva sus correcciones (exportar_datos.smoothing_corrections) con el peso que tienen en esa esquina."""
-    bodies = ed.corner_bodies(list(zip(ed.SMOOTHING_SLIDERS, EXTREME_MACROS)))
-    extra = ed.smoothing_corrections(edges, bodies)
-    print("  MEDIDA correcciones de alisado: %d; max. %.1f mm" % (
-        len(extra), 1000 * max(np.linalg.norm(d, axis=1).max() for d, _ in extra.values())))
-    worst = 0
-    for sides in itertools.product((0, 1), repeat=len(EXTREME_MACROS)):
-        corner = tuple(zip(ed.SMOOTHING_SLIDERS, sides))
-        parts = {f"{i}_{'incr' if side else 'decr'}" for i, side in corner}
-        skin = bodies[corner][0]
-        for name, (delta, _) in shapes.items():
-            if name == fp.SMOOTHING:
-                delta = delta + sum(d for n, (d, _) in extra.items() if set(n.split("*")[1:]) <= parts)
-            flipped = flips(skin, skin + delta, triangles)
-            worst = max(worst, flipped)
-            if flipped:
-                print("  MEDIDA %s con %s: %d triangulos invertidos" % (name, dict(zip(EXTREME_MACROS, sides)), flipped))
-    check("macros extremas: ningun triangulo se da la vuelta", worst == 0, f"peor {worst}")
+def smoothing_bodies():
+    """{esquina: muestra} con las macros de SMOOTHING_SLIDERS a 0, 0,5 o 1, como en exportar_datos.py."""
+    return ed.corner_bodies([s for s in ed.macro_sliders(ed.read_sliders(DATA)) if s[0] in ed.SMOOTHING_SLIDERS])
 
 
-def captures():
+def smoothing_at(delta, extra, corner):
+    """alisado en esa esquina: delta mas las correcciones cuyas partes tiene (peso 1; las demas pesan 0), como la app."""
+    parts = {f"{i}_{'incr' if side else 'decr'}" for i, side in corner}
+    return delta + sum(d for n, (d, _) in extra.items() if set(n.split("*")[1:]) <= parts)
+
+
+def complexion_corners():
+    """Esquinas de PL.0: COMPLEXION a 0 o a 1 y las demas macros neutras."""
+    return [tuple(zip(COMPLEXION, sides)) for sides in itertools.product((0, 1), repeat=len(COMPLEXION))]
+
+
+def check_complexion(bodies, delta, extra, edges, triangles):
+    """PL.0: el alisado, con sus correcciones, cumple las medidas del 6.2 con complexion y firmeza a 0 y a 1."""
+    for corner in complexion_corners():
+        label = "alisado con " + ", ".join(f"{i}={side}" for i, side in corner)
+        skin, smoothing = bodies[corner][0], smoothing_at(delta, extra, corner)
+        flipped = flips(skin, skin + smoothing, triangles)
+        check(f"{label}: ningun triangulo se da la vuelta", flipped == 0, f"{flipped}")
+        check_smoothing(label, skin, smoothing, edges, triangles)
+
+
+def check_extremes(shapes, bodies, extra, triangles):
+    """Cada forma al 100 % sobre los cuerpos de las esquinas (espacio de la malla); alisado, con sus correcciones
+    (exportar_datos.smoothing_corrections). Cuentan todas las formas en las 8 de EXTREME (6.2) y alisado en las 32
+    de SMOOTHING_SLIDERS (PL.0b); ahi las demas solo se miden (shoulder_height_decr: IDEAS.md)."""
+    for ids in (EXTREME, [i for i, _ in max(bodies, key=len)]):
+        worst = 0
+        for sides in itertools.product((0, 1), repeat=len(ids)):
+            corner = tuple(zip(ids, sides))
+            skin = bodies[corner][0]
+            for name, (delta, _) in shapes.items():
+                if name == fp.SMOOTHING:
+                    delta = smoothing_at(delta, extra, corner)
+                flipped = flips(skin, skin + delta, triangles)
+                if flipped:
+                    print("  MEDIDA %s con %s: %d triangulos invertidos" % (name, dict(corner), flipped))
+                if ids == EXTREME or name == fp.SMOOTHING:
+                    worst = max(worst, flipped)
+        what = "todas las formas" if ids == EXTREME else "alisado"
+        check(f"macros extremas ({2 ** len(ids)} cuerpos, {what}): ningun triangulo se da la vuelta", worst == 0,
+              f"peor {worst}")
+
+
+def captures(bodies):
     basemesh = ed.build_base()[0]
     shapes = fp.own_shapes(basemesh)
     base = np.empty(len(basemesh.data.vertices) * 3)
@@ -161,6 +196,15 @@ def captures():
     camera.data.ortho_scale = 0.8
     camera["center_z"] = float((points[zones["chest"], 2].mean() + points[zones["crotch"], 2].mean()) / 2)
     sheet([None, "alisado"], [0, 45], os.path.join(CAPTURES, "alisado.png"))
+    center = camera["center_z"]
+    rows = []
+    for corner, (skin, smoothing) in bodies.items():  # cada cuerpo, bajado o subido para que su torso quede en el centro
+        lift = center - (skin[zones["chest"], 2].mean() + skin[zones["crotch"], 2].mean()) / 2
+        for name, delta in ((f"{corner}", 0), (f"{corner} alisado", smoothing)):
+            keys[name] = basemesh.shape_key_add(name=name, from_mix=False)
+            keys[name].data.foreach_set("co", (skin + delta + [0, 0, lift]).ravel())
+            rows.append(name)
+    sheet(rows, [0, 45], os.path.join(CAPTURES, "complexion.png"))
 
 
 def main():
@@ -175,9 +219,15 @@ def main():
     _, edges, triangles, _ = fp.mesh_arrays(basemesh)
     local = fp.own_shapes(basemesh)
     check_shapes(basemesh, shapes)
+    bodies = smoothing_bodies()
+    extra = ed.smoothing_corrections(edges, triangles, bodies)
+    print("  MEDIDA correcciones de alisado: %d; max. %.1f mm" % (
+        len(extra), 1000 * max(np.linalg.norm(d, axis=1).max() for d, _ in extra.values())))
+    delta = local[fp.SMOOTHING][0]
+    check_complexion(bodies, delta, extra, edges, triangles)
     if "--capturas" in sys.argv:
-        captures()
-    check_extremes(local, edges, triangles)
+        captures({c: (bodies[c][0], smoothing_at(delta, extra, c)) for c in complexion_corners()})
+    check_extremes(local, bodies, extra, triangles)
     print("RESULTADO:", "TODO BIEN" if not failures else f"{len(failures)} FALLOS")
 
 

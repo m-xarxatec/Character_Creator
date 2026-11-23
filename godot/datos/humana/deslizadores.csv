@@ -1,9 +1,9 @@
 id,zona,nombre,tipo,decr,incr,lados,neutro
-height,Global,Altura,Proporción,escala:Root=0.85,escala:Root=1.15,1,0.5
+height,Global,Altura,Proporción,escala:Root=0.65,escala:Root=1.15,1,0.5
 gender,Global,Complexión,Forma,macro:gender=0,macro:gender=1,1,0.5
 muscle,Global,Músculo,Forma,macro:muscle=0,macro:muscle=1,1,0.5
 weight,Global,Grasa,Forma,macro:weight=0,macro:weight=1,1,0.5
-head_size,Cabeza,Tamaño,Proporción,escala:Head=0.8,escala:Head=1.3,1,0.5
+head_size,Cabeza,Tamaño,Proporción,escala:Head=0.8,escala:Head=2.5,1,0.5
 head_width,Cabeza,Ancho,Forma,head-scale-horiz-decr,head-scale-horiz-incr,1,0.5
 head_height,Cabeza,Alto,Forma,head-scale-vert-decr,head-scale-vert-incr,1,0.5
 neck_length,Cuello,Largo,Forma,measure-neck-height-decr,measure-neck-height-incr,1,0.5
@@ -45,3 +45,23 @@ mandibula_anime,Cara,Mandíbula anime,Forma,,cara:mandibula_anime,1,0
 menton_anime,Cara,Mentón anime,Forma,,cara:menton_anime,1,0
 nariz_anime,Cara,Nariz anime,Forma,,cara:nariz_anime,1,0
 alisado,Base,Alisado,Forma,,propia:alisado,1,0
+eye_size,Ojos,Tamaño,Forma,l-eye-scale-decr+r-eye-scale-decr,l-eye-scale-incr+r-eye-scale-incr,1,0.5
+eye_spacing,Ojos,Separación,Forma,l-eye-trans-in+r-eye-trans-in,l-eye-trans-out+r-eye-trans-out,1,0.5
+eye_position,Ojos,Altura,Forma,l-eye-trans-down+r-eye-trans-down,l-eye-trans-up+r-eye-trans-up,1,0.5
+eye_tall,Ojos,Alto,Forma,l-eye-height2-decr+r-eye-height2-decr,l-eye-height2-incr+r-eye-height2-incr,1,0.5
+eye_corner,Ojos,Inclinación,Forma,l-eye-corner1-down+r-eye-corner1-down,l-eye-corner1-up+r-eye-corner1-up,1,0.5
+nose_width,Nariz,Ancho,Forma,nose-scale-horiz-decr,nose-scale-horiz-incr,1,0.5
+nose_tall,Nariz,Largo,Forma,nose-scale-vert-decr,nose-scale-vert-incr,1,0.5
+nose_depth,Nariz,Fondo,Forma,nose-scale-depth-decr,nose-scale-depth-incr,1,0.5
+nose_position,Nariz,Altura,Forma,nose-trans-down,nose-trans-up,1,0.5
+mouth_width,Boca,Ancho,Forma,mouth-scale-horiz-decr,mouth-scale-horiz-incr,1,0.5
+mouth_tall,Boca,Alto,Forma,mouth-scale-vert-decr,mouth-scale-vert-incr,1,0.5
+mouth_position,Boca,Altura,Forma,mouth-trans-down,mouth-trans-up,1,0.5
+lip_upper,Boca,Labio superior,Forma,mouth-upperlip-volume-decr,mouth-upperlip-volume-incr,1,0.5
+lip_lower,Boca,Labio inferior,Forma,mouth-lowerlip-volume-decr,mouth-lowerlip-volume-incr,1,0.5
+chin_width,Mandíbula,Ancho,Forma,chin-width-decr,chin-width-incr,1,0.5
+chin_tall,Mandíbula,Alto,Forma,chin-height-decr,chin-height-incr,1,0.5
+chin_forward,Mandíbula,Mentón saliente,Forma,chin-prominent-decr,chin-prominent-incr,1,0.5
+ear_size,Orejas,Tamaño,Forma,l-ear-scale-decr+r-ear-scale-decr,l-ear-scale-incr+r-ear-scale-incr,1,0.5
+ear_shape,Orejas,Forma,Forma,l-ear-shape-pointed+r-ear-shape-pointed,l-ear-shape-triangle+r-ear-shape-triangle,1,0.5
+ear_wing,Orejas,Despegadas,Forma,l-ear-wing-decr+r-ear-wing-decr,l-ear-wing-incr+r-ear-wing-incr,1,0.5

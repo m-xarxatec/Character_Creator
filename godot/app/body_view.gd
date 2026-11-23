@@ -17,9 +17,12 @@ extends SubViewportContainer
 # Paso IU.7b: con touch_zones, al dejar quieto el ratón HOVER_WAIT s sobre el cuerpo, su zona se tiñe (tema/zona.gdshader,
 # material_overlay: no va al .glb) y una etiqueta dice «Zona · clic para editar».
 # Paso 5.9: set_animation(ROM_ID) recorre el rango de movimiento (rom.gd): cada fotograma vuelve a la pose T y gira.
+# Paso AB.4: set_piece() pone o quita una pieza de los packs (library: godot/packs y user://packs) que sigue al cuerpo
+#   (BodyPiece; una por ranura, salvo accesorios), con el mismo toon y contorno. Paso AB.7: se exportan con el cuerpo.
 
 ## Paso IU.7a: clic sin arrastrar en el cuerpo, con touch_zones encendido.
 signal zone_touched(zone: String)
+signal pieces_changed  # paso AB.13: se puso o se quitó una pieza
 
 const SpeciesData := preload("../addons/creador/species_data.gd")
 const CharacterUpdater := preload("../addons/creador/character_updater.gd")
@@ -40,6 +43,14 @@ const CharacterBox := preload("character_box.gd")
 const SettingsFile := preload("settings_file.gd")
 const FloorShadow := preload("floor_shadow.gd")
 const ZoneRay := preload("zone_ray.gd")
+const PackLibrary := preload("../addons/creador/pack_library.gd")  # paso AB.4
+const BodyPiece := preload("../addons/creador/body_piece.gd")
+const BodyDerived := preload("../addons/creador/body_derived.gd")  # paso AB.9a
+const RigidPiece := preload("../addons/creador/rigid_piece.gd")  # paso AB.11
+const GarmentCut := preload("../addons/creador/garment_cut.gd")  # paso AB.5
+## Paso AB.6: capa de cada ranura (más alta = más por fuera): se adelanta BodyMaterial.PIECE_PULL × capa.
+const LAYERS := {"ropa_interior": 1, "ropa_torso": 2, "ropa_piernas": 2, "pelo": 2, "ropa_pies": 3, "ropa_exterior": 3,
+	"accesorio": 4}
 const HOVER_WAIT := 0.12  # s quieto antes del rayo: así no hay un rayo por cada movimiento del ratón
 const ZONE_SHADER := preload("tema/zona.gdshader")
 const CLICK_SLOP := 4.0  # px: más movimiento entre pulsar y soltar es un arrastre (girar), no un clic
@@ -57,6 +68,9 @@ const REPORT_INSTANTS := 4  # momentos de un clip que mide el informe
 var error := ""
 var load_ms := 0
 var species  # SpeciesData
+var library  # PackLibrary (paso AB.4)
+var pieces := {}  # paso AB.4: "pack/pieza" → MeshInstance3D puesta
+var accessories := {}  # paso AB.11: "pack/pieza" → BoneAttachment3D de un accesorio rígido
 var updater  # CharacterUpdater
 var values: Dictionary
 var pose_t := false
@@ -100,7 +114,7 @@ func _ready() -> void:
 	restyle_timer = Timer.new()
 	restyle_timer.one_shot = true
 	restyle_timer.wait_time = RESTYLE_WAIT
-	restyle_timer.timeout.connect(func() -> void: style.refresh())
+	restyle_timer.timeout.connect(func() -> void: style.refresh_async())  # paso OPT.2: en un hilo
 	add_child(restyle_timer)
 	frame_timer = Timer.new()
 	frame_timer.one_shot = true
@@ -196,7 +210,8 @@ func export_glb(path: String) -> Error:
 ## Paso P.1: exportar en partes (body_actions.gd hace GlbExporter.compute en un hilo entre las dos).
 ## start_export lee el personaje tal como está ahora; lo que cambie después no entra en el archivo.
 func start_export() -> Dictionary:
-	return GlbExporter.prepare(species.mesh, species.skeleton, species.manifest["bones"]["sockets"], true)
+	return GlbExporter.prepare(species.mesh, species.skeleton, species.manifest["bones"]["sockets"], true, pieces.values(),
+		accessories.values())
 
 
 func finish_export(job: Dictionary, path: String) -> Error:
@@ -420,6 +435,9 @@ func _load_character() -> String:
 		return loaded["error"]
 	viewport.add_child(species.scene)
 	updater = CharacterUpdater.new(species)
+	library = PackLibrary.new()  # paso AB.4
+	for warning: String in library.scan(PackedStringArray([folder.path_join("../../packs").simplify_path(), "user://packs"])):
+		push_warning(warning)
 	BodyMaterial.apply(species.mesh)
 	Preset.apply_look(species.mesh, loaded)
 	set_values(loaded["valores"])
@@ -431,6 +449,107 @@ func _load_character() -> String:
 	floor_shadow.setup(species.skeleton)
 	_load_animations(folder.path_join("../animaciones").path_join(ANIMATIONS + ".json").simplify_path())
 	return ""
+
+
+## Paso AB.4: pone (on) o quita una pieza que sigue al cuerpo. Quita la que ocupe su ranura o choque con ella (PackLibrary.conflicts).
+## Devuelve false si no se pudo poner (no existe, no sigue al cuerpo o su archivo no vale).
+func set_piece(pack_id: String, piece_id: String, on: bool) -> bool:
+	var key := pack_id.path_join(piece_id)
+	var known: Dictionary = library.piece(pack_id, piece_id)
+	if known.has("generador") or accessories.has(key):  # paso AB.11
+		return _set_accessory(key, known, on)
+	if not on or pieces.has(key):
+		if not on and pieces.has(key):
+			updater.pieces.erase(pieces[key])
+			BodyPiece.detach(pieces[key])
+			pieces.erase(key)
+			pieces_changed.emit()
+		return true
+	var card: Dictionary = library.piece(pack_id, piece_id)
+	if card.is_empty() or not card["sigue_al_cuerpo"]:
+		return false
+	var mesh: MeshInstance3D
+	if card.has("derivada"):  # paso AB.9a: hecha con caras del cuerpo
+		mesh = BodyDerived.build(species.mesh, species.skeleton, card["derivada"]["mascara"], card["derivada"]["separacion"])
+		if mesh != null:
+			BodyPiece.hang(mesh, species.skeleton)
+	elif card.has("corte"):  # paso AB.5: recortada de otra pieza (las mallas)
+		var whole: MeshInstance3D = BodyPiece.attach(library.load_piece(pack_id, card["corte"]["de"]), species.skeleton)
+		if whole != null:
+			mesh = GarmentCut.cut(whole, species.skeleton, species.joints, card["corte"])
+			BodyPiece.detach(whole)
+		if mesh != null:
+			mesh.name = piece_id.capitalize()
+			BodyPiece.hang(mesh, species.skeleton)
+	else:
+		mesh = BodyPiece.attach(library.load_piece(pack_id, piece_id), species.skeleton)
+	if mesh == null:
+		return false
+	if card["ranura"] != PackLibrary.MULTI_SLOT:
+		for other: String in pieces.keys():
+			if PackLibrary.conflicts(library.piece(other.get_base_dir(), other.get_file()), card):
+				set_piece(other.get_base_dir(), other.get_file(), false)
+	BodyMaterial.apply(mesh, true)  # paso AB.6: se adelanta un poco y tapa la piel que asoma
+	(mesh.material_override as ShaderMaterial).set_shader_parameter("depth_pull",
+		BodyMaterial.PIECE_PULL * LAYERS.get(card["ranura"], 1))
+	var color: Color = library.color_of(card)  # el de partida, de pack.json
+	BodyMaterial.set_color(mesh, "skin_color", color)
+	BodyMaterial.set_color(mesh, "garment_color", color)
+	var finish: Dictionary = BodyMaterial.get_finish(species.mesh)
+	for name: String in finish:
+		BodyMaterial.set_finish(mesh, name, finish[name])
+	pieces[key] = mesh
+	updater.pieces.append(mesh)
+	BodyPiece.follow(mesh, species.mesh)
+	pieces_changed.emit()
+	return true
+
+
+## Paso AB.11: pone o quita un accesorio rígido (RigidPiece, colgado de su hueso). Varios a la vez (ranura accesorio).
+func _set_accessory(key: String, card: Dictionary, on: bool) -> bool:
+	if not on:
+		if accessories.has(key):
+			accessories[key].get_parent().remove_child(accessories[key])
+			accessories[key].free()
+			accessories.erase(key)
+			pieces_changed.emit()
+		return true
+	if accessories.has(key):
+		return true
+	var holder: BoneAttachment3D = RigidPiece.build(card, species.skeleton)
+	if holder == null:
+		return false
+	for mesh in RigidPiece.meshes(holder):
+		BodyMaterial.apply(mesh, true)
+		BodyMaterial.set_color(mesh, "skin_color", library.color_of(card))
+		BodyMaterial.set_color(mesh, "garment_color", library.color_of(card))
+	accessories[key] = holder
+	pieces_changed.emit()
+	return true
+
+
+## Color principal de una pieza puesta.
+func piece_color(key: String) -> Color:
+	var meshes := meshes_of(key)
+	return BodyMaterial.get_color(meshes[0], "skin_color") if not meshes.is_empty() else Color.WHITE
+
+
+func set_piece_color(key: String, color: Color) -> void:
+	for mesh in meshes_of(key):
+		BodyMaterial.set_color(mesh, "skin_color", color)
+		BodyMaterial.set_color(mesh, "garment_color", color)
+
+
+## Paso AB.11: ¿está puesta? (pieza que sigue al cuerpo o accesorio rígido)
+func is_on(key: String) -> bool:
+	return pieces.has(key) or accessories.has(key)
+
+
+## Paso AB.11: las mallas de una pieza puesta (una, o las del accesorio).
+func meshes_of(key: String) -> Array[MeshInstance3D]:
+	if pieces.has(key):
+		return [pieces[key]]
+	return RigidPiece.meshes(accessories[key]) if accessories.has(key) else []
 
 
 # Sin animaciones el editor sigue funcionando: solo se queda sin la lista de clips.

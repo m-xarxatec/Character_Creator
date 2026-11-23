@@ -59,13 +59,16 @@ Todo va en un solo archivo: no hace falta instalar Godot.
   El botón «Download ZIP» de GitHub no incluye los archivos de Git LFS: clona con `git lfs` instalado.
 - Abrir el editor: `godot --path godot`. Una prueba: `godot --headless --path pruebas/godot -s probar_carga.gd`
   (cada script de prueba dice en su cabecera cómo se lanza). El build de Linux: `sh pruebas/fase_7/probar_build_linux.sh`.
+  Después, `sh scripts/instalar_lanzador.sh` lo abre con la orden `gamemolde` y desde el menú (sin `sudo`).
 
 | Carpeta | Para qué sirve |
 | --- | --- |
 | `godot/` | El programa: `addons/creador/` es el núcleo y `app/` la interfaz. |
 | `godot/datos/` | El cuerpo base ya preparado y las animaciones de prueba; viaja dentro del programa. |
+| `godot/packs/` | Piezas que se ponen al personaje (pelo, ropa, accesorios): el pack base, CC0. |
 | `blender/` | Scripts que preparan el cuerpo base con Blender. |
 | `pruebas/` | Pruebas automáticas y sus resultados. |
+| `scripts/` | Utilidades: instalar la orden `gamemolde`. |
 | `diseno/` | Dibujo de cómo se verá el programa. Ábrelo con el navegador. |
 
 Documentos: `PLAN.md` (los pasos), `IDEAS.md` (lo que viene después), `CREDITOS.md` (lo que no hicimos nosotros).
@@ -78,6 +81,8 @@ Documentos: `PLAN.md` (los pasos), `IDEAS.md` (lo que viene después), `CREDITOS
 - Los datos del cuerpo (`godot/datos/`): **CC0**, de MakeHuman. Las formas propias (cara anime de
   `blender/cara_anime.py` y hombros, glúteos y alisado de `blender/formas_propias.py`) y sus zonas también son CC0:
   son datos de salida de los scripts, no código GPL.
+- El pack base (`godot/packs/base/`): **CC0**. Sus mallas salen de la misma malla de MakeHuman; el resto lo genera
+  el programa al vuelo.
 - Los scripts de `blender/`: GPL-3.0 o posterior.
 - El programa exportado lleva Godot Engine (MIT) y sus bibliotecas: sus avisos están en el botón «Licencias».
   Todo lo de terceros, en `CREDITOS.md`.
