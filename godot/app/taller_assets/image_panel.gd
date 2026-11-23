@@ -88,6 +88,20 @@ func show_contour(contour: PackedVector2Array, source_size: Vector2i) -> void:
 	preview.show_contour(contour, source_size)
 
 
+## TA.5b: pieza reabierta sin su imagen de origen.
+func show_missing_source(file_name: String) -> void:
+	file_label.text = file_name + " (no disponible)"
+	preview.clear()
+
+
+## TA.5b: sin imagen no se puede recalcular el contorno; medidas y color siguen activos.
+func set_contour_enabled(enabled: bool) -> void:
+	for key: String in FIELDS["Contorno"]:
+		sliders[key].editable = enabled
+		numbers[key].editable = enabled
+	invert_box.disabled = not enabled
+
+
 func show_notes(warnings: PackedStringArray) -> void:
 	notes.text = "\n".join(warnings)
 	notes.visible = not warnings.is_empty()
@@ -229,6 +243,11 @@ class Preview extends Control:
 		thumb.resize(maxi(roundi(thumb.get_width() * factor), 1), maxi(roundi(thumb.get_height() * factor), 1),
 			Image.INTERPOLATE_BILINEAR)
 		texture = ImageTexture.create_from_image(thumb)
+		contour = PackedVector2Array()
+		queue_redraw()
+
+	func clear() -> void:
+		texture = null
 		contour = PackedVector2Array()
 		queue_redraw()
 

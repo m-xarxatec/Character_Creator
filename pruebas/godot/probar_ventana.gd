@@ -2,6 +2,7 @@ extends SceneTree
 # TA.2a y TA.2b: navegación con cambios pendientes, modos del Taller y aislamiento del visor.
 # TA.3c: edición de la espada con los controles reales, cotejada con el generador.
 # TA.4c: recorrido de «Desde imagen» con PNG de user://ta4c_ventana (carpeta de este proyecto de pruebas; se borra al final).
+# TA.5b: guardar y reabrir desde el Taller, con una biblioteca en user://ta5b_ventana (se borra al final).
 # Uso: (ulimit -v 4000000; timeout 120 godot --headless --path pruebas/godot -s probar_ventana.gd 2>&1 | grep -E 'FALLO|RESULTADO|ERROR')
 
 const EXPECTED := ["Cuerpo", "Cara y ojos", "Pelo", "Ropa", "Accesorios", "Estilo"]  # IU.4: Exportar ya no es pestaña
@@ -31,6 +32,7 @@ func _initialize() -> void:
 		await _check_workshop(main)
 		await _check_sword_editor(main)
 		await _check_image_editor(main, root_dir)
+		await _check_library(main, root_dir)
 	_check_core_independent(root_dir.path_join("godot/addons/creador"))
 	main.free()
 	print("RESULTADO: ", "TODO BIEN" if failures == 0 else "%d FALLOS" % failures)
@@ -184,7 +186,7 @@ func _check_sword_editor(main: Control) -> void:
 	await process_frame
 	check("en Espada se editan los controles, no la lista prevista", panel.is_visible_in_tree()
 		and not page.properties.visible and not page.generate_button.disabled)
-	check("Guardar, Equipar y Exportar siguen pendientes", page.actions.get_child(1).disabled
+	check("Guardar activo; Equipar y Exportar siguen pendientes", not page.save_button.disabled
 		and page.actions.get_child(2).disabled and page.actions.get_child(3).disabled)
 	check("el visor indica triángulos y tamaño real", page.info.text.begins_with("144 triángulos")
 		and page.info.text.contains("0,297 × 1,260 × 0,059 m"), page.info.text)
@@ -335,7 +337,7 @@ func _check_image_editor(main: Control, root_dir: String) -> void:
 	check("el visor indica triángulos y tamaño", page.info.visible and page.info.text.contains("triángulos"), page.info.text)
 	check("con alfa se ve Umbral y no Tolerancia", page.image_panel.rows["umbral_alfa"].visible
 		and not page.image_panel.rows["tolerancia"].visible)
-	check("Guardar, Equipar y Exportar siguen desactivados", page.actions.get_child(1).disabled
+	check("con pieza se puede Guardar; Equipar y Exportar siguen desactivados", not page.save_button.disabled
 		and page.actions.get_child(2).disabled and page.actions.get_child(3).disabled)
 	_check_image_sizes(page, alpha)
 	await _check_image_contour(page, alpha)
@@ -500,6 +502,199 @@ func _check_image_mesh(page, label: String, image: Image, options: Dictionary, p
 		same = same and shown.surface_get_arrays(0) == result.malla.surface_get_arrays(0)
 		same = same and shown.surface_get_material(0).albedo_color == result.malla.surface_get_material(0).albedo_color
 	check(label, same, detail)
+
+
+## TA.5b: guardar, ver en la lista, reabrir, actualizar, imagen perdida y otra sesión.
+func _check_library(main: Control, root_dir: String) -> void:
+	var page = main.workshop_page
+	var folder := ProjectSettings.globalize_path("user://ta5b_ventana")
+	_remove_tree(folder)
+	DirAccess.make_dir_recursive_absolute(folder)
+	var store_script: GDScript = load(root_dir.path_join("godot/addons/creador/taller_assets/asset_store.gd"))
+	page.store = store_script.new(folder.path_join("packs"), folder.path_join("temporal"))
+	main.top_bar.tab_bar.current_tab = 6
+	await process_frame
+	page.modes.get_buttons()[0].pressed.emit()
+	page.sword_panel.reset_button.pressed.emit()
+	page.refresh_library()
+	check("biblioteca vacía: lo dice", page.library_panel.empty_label.visible and not page.library_panel.list.visible)
+	page.modes.get_buttons()[2].pressed.emit()
+	check("Camiseta todavía no se guarda", page.save_button.disabled)
+	page.modes.get_buttons()[0].pressed.emit()
+	await _check_save_dialog(page)
+	await _check_reopen_sword(page)
+	await _check_image_library(page, folder)
+	await _check_library_damage(page, store_script, folder)
+	page.modes.get_buttons()[0].pressed.emit()
+	main.top_bar.tab_bar.current_tab = 0
+	await process_frame
+	_remove_tree(folder)
+
+
+func _check_save_dialog(page) -> void:
+	var dialog = page.save_dialog
+	page.sword_panel.sliders["longitud_m"].value = 1200
+	page.save_button.pressed.emit()
+	check("Guardar abre el diálogo", dialog.visible)
+	check("sin nombre ni autor no se puede confirmar", dialog.get_ok_button().disabled)
+	check("una espada no pide derechos de imagen", not dialog.rights_box.visible and not dialog.as_new_box.visible)
+	_type_field(dialog.name_edit, "Espada larga")
+	check("falta el autor", dialog.get_ok_button().disabled)
+	dialog.confirmed.emit()
+	check("Intro con datos incompletos no guarda", page.library_panel.ids.is_empty() and dialog.visible)
+	_type_field(dialog.author_edit, "Autora")
+	check("con nombre y autor se puede confirmar", not dialog.get_ok_button().disabled)
+	dialog.confirmed.emit()
+	await process_frame
+	check("guarda y cierra el diálogo", page.library_panel.ids.size() == 1 and not dialog.visible, str(page.library_panel.ids))
+	check("la pieza sale en la lista", page.library_panel.list.get_item_text(0) == "Espada larga"
+		and page.library_panel.list.visible and not page.library_panel.empty_label.visible)
+	check("queda seleccionada", page.library_panel.list.is_selected(0))
+	page.save_button.pressed.emit()
+	check("reabierta propone su nombre, autor y copia", dialog.name_edit.text == "Espada larga"
+		and dialog.author_edit.text == "Autora" and dialog.as_new_box.visible)
+	dialog.as_new_box.button_pressed = true
+	dialog.confirmed.emit()
+	await process_frame
+	check("un nombre repetido deja el diálogo abierto con el motivo", dialog.visible and dialog.message.visible
+		and dialog.message.text.contains("Ya hay") and page.library_panel.ids.size() == 1, dialog.message.text)
+	dialog.hide()
+
+
+func _check_reopen_sword(page) -> void:
+	var library = page.library_panel
+	var first: String = library.ids[0]
+	var long_params := SWORD_PARAMS.merged({"longitud_m": 1.2}, true)
+	var copy: Dictionary = await page.save_piece("Daga", "Autora", "CC0-1.0", true)
+	check("Guardar como nueva crea otra pieza", copy.error == "" and copy.id != first and library.ids.size() == 2, str(copy))
+	page.sword_panel.sliders["longitud_m"].value = 700
+	var short_params := SWORD_PARAMS.merged({"longitud_m": 0.7}, true)
+	var updated: Dictionary = await page.save_piece("Daga", "Autora", "CC0-1.0")
+	check("Guardar actualiza la pieza abierta", updated.get("id") == copy.id and library.ids.size() == 2, str(updated))
+	library.list.item_clicked.emit(library.ids.find(first), Vector2.ZERO, MOUSE_BUTTON_LEFT)
+	_check_sword_mesh(page, "un clic reabre la pieza guardada", long_params, SWORD_COLORS)
+	check("reabrir pone sus controles", page.sword_panel.numbers["longitud_m"].text == "1,200" and library.list.is_selected(library.ids.find(first)))
+	check("reabrir recuerda cuál se edita", page.open_pieces[page.SWORD].id == first and page.open_pieces[page.SWORD].autor == "Autora")
+	library.list.item_clicked.emit(library.ids.find(copy.id), Vector2.ZERO, MOUSE_BUTTON_RIGHT)
+	check("el botón derecho no reabre", page.open_pieces[page.SWORD].id == first)
+	library.list.item_clicked.emit(library.ids.find(copy.id), Vector2.ZERO, MOUSE_BUTTON_LEFT)
+	_check_sword_mesh(page, "la pieza actualizada conserva su edición", short_params, SWORD_COLORS)
+	check("conserva su licencia", page.open_pieces[page.SWORD].licencia == "CC0-1.0")
+
+
+func _check_image_library(page, folder: String) -> void:
+	var library = page.library_panel
+	var dialog = page.save_dialog
+	var image := _alpha_image()
+	var path := folder.path_join("origen.png")
+	image.save_png(path)
+	page.modes.get_buttons()[1].pressed.emit()
+	page.image_panel.reset_button.pressed.emit()
+	check("carga la imagen a guardar", page.load_image_file(path), page.diagnosis.text)
+	page.image_panel.sliders["altura_m"].value = 1500
+	page.image_panel.sliders["umbral_alfa"].value = 20
+	page.save_button.pressed.emit()  # con el ajuste aún en espera: lo aplica antes de guardar
+	var size := {"altura_m": 1.5, "grosor_m": 0.02}
+	_check_image_mesh(page, "guardar aplica el ajuste pendiente", image, {"umbral_alfa": 0.2}, size, "#FFFFFF")
+	check("una imagen exige confirmar los derechos", dialog.rights_box.visible)
+	_type_field(dialog.name_edit, "Silueta")
+	_type_field(dialog.author_edit, "Autora")
+	check("sin confirmar no se puede guardar", dialog.get_ok_button().disabled)
+	dialog.rights_box.button_pressed = true
+	check("confirmados se puede guardar", not dialog.get_ok_button().disabled)
+	dialog.confirmed.emit()
+	await process_frame
+	check("guarda la pieza de imagen", library.ids.size() == 3 and not dialog.visible, dialog.message.text)
+	var id: String = page.open_pieces[page.IMAGE].id
+	DirAccess.remove_absolute(path)
+	check("sin el PNG original se puede seguir guardando", not page.save_button.disabled)
+	page.save_button.pressed.emit()
+	check("la misma imagen no vuelve a pedir derechos", not dialog.rights_box.visible)
+	dialog.hide()
+	page.image_panel.sliders["altura_m"].value = 2000
+	page.image_panel.reset_button.pressed.emit()
+	await create_timer(page.CONTOUR_DELAY * 2.0).timeout
+	library.list.item_clicked.emit(library.ids.find(id), Vector2.ZERO, MOUSE_BUTTON_LEFT)
+	_check_image_mesh(page, "reabrir recupera la pieza de imagen", image, {"umbral_alfa": 0.2}, size, "#FFFFFF")
+	check("reabrir pone medidas y ajustes", page.image_panel.numbers["altura_m"].text == "1,500"
+		and page.image_panel.numbers["umbral_alfa"].text == "20" and page.image_options.umbral_alfa == 0.2)
+	check("reabrir enseña la imagen", page.image_panel.preview.texture != null and page.image_panel.preview.contour == page.image_contour)
+	var before := analyses
+	await create_timer(page.CONTOUR_DELAY * 2.0).timeout
+	check("reabrir no deja análisis pendientes", analyses == before)
+	_check_lost_source(page, id, image, size)
+
+
+## Sin su imagen: aviso, contorno bloqueado, medidas editables y no se guarda hasta elegirla.
+func _check_lost_source(page, id: String, image: Image, size: Dictionary) -> void:
+	var library = page.library_panel
+	var panel = page.image_panel
+	var source: String = page.store.packs_folder.path_join(id).path_join(page.image_origin.archivo)
+	var keep := FileAccess.get_file_as_bytes(source)
+	DirAccess.remove_absolute(source)
+	library.list.item_clicked.emit(library.ids.find(id), Vector2.ZERO, MOUSE_BUTTON_LEFT)
+	_check_image_mesh(page, "sin imagen, la pieza se abre igual", image, {"umbral_alfa": 0.2}, size, "#FFFFFF")
+	check("avisa de la imagen perdida", library.notes.visible and library.notes.text.contains("imagen de origen"), library.notes.text)
+	check("bloquea el contorno", not panel.sliders["umbral_alfa"].editable and not panel.numbers["simplificacion"].editable
+		and panel.invert_box.disabled and panel.preview.texture == null)
+	check("sin imagen no se guarda y explica por qué", page.save_button.disabled and page.pending.text.contains("elige otra vez"))
+	panel.sliders["altura_m"].value = 1200
+	_check_image_mesh(page, "las medidas se siguen editando", image, {"umbral_alfa": 0.2}, {"altura_m": 1.2, "grosor_m": 0.02}, "#FFFFFF")
+	panel.reset_button.pressed.emit()
+	_check_image_mesh(page, "Restablecer funciona sin imagen", image, {"umbral_alfa": 0.2}, {"altura_m": 1.0, "grosor_m": 0.02}, "#FFFFFF")
+	var again := source.get_base_dir().path_join("elegida.png")
+	var file := FileAccess.open(again, FileAccess.WRITE)
+	file.store_buffer(keep)
+	file.close()
+	check("elegir la imagen de nuevo funciona", page.load_image_file(again), page.diagnosis.text)
+	check("y desbloquea el contorno y Guardar", panel.sliders["umbral_alfa"].editable and not panel.invert_box.disabled
+		and not page.save_button.disabled)
+	DirAccess.remove_absolute(again)
+	file = FileAccess.open(source, FileAccess.WRITE)
+	file.store_buffer(keep)
+	file.close()
+
+
+## Una pieza dañada avisa y no se lleva a las demás; otra sesión ve la biblioteca igual.
+func _check_library_damage(page, store_script: GDScript, folder: String) -> void:
+	var library = page.library_panel
+	var victim: String = library.ids[0]
+	var path: String = page.store.packs_folder.path_join(victim).path_join("edicion.json")
+	var keep := FileAccess.get_file_as_bytes(path)
+	var shown: Mesh = page.sample.mesh
+	var file := FileAccess.open(path, FileAccess.WRITE)
+	file.store_string("{")
+	file.close()
+	check("abrir una pieza recién dañada no cambia lo que hay", not page.open_piece(victim) and page.sample.mesh == shown
+		and library.notes.text.contains("dañada"), library.notes.text)
+	page.refresh_library()
+	check("la dañada sale de la lista con un aviso", library.ids.size() == 2 and not victim in library.ids
+		and library.notes.visible, library.notes.text)
+	file = FileAccess.open(path, FileAccess.WRITE)
+	file.store_buffer(keep)
+	file.close()
+	var other = page.get_script().new()
+	other.store = store_script.new(folder.path_join("packs"), folder.path_join("temporal"))
+	root.add_child(other)
+	await process_frame
+	check("otra sesión ve las tres piezas", other.library_panel.ids.size() == 3, str(other.library_panel.ids))
+	check("y las reabre", other.open_piece(page.open_pieces[page.SWORD].id) and other.title.text == "Espada")
+	other.free()
+
+
+func _type_field(field: LineEdit, text: String) -> void:
+	field.text = text
+	field.text_changed.emit(text)
+
+
+func _remove_tree(folder: String) -> void:
+	if not DirAccess.dir_exists_absolute(folder):
+		return
+	for child in DirAccess.get_directories_at(folder):
+		_remove_tree(folder.path_join(child))
+	for file in DirAccess.get_files_at(folder):
+		DirAccess.remove_absolute(folder.path_join(file))
+	DirAccess.remove_absolute(folder)
 
 
 func _shortcut(key: Key) -> void:

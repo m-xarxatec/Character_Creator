@@ -2,6 +2,7 @@ extends HBoxContainer
 # TA.2b: selector de modo, visor orbital y propiedades del Taller.
 # TA.3c: en Espada edita una receta de la sesión y enseña su malla real, su tamaño y sus triángulos.
 # TA.4c: en Desde imagen carga un PNG, enseña su contorno y su pieza 3D y la ajusta.
+# TA.5b: guarda la pieza en la biblioteca local y la reabre para seguir editándola.
 # Uso: la ventana principal monta la página una vez y alterna su visibilidad.
 
 ## Una regeneración correcta de la espada.
@@ -19,8 +20,12 @@ const SwordGenerator := preload("../../addons/creador/taller_assets/sword_genera
 const ImageSource := preload("../../addons/creador/taller_assets/image_source.gd")
 const ImageMask := preload("../../addons/creador/taller_assets/image_mask.gd")
 const SilhouetteMesh := preload("../../addons/creador/taller_assets/silhouette_mesh.gd")
+const AssetStore := preload("../../addons/creador/taller_assets/asset_store.gd")
 const SwordPanel := preload("sword_panel.gd")
 const ImagePanel := preload("image_panel.gd")
+const LibraryPanel := preload("library_panel.gd")
+const SaveAssetDialog := preload("save_asset_dialog.gd")
+const AssetThumbnail := preload("asset_thumbnail.gd")
 const MODES := ["Espada", "Desde imagen", "Camiseta"]
 const SWORD := 0
 const IMAGE := 1
@@ -28,8 +33,9 @@ const CONTOUR_DELAY := 0.15  # segundos desde el último cambio de un ajuste del
 const PROPERTIES := ["Largo, ancho y grosor de la hoja", "Imagen de origen y espesor de extrusión", "Largo de la camiseta y de las mangas"]
 const VIEWS := {"Frente": Vector2(0, 0), "Perfil": Vector2(90, 0), "¾": Vector2(45, 10)}  # giro e inclinación, en grados
 const PENDING := "Estas acciones estarán disponibles al incorporar los generadores y la biblioteca."
-const PENDING_SWORD := "Guardar, Equipar y Exportar llegarán con la biblioteca."
-const PENDING_IMAGE := "La pieza se actualiza sola. Guardar, Equipar y Exportar llegarán con la biblioteca."
+const PENDING_SWORD := "Equipar y Exportar llegarán en los próximos pasos."
+const PENDING_IMAGE := "La pieza se actualiza sola. Equipar y Exportar llegarán en los próximos pasos."
+const PENDING_NO_SOURCE := "Para guardar esta pieza, elige otra vez su imagen."
 
 var modes := ButtonGroup.new()
 var title := Label.new()
@@ -61,6 +67,16 @@ var image_origin := {}  # archivo y sha256 de la última pieza válida
 var image_recipe := {}  # la receta de la última pieza válida
 var image_mesh: ArrayMesh  # la última pieza válida
 var image_problem := ""
+var image_contour_options := {}  # los ajustes que dieron image_contour
+var image_origin_path := ""  # dónde leer la imagen de la última pieza válida
+var store := AssetStore.new()
+var library_panel := LibraryPanel.new()
+var save_dialog := SaveAssetDialog.new()
+var save_button: Button
+var open_pieces := {SWORD: {}, IMAGE: {}}  # modo → la pieza de la biblioteca que se está editando
+var last_author := ""
+var library_loaded := false
+var _saving := false
 var current_mode := -1
 
 
@@ -69,6 +85,7 @@ func _ready() -> void:
 	_build_viewer()
 	_build_details()
 	_build_image_tools()
+	_build_library_tools()
 	sword_panel.edited.connect(_on_sword_edited)
 	sword_panel.reset_requested.connect(reset_sword)
 	reset_sword()
@@ -90,8 +107,8 @@ func select_mode(index: int) -> void:
 	sword_panel.visible = is_sword
 	image_panel.visible = is_image
 	generate_button.disabled = not is_sword
-	pending.text = PENDING_SWORD if is_sword else (PENDING_IMAGE if is_image else PENDING)
 	_refresh_piece()
+	library_panel.select_piece(open_pieces.get(index, {}).get("id", ""))
 	_fit_view()
 
 
@@ -113,7 +130,9 @@ func load_image_file(path: String) -> bool:
 		_fail_image("No se pudo cargar la imagen: " + loaded.error)
 		return false
 	image_source = loaded
+	image_source.ruta = path
 	image_panel.show_source(loaded.imagen, path.get_file())
+	image_panel.set_contour_enabled(true)
 	var done := analyze_image()
 	if done and current_mode == IMAGE:
 		_fit_view()
@@ -134,7 +153,12 @@ func analyze_image() -> bool:
 		_fail_image("No se pudo sacar el contorno: " + analysis.error)
 		return false
 	image_problem = ""
-	return _build_image_piece(analysis.contorno, {"archivo": image_source.archivo, "sha256": image_source.sha256})
+	if not _build_image_piece(analysis.contorno, {"archivo": image_source.archivo, "sha256": image_source.sha256}):
+		return false
+	image_contour_options = image_options.duplicate()
+	image_origin_path = image_source.ruta
+	_refresh_piece()
+	return true
 
 
 ## Vuelve a las medidas, los ajustes y el color iniciales, sin perder la imagen.
@@ -145,6 +169,8 @@ func reset_image() -> void:
 	image_panel.show_values(image_values, image_options)
 	if not image_source.is_empty():
 		analyze_image()
+	elif not image_contour.is_empty():  # pieza reabierta sin su imagen: su contorno guardado sigue valiendo
+		_build_image_piece(image_contour, image_origin)
 
 
 func choose_image() -> void:
@@ -152,6 +178,61 @@ func choose_image() -> void:
 	if folder != "":
 		image_dialog.current_dir = folder
 	image_dialog.popup_centered_ratio(0.6)
+
+
+## Relee la biblioteca. La primera vez se hace al entrar en el Taller, para no retrasar el arranque.
+func refresh_library() -> void:
+	library_loaded = true
+	var listed: Dictionary = store.list()
+	library_panel.show_pieces(listed.piezas, listed.avisos, open_pieces.get(current_mode, {}).get("id", ""))
+
+
+## Abre el diálogo de guardar con los datos de la pieza actual.
+func request_save() -> void:
+	if not contour_timer.is_stopped():
+		analyze_image()
+	if not _can_save():
+		return
+	var opened: Dictionary = open_pieces[current_mode]
+	var new_image: bool = current_mode == IMAGE and image_origin.sha256 != opened.get("sha256", "")
+	save_dialog.open_for({"nombre": opened.get("nombre", ""), "autor": opened.get("autor", last_author),
+		"licencia": opened.get("licencia", "propia"), "reabierta": not opened.is_empty(), "pide_derechos": new_image})
+
+
+## Guarda la pieza del modo actual. Devuelve {error, id} o {error}.
+func save_piece(piece_name: String, author: String, license: String, as_new := false) -> Dictionary:
+	if _saving or not _can_save():
+		return {"error": "Ahora no se puede guardar esta pieza."}
+	var mode := current_mode
+	var entry := _save_entry(mode, piece_name, author, license, as_new)
+	_saving = true
+	entry.miniatura = await AssetThumbnail.render(self, entry.malla)
+	var result: Dictionary = store.save(entry)
+	_saving = false
+	if result.error == "":
+		_after_save(mode, result.id, entry)
+	return result
+
+
+## Reabre una pieza de la biblioteca en su modo. Si no se puede, avisa y no cambia lo que hay en pantalla.
+func open_piece(id: String) -> bool:
+	var opened: Dictionary = store.open(id)
+	if opened.error != "":
+		library_panel.show_notes(PackedStringArray([opened.error]))
+		return false
+	var mode := SWORD if opened.receta.modo == AssetStore.SWORD_MODE else IMAGE
+	if mode == SWORD:
+		_show_opened_sword(opened)
+	else:
+		_show_opened_image(opened)
+	open_pieces[mode] = {"id": id, "nombre": opened.nombre, "autor": opened.receta.autor, "licencia": opened.receta.licencia,
+		"sha256": opened.receta.fuente.sha256 if mode == IMAGE else ""}
+	select_mode(mode)
+	_refresh_piece()
+	_fit_view()
+	library_panel.select_piece(id)
+	library_panel.show_notes(opened.avisos)
+	return true
 
 
 ## Vuelve a las medidas y los colores iniciales con una sola regeneración.
@@ -211,6 +292,84 @@ func _on_image_chosen(path: String) -> void:
 	load_image_file(path)
 
 
+func _can_save() -> bool:
+	if current_mode == SWORD:
+		return sword_mesh != null and sword_problem == ""
+	return current_mode == IMAGE and image_mesh != null and image_origin_path != "" and FileAccess.file_exists(image_origin_path)
+
+
+## Una foto de la pieza válida: lo que se edite después no entra en este guardado.
+func _save_entry(mode: int, piece_name: String, author: String, license: String, as_new: bool) -> Dictionary:
+	var recipe: Dictionary = (sword_recipe if mode == SWORD else image_recipe).duplicate(true)
+	recipe.autor = author
+	recipe.licencia = license
+	var entry := {"nombre": piece_name, "receta": recipe, "malla": sword_mesh if mode == SWORD else image_mesh, "miniatura": null}
+	if not as_new and not open_pieces[mode].is_empty():
+		entry.reemplaza = open_pieces[mode].id
+	if mode == IMAGE:
+		entry.contorno = image_contour
+		entry.ajustes = image_contour_options.duplicate()
+		entry.fuente_bytes = FileAccess.get_file_as_bytes(image_origin_path)
+	return entry
+
+
+func _after_save(mode: int, id: String, entry: Dictionary) -> void:
+	last_author = entry.receta.autor
+	open_pieces[mode] = {"id": id, "nombre": entry.nombre, "autor": entry.receta.autor, "licencia": entry.receta.licencia,
+		"sha256": entry.receta.fuente.sha256 if mode == IMAGE else ""}
+	if mode == IMAGE:  # desde ahora la copia de la biblioteca vale aunque se borre el PNG original
+		image_origin_path = store.packs_folder.path_join(id).path_join(entry.receta.fuente.archivo)
+		if image_source.get("sha256", "") == entry.receta.fuente.sha256:
+			image_source.ruta = image_origin_path
+	refresh_library()
+	_refresh_piece()
+
+
+func _on_save_requested(piece_name: String, author: String, license: String, as_new: bool) -> void:
+	var result: Dictionary = await save_piece(piece_name, author, license, as_new)
+	if result.error == "":
+		save_dialog.hide()
+	else:
+		save_dialog.show_error(result.error)
+
+
+func _show_opened_sword(opened: Dictionary) -> void:
+	sword_recipe = opened.receta.duplicate(true)
+	sword_panel.show_recipe(sword_recipe)
+	generate_sword()
+
+
+## Enseña la pieza guardada tal cual: su contorno es el guardado, aunque la imagen ya no esté.
+func _show_opened_image(opened: Dictionary) -> void:
+	contour_timer.stop()
+	var recipe: Dictionary = opened.receta.duplicate(true)
+	image_values = {"parametros": recipe.parametros.duplicate(), "colores": recipe.colores.duplicate()}
+	image_options = opened.ajustes.duplicate()
+	image_contour_options = opened.ajustes.duplicate()
+	image_contour = opened.contorno
+	image_origin = recipe.fuente.duplicate()
+	image_recipe = recipe
+	image_mesh = opened.malla
+	image_problem = ""
+	image_panel.show_values(image_values, image_options)
+	var file_name: String = image_origin.archivo.get_file()
+	if opened.imagen == null:
+		image_source = {}
+		image_origin_path = ""
+		image_panel.show_missing_source(file_name)
+		image_panel.show_notes(PackedStringArray())
+	else:
+		image_origin_path = store.packs_folder.path_join(opened.id).path_join(image_origin.archivo)
+		image_source = {"error": "", "imagen": opened.imagen, "archivo": image_origin.archivo, "sha256": image_origin.sha256,
+			"ruta": image_origin_path}
+		image_panel.show_source(opened.imagen, file_name)
+		var analysis: Dictionary = ImageMask.analyze(opened.imagen, image_options)
+		image_panel.show_contour(opened.contorno, analysis.get("tamano", Vector2i.ONE))
+		image_panel.show_notes(analysis.get("avisos", PackedStringArray()))
+		image_panel.show_background(analysis.get("fondo", ""))
+	image_panel.set_contour_enabled(opened.imagen != null)
+
+
 ## Enseña la pieza y el estado del modo actual; cada modo guarda los suyos.
 func _refresh_piece() -> void:
 	var mesh: ArrayMesh = sword_mesh if current_mode == SWORD else (image_mesh if current_mode == IMAGE else null)
@@ -221,7 +380,17 @@ func _refresh_piece() -> void:
 	diagnosis.text = problem
 	diagnosis.visible = problem != ""
 	_paint_diagnosis()
+	save_button.disabled = not _can_save()
+	pending.text = _pending_text()
 	view_title.text = "Vista de muestra" if mesh == null else ("Vista de la espada" if current_mode == SWORD else "Vista de la pieza")
+
+
+func _pending_text() -> String:
+	if current_mode == SWORD:
+		return PENDING_SWORD
+	if current_mode != IMAGE:
+		return PENDING
+	return PENDING_NO_SOURCE if image_mesh != null and not _can_save() else PENDING_IMAGE
 
 
 ## En Desde imagen el motivo sale con el color de aviso del tema (claro u oscuro).
@@ -263,6 +432,8 @@ func _build_selector() -> void:
 		button.button_group = modes
 		button.pressed.connect(select_mode.bind(i))
 		selector.add_child(button)
+	selector.add_child(HSeparator.new())
+	selector.add_child(library_panel)
 
 
 func _build_viewer() -> void:
@@ -327,6 +498,7 @@ func _build_details() -> void:
 		actions.add_child(button)
 	generate_button = actions.get_child(0)
 	generate_button.pressed.connect(generate_sword)
+	save_button = actions.get_child(1)
 	pending.theme_type_variation = "Pista"
 	pending.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
 	details.add_child(pending)
@@ -345,6 +517,20 @@ func _build_image_tools() -> void:
 	image_dialog.filters = PackedStringArray(["*.png ; Imagen PNG"])
 	image_dialog.file_selected.connect(_on_image_chosen)
 	add_child(image_dialog)
+
+
+func _build_library_tools() -> void:
+	library_panel.piece_chosen.connect(open_piece)
+	save_button.pressed.connect(request_save)
+	save_dialog.save_requested.connect(_on_save_requested)
+	add_child(save_dialog)
+	visibility_changed.connect(_on_visibility_changed)
+	_on_visibility_changed()
+
+
+func _on_visibility_changed() -> void:
+	if is_visible_in_tree() and not library_loaded:
+		refresh_library()
 
 
 ## Encuadre completo: al entrar en un modo y con las vistas rápidas. Editar no lo llama: conserva giro y zoom.
