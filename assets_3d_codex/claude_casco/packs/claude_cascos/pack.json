@@ -1,0 +1,151 @@
+{
+ "formato": "gamemolde-pack",
+ "version": 1,
+ "id": "claude_cascos",
+ "nombre": "Cascos (pruebas)",
+ "autor": "GameMolde",
+ "licencia": "propia",
+ "origen": "",
+ "piezas": [
+  {
+   "id": "casco_astronauta",
+   "nombre": "Casco de astronauta",
+   "archivo": "casco_astronauta.glb",
+   "sha256": "a911fa8ecfef684d8a76b7d7809bbec7f27d944e7cd7fa2d528720794faf79d5",
+   "tipo": "accesorio",
+   "ranura": "pelo",
+   "especies": [
+    "humana"
+   ],
+   "colores": [
+    "principal"
+   ],
+   "color": [
+    0.86,
+    0.85,
+    0.81
+   ],
+   "sigue_al_cuerpo": true,
+   "fisica": [],
+   "miniatura": "",
+   "anclaje": {
+    "hueso": "",
+    "transform": [
+     0,
+     0,
+     0,
+     0,
+     0,
+     0,
+     1,
+     1
+    ]
+   }
+  },
+  {
+   "id": "casco_astronauta_metal",
+   "nombre": "Casco de astronauta: metal",
+   "archivo": "casco_astronauta_metal.glb",
+   "sha256": "b1732d075553bcaff3f45152132cc62bc1df5b588acd693a5fcc51eaf1ea20bb",
+   "tipo": "accesorio",
+   "ranura": "accesorio",
+   "especies": [
+    "humana"
+   ],
+   "colores": [
+    "principal"
+   ],
+   "color": [
+    0.56,
+    0.57,
+    0.6
+   ],
+   "sigue_al_cuerpo": true,
+   "fisica": [],
+   "miniatura": "",
+   "anclaje": {
+    "hueso": "",
+    "transform": [
+     0,
+     0,
+     0,
+     0,
+     0,
+     0,
+     1,
+     1
+    ]
+   }
+  },
+  {
+   "id": "casco_astronauta_acolchado",
+   "nombre": "Casco de astronauta: acolchado",
+   "archivo": "casco_astronauta_acolchado.glb",
+   "sha256": "7e604470a158cd8abdc7e3aa210db09a93dec2a73583d7aaa9b513d99f2235bf",
+   "tipo": "accesorio",
+   "ranura": "accesorio",
+   "especies": [
+    "humana"
+   ],
+   "colores": [
+    "principal"
+   ],
+   "color": [
+    0.2,
+    0.2,
+    0.22
+   ],
+   "sigue_al_cuerpo": true,
+   "fisica": [],
+   "miniatura": "",
+   "anclaje": {
+    "hueso": "",
+    "transform": [
+     0,
+     0,
+     0,
+     0,
+     0,
+     0,
+     1,
+     1
+    ]
+   }
+  },
+  {
+   "id": "casco_astronauta_visor",
+   "nombre": "Casco de astronauta: visor (espejo)",
+   "archivo": "casco_astronauta_visor.glb",
+   "sha256": "77fefec1d4b5daf1e8c42aa93e9b77dbf0ac68be50ae67fff2867396bc91ae46",
+   "tipo": "accesorio",
+   "ranura": "accesorio",
+   "especies": [
+    "humana"
+   ],
+   "colores": [
+    "principal"
+   ],
+   "color": [
+    0.09,
+    0.1,
+    0.13
+   ],
+   "sigue_al_cuerpo": true,
+   "fisica": [],
+   "miniatura": "",
+   "anclaje": {
+    "hueso": "",
+    "transform": [
+     0,
+     0,
+     0,
+     0,
+     0,
+     0,
+     1,
+     1
+    ]
+   }
+  }
+ ]
+}

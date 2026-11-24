@@ -28,6 +28,9 @@ Assets 3D propios para ir llenando el programa. **No se toca el repo principal**
 | Gorra plana ajustada (+ GM) | Pendiente de probar | Sin pelo o rapado; hueco de 4–6 mm |
 | Falda corta plisada | Aprobada | `claude_falda/`; talle bajo, 25 cm, 16 pliegues, cintura pegada a la piel; en Accesorios (en `ropa_piernas` quitaría los shorts). Adaptable al cuerpo (76 formas, 4,9 MB); aún 100 % `Hips` (pesos de piernas en C) |
 | Sudadera oversize con capucha | Aprobada | `claude_sudadera/`; ranura `ropa_exterior` (no sustituye nada); piel copiada e hinchada (pesos y formas del cuerpo), cae recta desde el pecho, bajo a ~0,95 m, mangas hasta los nudillos, capucha bajada, bolsillo; 268 formas dispersas, 6,8 MB. Conocido: 58 caras plegadas en las axilas |
+| Casco de astronauta | Aprobado | `claude_casco/`; 4 piezas: carcasa (ranura `pelo`: quita el peinado), metal (anillo, orejeras, marco, cierre, remaches), acolchado y visor espejo (sin él, casco abierto). Burbuja de 14,3 cm de radio medida sobre la cabeza (5 mm de aire + 10 mm de acolchado); anillo con 6–8 mm de holgura a cuello y hombros. 32 formas afines (se estira con la caja de la cabeza; la base sigue a los hombros), 8,3 MB |
+| Orejas de gato (sin diadema) | Aprobadas | `claude_orejas/`; el plano traía diadema, pero el responsable la quitó. 2 piezas: orejas (negro) e interior (rosa). Nacen del cráneo (base hundida 1 cm), 6,2 cm de alto: salen de la piel o entre el pelo; con el afro (3 cm) solo asoman las puntas. Rígidas, cada una sigue a su base (15 formas), 1,1 MB |
+| Tentáculos de la espalda | Aprobados | `claude_tentaculos/`; 6 (3 por lado: arriba y en medio grandes, 58–62 cm; abajo pequeño, 36 cm), 1 pieza con las ventosas en relieve. Nacen juntos en el centro de la espalda, bajo los omóplatos (raíces de y=1,10 a 1,25, a distinta altura en cada lado; hundidas 2 cm), salen hacia los lados (8–13° hacia atrás; hasta 22 cm de la espalda). **Sin simetría** (no son alas): cada uno con su dirección, ondas, punta enroscada y vaivén en profundidad (lista `TENTACULOS`). En reposo, a 4,2 cm de los brazos. 100 % `UpperChest`; cada uno rígido con su raíz (42 formas), 10,9 MB. Tamaño fijo: ver H |
 | (siguiente) | — | — |
 
 ## Pendiente: se hace en el propio asset (sin tocar el núcleo)
@@ -64,6 +67,72 @@ Al ponerse la gorra, el pelo que queda por encima de la banda se aplasta hacia d
 - Peinados extremos (afro, moños altos): aun aplastados quedarían raros; para esos, ocultarlos
   (`cubre: ["pelo"]` solo en ese caso, o una lista de excepciones).
 
+### D. `cubre` en piezas de la ranura `accesorio` (casco)
+
+`body_view.gd` (`set_piece`) solo busca conflictos si la ranura **no** es `accesorio`, así que un accesorio con
+`cubre: ["pelo"]` no quita el peinado (y ponerse un peinado después sí quita el accesorio). Por eso la carcasa del casco
+va hoy en la ranura `pelo`. Arreglo: comprobar `cubre` también en los accesorios (lo de «varios a la vez» solo vale
+entre accesorios). Después, la carcasa vuelve a `accesorio` con `cubre: ["pelo"]` (también serviría para B).
+
+### E. Visor transparente (casco)
+
+El shader de piezas es opaco y de un color. Para un cristal haría falta transparencia por pieza (p. ej.
+`"opacidad": 0.35` en `pack.json`, con `ALPHA`, sin contorno y sin escribir profundidad) y que el `.glb` exportado la
+lleve (`alphaMode: BLEND`). Entonces se añade una tercera variante del visor: cristal.
+
+### F. Ajuste afín de piezas rígidas (peso del casco)
+
+Las 32 formas del casco solo son una escala y un desplazamiento por ejes de la caja de la cabeza (cómo se calculan:
+`shape_fields` y `deltas` en `generar_casco.py`). Si el núcleo hiciera ese cálculo al cambiar las formas (p. ej.
+`"ajuste": "caja_cabeza"` en `pack.json`), el casco no necesitaría formas: de 8,3 MB a ~0,6 MB. Valdría para gafas, cascos
+y otros accesorios rígidos.
+
+### G. El casco como una sola pieza con varios colores (decidido por el responsable)
+
+Forma final: **dos opciones, «con visor» y «sin visor»**, y las dos llevan siempre el metal y el acolchado. Hoy no se
+puede: cada pieza pinta un solo color (`set_piece` pone el mismo en `skin_color` y `garment_color`), así que van como
+4 piezas que se ponen una a una. Dos caminos en el núcleo:
+- **Varios colores por pieza**: zonas por color de vértice (el shader ya mezcla dos con `COLOR`; harían falta tres o
+  cuatro: carcasa, metal, acolchado, visor) y `"colores": ["carcasa", "metal", …]` en `pack.json`. El generador
+  fundiría las piezas en una y pintaría cada zona.
+- **Conjunto**: un campo de grupo en `pack.json` (p. ej. `"conjunto": ["casco_astronauta_metal", …]`) para poner y
+  quitar las piezas a la vez; «con visor» y «sin visor» serían dos conjuntos.
+
+### H. Tamaño ajustable de los tentáculos (pedido por el responsable; no hecho)
+
+Un deslizador «Tamaño» propio de la pieza (p. ej. de ×0,5 a ×1,5). Cómo:
+1. **Asset**: `generar_tentaculos.py` añade dos formas propias, `tentaculos_mas` y `tentaculos_menos`: cada vértice se
+   aleja o se acerca a la raíz de su tentáculo (delta = (p − raíz) × 0,5). Las raíces ya las calcula (`root_point`).
+   Así crecen desde la espalda, sin despegarse de ella.
+2. **Núcleo**: hoy `ShapeWeights.apply` pone a 0 toda forma de la pieza que el cuerpo no tiene, así que una forma propia
+   no se puede mover. Hace falta: (a) un campo en `pack.json`, p. ej. `"deslizadores": [{"id": "tamano", "nombre":
+   "Tamaño", "decr": "tentaculos_menos", "incr": "tentaculos_mas", "neutro": 0.5}]`; (b) que `apply` respete esas
+   formas y la interfaz muestre el deslizador cuando la pieza está puesta; (c) guardarlo en el proyecto (`project_file`)
+   y que el `.glb` exportado salga con ese tamaño.
+3. Otra vía sin formas: escalar cada tentáculo en CPU alrededor de su raíz (raíces en `pack.json`). Pesa menos, pero
+   es más código en el núcleo.
+- Las formas del cuerpo (que mueven la raíz) y el tamaño se suman: con tamaños extremos y cuerpos extremos, la raíz
+  puede asomar unos milímetros (está hundida 2 cm).
+- Peso: hoy 10,9 MB por las 42 formas densas; F (ajuste sin formas) también le valdría (cada tentáculo es rígido).
+
+### I. Movimiento propio de los tentáculos (pedido por el responsable; no hecho)
+
+Un ondular suave **siempre puesto y sin controles** (no se puede cambiar ni quitar desde la interfaz). La vía simple, sin
+huesos nuevos, es mover los vértices en el shader:
+1. **Asset**: `generar_tentaculos.py` guarda por vértice, en `TEXCOORD_1` (UV2), `s` (0 en la raíz, 1 en la punta;
+   las ventosas, la `s` de su anillo) y la fase de su tentáculo (una distinta para cada uno, para que no se muevan a la
+   vez). Lo demás no cambia.
+2. **`pack.json`**: `"movimiento": "ondular"`, sin parámetros: amplitud y velocidad fijas en el núcleo, para que no se
+   puedan tocar. Sugerencia de partida: desplazamiento = 0,03 m × s² × sin(1,2 · TIEMPO + fase + 4 · s), hacia arriba y un
+   poco hacia atrás en el espacio del hueso; la raíz (s = 0) no se mueve, así que no se despega de la espalda.
+3. **Núcleo**: si la pieza trae `movimiento`, `BodyMaterial` usa una variante del shader con ese desplazamiento en
+   `vertex()`, y `outline.gdshader` hace lo mismo (si no, el contorno se queda quieto). Hay que comprobar en Godot 4.7
+   en qué espacio llega `VERTEX` en una malla con piel, para que el desplazamiento siga al hueso al animar.
+4. **Exportar**: un shader no viaja en el `.glb`; el exportado sale quieto (en la pose de reposo). Que se mueva también
+   en el juego exige la otra vía: 4–6 huesos por tentáculo, colgados de `UpperChest`, y una animación en bucle dentro del
+   `.glb`. Eso rompe la regla de los 53 huesos del `CLAUDE.md`, así que la decide el responsable.
+- Pausa: si se quiere quieto en las capturas y miniaturas, que el núcleo lo pare ahí (no el usuario).
+
 ## Ficha de integración (para cuando se metan en el proyecto)
 
 Hoy viven fuera del repo. Meterlos es un **paso del PLAN con su ficha en `ruta/pasos/`** (reglas 1, 9 y 10 del
@@ -76,6 +145,9 @@ Hoy viven fuera del repo. Meterlos es un **paso del PLAN con su ficha en `ruta/p
 | Gorra plana | `claude_gorra/generar_gorra.py` (`ajustada` para la variante) | `claude_gorras` | `gorra_plana`, `gorra_plana_gm`, `gorra_plana_ajustada`, `gorra_plana_ajustada_gm` | accesorio / accesorio | 4,0 + 0,35 MB cada variante | 100 % `Head` | 19 (cráneo) |
 | Falda corta plisada | `claude_falda/generar_falda.py` | `claude_faldas` | `falda_plisada` | accesorio / accesorio | 4,9 MB | 100 % `Hips` | 76 (cintura, cadera, muslos) |
 | Sudadera con capucha | `claude_sudadera/generar_sudadera.py` | `claude_sudaderas` | `sudadera_capucha` | ropa / ropa_exterior | 6,8 MB | copiados de la piel (4 influencias, suman 1) | 268, dispersas |
+| Tentáculos de la espalda | `claude_tentaculos/generar_tentaculos.py` (capturas: `capturar_tentaculos.gd`) | `claude_tentaculos` | `tentaculos_espalda` | accesorio / accesorio | 10,9 MB | 100 % `UpperChest` | 42 (cada tentáculo, rígido con su raíz) |
+| Orejas de gato | `claude_orejas/generar_orejas.py` (capturas: `capturar_orejas.gd`) | `claude_orejas` | `orejas_gato`, `orejas_gato_interior` | accesorio / accesorio | 0,64 + 0,48 MB | 100 % `Head` | 15 (cada oreja, rígida con su base) |
+| Casco de astronauta | `claude_casco/generar_casco.py` (capturas: `capturar_casco.gd`) | `claude_cascos` | `casco_astronauta` (pelo), `_metal`, `_acolchado`, `_visor` (accesorio) | accesorio | 3,8 + 2,0 + 1,6 + 0,9 MB | 100 % `Head` | 32, afines (densas) |
 
 Todos: licencia `propia`, autor «GameMolde», color plano (un color por pieza), mismo esqueleto que
 `godot/packs/base/tights.glb`, generados con Python + numpy (+ scipy la sudadera), sin Blender. Se regeneran
@@ -113,3 +185,16 @@ con `python generar_<asset>.py` desde su carpeta.
   - Capucha subida: pieza aparte, con el mismo problema que la gorra con el pelo (A/B).
   - Los pesos y formas de pretina, puños, capucha y bolsillo salen de los 8 vértices de piel más cercanos;
     revisar con animaciones al integrarla.
+- **Tentáculos**: H (tamaño ajustable), I (ondular fijo) y F (peso). Van rígidos con `UpperChest`: con los brazos muy
+  hacia atrás (animaciones) pueden cruzarse con ellos.
+- **Orejas de gato**: ya hay unas «Orejas de gato» (conos generados) en `godot/packs/base`; al integrar, decidir si
+  estas las sustituyen. **Decidido por el responsable: al integrarlas serán una sola pieza, con sus dos colores
+  (fuera e interior) editables por separado**; hoy van en dos piezas porque cada pieza pinta un solo color (lo resuelve
+  «Varios colores por pieza» de G: dos zonas, que el shader ya mezcla con `COLOR`). Peinados muy altos (afro) las
+  tapan casi enteras; arreglo en el asset si molesta: base algo más alta o una variante para pelo voluminoso.
+- **Casco**: D (vuelve a `accesorio` con `cubre`), E (cristal), F (sin formas) y G (una pieza con y sin visor), en el núcleo.
+  - Todo va con `Head`: al inclinar mucho la cabeza (animaciones), el anillo entra en hombros y pecho. Arreglo en el
+    asset, si molesta: anillo y base con pesos de `Neck`/`UpperChest`, y la burbuja con más hueco para que la cabeza
+    gire dentro.
+  - Pesa el doble que la gorra por las formas densas (todas mueven todos los vértices); F lo resuelve.
+  - Al integrarlo, la decisión del responsable: ¿visor espejo y abierto como ahora, o esperar a E?

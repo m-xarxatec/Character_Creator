@@ -1,0 +1,81 @@
+{
+ "formato": "gamemolde-pack",
+ "version": 1,
+ "id": "claude_orejas",
+ "nombre": "Orejas (pruebas)",
+ "autor": "GameMolde",
+ "licencia": "propia",
+ "origen": "",
+ "piezas": [
+  {
+   "id": "orejas_gato",
+   "nombre": "Orejas de gato con cuenco",
+   "archivo": "orejas_gato.glb",
+   "sha256": "537c2c2c40bd8d8fa4e6483fd324541c2cc298677bd9fb8d2cfe7652b979fe73",
+   "tipo": "accesorio",
+   "ranura": "accesorio",
+   "especies": [
+    "humana"
+   ],
+   "colores": [
+    "principal"
+   ],
+   "color": [
+    0.13,
+    0.13,
+    0.14
+   ],
+   "sigue_al_cuerpo": true,
+   "fisica": [],
+   "miniatura": "",
+   "anclaje": {
+    "hueso": "",
+    "transform": [
+     0,
+     0,
+     0,
+     0,
+     0,
+     0,
+     1,
+     1
+    ]
+   }
+  },
+  {
+   "id": "orejas_gato_interior",
+   "nombre": "Orejas de gato: interior",
+   "archivo": "orejas_gato_interior.glb",
+   "sha256": "aaf6b3d2ff2ae87c7a98714ec471c507b3c8a547a76661e61854dc3a7b5cb104",
+   "tipo": "accesorio",
+   "ranura": "accesorio",
+   "especies": [
+    "humana"
+   ],
+   "colores": [
+    "principal"
+   ],
+   "color": [
+    0.93,
+    0.6,
+    0.65
+   ],
+   "sigue_al_cuerpo": true,
+   "fisica": [],
+   "miniatura": "",
+   "anclaje": {
+    "hueso": "",
+    "transform": [
+     0,
+     0,
+     0,
+     0,
+     0,
+     0,
+     1,
+     1
+    ]
+   }
+  }
+ ]
+}
