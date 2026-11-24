@@ -13,25 +13,22 @@ extends RefCounted
 ## - No se calculan tangentes: en el MVP no hay mapas de normales.
 
 
-static var _shapes_mesh: Mesh = null  # paso OPT.1: de qué malla son _shapes
-static var _shapes: Array = []
+static var _shapes := {}  # paso OPT.1: Mesh → sus formas. AC.6b: una entrada por malla (los ojos no echan al cuerpo)
 
 
 ## Paso OPT.1: las formas de la malla (surface_get_blend_shape_arrays, ~200 ms con 286). En el mismo fotograma se
 ## reutilizan (al abrir las piden la vista del estilo, el encuadre y las medidas); en el siguiente se sueltan (~100 MB).
 static func shape_arrays(mesh: Mesh) -> Array:
-	if _shapes_mesh != mesh:
-		_shapes = (mesh as ArrayMesh).surface_get_blend_shape_arrays(0)
-		_shapes_mesh = mesh
+	if not _shapes.has(mesh):
+		_shapes[mesh] = (mesh as ArrayMesh).surface_get_blend_shape_arrays(0)
 		var tree := Engine.get_main_loop() as SceneTree
 		if tree != null and not tree.process_frame.is_connected(_forget_shapes):
 			tree.process_frame.connect(_forget_shapes, CONNECT_ONE_SHOT)
-	return _shapes
+	return _shapes[mesh]
 
 
 static func _forget_shapes() -> void:
-	_shapes = []
-	_shapes_mesh = null
+	_shapes = {}
 
 
 static func bake(mesh: MeshInstance3D, skeleton: Skeleton3D) -> Dictionary:

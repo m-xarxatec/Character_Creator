@@ -7,6 +7,8 @@ extends SceneTree
 
 ## Paso RE.1b: peinados de Quaternius.
 const MeshBaker := preload("res://../../godot/addons/creador/mesh_baker.gd")
+## Paso AC.6b: el .glb lleva también los ojos (EyeMesh); no son piezas y no se cuentan (los mira probar_glb.gd --ojos).
+const EYE_MESHES := ["ojo_l", "ojo_r", "linea_l", "linea_r", "linea_inferior_l", "linea_inferior_r", "pliegue_l", "pliegue_r"]
 const QU_HAIR := ["hair_buns", "hair_long", "hair_buzzed_female", "hair_buzzed", "hair_simple_parted"]
 const QU_SHAPES := ["head_width_incr", "head_height_incr", "gender_incr", "torso_length_incr", "neck_length_incr"]
 ## Cambio de la distancia con signo a la piel al deformar, en el pelo pegado al cuero cabelludo. Mide si se despega.
@@ -141,7 +143,7 @@ func _check_exports(view, id: String, label := "Quaternius") -> void:
 		if ok:
 			var scene := document.generate_scene(state)
 			var meshes := scene.find_children("*", "MeshInstance3D", true, false)
-			count = meshes.size()
+			count = _without_eyes(meshes).size()
 			ok = meshes.all(func(m: MeshInstance3D) -> bool: return m.skin != null)
 			scene.free()
 	check("%s: %s se exporta con el cuerpo" % [label, id], ok and count == 2, str(count))
@@ -641,8 +643,8 @@ func _check_makehuman(main: Control, view) -> void:
 	else:
 		var scene := document.generate_scene(state)
 		var meshes := scene.find_children("*", "MeshInstance3D", true, false)
-		check("MakeHuman: el .glb trae cuerpo + 3 mallas, todas con piel", meshes.size() == 4
-			and meshes.all(func(m: MeshInstance3D) -> bool: return m.skin != null), str(meshes.size()))
+		check("MakeHuman: el .glb trae cuerpo + 3 mallas, todas con piel", _without_eyes(meshes).size() == 4
+			and meshes.all(func(m: MeshInstance3D) -> bool: return m.skin != null), str(_without_eyes(meshes).size()))
 		scene.free()
 	DirAccess.remove_absolute(path)
 	DirAccess.remove_absolute(path.get_basename() + ".tres")
@@ -694,9 +696,9 @@ func _check_export(view) -> void:
 		return
 	var scene := document.generate_scene(state)
 	var meshes := scene.find_children("*", "MeshInstance3D", true, false)
-	var names: Array = meshes.map(func(m: MeshInstance3D) -> String: return m.name)
+	var names: Array = _without_eyes(meshes).map(func(m: MeshInstance3D) -> String: return m.name)
 	# cuerpo + malla + casquete + 2 cuernos
-	check("el .glb trae el cuerpo primero y 4 mallas de piezas, todas con piel", meshes.size() == 5 and names[0] == "Body"
+	check("el .glb trae el cuerpo primero y 4 mallas de piezas, todas con piel", names.size() == 5 and names[0] == "Body"
 		and meshes.all(func(m: MeshInstance3D) -> bool: return m.skin != null), str(names))
 	var lowest := INF
 	for m: MeshInstance3D in meshes:
@@ -720,3 +722,8 @@ func _check_project(main: Control, view) -> void:
 	check("vuelven las mismas piezas", back == worn, str(back))
 	check("la pestaña Ropa marca las mallas", main.piece_panels["Ropa"].buttons["base/tights"].button_pressed)
 	DirAccess.remove_absolute(path)
+
+
+## Paso AC.6b: las mallas del .glb sin las de los ojos.
+func _without_eyes(meshes: Array) -> Array:
+	return meshes.filter(func(m: MeshInstance3D) -> bool: return not m.name in EYE_MESHES)

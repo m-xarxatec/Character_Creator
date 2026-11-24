@@ -77,6 +77,7 @@ var library  # PackLibrary (paso AB.4)
 var pieces := {}  # paso AB.4: "pack/pieza" → MeshInstance3D puesta
 var accessories := {}  # paso AB.11: "pack/pieza" → BoneAttachment3D de un accesorio rígido
 var hair := {}  # SH.6b: "pack/pieza" → MeshInstance3D de las piezas de ranura pelo (llevan la banda de brillo)
+var eyes: Array[MeshInstance3D] = []  # AC.6b: capas y líneas del ojo (EyeMesh), para exportarlas
 var updater  # CharacterUpdater
 var values: Dictionary
 var pose_t := false
@@ -221,7 +222,7 @@ func export_glb(path: String) -> Error:
 ## start_export lee el personaje tal como está ahora; lo que cambie después no entra en el archivo.
 func start_export() -> Dictionary:
 	return GlbExporter.prepare(species.mesh, species.skeleton, species.manifest["bones"]["sockets"], true, pieces.values(),
-		accessories.values())
+		accessories.values(), eyes, species.eyes)  # AC.6b: con los ojos
 
 
 func finish_export(job: Dictionary, path: String) -> Error:
@@ -453,7 +454,8 @@ func _load_character() -> String:
 	Preset.apply_look(species.mesh, loaded)
 	_set_shadow(BodyMaterial.is_soft(species.mesh))
 	set_values(loaded["valores"])
-	for eye in EyeMesh.build(species.mesh, species.skeleton, species.eyes):  # siguen a las formas; no son piezas del pack
+	eyes = EyeMesh.build(species.mesh, species.skeleton, species.eyes)
+	for eye in eyes:  # siguen a las formas; no son piezas del pack
 		updater.pieces.append(eye)
 		BodyPiece.follow(eye, species.mesh)
 	style = StyleView.new()

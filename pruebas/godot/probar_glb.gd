@@ -5,6 +5,10 @@ extends SceneTree
 # Paso AB.16: con --piezas=N --rigidas=M (los dos juntos) espera el cuerpo y N mallas de piezas, M de ellas rígidas
 # (accesorios: una sola articulación). Cuenta mallas, no piezas: unos cuernos son 2. Sin ellos, una sola malla con piel.
 # El .glb con piezas lo genera generar_glb_piezas.gd.
+# Paso AC.6b: las mallas del ojo (ojo_*, linea_*, linea_inferior_*, pliegue_*) no cuentan como piezas. Con --ojos (junto a
+# --piezas) se exigen las 8, con textura y sin shader, y la bolsa del cuerpo detrás del ojo; y además se comparan los
+# valores de serie y las constantes de eye_texture.gd con el texto de eye_layers.gdshader y eye_line.gdshader.
+#   godot --headless --path pruebas/godot -s probar_glb.gd -- "$PWD/pruebas/godot/salida/glb_piezas" --piezas=4 --rigidas=2 --ojos
 # El autorrelleno del BoneMap solo existe en la ventana del editor; aqui se comprueba lo que necesita
 # para salir todo en verde: cada hueso con el nombre y el padre del SkeletonProfileHumanoid.
 
@@ -17,14 +21,23 @@ var failures := 0
 var pose_a := "--pose-a" in OS.get_cmdline_user_args()  # variante en pose A del paso 3.6.5
 var piece_count := _int_arg("--piezas=")  # -1 = sin modo piezas
 var rigid_count := _int_arg("--rigidas=")
+var with_eyes := "--ojos" in OS.get_cmdline_user_args()  # paso AC.6b
+
+const EYE_MESHES := ["ojo_l", "ojo_r", "linea_l", "linea_r", "linea_inferior_l", "linea_inferior_r", "pliegue_l", "pliegue_r"]
+const EYE_GAP := 0.0009  # PROVISIONAL (AC.6b): metros que la bolsa del cuerpo queda como mínimo detrás del ojo
+const RIM_MATCH := 0.00001  # PROVISIONAL (AC.6b): metros entre el lazo del ojo y el del cuerpo (no se mueve)
+const CREADOR := "res://../../godot/addons/creador/"
+const OJOS_JSON := "res://../../godot/datos/humana/ojos.json"
 
 
 func _init() -> void:
-	if not _piece_args_ok():
-		check("--piezas=N (N >= 1) y --rigidas=M (0 <= M <= N) van juntos", false)
+	if not _piece_args_ok() or (with_eyes and piece_count < 0):
+		check("--piezas=N (N >= 1) y --rigidas=M (0 <= M <= N) van juntos; --ojos, con ellos", false)
 		print("RESULTADO: %d FALLOS" % failures)
 		quit(1)
 		return
+	if with_eyes:
+		_check_eye_constants()
 	var folder: String = OS.get_cmdline_user_args()[0]
 	var files := Array(DirAccess.get_files_at(folder)).filter(func(f: String) -> bool: return f.ends_with(".glb"))
 	check("hay .glb que probar", files.size() > 0, folder)
@@ -160,10 +173,12 @@ func _check_with_pieces(scene: Node, skel: Skeleton3D) -> void:
 	check("un cuerpo con piel", bodies.size() == 1 and bodies[0].skin != null)
 	if bodies.size() == 1:
 		_check_body(bodies[0])
-	var pieces := meshes.filter(func(m: MeshInstance3D) -> bool: return m.name != "Body")
+	var pieces := meshes.filter(func(m: MeshInstance3D) -> bool: return m.name != "Body" and not m.name in EYE_MESHES)
 	check("%d mallas de piezas" % piece_count, pieces.size() == piece_count, str(pieces.size()))
 	if skel == null:
 		return
+	if with_eyes and bodies.size() == 1:
+		_check_eyes(meshes, bodies[0], skel)
 	var rigid := 0
 	for piece: MeshInstance3D in pieces:
 		_check_piece(piece, skel)
@@ -249,3 +264,110 @@ func _accessor_weight_error(data: PackedByteArray, json: Dictionary, index: int,
 			total += data.decode_float(at) if kind == 5126 else (data.decode_u16(at) / 65535.0 if kind == 5123 else data[at] / 255.0)
 		worst = maxf(worst, absf(total - 1.0))
 	return worst
+
+
+## Paso AC.6b: las 8 mallas del ojo, como piezas, con su textura y sin shader; la bolsa del cuerpo, detrás de cada ojo.
+func _check_eyes(meshes: Array, body: MeshInstance3D, skel: Skeleton3D) -> void:
+	var by_name := {}
+	for m: MeshInstance3D in meshes:
+		by_name[String(m.name)] = m
+	for eye_name: String in EYE_MESHES:
+		check("%s: está" % eye_name, by_name.has(eye_name))
+		if not by_name.has(eye_name):
+			continue
+		var eye: MeshInstance3D = by_name[eye_name]
+		_check_piece(eye, skel)
+		var material := eye.mesh.surface_get_material(0)
+		var standard := material as StandardMaterial3D
+		check("%s: material sin shader, con textura" % eye_name, standard != null and standard.albedo_texture != null,
+			material.get_class() if material != null else "sin material")
+		if standard != null and not eye_name.begins_with("ojo_"):
+			check("%s: con alfa" % eye_name, standard.transparency != BaseMaterial3D.TRANSPARENCY_DISABLED)
+	var data: Dictionary = JSON.parse_string(FileAccess.get_file_as_string(OJOS_JSON))
+	var body_points: PackedVector3Array = body.mesh.surface_get_arrays(0)[Mesh.ARRAY_VERTEX]
+	for side: String in ["l", "r"]:
+		if by_name.has("ojo_" + side):
+			_check_sunk(by_name["ojo_" + side], body_points, data[side])
+
+
+## Cada vértice del ojo sale del de su bolsa (mismo orden que ojos.json): en el lazo coinciden; dentro, el del cuerpo
+## queda al menos EYE_GAP detrás, por la normal del ojo.
+func _check_sunk(eye: MeshInstance3D, body_points: PackedVector3Array, data: Dictionary) -> void:
+	var arrays := eye.mesh.surface_get_arrays(0)
+	var points: PackedVector3Array = arrays[Mesh.ARRAY_VERTEX]
+	var normal: Vector3 = (arrays[Mesh.ARRAY_NORMAL] as PackedVector3Array)[0]
+	var bag: Array = data["bolsa"]
+	if not check_size(eye.name, points.size(), bag.size()):
+		return
+	var rim := {}
+	for v: float in data["lazo"]:
+		rim[int(v)] = true
+	var rim_worst := 0.0
+	var gap_min := INF
+	for n in bag.size():
+		var offset := points[n] - body_points[int(bag[n])]
+		if rim.has(int(bag[n])):
+			rim_worst = maxf(rim_worst, offset.length())
+		else:
+			gap_min = minf(gap_min, offset.dot(normal))
+	check("%s: el lazo del cuerpo no se mueve" % eye.name, rim_worst <= RIM_MATCH, "MEDIDA %.6f mm" % (rim_worst * 1000.0))
+	check("%s: la bolsa queda detrás del ojo" % eye.name, gap_min >= EYE_GAP, "MEDIDA mínimo %.4f mm" % (gap_min * 1000.0))
+
+
+func check_size(label: String, size: int, expected: int) -> bool:
+	check("%s: tantos vértices como su bolsa" % label, size == expected, "%d de %d" % [size, expected])
+	return size == expected
+
+
+## Paso AC.6b: eye_texture.gd copia las cuentas de los shaders del ojo; sus valores de serie y constantes deben ser los mismos.
+func _check_eye_constants() -> void:
+	var texture: GDScript = load(CREADOR + "eye_texture.gd")
+	var layers := FileAccess.get_file_as_string(CREADOR + "eye_layers.gdshader")
+	var lines := FileAccess.get_file_as_string(CREADOR + "eye_line.gdshader")
+	var constants: Dictionary = texture.get_script_constant_map()
+	var groups := [[constants["EYE_DEFAULTS"], layers, "uniform"], [constants["SHADER_CONSTANTS"], layers, "const"],
+		[constants["LINE_DEFAULTS"], lines, "uniform"]]
+	var wrong := []
+	for group: Array in groups:
+		var found := _shader_values(group[1], group[2])
+		for key: String in group[0]:
+			if not found.has(key) or not _same(_numbers_of(group[0][key]), found[key]):
+				wrong.append(key)
+	check("eye_texture.gd: valores de serie y constantes iguales a los shaders del ojo", wrong.is_empty(), ", ".join(wrong))
+
+
+## {nombre: [números]} de las líneas «uniform … nombre … = valor;» o «const … nombre = valor;» del shader.
+func _shader_values(code: String, kind: String) -> Dictionary:
+	var pattern := RegEx.create_from_string("(?m)^" + kind + r"\s+\w+\s+(\w+)[^=;]*=\s*([^;]+);")
+	var number := RegEx.create_from_string(r"-?\d+(\.\d+)?")
+	var out := {}
+	for m in pattern.search_all(code):
+		var values := []
+		for n in number.search_all(m.get_string(2).replace("vec2", "").replace("vec3", "")):
+			values.append(n.get_string().to_float())
+		out[m.get_string(1)] = values
+	return out
+
+
+func _numbers_of(value: Variant) -> Array:
+	if value is Color:
+		return [value.r, value.g, value.b]
+	if value is Vector2:
+		return [value.x, value.y]
+	if value is Vector3:
+		return [value.x, value.y, value.z]
+	return [float(value)]
+
+
+func _same(a: Array, b: Array) -> bool:
+	if b.size() == 1 and a.size() > 1:  # vec2(0.0): el mismo valor en todas las componentes
+		var value: float = b[0]
+		b = []
+		b.resize(a.size())
+		b.fill(value)
+	if a.size() != b.size():
+		return false
+	for i in a.size():
+		if absf(a[i] - b[i]) > 1e-6:
+			return false
+	return true
