@@ -9,6 +9,8 @@ nariz_anime a 0 (nariz de MakeHuman). Salida determinista y CC0 (ver README.md).
 Prueba: pruebas/fase_3/probar_cara_anime.py (la suma de las formas da la cara aprobada en la 3.13a-4).
 Ojo anime (AC.3b.1): EyeFit abre la cuenca nueva, corrige lazo, bolsa y corona, y da las 10 formas de ojo, la mascara
 del contorno (TEXCOORD_1) y ojos.json. Prueba: pruebas/fase_3/probar_forma_ojo.py.
+Tiras del ojo (AC.6a): linea de arriba (con cola para las pestanas), linea de abajo y pliegue, en ojos.json. Cada vertice
+es la mezcla baricentrica de 3 vertices del .glb mas un desplazamiento fijo: asi sigue a las formas y a los huesos.
 
 Zonas: blender/cara_anime_zonas.json, listas de indices de vertice de la malla base de MakeHuman, elegidas una vez
 sobre la cabeza neutra: los vertices que mueven los targets CC0 de MakeHuman de cada rasgo (nose, mouth, eyes, chin,
@@ -62,6 +64,16 @@ OWN_EYE = {"eye_size_decr": ("size", -0.25), "eye_size_incr": ("size", 0.16), "e
 EYE_CLIP = {"eye_spacing_incr": 0.70, "eye_position_incr": 0.65}
 FLIP = np.array((-1.0, 1.0, 1.0))
 TAU = 2.0 * math.pi
+# Tiras del ojo (AC.6a; filas en metros, + hacia fuera del lazo; las de AC.4a, ac4a_hoja.gd)
+LINE_ROWS = (-0.0028, -0.0022, -0.0016, -0.0011, -0.0006, 0.0, 0.00006, 0.00012, 0.00018, 0.00025, 0.0005, 0.00075,
+             0.0010, 0.00125)  # hasta el borde de la linea mas las pestanas
+LOWER_ROWS = (-0.00075, -0.0005, -0.00025, -0.00002, 0.0, 0.00006, 0.00012, 0.00018, 0.00025, 0.0005, 0.00075)
+CREASE_ROWS = (0.0020, 0.0022, 0.0024)
+TAIL, TAIL_STEP = 3, 0.001  # columnas de cola de la linea de arriba (pestanas) y metros por columna
+STRIP_LIFT = 0.00012  # elevacion sobre la superficie en la que se apoya cada vertice
+RAY_FROM = 0.005  # el rayo de apoyo empieza 5 mm por delante
+MAX_SNAP = 0.0045  # solo se apoya en una superficie a menos de 4,5 mm del punto
+SKIN_RADIUS = 0.025  # piel en la que se apoyan las tiras: a menos de 25 mm del centro del ojo
 
 
 def relax(points, edges, mask, steps, keep):
@@ -527,19 +539,102 @@ def _line_y(line, x):
     return float("nan")
 
 
-def _style_normal(anime, weights, joints, head, rim):
-    """La normal del estilo en el lazo (StyleNormals.face: elipsoide de la caja de la cabeza), en el estado anime."""
+def _style_normals(anime, weights, joints, head, ids):
+    """Normales del estilo en ids (StyleNormals.face: elipsoide de la caja de la cabeza), en el estado anime."""
     head_weight = (weights * (joints == head)).sum(1)
     box = anime[head_weight > 0.5]
     low, high = box.min(0), box.max(0)
     center, radii = (low + high) / 2.0, (high - low) / 2.0
-    offset = anime[rim] - center
-    r = np.tile(radii, (len(rim), 1))
+    offset = anime[ids] - center
+    r = np.tile(radii, (len(ids), 1))
     r[offset[:, 2] > 0.0, 2] *= 0.6  # StyleNormals.FACE_DEPTH
     ellipsoid = offset / (r * r)
-    ellipsoid /= np.linalg.norm(ellipsoid, axis=1)[:, None]
-    total = ellipsoid.sum(0)
+    return ellipsoid / np.linalg.norm(ellipsoid, axis=1)[:, None], head_weight
+
+
+def _style_normal(anime, weights, joints, head, rim):
+    """La normal del estilo en el lazo: la media de las del elipsoide, en el estado anime."""
+    normals, head_weight = _style_normals(anime, weights, joints, head, rim)
+    total = normals.sum(0)
     return total / np.linalg.norm(total), float(head_weight[rim].min())
+
+
+def _hit(point, normal, surface):
+    """Primera cara visible de surface desde fuera: rayo desde point + normal * RAY_FROM hacia -normal (Moller-Trumbore).
+    surface: {"tris": (T, 3) indices del .glb, "pos": posiciones, "out": normal de cada cara hacia fuera}.
+    Devuelve (distancia, indices, baricentricas, normal de la cara) o None si no toca ninguna."""
+    tris, pos = surface["tris"], surface["pos"]
+    origin, direction = point + normal * RAY_FROM, -normal
+    a, b, c = pos[tris[:, 0]], pos[tris[:, 1]], pos[tris[:, 2]]
+    e1, e2 = b - a, c - a
+    h = np.cross(direction, e2)
+    det = (e1 * h).sum(1)
+    ok = np.abs(det) > 1e-14
+    det = np.where(ok, det, 1.0)
+    s = origin - a
+    u = (s * h).sum(1) / det
+    q = np.cross(s, e1)
+    v = (q * direction).sum(1) / det
+    t = (e2 * q).sum(1) / det
+    ok &= (u >= 0.0) & (v >= 0.0) & (u + v <= 1.0) & (t > 0.0) & ((surface["out"] * direction).sum(1) < 0.0)
+    if not ok.any():
+        return None
+    best = np.flatnonzero(ok)[np.argmin(t[ok])]
+    return t[best], tris[best], np.array((1.0 - u[best] - v[best], u[best], v[best])), surface["out"][best]
+
+
+def _support(point, normal, surfaces):
+    """La primera cara visible entre varias superficies (piel y blanco): (superficie, indices, baricentricas, normal),
+    o None si no hay ninguna o queda a mas de MAX_SNAP del punto."""
+    hits = [(hit, surface) for surface in surfaces for hit in [_hit(point, normal, surface)] if hit is not None]
+    if not hits:
+        return None
+    hit, surface = min(hits, key=lambda pair: pair[0][0])
+    return None if abs(hit[0] - RAY_FROM) > MAX_SNAP else (surface, *hit[1:])
+
+
+def _faces(tris, pos):
+    """Caras con su normal delantera por el orden de sus vertices (glTF: antihorario), como las ve Godot (cull_back):
+    una cara vista por detras no tapa nada."""
+    face = np.cross(pos[tris[:, 1]] - pos[tris[:, 0]], pos[tris[:, 2]] - pos[tris[:, 0]])
+    face /= np.maximum(np.linalg.norm(face, axis=1), 1e-20)[:, None]
+    return {"tris": tris, "pos": pos, "out": face}
+
+
+def eye_strip(arc, anime, style, rows, center, surfaces, ahead, tail=0):
+    """Tira sobre el arco del lazo (de la esquina interior a la exterior), mas tail columnas de cola.
+    Cada vertice: lazo[k] + frente[k] * fila (+ la cola), apoyado de frente (rayo por ahead, la normal del ojo) en la
+    primera superficie visible (piel o blanco del ojo) y elevado STRIP_LIFT. La fila 0 es el propio lazo. Si no hay superficie,
+    queda recto. uv = (u por longitud de arco, de 0 a 1 en la esquina exterior; fila en metros)."""
+    points = anime[arc]
+    lengths = np.concatenate(([0.0], np.cumsum(np.linalg.norm(np.diff(points, axis=0), axis=1))))
+    total = float(lengths[-1])
+    tail_dir = (points[-1] - points[-2]) / np.linalg.norm(points[-1] - points[-2])
+    ids, bary, offset, uv = [], [], [], []
+    for k in range(len(arc) + tail):
+        at = min(k, len(arc) - 1)
+        j = k - at  # columna de cola (0 sobre el lazo)
+        tangent = points[min(at + 1, len(arc) - 1)] - points[max(at - 1, 0)]
+        front = np.cross(tangent, style[at])
+        front /= np.linalg.norm(front)
+        if np.dot(front, points[at] - center) < 0.0:
+            front = -front
+        for row in rows:
+            target = points[at] + front * (max(row, 0.0) if j else row) + tail_dir * TAIL_STEP * j
+            hit = _support(target, ahead, surfaces) if row != 0.0 or j else None
+            if hit is None:
+                ids.append([int(arc[at])] * 3)
+                bary.append([1.0, 0.0, 0.0])
+                offset.append(target - points[at])
+            else:
+                on, corners, weights, out = hit
+                ids.append([int(i) for i in corners])
+                bary.append(list(weights))
+                offset.append(on["lift"][corners].T @ weights + out * STRIP_LIFT)
+            uv.append([(lengths[at] + j * TAIL_STEP) / total, row])
+    return {"ids": ids, "bary": [[round(float(x), 6) for x in b] for b in bary],
+            "offset": [[round(float(x), 8) for x in o] for o in offset],
+            "uv": [[round(float(x), 7) for x in t] for t in uv], "filas": len(rows), "largo": round(total, 7)}
 
 
 def eye_data(fit, glb_path, preset_values):
@@ -556,6 +651,7 @@ def eye_data(fit, glb_path, preset_values):
         if key in names and value:
             anime += value * _accessor(gltf, data, primitive["targets"][names.index(key)]["POSITION"])
     joints = _accessor(gltf, data, primitive["attributes"]["JOINTS_0"]).astype(int)
+    tris = _accessor(gltf, data, primitive["indices"]).astype(int).reshape(-1, 3)
     weights = _accessor(gltf, data, primitive["attributes"]["WEIGHTS_0"])
     weights = weights.astype(float) / (1.0 if weights.dtype == np.float32 else np.iinfo(weights.dtype).max)
     bones = [gltf["nodes"][n]["name"] for n in gltf["skins"][0]["joints"]]
@@ -598,11 +694,36 @@ def eye_data(fit, glb_path, preset_values):
                 height.append(round(float(h), 5))
                 rise.append(round(lift.get(int(v), 0.0), 7))
         order = np.argsort(bag)
-        out[side] = {"lazo": [int(i) for i in rim], "esquinas": corners[side], "arco_superior": upper[side], "arco_inferior": lower[side],
+        strips = _strips(anime, tris, (weights, joints, head), rim, (upper[side], lower[side]), center,
+                         dict(zip(bag, rise)))
+        out[side] = {**strips, "lazo": [int(i) for i in rim], "esquinas": corners[side], "arco_superior": upper[side], "arco_inferior": lower[side],
                      "bolsa": [bag[i] for i in order], "uv": [uv[i] for i in order], "altura": [height[i] for i in order],
                      "elevacion": [rise[i] for i in order], "centro": [round(float(c), 7) for c in center],
                      "normal": [round(float(c), 7) for c in normal]}
     return out
+
+
+def _strips(anime, tris, bones, rim, arcs, center, rise):
+    """Las tres tiras de un ojo (AC.6a): linea de arriba con su cola, linea de abajo y pliegue."""
+    in_bag = np.zeros(len(anime), bool)
+    in_bag[list(rise)] = True
+    bag_tris = tris[in_bag[tris].all(1)]
+    near = np.linalg.norm(anime[tris[:, 0]] - center, axis=1) < SKIN_RADIUS
+    skin = _faces(tris[near & ~in_bag[tris].all(1)], anime)
+    eye_normal = _style_normal(anime, *bones, rim)[0]
+    skin["lift"] = np.zeros((len(anime), 3))
+    lift = np.zeros((len(anime), 3))
+    for v, z in rise.items():
+        lift[v, 2] = z  # el blanco va subido a la membrana del lazo (elevacion)
+    bag = _faces(bag_tris, anime + lift)
+    bag["lift"] = lift
+    upper, lower = rim[arcs[0]], rim[arcs[1]]
+    style_upper = _style_normals(anime, *bones, upper)[0]
+    style_lower = _style_normals(anime, *bones, lower)[0]
+    surfaces = (skin, bag)
+    return {"tira_superior": eye_strip(upper, anime, style_upper, LINE_ROWS, center, surfaces, eye_normal, TAIL),
+            "tira_inferior": eye_strip(lower, anime, style_lower, LOWER_ROWS, center, surfaces, eye_normal),
+            "pliegue": eye_strip(upper, anime, style_upper, CREASE_ROWS, center, surfaces, eye_normal)}
 
 
 def feature_shapes(basemesh, fit=None):

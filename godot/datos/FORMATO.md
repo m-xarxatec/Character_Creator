@@ -141,6 +141,12 @@ Lo escribe `blender/cara_anime.py` (`eye_data`) tras exportar `cuerpo.glb`. Si e
 - `uv`: posición anime (x, y) menos `centro`, en metros. `altura`: de 0 (párpado de abajo) a 1 (de arriba). `elevacion`: metros en +Z hasta la membrana del lazo.
 - `normal`: la de estilo (`StyleNormals`), media del lazo en el estado anime.
 - Si cambia el número de vértices del `.glb` (14.517), cambian estos índices.
+- AC.6a: `tira_superior` (línea de arriba, con 3 columnas de cola para las pestañas), `tira_inferior` (línea de abajo) y
+  `pliegue`: `{"ids": [[a, b, c]], "bary": [[x, y, z]], "offset": [[x, y, z]], "uv": [[u, fila]], "filas": n, "largo": m}`.
+  Cada vértice = mezcla baricéntrica de los vértices `ids` del `.glb` + `offset` (metros), y sigue a sus formas y huesos.
+  Van por columnas (de la esquina interior a la exterior) y, en cada columna, `filas` vértices. `uv`: u por longitud de
+  arco (1 en la esquina exterior), fila en metros (+ hacia fuera). `largo`: metros del arco. Apoyadas en la piel (fuera)
+  o en el blanco (dentro), 0,12 mm por encima; sin superficie, rectas (`ids` repetido y `offset` hasta el punto).
 
 `cuerpo.glb` lleva en `TEXCOORD_1` (x) la máscara del contorno, por vértice: 1 en bolsa, lazo y anillos 1–5; 0,5 en el anillo 6; 0 en el resto.
 

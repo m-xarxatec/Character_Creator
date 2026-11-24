@@ -52,6 +52,7 @@ Desde SH.7 (2026-11-23, D47–D54) el estilo por defecto es el **anime** (`toon_
 
 - **Tonos:** **2** (luz y sombra) con borde corto y suave (`softness` 0,09, editable como «Suavidad de la sombra»). D47.
 - **Color de sombra:** calculado desde el color de cada zona (más oscuro, más saturado y algo más rojo), para que cualquier color se vea bien. D48.
+- **Tela oscura (SH.9):** la sombra baja **al menos 6/255 de valor** (sRGB), lo mismo que baja la piel oscura, que no cambia; y ningún color se pinta por debajo de **14/255**: el negro puro se lee gris muy oscuro (D47) y la línea se distingue de él. Medido con `probar_tela_oscura.gd` (luminancia /255): ropa 0,10, luz 25 y sombra 19–20; negro puro 13–14 y 6–8, con la línea en 1–3.
 - **Banda cálida:** franja fina más saturada en el paso de luz a sombra (`edge_strength` 0,6). D52.
 - **Brillo de piel:** satinado suave que multiplica el color de la piel donde da la luz (`gloss_strength` 0,35). D49 (cambia el «sin brillo» de antes).
 - **Rubor, labios y pecas:** zonas generadas desde la geometría (`piel.png`); rubor 0,35, labios 0,45, pecas de 0 a 10 (0 por defecto). D52 y D54.

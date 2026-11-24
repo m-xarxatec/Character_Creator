@@ -42,6 +42,7 @@ uniform float detail_amount : hint_range(0.0, 1.0) = 0.0;
 // ==== Común (SH.2b): idéntico en toon_soft.gdshader y eye_layers.gdshader; lo vigila probar_base_ojo.gd ====
 const float SHADE_VALUE_LIGHT = 0.78;  // cuánto oscurece un color claro
 const float SHADE_VALUE_DARK = 0.92;   // un color oscuro baja menos, para no acabar casi negro
+const float SHADE_MIN_DROP = 6.0 / 255.0;  // SH.9: pero baja al menos esto (lo que baja la piel oscura): la tela oscura tiene sombra
 const float SHADE_SATURATION = 1.08;  // colores medios y oscuros
 const float SHADE_SATURATION_LIGHT = 1.35;  // colores claros: la sombra de la piel clara no debe quedar beige (D47)
 const float SHADE_HUE_DEGREES = 5.0;   // hacia el rojo, por el camino corto
@@ -83,7 +84,7 @@ vec3 shade_of(vec3 color) {
 	float turn = clamp(to_red, -SHADE_HUE_DEGREES / 360.0, SHADE_HUE_DEGREES / 360.0) * min(hsv.y * 4.0, 1.0);
 	float value = mix(SHADE_VALUE_DARK, SHADE_VALUE_LIGHT, smoothstep(0.2, 0.8, hsv.z));
 	float saturation = mix(SHADE_SATURATION, SHADE_SATURATION_LIGHT, smoothstep(0.75, 0.92, hsv.z));
-	vec3 shaded = vec3(fract(hsv.x + turn), min(hsv.y * saturation, 1.0), hsv.z * value);
+	vec3 shaded = vec3(fract(hsv.x + turn), min(hsv.y * saturation, 1.0), max(min(hsv.z * value, hsv.z - SHADE_MIN_DROP), 0.0));
 	return mix(color, to_linear(hsv_to_rgb(shaded)), shade_strength);
 }
 
@@ -174,6 +175,15 @@ float freckle_cover(vec2 uv, float near) {
 	return cover * zone * fade * FRECKLE_OPACITY;
 }
 
+// SH.9: ningún color baja de DARK_FLOOR de valor (sRGB), con el mismo matiz y saturación; los demás no cambian. Así el
+// negro puro se lee gris muy oscuro (D47) y la línea (casi 0) se distingue. Más de 14/255 movería el negro 0,05 de SH.2.
+const float DARK_FLOOR = 14.0 / 255.0;
+
+vec3 floor_dark(vec3 color) {
+	vec3 hsv = rgb_to_hsv(to_srgb(clamp(color, 0.0, 1.0)));
+	return hsv.z < DARK_FLOOR ? to_linear(hsv_to_rgb(vec3(hsv.xy, DARK_FLOOR))) : color;
+}
+
 void fragment() {
 	float garment = show_garment ? step(0.5, min(COLOR.r, COLOR.a)) : 0.0;
 	vec3 color = mix(skin_color, garment_color, garment);
@@ -195,6 +205,7 @@ void fragment() {
 	if (detail_amount > 0.0) {
 		color *= mix(vec3(1.0), texture(detail_tex, UV).rgb / 0.266, detail_amount);
 	}
+	color = floor_dark(color);
 	ROUGHNESS = 1.0;
 	SPECULAR = 0.0;
 	shade_ratio = shade_of(color) / max(color, vec3(0.0001));

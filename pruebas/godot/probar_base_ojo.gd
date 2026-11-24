@@ -38,6 +38,7 @@ func _initialize() -> void:
 	body_material.apply(species.mesh)
 	updater.update(values, false)
 	var eyes: Array[MeshInstance3D] = eye_mesh.build(species.mesh, species.skeleton, species.eyes)
+	eyes = eyes.filter(func(n: MeshInstance3D) -> bool: return n.name.begins_with("ojo_"))  # AC.6a: las líneas, aparte
 	_check(eyes.size() == 2, "una capa por ojo (%d)" % eyes.size())
 	if eyes.size() == 2:
 		for eye in eyes:
