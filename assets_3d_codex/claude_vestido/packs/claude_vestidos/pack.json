@@ -1,0 +1,49 @@
+{
+ "formato": "gamemolde-pack",
+ "version": 1,
+ "id": "claude_vestidos",
+ "nombre": "Vestidos (pruebas)",
+ "autor": "GameMolde",
+ "licencia": "propia",
+ "origen": "",
+ "piezas": [
+  {
+   "id": "vestido_qipao",
+   "nombre": "Vestido qipao",
+   "archivo": "vestido_qipao.glb",
+   "sha256": "a83a4f830ad35224925a4565ee379ca756ca5929ba24fb72f986a6395889f9a5",
+   "tipo": "ropa",
+   "ranura": "ropa_torso",
+   "especies": [
+    "humana"
+   ],
+   "colores": [
+    "principal"
+   ],
+   "color": [
+    0.86,
+    0.12,
+    0.16
+   ],
+   "sigue_al_cuerpo": true,
+   "fisica": [],
+   "miniatura": "",
+   "anclaje": {
+    "hueso": "",
+    "transform": [
+     0,
+     0,
+     0,
+     0,
+     0,
+     0,
+     1,
+     1
+    ]
+   },
+   "cubre": [
+    "ropa_piernas"
+   ]
+  }
+ ]
+}

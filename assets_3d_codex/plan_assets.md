@@ -31,6 +31,7 @@ Assets 3D propios para ir llenando el programa. **No se toca el repo principal**
 | Casco de astronauta | Aprobado | `claude_casco/`; 4 piezas: carcasa (ranura `pelo`: quita el peinado), metal (anillo, orejeras, marco, cierre, remaches), acolchado y visor espejo (sin él, casco abierto). Burbuja de 14,3 cm de radio medida sobre la cabeza (5 mm de aire + 10 mm de acolchado); anillo con 6–8 mm de holgura a cuello y hombros. 32 formas afines (se estira con la caja de la cabeza; la base sigue a los hombros), 8,3 MB |
 | Orejas de gato (sin diadema) | Aprobadas | `claude_orejas/`; el plano traía diadema, pero el responsable la quitó. 2 piezas: orejas (negro) e interior (rosa). Nacen del cráneo (base hundida 1 cm), 6,2 cm de alto: salen de la piel o entre el pelo; con el afro (3 cm) solo asoman las puntas. Rígidas, cada una sigue a su base (15 formas), 1,1 MB |
 | Tentáculos de la espalda | Aprobados | `claude_tentaculos/`; 6 (3 por lado: arriba y en medio grandes, 58–62 cm; abajo pequeño, 36 cm), 1 pieza con las ventosas en relieve. Nacen juntos en el centro de la espalda, bajo los omóplatos (raíces de y=1,10 a 1,25, a distinta altura en cada lado; hundidas 2 cm), salen hacia los lados (8–13° hacia atrás; hasta 22 cm de la espalda). **Sin simetría** (no son alas): cada uno con su dirección, ondas, punta enroscada y vaivén en profundidad (lista `TENTACULOS`). En reposo, a 4,2 cm de los brazos. 100 % `UpperChest`; cada uno rígido con su raíz (42 formas), 10,9 MB. Tamaño fijo: ver H |
+| Vestido qipao | Aprobado | `claude_vestido/`; corto y ajustado (bajo en y=0,73, a 4 cm de la entrepierna): cuello mao, sin mangas, rendija en diagonal con 4 alamares y perlas, ribetes, aberturas laterales en V hasta la cadera (y=0,93; ~5 cm abiertas abajo), borde de pelo y borlas. **Una sola pieza con todo** (ranura `ropa_torso`, `cubre: ["ropa_piernas"]`); hoy de un color (rojo), con las zonas marcadas en `COLOR_0` para G. Hecho envolviendo el cuerpo rodaja a rodaja (envolvente convexa sin brazos, +4 mm; falda +6 mm), con caída bajo el pecho y los glúteos; recortes sobre la rejilla. Pesos y formas de la piel cercana (centro de la falda repartido con `Hips`). 15,8 MB |
 | (siguiente) | — | — |
 
 ## Pendiente: se hace en el propio asset (sin tocar el núcleo)
@@ -145,6 +146,7 @@ Hoy viven fuera del repo. Meterlos es un **paso del PLAN con su ficha en `ruta/p
 | Gorra plana | `claude_gorra/generar_gorra.py` (`ajustada` para la variante) | `claude_gorras` | `gorra_plana`, `gorra_plana_gm`, `gorra_plana_ajustada`, `gorra_plana_ajustada_gm` | accesorio / accesorio | 4,0 + 0,35 MB cada variante | 100 % `Head` | 19 (cráneo) |
 | Falda corta plisada | `claude_falda/generar_falda.py` | `claude_faldas` | `falda_plisada` | accesorio / accesorio | 4,9 MB | 100 % `Hips` | 76 (cintura, cadera, muslos) |
 | Sudadera con capucha | `claude_sudadera/generar_sudadera.py` | `claude_sudaderas` | `sudadera_capucha` | ropa / ropa_exterior | 6,8 MB | copiados de la piel (4 influencias, suman 1) | 268, dispersas |
+| Vestido qipao | `claude_vestido/generar_vestido.py` (capturas: `capturar_vestido.gd`) | `claude_vestidos` | `vestido_qipao` | ropa / ropa_torso (cubre ropa_piernas) | 15,8 MB | de la piel (4 influencias, suman 1) | 204, dispersas |
 | Tentáculos de la espalda | `claude_tentaculos/generar_tentaculos.py` (capturas: `capturar_tentaculos.gd`) | `claude_tentaculos` | `tentaculos_espalda` | accesorio / accesorio | 10,9 MB | 100 % `UpperChest` | 42 (cada tentáculo, rígido con su raíz) |
 | Orejas de gato | `claude_orejas/generar_orejas.py` (capturas: `capturar_orejas.gd`) | `claude_orejas` | `orejas_gato`, `orejas_gato_interior` | accesorio / accesorio | 0,64 + 0,48 MB | 100 % `Head` | 15 (cada oreja, rígida con su base) |
 | Casco de astronauta | `claude_casco/generar_casco.py` (capturas: `capturar_casco.gd`) | `claude_cascos` | `casco_astronauta` (pelo), `_metal`, `_acolchado`, `_visor` (accesorio) | accesorio | 3,8 + 2,0 + 1,6 + 0,9 MB | 100 % `Head` | 32, afines (densas) |
@@ -185,6 +187,27 @@ con `python generar_<asset>.py` desde su carpeta.
   - Capucha subida: pieza aparte, con el mismo problema que la gorra con el pelo (A/B).
   - Los pesos y formas de pretina, puños, capucha y bolsillo salen de los 8 vértices de piel más cercanos;
     revisar con animaciones al integrarla.
+- **Vestido qipao**:
+  - **Decidido por el responsable: una sola pieza con todo**, y los colores (vestido, adornos, alamares) editables.
+    Ya va en una pieza; falta el color por zonas (G). Zonas en `COLOR_0` por vértice: `r = 0` vestido, `r = 1` adornos
+    (ribetes, pelo, perlas), y además `g = 1` alamares. El shader ya pinta `skin_color` donde `r = 0` y `garment_color`
+    donde `r = 1`: basta con que el núcleo deje dar a la pieza un segundo color (`"colores": ["principal", "adornos"]`)
+    en vez de poner el mismo en los dos. El tercero (alamares, `g`) necesita un uniform más en el shader.
+  - **Interfaz (pedido por el responsable)**: al seleccionar el vestido, una ventana (o panel) adicional con un selector
+    de color por zona: «Vestido», «Adornos» (ribetes, pelo y perlas) y «Alamares». Los nombres de las zonas salen de
+    `"colores"` en `pack.json`; cada color se guarda en el proyecto (`project_file`) y viaja al `.glb` exportado (color
+    por vértice o un material por zona). Servirá igual para las orejas de gato (fuera / interior) y el casco.
+  - **Pesos de las piernas (pendiente, pedido por el responsable)**: con las animaciones las piernas atraviesan la
+    falda. Hoy cada panel sigue a la piel más cercana y el centro se reparte con `Hips`. Al integrarlo: panel delantero
+    y trasero repartidos entre `Hips` y los dos `UpperLeg` según la altura (arriba, `Hips`; hacia el bajo, cada mitad
+    con su muslo y el centro a medias), probado con las animaciones del programa (andar, correr, sentarse). Sin físicas,
+    con la pierna muy levantada seguirá cruzándose algo.
+  - Bajo un pecho muy grande se ve una línea (el contorno marca la curva del pecho). Las formas del pecho llevan una
+    mezcla para que la tela no se meta debajo (`weights_and_shapes`, `hang`); si molesta, bajar `CAIDA` o subir
+    `GAP_TORSO`.
+  - Las borlas van con la piel cercana, no cuelgan. Las sisas se calculan solas (zona a menos de 2,5 cm del brazo en
+    reposo); con brazos muy musculosos, revisar.
+  - Pesa 15,8 MB por las formas densas del tronco (las macro mueven todo el vestido).
 - **Tentáculos**: H (tamaño ajustable), I (ondular fijo) y F (peso). Van rígidos con `UpperChest`: con los brazos muy
   hacia atrás (animaciones) pueden cruzarse con ellos.
 - **Orejas de gato**: ya hay unas «Orejas de gato» (conos generados) en `godot/packs/base`; al integrar, decidir si
