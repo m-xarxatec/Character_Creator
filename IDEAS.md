@@ -11,6 +11,7 @@
 - Comparar antes y después (dos maniquíes lado a lado).
 - Medidas reales (altura en cm) junto a los deslizadores.
 - Atajos de teclado.
+- Guardar el `.glb` en un hilo (OPT.3c, quitado el 2026-11-25): funciona y quita ~180 ms del final, pero `GlbExporter.write` necesita el hilo principal libre (bloquearlo con `wait_to_finish()` lo cuelga). Antes hay que resolver qué pasa si se cierra la ventana a mitad (`body_actions._exit_tree` espera al hilo) y que la puerta espere dibujando.
 - Pies al suelo al animar (IK de pies): sin él, con las rodillas dobladas los pies flotan según las proporciones (medido en el 5.1: hasta 168 mm al sentarse).
 
 ---

@@ -31,11 +31,13 @@ static func _forget_shapes() -> void:
 	_shapes = {}
 
 
-static func bake(mesh: MeshInstance3D, skeleton: Skeleton3D) -> Dictionary:
+## cache (opcional, paso OPT.3a): la de _add_shapes, de esta misma malla. Con ella no se piden a la malla las formas que ya
+## tiene (las que falten se añaden): el resultado es el mismo.
+static func bake(mesh: MeshInstance3D, skeleton: Skeleton3D, cache: Variant = null) -> Dictionary:
 	var arrays := mesh.mesh.surface_get_arrays(0)
 	var vertices: PackedVector3Array = arrays[Mesh.ARRAY_VERTEX]
 	var normals: PackedVector3Array = arrays[Mesh.ARRAY_NORMAL]
-	_add_shapes(mesh, vertices, normals)
+	_add_shapes(mesh, vertices, normals, cache)
 	_skin(skin_matrices(skeleton, mesh.skin), arrays[Mesh.ARRAY_BONES], arrays[Mesh.ARRAY_WEIGHTS], vertices, normals)
 	return {"vertices": vertices, "normals": normals}
 

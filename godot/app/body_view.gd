@@ -212,17 +212,22 @@ func _process(delta: float) -> void:
 
 
 ## Exporta en pose T, sea cual sea la pose de la vista (el exportador la fija), con el .tres al lado.
-func export_glb(path: String) -> Error:
-	var job := start_export()
+func export_glb(path: String, use_cache := true) -> Error:
+	var job := start_export(use_cache)
+	GlbExporter.compute_bake(job)
+	GlbExporter.after_bake(job)
 	GlbExporter.compute(job)
 	return finish_export(job, path)
 
 
-## Paso P.1: exportar en partes (body_actions.gd hace GlbExporter.compute en un hilo entre las dos).
-## start_export lee el personaje tal como está ahora; lo que cambie después no entra en el archivo.
-func start_export() -> Dictionary:
-	return GlbExporter.prepare(species.mesh, species.skeleton, species.manifest["bones"]["sockets"], true, pieces.values(),
-		accessories.values(), eyes, species.eyes)  # AC.6b: con los ojos
+## Paso P.1: exportar en partes (body_actions.gd hace en un hilo GlbExporter.compute_bake y GlbExporter.compute, con
+## GlbExporter.after_bake entre las dos, paso OPT.3b). start_export lee el personaje tal como está ahora; lo que cambie
+## después no entra en el archivo.
+## OPT.3a: con las formas de la caché de la vista; use_cache = false las pide a la malla (para comparar en las pruebas).
+func start_export(use_cache := true) -> Dictionary:
+	var cache: Variant = style.shape_cache() if use_cache and style != null else null
+	return GlbExporter.start(species.mesh, species.skeleton, species.manifest["bones"]["sockets"], true, pieces.values(),
+		accessories.values(), eyes, species.eyes, cache)  # AC.6b: con los ojos
 
 
 func finish_export(job: Dictionary, path: String) -> Error:

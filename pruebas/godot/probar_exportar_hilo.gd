@@ -2,6 +2,11 @@ extends SceneTree
 # Paso P.1: exportar desde la ventana no la congela (lo pesado va en un hilo) y el .glb sale igual. Sin ventana.
 # Uso: (ulimit -v 4000000; timeout 200 godot --headless --path pruebas/godot -s probar_exportar_hilo.gd 2>&1 | grep -E 'FALLO|RESULTADO|ERROR')
 # Que detecta el fallo: si GlbExporter.compute se hace en el hilo principal, el hueco mayor entre fotogramas pasa de 1 s.
+# OPT.3a: la de referencia se exporta sin la caché de la vista y la del hilo con ella: deben salir iguales. Si
+# start_export no pasa la caché, falla «las formas del cuerpo salen de la caché» (y MEDIDA al pulsar vuelve a 650–750 ms
+# con ventana). OPT.3b: las dos usan ya el horneado partido; para ver que el archivo es el de antes de OPT.3, comparar
+# los sha256 con los de antes del cambio; un compute_bake sin suelo lo ve probar_personaje_horneado.
+# Las medidas que valen son con ventana: quitar --headless.
 
 const MAX_GAP_MS := 300  # PROVISIONAL
 
@@ -19,22 +24,37 @@ func _initialize() -> void:
 	var direct := folder.path_join("directo.glb")
 	var threaded := folder.path_join("hilo.glb")
 	main.editor.set_value("height", 0.7)
-	check("exportar sin hilo va bien", main.body_view.export_glb(direct) == OK)
+	var waited := 0  # OPT.3a: como en el uso real, la vista ya tiene en su caché las formas activas
+	while not main.body_view.style.show_if_current() and waited < 1200:
+		await process_frame
+		waited += 1
+	check("la vista del estilo está al día antes de exportar", main.body_view.style.show_if_current())
+	check("exportar sin hilo y sin la caché va bien", main.body_view.export_glb(direct, false) == OK)
+	await process_frame  # en frío: MeshBaker suelta sus formas en el fotograma siguiente
+	await process_frame
 
+	var mesh_baker: GDScript = load(godot_dir.path_join("addons/creador/mesh_baker.gd"))
+	var body_mesh: Mesh = main.body_view.species.mesh.mesh
 	var last := Time.get_ticks_msec()  # desde que se pulsa: prepare también cuenta
 	actions._on_file_selected(threaded)
+	var press := Time.get_ticks_msec() - last
+	print("MEDIDA al pulsar (prepare, con la caché): %d ms" % press)
+	check("OPT.3a: las formas del cuerpo salen de la caché, no de la malla", not mesh_baker._shapes.has(body_mesh))
 	check("durante: botón desactivado y «Exportando…»", actions.export_button.disabled
 		and actions.export_button.text == "Exportando…" and actions.export_running())
 	main.editor.set_value("height", 0.2)  # lo que cambie ahora no entra en el archivo
 	var gap := Time.get_ticks_msec() - last
 	last = Time.get_ticks_msec()
 	var frames := 0
+	var end_gap := 0  # OPT.3b: el último fotograma, el de terminar (finish y write)
 	while actions.export_running():
 		await process_frame
 		var now := Time.get_ticks_msec()
-		gap = maxi(gap, now - last)
+		end_gap = now - last
+		gap = maxi(gap, end_gap)
 		last = now
 		frames += 1
+	print("MEDIDA al terminar (finish + write): %d ms; peor fotograma de toda la exportación: %d ms" % [end_gap, gap])
 	check("la ventana sigue dibujando (hueco mayor %d ms, %d fotogramas)" % [gap, frames], gap < MAX_GAP_MS and frames > 3)
 	check("el .glb es el mismo, byte a byte", _same(direct, threaded))
 	check("el .tres es el mismo (sin los id aleatorios de los subrecursos)",

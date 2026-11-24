@@ -9,6 +9,7 @@ extends HBoxContainer
 # Paso 7.0: Guardar preset… y Abrir preset… (preset_file.gd). Abrir se deshace con Ctrl+Z (solo los valores);
 #   look_changed avisa de que cambiaron colores y acabado (main.gd refresca el panel Acabado).
 # Paso P.1: exportar no congela la ventana: lo pesado (GlbExporter.compute) va en un hilo.
+# Paso OPT.3b: también el horneado (GlbExporter.compute_bake), en otro hilo antes de ese.
 # Paso P.4: atajos Ctrl+S, Ctrl+O y Ctrl+E (Cmd en Mac) en los botones; has_changes() dice si lo que entraría en el
 #   preset es distinto de lo último guardado o abierto (exportar no cuenta). save_and_quit() guarda y cierra (main.gd).
 # Paso P.5c: los tres diálogos de archivo se abren en la última carpeta usada (settings_file.gd).
@@ -227,16 +228,27 @@ func _on_file_selected(path: String) -> void:
 	export_button.text = "Exportando…"
 	export_button.disabled = true
 	var job: Dictionary = view.start_export()
+	if not await _in_thread(GlbExporter.compute_bake.bind(job)):  # OPT.3b: formas y huesos
+		return
+	GlbExporter.after_bake(job)
+	if not await _in_thread(GlbExporter.compute.bind(job)):
+		return
+	_export_done(path, view.finish_export(job, path))
+
+
+## Paso OPT.3b: una parte de la exportación en el hilo, dibujando mientras tanto. false si se cerró la ventana a mitad
+## (_exit_tree ya esperó al hilo). Entre dos partes no pasa ningún fotograma: export_running() no deja de ser true.
+func _in_thread(work: Callable) -> bool:
 	var tree := get_tree()
 	export_thread = Thread.new()
-	export_thread.start(GlbExporter.compute.bind(job))
+	export_thread.start(work)
 	while export_thread != null and export_thread.is_alive():
 		await tree.process_frame
-	if export_thread == null:  # se cerró la ventana mientras tanto (_exit_tree ya esperó al hilo)
-		return
+	if export_thread == null:
+		return false
 	export_thread.wait_to_finish()
 	export_thread = null
-	_export_done(path, view.finish_export(job, path))
+	return true
 
 
 func export_running() -> bool:

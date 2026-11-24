@@ -6,6 +6,7 @@ extends RefCounted
 ##   var error := GlbExporter.save(species.mesh, species.skeleton, species.manifest["bones"]["sockets"], "user://heroe.glb", true)
 ## - t_pose: true = pose T horneada; false = pose A.
 ## Sin congelar la ventana (paso P.1): job = prepare(…) → compute(job) en un hilo → write(finish(job), job["toon"], ruta).
+## OPT.3b: también el horneado va en un hilo; ver start.
 ## Hornea (character_baker.gd), pasa los anclajes a nodos (sockets.gd) y escribe con GLTFDocument.
 ## Normales del estilo (paso 3.16, style_normals.gd): torso suavizado y cara de elipsoide; viajan en el .glb.
 ## En el archivo: Character → Armature → huesos, malla y anclajes (misma estructura que los .glb de Blender).
@@ -45,19 +46,36 @@ static func build(mesh: MeshInstance3D, skeleton: Skeleton3D, socket_names: Arra
 	return finish(job)
 
 
-## Paso P.1: exportar en tres partes, para que lo pesado (compute, ~1,3 s) vaya en un hilo.
-## prepare: hilo principal. Hornea y lee del editor todo lo que hace falta; lo que cambie después no entra.
+## Paso P.1: exportar en partes, para que lo pesado vaya en un hilo. Paso OPT.3b: el horneado también.
+## Orden: start (principal) → compute_bake (hilo) → after_bake (principal) → compute (hilo) → finish (principal) → write.
+## prepare = start + compute_bake + after_bake, todo seguido (para quien no usa hilos).
 static func prepare(mesh: MeshInstance3D, skeleton: Skeleton3D, socket_names: Array, t_pose: bool,
-		pieces: Array = [], rigid: Array = [], eyes: Array = [], eye_data: Dictionary = {}) -> Dictionary:
-	var baked: Node3D = CharacterBaker.bake(mesh, skeleton, t_pose, t_pose, pieces + eyes, rigid)
-	var character: Node3D = Sockets.to_nodes(baked, socket_names)
-	baked.free()
-	if character != null:
-		var colored: Array = pieces.duplicate()
-		for holder: Node in rigid:  # paso AB.11
-			colored.append_array(holder.get_children().filter(func(n: Node) -> bool: return n is MeshInstance3D))
-		_color_pieces(character, colored, eyes.map(func(n: Node) -> StringName: return n.name))
-	var job := {"character": character, "toon": BodyMaterial.standalone(mesh),
+		pieces: Array = [], rigid: Array = [], eyes: Array = [], eye_data: Dictionary = {}, cache: Variant = null) -> Dictionary:
+	var job := start(mesh, skeleton, socket_names, t_pose, pieces, rigid, eyes, eye_data, cache)
+	compute_bake(job)
+	after_bake(job)
+	return job
+
+
+## start: hilo principal. Lee del editor todo lo que hace falta; lo que cambie después no entra.
+## cache (paso OPT.3a): las formas del cuerpo que la vista ya tiene (StyleView.shape_cache()); así no se piden a la malla
+## (335–386 ms con ventana). Solo se le añaden las que falten; el archivo sale igual.
+static func start(mesh: MeshInstance3D, skeleton: Skeleton3D, socket_names: Array, t_pose: bool,
+		pieces: Array = [], rigid: Array = [], eyes: Array = [], eye_data: Dictionary = {}, cache: Variant = null) -> Dictionary:
+	var colors := {}  # paso AB.7 y AB.11: color del editor de cada pieza y accesorio, por nombre
+	var colored: Array = pieces.duplicate()
+	for holder: Node in rigid:
+		colored.append_array(holder.get_children().filter(func(n: Node) -> bool: return n is MeshInstance3D))
+	for piece: MeshInstance3D in colored:
+		colors[piece.name] = BodyMaterial.get_color(piece, "skin_color")
+	var eye_values := []  # AC.6b
+	for eye: MeshInstance3D in eyes:
+		var is_eye := String(eye.name).begins_with("ojo_")
+		eye_values.append({"name": eye.name, "is_eye": is_eye,
+			"values": EyeTexture.eye_values(eye) if is_eye else EyeTexture.line_values(eye)})
+	var job := {"bake": CharacterBaker.prepare_bake(mesh, skeleton, t_pose, t_pose, pieces + eyes, rigid, cache),
+		"sockets": socket_names, "colors": colors, "eye_values": eye_values, "eye_data": eye_data,
+		"toon": BodyMaterial.standalone(mesh),
 		"skin": BodyMaterial.get_color(mesh, "skin_color"), "garment": BodyMaterial.get_color(mesh, "garment_color"),
 		"garment_visible": BodyMaterial.is_garment_visible(mesh)}
 	if BodyMaterial.is_soft(mesh):  # SH.8c: el rubor, los labios y las pecas van pintados en la textura del .glb
@@ -65,24 +83,42 @@ static func prepare(mesh: MeshInstance3D, skeleton: Skeleton3D, socket_names: Ar
 		var image: Image = zones.get_image() if zones != null else null
 		if image != null:
 			job["paint"] = {"zones": image, "params": BodyMaterial.get_skin(mesh)}
-	if character != null:
-		var exported := character.find_children("*", "MeshInstance3D", true, false)[0] as MeshInstance3D
-		job["arrays"] = exported.mesh.surface_get_arrays(0)
-		job["head"] = StyleNormals.head_weights(job["arrays"], exported.skin, exported.get_parent() as Skeleton3D)
-		job["eyes"] = _prepare_eyes(character, eyes, eye_data)
 	return job
 
 
-## AC.6b: de cada malla del ojo, sus arrays horneados y sus uniforms; de cada ojo con datos, los vértices del cuerpo que
-## se hunden (la bolsa menos el lazo) y la normal del ojo horneado.
-static func _prepare_eyes(character: Node3D, eyes: Array, eye_data: Dictionary) -> Array:
+## compute_bake (OPT.3b): cualquier hilo. Formas y huesos de todas las mallas (CharacterBaker.compute_bake).
+static func compute_bake(job: Dictionary) -> void:
+	CharacterBaker.compute_bake(job["bake"])
+
+
+## after_bake (OPT.3b): hilo principal. Crea el personaje horneado y lo pasa a anclajes; lee sus arrays para compute.
+## Las mallas se crean aquí y se leen otra vez (como antes de OPT.3b): Godot comprime las normales al crear la malla, y
+## compute tiene que partir de los mismos números para que el archivo salga idéntico.
+static func after_bake(job: Dictionary) -> void:
+	var baked: Node3D = CharacterBaker.finish_bake(job["bake"])
+	job.erase("bake")  # ~decenas de MB de arrays y formas: ya no hacen falta
+	var character: Node3D = Sockets.to_nodes(baked, job["sockets"])
+	baked.free()
+	job["character"] = character
+	if character == null:
+		return
+	_color_pieces(character, job["colors"], job["eye_values"].map(func(e: Dictionary) -> StringName: return e["name"]))
+	var exported := character.find_children("*", "MeshInstance3D", true, false)[0] as MeshInstance3D
+	job["arrays"] = exported.mesh.surface_get_arrays(0)
+	job["head"] = StyleNormals.head_weights(job["arrays"], exported.skin, exported.get_parent() as Skeleton3D)
+	job["eyes"] = _prepare_eyes(character, job["eye_values"], job["eye_data"])
+
+
+## AC.6b: de cada malla del ojo, sus arrays horneados y sus uniforms (leídos en start); de cada ojo con datos, los
+## vértices del cuerpo que se hunden (la bolsa menos el lazo) y la normal del ojo horneado.
+static func _prepare_eyes(character: Node3D, eye_values: Array, eye_data: Dictionary) -> Array:
 	var out := []
-	for eye: MeshInstance3D in eyes:
-		var exported := character.find_child(eye.name, true, false) as MeshInstance3D
-		var is_eye := String(eye.name).begins_with("ojo_")
-		var entry := {"name": eye.name, "is_eye": is_eye, "arrays": exported.mesh.surface_get_arrays(0),
-			"values": EyeTexture.eye_values(eye) if is_eye else EyeTexture.line_values(eye)}
-		var side := String(eye.name).get_slice("_", 1)
+	for read: Dictionary in eye_values:
+		var exported := character.find_child(read["name"], true, false) as MeshInstance3D
+		var is_eye: bool = read["is_eye"]
+		var entry := {"name": read["name"], "is_eye": is_eye, "arrays": exported.mesh.surface_get_arrays(0),
+			"values": read["values"]}
+		var side := String(read["name"]).get_slice("_", 1)
 		if is_eye and eye_data.has(side):
 			var rim := {}
 			for v: float in eye_data[side]["lazo"]:
@@ -202,11 +238,8 @@ static func save(mesh: MeshInstance3D, skeleton: Skeleton3D, socket_names: Array
 
 
 ## Paso AB.7: material de cada pieza exportada (todas las mallas detrás de la primera), con el color del editor.
-## skip (AC.6b): nombres de las mallas del ojo, que llevan su textura (finish).
-static func _color_pieces(character: Node3D, pieces: Array, skip: Array = []) -> void:
-	var colors := {}
-	for piece: MeshInstance3D in pieces:
-		colors[piece.name] = BodyMaterial.get_color(piece, "skin_color")
+## colors: {nombre: color}, leído en start. skip (AC.6b): nombres de las mallas del ojo, que llevan su textura (finish).
+static func _color_pieces(character: Node3D, colors: Dictionary, skip: Array = []) -> void:
 	for exported: MeshInstance3D in character.find_children("*", "MeshInstance3D", true, false).slice(1):
 		if exported.name in skip:
 			continue
