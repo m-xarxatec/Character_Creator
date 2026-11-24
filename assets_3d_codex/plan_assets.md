@@ -32,6 +32,7 @@ Assets 3D propios para ir llenando el programa. **No se toca el repo principal**
 | Orejas de gato (sin diadema) | Aprobadas | `claude_orejas/`; el plano traía diadema, pero el responsable la quitó. 2 piezas: orejas (negro) e interior (rosa). Nacen del cráneo (base hundida 1 cm), 6,2 cm de alto: salen de la piel o entre el pelo; con el afro (3 cm) solo asoman las puntas. Rígidas, cada una sigue a su base (15 formas), 1,1 MB |
 | Tentáculos de la espalda | Aprobados | `claude_tentaculos/`; 6 (3 por lado: arriba y en medio grandes, 58–62 cm; abajo pequeño, 36 cm), 1 pieza con las ventosas en relieve. Nacen juntos en el centro de la espalda, bajo los omóplatos (raíces de y=1,10 a 1,25, a distinta altura en cada lado; hundidas 2 cm), salen hacia los lados (8–13° hacia atrás; hasta 22 cm de la espalda). **Sin simetría** (no son alas): cada uno con su dirección, ondas, punta enroscada y vaivén en profundidad (lista `TENTACULOS`). En reposo, a 4,2 cm de los brazos. 100 % `UpperChest`; cada uno rígido con su raíz (42 formas), 10,9 MB. Tamaño fijo: ver H |
 | Vestido qipao | Aprobado | `claude_vestido/`; corto y ajustado (bajo en y=0,73, a 4 cm de la entrepierna): cuello mao, sin mangas, rendija en diagonal con 4 alamares y perlas, ribetes, aberturas laterales en V hasta la cadera (y=0,93; ~5 cm abiertas abajo), borde de pelo y borlas. **Una sola pieza con todo** (ranura `ropa_torso`, `cubre: ["ropa_piernas"]`); hoy de un color (rojo), con las zonas marcadas en `COLOR_0` para G. Hecho envolviendo el cuerpo rodaja a rodaja (envolvente convexa sin brazos, +4 mm; falda +6 mm), con caída bajo el pecho y los glúteos; recortes sobre la rejilla. Pesos y formas de la piel cercana (centro de la falda repartido con `Hips`). 15,8 MB |
+| Coraza medieval de acero | Aprobada | `claude_coraza/`; peto y espaldar en una, cresta en el peto, cuello en V, bajo en pico (y=0,935 delante, 0,985 en el costado), reborde en los bordes, costuras en los costados, tirantes de cuero con hebilla y 2 correas con hebilla por costado. **Una sola pieza** (ranura `ropa_exterior`: sustituye a la sudadera), zonas en `COLOR_0`. Envolvente del tronco (+1,5 cm, lisa: cubre el pecho por encima); sisas automáticas a ≥ 2,5 cm del brazo en reposo. Formas: la envolvente recalculada con cada forma (las del pecho, sobre el cuerpo femenino), nunca por dentro de la piel; hueco mínimo ≥ 5,5 mm en 5 cuerpos de prueba. Pesos de la piel, solo tronco y hombros. 137 formas, 11,5 MB |
 | (siguiente) | — | — |
 
 ## Pendiente: se hace en el propio asset (sin tocar el núcleo)
@@ -147,6 +148,7 @@ Hoy viven fuera del repo. Meterlos es un **paso del PLAN con su ficha en `ruta/p
 | Falda corta plisada | `claude_falda/generar_falda.py` | `claude_faldas` | `falda_plisada` | accesorio / accesorio | 4,9 MB | 100 % `Hips` | 76 (cintura, cadera, muslos) |
 | Sudadera con capucha | `claude_sudadera/generar_sudadera.py` | `claude_sudaderas` | `sudadera_capucha` | ropa / ropa_exterior | 6,8 MB | copiados de la piel (4 influencias, suman 1) | 268, dispersas |
 | Vestido qipao | `claude_vestido/generar_vestido.py` (capturas: `capturar_vestido.gd`) | `claude_vestidos` | `vestido_qipao` | ropa / ropa_torso (cubre ropa_piernas) | 15,8 MB | de la piel (4 influencias, suman 1) | 204, dispersas |
+| Coraza de acero | `claude_coraza/generar_coraza.py` (capturas: `capturar_coraza.gd`) | `claude_corazas` | `coraza_acero` | ropa / ropa_exterior | 11,5 MB | de la piel, solo `Hips`, `Spine`, `Chest`, `UpperChest` y hombros (4 influencias, suman 1) | 137 (envolvente por forma; densas las macro) |
 | Tentáculos de la espalda | `claude_tentaculos/generar_tentaculos.py` (capturas: `capturar_tentaculos.gd`) | `claude_tentaculos` | `tentaculos_espalda` | accesorio / accesorio | 10,9 MB | 100 % `UpperChest` | 42 (cada tentáculo, rígido con su raíz) |
 | Orejas de gato | `claude_orejas/generar_orejas.py` (capturas: `capturar_orejas.gd`) | `claude_orejas` | `orejas_gato`, `orejas_gato_interior` | accesorio / accesorio | 0,64 + 0,48 MB | 100 % `Head` | 15 (cada oreja, rígida con su base) |
 | Casco de astronauta | `claude_casco/generar_casco.py` (capturas: `capturar_casco.gd`) | `claude_cascos` | `casco_astronauta` (pelo), `_metal`, `_acolchado`, `_visor` (accesorio) | accesorio | 3,8 + 2,0 + 1,6 + 0,9 MB | 100 % `Head` | 32, afines (densas) |
@@ -208,6 +210,21 @@ con `python generar_<asset>.py` desde su carpeta.
   - Las borlas van con la piel cercana, no cuelgan. Las sisas se calculan solas (zona a menos de 2,5 cm del brazo en
     reposo); con brazos muy musculosos, revisar.
   - Pesa 15,8 MB por las formas densas del tronco (las macro mueven todo el vestido).
+- **Coraza de acero**:
+  - Hoy de un color (gris acero). Zonas en `COLOR_0`: `r = 0` metal, `r = 1` cuero (tirantes y correas), y además
+    `g = 1` hebillas y remaches. Con G: «Metal», «Cuero» y «Hebillas» (tres colores, como el vestido).
+  - Formas: la envolvente no es lineal (la suma de dos formas no es la suma de sus efectos). Cada forma se mide desde
+    su cuerpo de partida (`start_of`: las del pecho, desde el femenino; el resto, desde el base) y nunca sale menos que
+    la piel de debajo. Comprobado (sin pose) en base, femenino con pecho grande, fuerte, femenino gordo con pecho y
+    delgado. Con combinaciones muy distintas (pecho grande y músculo al máximo, edades extremas) revisar.
+  - Rígida a medias: sigue la columna y los hombros como la piel; al doblarse mucho el tronco (animaciones) la chapa se
+    dobla con él. Las sisas se calculan en pose T; en la pose A del programa no se cruza, pero con los brazos muy
+    pegados al costado (animaciones) puede rozar.
+  - El bajo (y=0,935 delante) pisa la cintura de la falda plisada (accesorio) si se ponen juntas; revisar al integrar.
+  - La cresta del peto (1 cm) apenas se ve con el sombreado de 3 tonos; si se quiere más marcada, subir `RIDGE_H` o
+    partir las normales en la columna del centro.
+  - Pesa 11,5 MB por las formas densas (las macro mueven toda la coraza); F (ajuste en el núcleo) no le vale (no es
+    rígida); bajar `NH`/`NR` si hace falta.
 - **Tentáculos**: H (tamaño ajustable), I (ondular fijo) y F (peso). Van rígidos con `UpperChest`: con los brazos muy
   hacia atrás (animaciones) pueden cruzarse con ellos.
 - **Orejas de gato**: ya hay unas «Orejas de gato» (conos generados) en `godot/packs/base`; al integrar, decidir si
