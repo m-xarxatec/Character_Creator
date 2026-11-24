@@ -11,6 +11,8 @@ const SCREEN := Vector2i(1920, 1080)
 const CROP := 160
 const HEIGHTS := [64, 96, 128]
 const HEIGHT_PX := 2  # ± px; PROVISIONAL (D26)
+const OUTLINE_CLASSIC := 0.06  # luminancia máxima de un píxel de contorno: el negro del estilo clásico
+const OUTLINE_ANIME := 0.40  # la línea teñida de la piel gris de serie mide 0,34. Aprobado el 2026-11-24 (SH.7)
 const LIGHTS := {  # energía de la luz, color, ambiente
 	"normal": [1.0, Color.WHITE, 0.4],
 	"baja": [0.25, Color.WHITE, 0.1],
@@ -31,6 +33,7 @@ var baker: GDScript
 var retarget_script: GDScript
 var material_script: GDScript
 var preset_script: GDScript
+var outline_limit := OUTLINE_CLASSIC  # SH.7: según el estilo del preset (anime: línea teñida)
 var view: SubViewport
 var camera: Camera3D
 var light: DirectionalLight3D
@@ -74,6 +77,7 @@ func _initialize() -> void:
 			print("  MEDIDA %s: no carga (%s); se salta" % [preset_name, loaded["error"]])
 			continue
 		preset_script.apply_look(species.mesh, loaded)
+		outline_limit = OUTLINE_ANIME if loaded["estilo"] == "anime" else OUTLINE_CLASSIC
 		updater.update(loaded["valores"], false)
 		var character: Node3D = exporter.build(species.mesh, species.skeleton, species.manifest["bones"]["sockets"], true)
 		(character.find_children("*", "MeshInstance3D", true, false)[0] as MeshInstance3D).material_override = \
@@ -193,7 +197,7 @@ func _measure(crop: Image, background: Color) -> Array:
 			bottom = maxi(bottom, y)
 			luminance += pixel.get_luminance()
 			count += 1
-			if pixel.get_luminance() < 0.06:
+			if pixel.get_luminance() < outline_limit:
 				outline += 1
 	var contrast := (luminance / maxi(count, 1)) - background.get_luminance()
 	return [bottom - top + 1 if bottom >= 0 else 0, contrast, outline]

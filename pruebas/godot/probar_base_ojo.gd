@@ -1,6 +1,6 @@
 extends SceneTree
 # Paso AC.3c: la capa del blanco. 730 caras por ojo; capa y cuerpo juntos en los 10 extremos; orden de índices de ojos.json;
-# una especie sin ojos.json carga igual; a oscuras no brilla; su light() es la de toon_soft.
+# una especie sin ojos.json carga igual; a oscuras no brilla; su bloque común (SH.2b: luz y sombra) es el de toon_soft.
 # Con ventana (la prueba a oscuras dibuja).
 # Uso: (ulimit -v 4000000; timeout 300 godot [--rendering-method mobile] --path pruebas/godot -s probar_base_ojo.gd 2>&1 | grep -E 'FALLO|MEDIDA|RESULTADO|ERROR')
 # Que detecta el fallo: el blanco sin formas (EyeMesh._moves devuelve false); EMISSION en eye_layers; borrar ojos.json.
@@ -106,13 +106,16 @@ func _check_extremes(eyes: Array[MeshInstance3D]) -> void:
 func _check_light() -> void:
 	var own := FileAccess.get_file_as_string(repo.path_join("godot/addons/creador/eye_layers.gdshader"))
 	var soft := FileAccess.get_file_as_string(repo.path_join("godot/addons/creador/toon_soft.gdshader"))
-	_check(_light_text(own) != "" and _light_text(own) == _light_text(soft), "light() igual a la de toon_soft")
+	_check(_common_text(own).contains("void light()") and _common_text(own) == _common_text(soft),
+		"bloque común (luz y sombra calculada) igual al de toon_soft")
 	_check(not own.contains("EMISSION"), "sin EMISSION")
 
 
-func _light_text(code: String) -> String:
-	var start := code.find("void light()")
-	return code.substr(start).strip_edges() if start >= 0 else ""
+## SH.2b: el texto entre las marcas «Común» y «Fin del común» ("" si falta alguna).
+func _common_text(code: String) -> String:
+	var start := code.find("// ==== Común")
+	var end := code.find("// ==== Fin del común")
+	return code.substr(start, end - start) if start >= 0 and end > start else ""
 
 
 ## Solo la capa, sin luces: no debe verse nada. Con una luz de frente, sí (comprueba que se está dibujando).

@@ -149,6 +149,8 @@ func _parse(type: String, value: String) -> Variant:
 	if type == "vec3":
 		var parts := value.trim_prefix("vec3(").trim_suffix(")").split(",")
 		return Color(float(parts[0]), float(parts[1]), float(parts[2]))
+	if type == "mat4":  # SH.6b: hair_head; solo se usa la identidad
+		return Transform3D.IDENTITY if value == "mat4(1.0)" else null
 	return float(value)
 
 

@@ -14,6 +14,7 @@ extends RefCounted
 ## StandardMaterial3D de su color (el toon del .tres es el del cuerpo; en el juego se puede poner también a ellas).
 ## Material: StandardMaterial3D con luz, sin brillo (metálico 0, rugosidad 1; paso 3.11a), para que reciba sombra fuera
 ## del editor, con la prenda horneada en una textura (garment_texture.gd). Con la prenda oculta, sin textura: todo color piel.
+## SH.8c: en estilo anime, la piel de esa textura lleva el rubor, los labios y las pecas (skin_paint.gd).
 ## El estilo toon no viaja en el .glb: al lado se guarda heroe.tres (paso 3.11b), el material toon con el contorno y
 ## los shaders incrustados (BodyMaterial.standalone()), que funciona sin el addon. En el juego:
 ##   malla.material_override = load("res://heroe.tres")
@@ -24,6 +25,7 @@ const CharacterBaker := preload("character_baker.gd")
 const Sockets := preload("sockets.gd")
 const BodyMaterial := preload("body_material.gd")
 const GarmentTexture := preload("garment_texture.gd")
+const SkinPaint := preload("skin_paint.gd")  # SH.8c
 const StyleNormals := preload("style_normals.gd")
 const TEXTURE_SIZE := 2048  # 1 píxel ≈ 0,9 mm en el borde de la prenda (medido en el paso 3.6.6)
 
@@ -52,6 +54,11 @@ static func prepare(mesh: MeshInstance3D, skeleton: Skeleton3D, socket_names: Ar
 	var job := {"character": character, "toon": BodyMaterial.standalone(mesh),
 		"skin": BodyMaterial.get_color(mesh, "skin_color"), "garment": BodyMaterial.get_color(mesh, "garment_color"),
 		"garment_visible": BodyMaterial.is_garment_visible(mesh)}
+	if BodyMaterial.is_soft(mesh):  # SH.8c: el rubor, los labios y las pecas van pintados en la textura del .glb
+		var zones: Texture2D = (mesh.material_override as ShaderMaterial).get_shader_parameter("skin_zones")
+		var image: Image = zones.get_image() if zones != null else null
+		if image != null:
+			job["paint"] = {"zones": image, "params": BodyMaterial.get_skin(mesh)}
 	if character != null:
 		var exported := character.find_children("*", "MeshInstance3D", true, false)[0] as MeshInstance3D
 		job["arrays"] = exported.mesh.surface_get_arrays(0)
@@ -68,9 +75,14 @@ static func compute(job: Dictionary) -> void:
 		arrays[Mesh.ARRAY_INDEX], job["head"])
 	arrays[Mesh.ARRAY_TANGENT] = null  # ya no casarían con las normales (sin mapas de normales no hacen falta)
 	var colors: PackedColorArray = arrays[Mesh.ARRAY_COLOR]
+	var skin_image: Image = null
+	if job.has("paint"):  # SH.8c
+		skin_image = SkinPaint.skin_image(TEXTURE_SIZE, job["skin"], job["paint"]["zones"], job["paint"]["params"])
 	if job["garment_visible"]:  # la textura lee `garment` en el rojo: antes de pasarlo al alfa
 		job["image"] = GarmentTexture.bake_arrays(arrays[Mesh.ARRAY_TEX_UV], colors, arrays[Mesh.ARRAY_INDEX],
-			TEXTURE_SIZE, job["skin"], job["garment"])
+			TEXTURE_SIZE, job["skin"], job["garment"], skin_image)
+	elif skin_image != null:
+		job["image"] = skin_image
 	for i in colors.size():
 		colors[i] = Color(1.0, 1.0, 1.0, colors[i].r)
 	arrays[Mesh.ARRAY_COLOR] = colors

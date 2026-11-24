@@ -219,6 +219,34 @@ func _check_standalone() -> void:
 	DirAccess.remove_absolute(ProjectSettings.globalize_path(path))
 	material.set_unlit(species.mesh, false)
 	material.set_garment_visible(species.mesh, true)
+	_check_standalone_anime()
+
+
+## SH.5: en estilo anime la copia es de toon_soft, con la piel, el acabado y el mapa de zonas, todo dentro del .tres.
+func _check_standalone_anime() -> void:
+	material.set_style(species.mesh, true)
+	material.set_skin_zones(species.mesh, species.skin_zones)
+	material.set_skin(species.mesh, "freckles", 4)
+	material.set_finish(species.mesh, "softness", 0.14)
+	material.set_color(species.mesh, "skin_color", Color(0.3, 0.19, 0.14))
+	var copy: ShaderMaterial = material.standalone(species.mesh)
+	check("copia anime: shader toon_soft incrustado", copy.shader.resource_path == "" and copy.shader.code == material.SOFT_SHADER.code)
+	check("copia anime: piel, acabado, color y zonas de la malla", copy.get_shader_parameter("freckles") == 4.0
+		and is_equal_approx(copy.get_shader_parameter("softness"), 0.14) and copy.get_shader_parameter("skin_color") == Color(0.3, 0.19, 0.14)
+		and copy.get_shader_parameter("edge_strength") == material.SKIN_START["edge_strength"]
+		and copy.get_shader_parameter("skin_zones") != null and species.skin_zones != null)
+	var path := "user://probar_material_copia_anime.tres"
+	var saved := ResourceSaver.save(copy, path)
+	var text := FileAccess.get_file_as_string(path)
+	check("copia anime guardada en .tres: sin rutas, con los dos shaders y el mapa de zonas dentro",
+		saved == OK and not text.contains("res://") and text.count("shader_type spatial") == 2 and text.contains("Image"), "error %d" % saved)
+	var reloaded := ResourceLoader.load(path, "", ResourceLoader.CACHE_MODE_IGNORE) as ShaderMaterial
+	var zones: Texture2D = reloaded.get_shader_parameter("skin_zones") if reloaded != null else null
+	var expected_size: int = material.EXPORT_ZONES_SIZE
+	check("copia anime: el .tres se vuelve a leer con el mapa de zonas (%d px) y pesa menos de 1,5 MB" % expected_size,
+		zones != null and zones.get_width() == expected_size and text.length() < 1500000, "%s, %d bytes" % [zones, text.length()])
+	DirAccess.remove_absolute(ProjectSettings.globalize_path(path))
+	material.set_style(species.mesh, false)
 
 
 ## Paso 3.11b: toon.gdshader lee la prenda con min(rojo, alfa); en el editor el alfa vale 1, así que manda el rojo.

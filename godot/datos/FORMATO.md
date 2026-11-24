@@ -10,6 +10,7 @@ Unidades y ejes de Godot: metros, Y arriba, mirando a +Z.
 | `cuerpo.glb` | Malla base completa en **pose A**, esqueleto, pesos, color `garment` y formas |
 | `articulaciones.json` | Dónde está cada hueso en el cuerpo base y cuánto lo mueve cada forma |
 | `ojos.json` | Opcional (AC.3b): lazo, bolsa y datos fijos de cada ojo, en el estado anime. Sin él, la especie no tiene capas de ojo |
+| `piel.png` | Opcional (SH.8): zonas de la piel sobre las UV de `cuerpo.glb` (abajo). Sin él, la especie no tiene rubor, labios ni pecas |
 | `deslizadores.csv` | La tabla del paso 2.1, con la columna `neutro`, las formas de cara (versión 2) y las propias (versión 3) |
 | `presets/anime.json` | Preset de personaje nuevo (paso 3.15), en el formato de `godot/addons/creador/preset.gd` |
 | `presets/<género>.json` | Presets de género (paso PL.10): `femenino` y `masculino` (el neutro es `anime.json`); mismo formato |
@@ -235,3 +236,14 @@ En una malla ligera (proxy) las aristas son mucho más largas y el borde saldrí
 - `CLAUDE.md` pide la malla completa sin proxy, e `IDEAS.md` deja el proxy ligero para después del MVP.
 - La prenda pintada por vértice saldría dentada en el proxy (ver arriba).
 - Añadirlo después no rompe nada: es un archivo más en `files`.
+
+## `piel.png` (paso SH.8)
+
+PNG RGBA de 1024 × 1024 sobre `TEXCOORD_0` de `cuerpo.glb`, valores lineales (no es un color). Lo genera `blender/generar_zonas_piel.py` desde la geometría (sin pintar a mano) y hay que volver a generarlo si cambian las UV o la forma base. Su `.import` es `importer="keep"`: viaja tal cual dentro del `.pck` y el núcleo lo lee con `Image.load_png_from_buffer`.
+
+| Canal | Qué guarda |
+| --- | --- |
+| R | Rubor: mejillas, punta de la nariz y de las orejas, hombros, codos, rodillas y nudillos (0–1) |
+| G | Cercanía para las pecas: 1 en la nariz y las mejillas, baja con la distancia; 0 = nunca (ojos, labios, palmas, plantas) |
+| B | Labios (0–1) |
+| A | Fuera de la cara (SH.4): 0 en la cara, 1 en el resto; al revés para que, sin textura, todo cuente como fuera de la cara |

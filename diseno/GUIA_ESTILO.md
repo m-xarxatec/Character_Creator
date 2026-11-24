@@ -48,24 +48,29 @@ Medido en el 3.12: femenino 6,96, masculino 6,94; los rangos propuestos entonces
 
 ## 4. Sombreado toon
 
-- **Número de tonos:** **3** por defecto (luz, medio y sombra). Aprobado el 2026-11-11. Por qué: es lo que se probó en el 3.12 y con 2 la cara pierde volumen.
-- **Dureza del borde:** 0,04 por defecto, editable. Aprobado el 2026-11-12 (hoja del 3.10c).
-- **Luz de contorno (rim):** suave; fuerza 0,25 y ancho 0,3 por defecto, editables. Aprobado el 2026-11-12 (hoja del 3.10c). Color: PROPUESTA (pendiente de aprobar): cálido casi blanco. Por qué: separa la silueta del fondo oscuro sin parecer brillo.
-- **Brillo especular:** ninguno. Por qué: el brillo hace que la piel parezca plástico.
-- **Piel:** el color lo elige quien usa el editor (cualquiera); por defecto, gris neutro. La sombra no es un color fijo: sale del color base, más oscuro, para que cualquier color se vea bien. Aprobado el 2026-11-12. Cuánto más oscuro: medio ×0,90 y sombra ×0,73 por defecto, editables (la misma luminosidad que las tintas rosadas de antes). Aprobado el 2026-11-12.
+Desde SH.7 (2026-11-23, D47–D54) el estilo por defecto es el **anime** (`toon_soft.gdshader`), parecido a VRoid: piel suave y rosada, sombra cálida, línea fina de color. Referencia del responsable: la imagen VRoid que adjuntó el 2026-11-23. El **clásico** (`toon.gdshader`, 3 tonos y contorno negro) sigue disponible apagando «Estilo anime» en Acabado.
+
+- **Tonos:** **2** (luz y sombra) con borde corto y suave (`softness` 0,09, editable como «Suavidad de la sombra»). D47.
+- **Color de sombra:** calculado desde el color de cada zona (más oscuro, más saturado y algo más rojo), para que cualquier color se vea bien. D48.
+- **Banda cálida:** franja fina más saturada en el paso de luz a sombra (`edge_strength` 0,6). D52.
+- **Brillo de piel:** satinado suave que multiplica el color de la piel donde da la luz (`gloss_strength` 0,35). D49 (cambia el «sin brillo» de antes).
+- **Rubor, labios y pecas:** zonas generadas desde la geometría (`piel.png`); rubor 0,35, labios 0,45, pecas de 0 a 10 (0 por defecto). D52 y D54.
+- **Cara:** sin sombra proyectada (`face_shadow_receive` 0; la nariz casi no se ve), un poco más de luz (`face_light` 0,15) y sin escalón en la sien (`StyleNormals.temple_blend` 0,35). D54.
+- **Sombra proyectada:** sí en el cuerpo (cuello, ropa, pelo), de la luz principal; ninguna luz suma a otra (manda la más fuerte). SH.3 y SH.4.
+- **Luz de contorno (rim):** fuerza 0,075 y ancho 0,3. **Pelo:** anillo de brillo («Brillo del pelo» 0,6), solo donde da la luz. SH.6b.
+- Todo lo anterior se regula con deslizadores en Acabado → Piel y viaja en el preset (versión 3).
 
 ---
 
 ## 5. Contorno
 
-- **Grosor:** regulable desde 0 (sin contorno) hasta muy grueso. PROPUESTA (pendiente de aprobar): rango 0–10 px.
-- **Por defecto:** 2,5 px, editable. Aprobado el 2026-11-12 (hoja del 3.10c).
-- **Color:** PROPUESTA (pendiente de aprobar): casi negro y algo cálido, no negro puro.
+- **Grosor:** regulable de 0 a 10 px; en estilo anime, 1,25 px por defecto y la mitad en la cara («Línea en la cara» 0,5).
+- **Color:** en estilo anime, el de cada zona (piel, ropa o pelo) más oscuro («Color de la línea» 0,8); en el clásico, casi negro y algo cálido.
 - Sin roturas en las costuras ni contornos "flotando" separados de la malla.
 
-### Valores por defecto
+### Valores por defecto del estilo clásico
 
-`probar_material.gd` comprueba que el código (`BodyMaterial`) tiene estos valores. Todos se cambian en el editor.
+`probar_material.gd` comprueba que el código (`BodyMaterial`) tiene estos valores. Todos se cambian en el editor. Los del estilo anime están en `BodyMaterial.SOFT_DEFAULTS`, `default_finish(true)` y `SKIN_START` (lista de arriba).
 
 | Qué | Código | Por defecto | Estado |
 | --- | --- | --- | --- |

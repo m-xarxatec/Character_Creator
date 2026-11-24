@@ -45,6 +45,7 @@ CORRECTION_MIN = 0.0005  # metros; una correccion mas pequena no se guarda
 TEMPLATES = ("anime", "femenino", "masculino")  # presets/: el de personaje nuevo (Neutro) y los de genero (PL.10)
 FILES = ("cuerpo.glb", "articulaciones.json", "deslizadores.csv") + tuple(f"presets/{t}.json" for t in TEMPLATES)
 EYES_FILE = "ojos.json"  # opcional: una especie sin este archivo no tiene capas de ojo (AC.3b)
+SKIN_FILE = "piel.png"  # opcional (SH.8): lo escribe generar_zonas_piel.py; hay que volver a lanzarlo tras exportar
 PC_ONLY_ZONES = ("Ojos", "Nariz", "Boca", "Mandíbula", "Orejas")  # paso 9.2: Android no carga sus formas
 
 
@@ -365,7 +366,7 @@ def joints_json(rig, shapes, socket_rules):
 
 
 def manifest(folder, basemesh, rig):
-    files = FILES + (EYES_FILE,) if os.path.exists(os.path.join(folder, EYES_FILE)) else FILES
+    files = FILES + tuple(name for name in (EYES_FILE, SKIN_FILE) if os.path.exists(os.path.join(folder, name)))
     return {
         "version": FORMAT_VERSION,
         "species": SPECIES,

@@ -1,5 +1,5 @@
 extends SceneTree
-# Paso 3.7: presets en JSON (preset.gd). Paso 4.7: versión 2, con el acabado. Sin ventana.
+# Paso 3.7: presets en JSON (preset.gd). Paso 4.7: versión 2, con el acabado. SH.7a: versión 3, con estilo y piel. Sin ventana.
 # Paso PL.2: su miniatura (presets/<id>.png). Paso PL.1b: plantillas de serie (TEMPLATES): completas, con la cara y el aspecto de anime.json, y en la ventana sin
 # errores del informe en pose T y en «Atacar»; sus proporciones (godot/app/measures.gd) en los rangos de GUIA_ESTILO.md §2.
 # Uso: godot --headless --path pruebas/godot -s probar_presets.gd 2>&1 | grep -E 'FALLO|MEDIDA|RESULTADO|ERROR'
@@ -36,6 +36,7 @@ func _initialize() -> void:
 	_check_text()
 	_check_look()
 	_check_finish()
+	_check_style()
 	_check_values()
 	_check_errors()
 	_check_style_presets()
@@ -117,7 +118,7 @@ func _check_text() -> void:
 	var loaded: Dictionary = preset.from_text(text, "humana", species.sliders)
 	var again: String = preset.to_text(preset.to_dict(loaded["nombre"], "humana", loaded["valores"], loaded["colores"], loaded["prenda_visible"]))
 	check("cargar y volver a guardar da el mismo texto", again == text)
-	check("el texto es legible: 'version' al final, una clave por línea", text.count("\n") > values.size() and text.contains("\"version\": 2"))
+	check("el texto es legible: 'version' al final, una clave por línea", text.count("\n") > values.size() and text.contains("\"version\": 3"))
 
 
 func _check_look() -> void:
@@ -150,6 +151,8 @@ func _check_finish() -> void:
 	expected["width_px"] = 0.0
 	check("acabado: lo que falta toma el valor por defecto y lo de fuera de rango se recorta", loaded["acabado"] == expected, str(loaded.get("acabado")))
 	var old := _without("acabado")
+	old.erase("estilo")
+	old.erase("piel")
 	old["version"] = 1
 	loaded = _load(old)
 	check("versión 1 (sin acabado): carga con el acabado por defecto", loaded["error"] == "" and loaded["acabado"] == defaults, loaded["error"])
@@ -159,6 +162,58 @@ func _check_finish() -> void:
 	_expect_error("acabado desconocido", _with("acabado", {"brillo": 0.5}), "acabado desconocido")
 	_expect_error("acabado con texto", _with("acabado", {"softness": "duro"}), "'softness'")
 	_expect_error("acabado NaN", _with("acabado", {"rim_width": NAN}), "'rim_width'")
+
+
+## SH.7a: estilo y piel viajan en el preset (versión 3); la 2 se lee con estilo clásico.
+func _check_style() -> void:
+	var colors := {"skin_color": Color(0.9, 0.8, 0.7), "garment_color": Color(0.1, 0.2, 0.3)}
+	var plain := _valid_dict()
+	check("sin estilo ni piel, to_dict guarda estilo clásico y la piel de partida",
+		plain["estilo"] == "clasico" and _same(plain["piel"], material.SKIN_START), str([plain["estilo"], plain["piel"]]))
+	var skin: Dictionary = material.SKIN_START.duplicate()
+	skin.merge({"edge_strength": 0.25, "gloss_strength": 0.5, "blush_amount": 0.75, "lips_amount": 0.125, "freckles": 3.0,
+		"face_light": 0.25, "outline_tint": 0.5}, true)
+	var finish := {"softness": 0.14, "rim_strength": 0.1, "rim_width": 0.3, "width_px": 1.25}
+	var text: String = preset.to_text(preset.to_dict("Anime", "humana", _neutral(), colors, true, finish, "anime", skin))
+	var loaded: Dictionary = preset.from_text(text, "humana", species.sliders)
+	check("estilo y piel: ida y vuelta", loaded["error"] == "" and loaded["estilo"] == "anime" and _same(loaded["piel"], skin),
+		str([loaded.get("error"), loaded.get("piel")]))
+	material.apply(species.mesh)
+	preset.apply_look(species.mesh, loaded)
+	check("apply_look anime: el cuerpo pasa al estilo anime con su piel y su acabado", material.is_soft(species.mesh)
+		and _same(material.get_skin(species.mesh), skin) and material.get_finish(species.mesh) == finish, str(material.get_skin(species.mesh)))
+	check("apply_look anime: conserva los colores", material.get_color(species.mesh, "skin_color").is_equal_approx(colors["skin_color"]))
+	var classic: Dictionary = _load(_valid_dict())
+	preset.apply_look(species.mesh, classic)
+	check("apply_look clásico: vuelve al estilo clásico", not material.is_soft(species.mesh))
+	var anime_only := _with("estilo", "anime")
+	anime_only["acabado"] = {}
+	anime_only["piel"] = {"freckles": 12, "blush_amount": -1}
+	loaded = _load(anime_only)
+	var expected: Dictionary = material.SKIN_START.duplicate()
+	expected["freckles"] = 10.0
+	expected["blush_amount"] = 0.0
+	check("piel: lo que falta toma la de partida y lo de fuera de rango se recorta", _same(loaded["piel"], expected), str(loaded.get("piel")))
+	check("estilo anime sin acabado: el acabado por defecto del estilo anime", loaded["acabado"] == material.default_finish(true),
+		str(loaded.get("acabado")))
+	var old := _without("estilo")
+	old.erase("piel")
+	old["version"] = 2
+	loaded = _load(old)
+	check("versión 2: carga con estilo clásico y la piel de partida", loaded["error"] == "" and loaded["estilo"] == "clasico"
+		and _same(loaded["piel"], material.SKIN_START), loaded["error"])
+	check("y el preset de la versión 2 no cambia al cargarlo", old["version"] == 2 and not old.has("estilo"))
+	_expect_error("versión 2 con estilo", _with("version", 2), "versión")
+	_expect_error("estilo desconocido", _with("estilo", "acuarela"), "estilo")
+	_expect_error("estilo que no es texto", _with("estilo", 1), "estilo")
+	_expect_error("piel que no es objeto", _with("piel", [0.5]), "tipo de campo")
+	_expect_error("piel desconocida", _with("piel", {"bronceado": 0.5}), "piel desconocida")
+	_expect_error("piel NaN", _with("piel", {"freckles": NAN}), "'freckles'")
+
+
+## Mismas claves y valores iguales hasta el redondeo del formato (4 decimales).
+func _same(a: Dictionary, b: Dictionary) -> bool:
+	return a.size() == b.size() and a.keys().all(func(key: String) -> bool: return b.has(key) and absf(a[key] - b[key]) < MAX_ROUNDING)
 
 
 func _check_values() -> void:
@@ -212,7 +267,7 @@ func _without(field: String) -> Dictionary:
 
 
 func _check_errors() -> void:
-	_expect_error("versión 3", _with("version", 3), "versión")
+	_expect_error("versión 4", _with("version", 4), "versión")
 	_expect_error("versión que no es número", _with("version", "1"), "versión")
 	_expect_error("otra especie", _with("especie", "elfa"), "especie")
 	for field: String in preset.FIELDS:
@@ -274,9 +329,10 @@ func _check_new_character() -> void:
 	check("anime.json: colores por defecto (piel gris) y prenda visible",
 		loaded["colores"]["skin_color"] == defaults["skin_color"] and loaded["colores"]["garment_color"] == defaults["garment_color"]
 		and loaded["prenda_visible"] == defaults["show_garment"])
-	check("anime.json: versión 2 y acabado por defecto", data["version"] == 2 and loaded["acabado"] == material.default_finish())
+	check("anime.json: versión 3, estilo anime (SH.7), su acabado y la piel de partida", data["version"] == 3
+		and loaded["estilo"] == "anime" and loaded["acabado"] == material.default_finish(true) and _same(loaded["piel"], material.SKIN_START))
 	var saved: String = preset.to_text(preset.to_dict(loaded["nombre"], "humana", loaded["valores"], loaded["colores"],
-		loaded["prenda_visible"], loaded["acabado"]))
+		loaded["prenda_visible"], loaded["acabado"], loaded["estilo"], loaded["piel"]))
 	check("anime.json: cargar y guardar da el mismo texto", saved + "\n" == text)
 
 
@@ -293,14 +349,15 @@ func _check_templates() -> void:
 		if loaded.get("error") != "":
 			continue
 		var data: Dictionary = JSON.parse_string(text)
-		check("%s: versión 2, completa y en el manifiesto" % file, data["version"] == 2
+		check("%s: versión 3, completa y en el manifiesto" % file, data["version"] == 3
 			and data["valores"].size() == base["valores"].size() and species.manifest["files"].has(file))
 		check("%s: cara, alisado, colores, prenda y acabado de anime.json" % file,
 			FACE.all(func(key: String) -> bool: return loaded["valores"][key] == base["valores"][key])
 			and loaded["colores"] == base["colores"] and loaded["prenda_visible"] == base["prenda_visible"]
-			and loaded["acabado"] == base["acabado"])
+			and loaded["acabado"] == base["acabado"] and loaded["estilo"] == base["estilo"] and loaded["piel"] == base["piel"])
 		check("%s: cargar y guardar da el mismo texto" % file, preset.to_text(preset.to_dict(loaded["nombre"], "humana",
-			loaded["valores"], loaded["colores"], loaded["prenda_visible"], loaded["acabado"])) + "\n" == text)
+			loaded["valores"], loaded["colores"], loaded["prenda_visible"], loaded["acabado"], loaded["estilo"],
+			loaded["piel"])) + "\n" == text)
 
 
 

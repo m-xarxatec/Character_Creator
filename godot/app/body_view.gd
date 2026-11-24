@@ -63,6 +63,10 @@ const DATA_RES := "res://datos"
 const ANIMATIONS := "humanoide"
 const ROM_ID := "rango_de_movimiento"
 const LIGHT_ANGLES := Vector3(-40, 30, 0)  # desde arriba, delante y a un lado; set_light gira la Y
+## SH.4: sombra proyectada de la luz del editor, solo en estilo anime (el clásico no la usa). Los de las hojas de SH.2.
+const SHADOW := {"max_distance": 6.0, "bias": 0.03, "normal_bias": 1.0, "blur": 1.0}
+const HAIR_SLOT := "pelo"
+const HEAD_CENTER_UP := 0.075  # SH.6b: centro de la cabeza, en metros a lo largo del hueso Head (la mitad de su largo)
 const RESTYLE_WAIT := 0.3  # segundos sin cambios antes de recalcular las normales del estilo
 const REPORT_INSTANTS := 4  # momentos de un clip que mide el informe
 
@@ -72,6 +76,7 @@ var species  # SpeciesData
 var library  # PackLibrary (paso AB.4)
 var pieces := {}  # paso AB.4: "pack/pieza" → MeshInstance3D puesta
 var accessories := {}  # paso AB.11: "pack/pieza" → BoneAttachment3D de un accesorio rígido
+var hair := {}  # SH.6b: "pack/pieza" → MeshInstance3D de las piezas de ranura pelo (llevan la banda de brillo)
 var updater  # CharacterUpdater
 var values: Dictionary
 var pose_t := false
@@ -187,6 +192,10 @@ func set_animation(id: String) -> bool:
 
 
 func _process(delta: float) -> void:
+	if not hair.is_empty() and species != null and BodyMaterial.is_soft(species.mesh):  # SH.6b: la banda sigue a la cabeza
+		var head := head_transform()
+		for mesh: MeshInstance3D in hair.values():
+			(mesh.material_override as ShaderMaterial).set_shader_parameter("hair_head", head)
 	# Paso P.8a: con Ctrl, el cursor es una mano (Ctrl + arrastrar desplaza la cámara: orbit_camera.gd).
 	mouse_default_cursor_shape = CURSOR_POINTING_HAND if Input.is_key_pressed(KEY_CTRL) else CURSOR_ARROW
 	if clip == ROM_ID:
@@ -415,7 +424,7 @@ func _add_world() -> void:
 	var environment := Environment.new()
 	environment.ambient_light_source = Environment.AMBIENT_SOURCE_COLOR
 	environment.ambient_light_color = Color.WHITE
-	environment.ambient_light_energy = 0.4
+	environment.ambient_light_energy = 0.0  # SH.3b: toon_soft suma el ambiente; 0 mantiene el aspecto de SH.2
 	var world := WorldEnvironment.new()
 	world.environment = environment
 	viewport.add_child(world)
@@ -440,7 +449,9 @@ func _load_character() -> String:
 	for warning: String in library.scan(PackedStringArray([folder.path_join("../../packs").simplify_path(), "user://packs"])):
 		push_warning(warning)
 	BodyMaterial.apply(species.mesh)
+	BodyMaterial.set_skin_zones(species.mesh, species.skin_zones)
 	Preset.apply_look(species.mesh, loaded)
+	_set_shadow(BodyMaterial.is_soft(species.mesh))
 	set_values(loaded["valores"])
 	for eye in EyeMesh.build(species.mesh, species.skeleton, species.eyes):  # siguen a las formas; no son piezas del pack
 		updater.pieces.append(eye)
@@ -467,6 +478,7 @@ func set_piece(pack_id: String, piece_id: String, on: bool) -> bool:
 			updater.pieces.erase(pieces[key])
 			BodyPiece.detach(pieces[key])
 			pieces.erase(key)
+			hair.erase(key)
 			pieces_changed.emit()
 		return true
 	var card: Dictionary = library.piece(pack_id, piece_id)
@@ -493,7 +505,7 @@ func set_piece(pack_id: String, piece_id: String, on: bool) -> bool:
 		for other: String in pieces.keys():
 			if PackLibrary.conflicts(library.piece(other.get_base_dir(), other.get_file()), card):
 				set_piece(other.get_base_dir(), other.get_file(), false)
-	BodyMaterial.apply(mesh, true)  # paso AB.6: se adelanta un poco y tapa la piel que asoma
+	BodyMaterial.apply(mesh, true, BodyMaterial.is_soft(species.mesh))  # AB.6: se adelanta y tapa la piel que asoma
 	(mesh.material_override as ShaderMaterial).set_shader_parameter("depth_pull",
 		BodyMaterial.PIECE_PULL * LAYERS.get(card["ranura"], 1))
 	var color: Color = library.color_of(card)  # el de partida, de pack.json
@@ -502,7 +514,11 @@ func set_piece(pack_id: String, piece_id: String, on: bool) -> bool:
 	var finish: Dictionary = BodyMaterial.get_finish(species.mesh)
 	for name: String in finish:
 		BodyMaterial.set_finish(mesh, name, finish[name])
+	_copy_line(mesh)
 	pieces[key] = mesh
+	if card["ranura"] == HAIR_SLOT:
+		hair[key] = mesh
+		_copy_band(mesh)
 	updater.pieces.append(mesh)
 	BodyPiece.follow(mesh, species.mesh)
 	pieces_changed.emit()
@@ -524,15 +540,76 @@ func _set_accessory(key: String, card: Dictionary, on: bool) -> bool:
 	if holder == null:
 		return false
 	for mesh in RigidPiece.meshes(holder):
-		BodyMaterial.apply(mesh, true)
+		BodyMaterial.apply(mesh, true, BodyMaterial.is_soft(species.mesh))
 		BodyMaterial.set_color(mesh, "skin_color", library.color_of(card))
 		BodyMaterial.set_color(mesh, "garment_color", library.color_of(card))
+		_copy_line(mesh)
 	accessories[key] = holder
 	pieces_changed.emit()
 	return true
 
 
 ## Color principal de una pieza puesta.
+## SH.7a: estilo anime (true) o clásico en el cuerpo, las piezas y los accesorios, sin perder colores. Las piezas
+## copian el acabado del cuerpo, como al ponerlas.
+func set_anime_style(on: bool) -> void:
+	BodyMaterial.set_style(species.mesh, on)
+	var finish: Dictionary = BodyMaterial.get_finish(species.mesh)
+	var meshes: Array = pieces.values()
+	for holder in accessories.values():
+		meshes.append_array(RigidPiece.meshes(holder))
+	for mesh: MeshInstance3D in meshes:
+		BodyMaterial.set_style(mesh, on, true)
+		for name: String in finish:
+			BodyMaterial.set_finish(mesh, name, finish[name])
+	sync_lines()
+	_set_shadow(on)
+
+
+## SH.4b: las piezas y los accesorios llevan la línea teñida como el cuerpo (cada una, del color de la pieza).
+## SH.6b: y las de pelo, la banda de brillo (la fuerza de la piel del cuerpo, hair_band).
+func sync_lines() -> void:
+	var meshes: Array = pieces.values()
+	for holder in accessories.values():
+		meshes.append_array(RigidPiece.meshes(holder))
+	for mesh: MeshInstance3D in meshes:
+		_copy_line(mesh)
+	for mesh: MeshInstance3D in hair.values():
+		_copy_band(mesh)
+
+
+func _copy_band(mesh: MeshInstance3D) -> void:
+	var strength: float = BodyMaterial.get_skin(species.mesh)["hair_band"] if BodyMaterial.is_soft(species.mesh) else 0.0
+	(mesh.material_override as ShaderMaterial).set_shader_parameter("hair_band_strength", strength)
+
+
+## SH.6b: mundo → cabeza, con origen en su centro (para la banda del pelo).
+func head_transform() -> Transform3D:
+	var skeleton: Skeleton3D = species.skeleton
+	var bone: int = skeleton.find_bone("Head")
+	var pose: Transform3D = skeleton.global_transform * skeleton.get_bone_global_pose(bone)
+	return pose.translated_local(Vector3(0, HEAD_CENTER_UP, 0)).affine_inverse()
+
+
+func _copy_line(mesh: MeshInstance3D) -> void:
+	var tint: float = BodyMaterial.get_skin(species.mesh)["outline_tint"] if BodyMaterial.is_soft(species.mesh) else 0.0
+	((mesh.material_override as ShaderMaterial).get_meta("outline") as ShaderMaterial).set_shader_parameter("outline_tint", tint)
+
+
+## SH.4: la luz del editor proyecta sombra (con SHADOW) o no.
+func _set_shadow(on: bool) -> void:
+	light.shadow_enabled = on
+	light.directional_shadow_mode = DirectionalLight3D.SHADOW_ORTHOGONAL
+	light.directional_shadow_max_distance = SHADOW["max_distance"]
+	light.shadow_bias = SHADOW["bias"]
+	light.shadow_normal_bias = SHADOW["normal_bias"]
+	light.shadow_blur = SHADOW["blur"]
+
+
+func is_anime_style() -> bool:
+	return BodyMaterial.is_soft(species.mesh)
+
+
 func piece_color(key: String) -> Color:
 	var meshes := meshes_of(key)
 	return BodyMaterial.get_color(meshes[0], "skin_color") if not meshes.is_empty() else Color.WHITE

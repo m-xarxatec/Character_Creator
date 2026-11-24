@@ -13,6 +13,7 @@ extends RefCounted
 const VERSION := 3
 const NEW_CHARACTER_PRESET := "presets/anime.json"
 const EYES_FILE := "ojos.json"  # opcional (AC.3c): sin él, la especie no tiene capas de ojo
+const SKIN_FILE := "piel.png"  # opcional (SH.8): zonas de rubor, labios y pecas; sin él, no hay
 
 var error := ""
 var folder: String
@@ -23,6 +24,7 @@ var mesh: MeshInstance3D
 var joints: Dictionary  ## el diccionario "bones" de articulaciones.json
 var sliders: Array[Dictionary]  ## una fila de deslizadores.csv por elemento: {columna: valor}
 var eyes: Dictionary  ## ojos.json (vacío si la especie no lo tiene)
+var skin_zones: ImageTexture  ## piel.png (null si la especie no lo tiene)
 
 
 ## Devuelve el error ("" si todo va bien); también queda en error.
@@ -47,6 +49,7 @@ func _load() -> String:
 	joints = _read_json(folder.path_join("articulaciones.json")).get("bones", {})
 	sliders = _read_csv(folder.path_join("deslizadores.csv"))
 	eyes = _read_json(folder.path_join(EYES_FILE)) if FileAccess.file_exists(folder.path_join(EYES_FILE)) else {}
+	skin_zones = _read_png(folder.path_join(SKIN_FILE)) if FileAccess.file_exists(folder.path_join(SKIN_FILE)) else null
 	return _load_scene(folder.path_join("cuerpo.glb"))
 
 
@@ -74,6 +77,15 @@ func _load_scene(path: String) -> String:
 	if skeleton.get_bone_count() != bones.size() or bones.any(func(b: String) -> bool: return skeleton.find_bone(b) < 0):
 		return "Los huesos de cuerpo.glb no son los del manifiesto"
 	return ""
+
+
+## Un PNG guardado tal cual (importer="keep"), como textura con mipmaps; null si no se puede leer.
+func _read_png(path: String) -> ImageTexture:
+	var image := Image.new()
+	if image.load_png_from_buffer(FileAccess.get_file_as_bytes(path)) != OK:
+		return null
+	image.generate_mipmaps()
+	return ImageTexture.create_from_image(image)
 
 
 ## Texto de un preset de la especie (ruta dentro de su carpeta; por defecto, el de personaje nuevo).

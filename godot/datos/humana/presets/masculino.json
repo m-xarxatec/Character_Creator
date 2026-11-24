@@ -1,9 +1,9 @@
 {
 	"acabado": {
-		"rim_strength": 0.25,
+		"rim_strength": 0.075,
 		"rim_width": 0.3,
-		"softness": 0.04,
-		"width_px": 2.5
+		"softness": 0.09,
+		"width_px": 1.25
 	},
 	"colores": {
 		"garment_color": [
@@ -18,7 +18,20 @@
 		]
 	},
 	"especie": "humana",
+	"estilo": "anime",
 	"nombre": "Masculino",
+	"piel": {
+		"blush_amount": 0.35,
+		"edge_strength": 0.6,
+		"face_light": 0.15,
+		"face_line": 0.5,
+		"face_shadow_receive": 0.0,
+		"freckles": 0.0,
+		"gloss_strength": 0.35,
+		"hair_band": 0.6,
+		"lips_amount": 0.45,
+		"outline_tint": 0.8
+	},
 	"prenda_visible": true,
 	"valores": {
 		"alisado": 1.0,
@@ -96,5 +109,5 @@
 		"waist_width": 0.25,
 		"weight": 0.35
 	},
-	"version": 2
+	"version": 3
 }

@@ -75,14 +75,17 @@
   "ojos.json": {
    "sha256": "782cbc07eb8efc73424371f73d0317f0a4f8b1859a4d5186957f223500a2885e"
   },
+  "piel.png": {
+   "sha256": "aa8086e1e9caab68c4a6a53fa34597091c547767e618dbf276f7d234d702e192"
+  },
   "presets/anime.json": {
-   "sha256": "8d54f16bb967c5f851bef9afee15848622b676412ba1b3de8702f5045b5cba24"
+   "sha256": "0afbd68af0f10ec15a9e88b3d92c129def63dc2e6e282402e78764295b9ce910"
   },
   "presets/femenino.json": {
-   "sha256": "5f3b76453c9fbd679d32ad240c09ea6aaf0414dfd5c573cfdb021de97ebdd6f5"
+   "sha256": "6c1e12e34a9e3be91d1518cd0ad05407e5ce35cffa0805e22920076366a49dca"
   },
   "presets/masculino.json": {
-   "sha256": "e5328b4a592d5d88cbd8f4067c770bbc3c2d3f4524ce8f3902a64b9ecfe56887"
+   "sha256": "b012c9ea3ef810f76721a37068bd5417ded156502be5a40e83ff6436c40c8786"
   }
  },
  "pose": "A",

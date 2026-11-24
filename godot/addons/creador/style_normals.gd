@@ -16,12 +16,15 @@ extends RefCounted
 const SMOOTH_STEPS := 10  # elegido en el 3.12 (anatomia.png)
 const FACE_DEPTH := 0.6  # elegido en el 3.13a-2 (aplanado_hoja.png)
 const WELD := 100000.0  # vértices a menos de 0,01 mm son el mismo
+## X.7: ancho de la transición del fondo del elipsoide (de 1 a FACE_DEPTH), en fracción del radio z, para quitar el
+## escalón de la sien. 0 = el corte de antes. 0,35: elegido por el responsable (D54; salto en la sien de 1,42° a 0,16°).
+static var temple_blend := 0.35
 
 
 ## Torso suavizado y cara de elipsoide, con los valores elegidos.
 static func apply(vertices: PackedVector3Array, normals: PackedVector3Array, indices: PackedInt32Array,
 		head_weight: PackedFloat32Array) -> PackedVector3Array:
-	return face(vertices, smooth(vertices, normals, indices, SMOOTH_STEPS), head_weight, 1.0, FACE_DEPTH)
+	return face(vertices, smooth(vertices, normals, indices, SMOOTH_STEPS), head_weight, 1.0, FACE_DEPTH, temple_blend)
 
 
 ## Peso del hueso Head en cada vértice (0 si no lo tiene).
@@ -83,8 +86,9 @@ static func smooth(vertices: PackedVector3Array, normals: PackedVector3Array, in
 
 
 ## Mezcla cada normal con la del elipsoide de la cabeza: amount × peso de Head.
+## temple (X.7): ancho de la transición del fondo, en fracción del radio z; 0 = el corte de antes en offset.z = 0.
 static func face(vertices: PackedVector3Array, normals: PackedVector3Array, head_weight: PackedFloat32Array,
-		amount: float, depth: float) -> PackedVector3Array:
+		amount: float, depth: float, temple := 0.0) -> PackedVector3Array:
 	var box := AABB()
 	var first := true
 	for i in vertices.size():
@@ -99,8 +103,8 @@ static func face(vertices: PackedVector3Array, normals: PackedVector3Array, head
 		if w > 0.0:
 			var offset := vertices[i] - center
 			var r := radii
-			if offset.z > 0.0:
-				r.z *= depth
+			r.z *= lerpf(1.0, depth, smoothstep(-temple, temple, offset.z / radii.z)) if temple > 0.0 \
+				else (depth if offset.z > 0.0 else 1.0)
 			var ellipsoid := (offset / (r * r)).normalized()
 			result[i] = normals[i].lerp(ellipsoid, w).normalized()
 	return result

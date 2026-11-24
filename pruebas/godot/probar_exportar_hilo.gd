@@ -52,7 +52,7 @@ func _same(a: String, b: String) -> bool:
 
 ## Godot da a cada subrecurso un id aleatorio al guardar (dos exportaciones sin hilo también difieren en eso).
 func _without_ids(path: String) -> String:
-	var ids := RegEx.create_from_string("(Shader|ShaderMaterial)_[a-z0-9]+")
+	var ids := RegEx.create_from_string("(Shader|ShaderMaterial|Image|ImageTexture)_[a-z0-9]+")  # SH.5: también el mapa de zonas
 	return ids.sub(FileAccess.get_file_as_string(path), "$1", true)
 
 
