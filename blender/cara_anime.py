@@ -82,6 +82,8 @@ BROW_LOW, BROW_HIGH = 0.002, 0.028  # hacia arriba: de 2 a 28 mm sobre lo alto d
 BROW_RAY_FROM = 0.030  # la rejilla va en el plano del centro del ojo y el rayo empieza 30 mm por delante
 BROW_MAX_SNAP = 0.030  # vale cualquier piel entre el origen del rayo y 30 mm detras del plano (el prototipo no tenia limite)
 BROW_RADIUS = 0.050  # piel en la que se apoya la banda: a menos de 50 mm del centro del ojo
+BLINK_GAP = 0.0002  # paso 9.7.1: al parpadear, el arco de arriba del lazo queda 0,2 mm por encima del de abajo
+UPPER_ARC, LOWER_ARC = list(range(0, 21)), list(range(20, 36)) + [0]  # posiciones en EyeSide.loop (las de eye_data)
 
 
 def relax(points, edges, mask, steps, keep):
@@ -477,6 +479,35 @@ class EyeFit:
         delta[self.mirror[loop]] = from_godot(world) * FLIP
         return self._extend(delta)
 
+    def face_delta(self, raw):
+        """Paso 9.7.1: un desplazamiento de la cara (una unidad ARKit) con la bolsa del ojo siguiendo al lazo y la piel
+        de alrededor suavizada, como las formas de ojo de MakeHuman (eye_delta)."""
+        return self._soften(self._extend(raw))
+
+    def blink_delta(self, state, side):
+        """Paso 9.7.1: parpadeo propio del ojo side ("l" o "r") sobre state (puntos, en el espacio de fit). Cada punto
+        del arco de arriba del lazo baja hasta el del arco de abajo con su misma x en el plano del ojo, BLINK_GAP por
+        encima; las esquinas y el arco de abajo no se mueven. El derecho se calcula sobre el reflejo (mismo ojo)."""
+        flipped = side == "r"
+        g = to_godot(state[self.mirror] * FLIP if flipped else state)
+        c, u, v, _ = self.left.frame(g)
+        loop = np.array(self.left.loop)
+        p = g[loop]
+        lower = p[LOWER_ARC]
+        xs = (lower - c) @ u
+        world = np.zeros_like(p)
+        for k in UPPER_ARC[1:-1]:
+            target = _line_point(lower, xs, float((p[k] - c) @ u))
+            if target is not None:
+                world[k] = target + v * BLINK_GAP - p[k]
+        delta = np.zeros_like(state)
+        delta[loop] = from_godot(world)
+        if flipped:
+            mirrored = np.zeros_like(delta)
+            mirrored[self.mirror] = delta * FLIP
+            delta = mirrored
+        return self.face_delta(delta)
+
     def eye_delta(self, name, raw):
         """raw: el desplazamiento de la piel que da MakeHuman para esa forma."""
         return self._soften(self._own_delta(name) if name in OWN_EYE else self._extend(raw * EYE_CLIP.get(name, 1.0)))
@@ -536,6 +567,14 @@ def _accessor(gltf, data, index):
         where = np.frombuffer(data, id_kind, sparse["count"], id_start)
         out[where] = np.frombuffer(data, kind, sparse["count"] * size, value_start).reshape(-1, size)
     return out
+
+
+def _line_point(points, xs, x):
+    """Punto de la polilinea points (3D) con coordenada x (xs: la de cada punto); None si x queda fuera."""
+    for i in range(len(points) - 1):
+        if (x - xs[i]) * (x - xs[i + 1]) <= 0.0 and xs[i] != xs[i + 1]:
+            return points[i] + (points[i + 1] - points[i]) * (x - xs[i]) / (xs[i + 1] - xs[i])
+    return None
 
 
 def _line_y(line, x):

@@ -6,6 +6,7 @@ Lee <carpeta>/deslizadores.csv y escribe cuerpo.glb, ojos.json (AC.3b), articula
 presets/anime.json (paso 3.15) se escribe aparte, como deslizadores.csv; aqui solo entra en el manifiesto.
 Las formas de cara (filas «cara:<forma>», paso 3.14) salen de blender/cara_anime.py y las propias (filas
 «propia:<forma>», paso 6.2), de blender/formas_propias.py, con las correcciones de «alisado» (ver own_shapes).
+Las de expresion (expr_*, paso 9.7.1), de blender/expresiones.py, al final: no son deslizadores.
 
 Cada forma se mide creando un cuerpo nuevo con MPFB (target o macro al 100 %, con su rig)
 y restandole el cuerpo neutro: asi la malla y los huesos salen tal cual los calcula MPFB.
@@ -404,6 +405,8 @@ def export_species(folder):
     fit.fix_eye_shapes(shapes)
     shapes.update(face_shapes(basemesh, rows, fit))
     shapes.update(own_shapes(basemesh, rows, bodies))
+    import expresiones  # paso 9.7.1: expr_*, al final (no cambian el orden de las formas de antes)
+    shapes.update(expresiones.expression_shapes(basemesh, fit, shapes))
     add_shape_keys(basemesh, shapes)
     cara_anime.add_mask_uv(basemesh, fit.mask())
     export_glb(basemesh, [], os.path.join(folder, "cuerpo.glb"), morph=True, deform_only=False)

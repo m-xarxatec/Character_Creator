@@ -1,0 +1,13 @@
+{
+  "version": 1,
+  "fuente": "faceunits01 (blender/faceunits01/, CC0, Mika Suominen)",
+  "nota": "Paso 9.7.1. Pesos de las unidades ARKit de cada expresion (nombres de VRM 1.0). \"propio\": parpadeo de cara_anime (EyeFit.blink_delta). Para comparar con el de MakeHuman (9.7.0, A/B): blinkLeft = {\"eyeBlinkLeft\": 1.0} y blinkRight = {\"eyeBlinkRight\": 1.0}.",
+  "expresiones": {
+    "happy": {"mouthSmileLeft": 0.8, "mouthSmileRight": 0.8, "cheekSquintLeft": 0.5, "cheekSquintRight": 0.5, "eyeSquintLeft": 0.3, "eyeSquintRight": 0.3},
+    "angry": {"browDownLeft": 1.0, "browDownRight": 1.0, "noseSneerLeft": 0.3, "noseSneerRight": 0.3, "mouthFrownLeft": 0.4, "mouthFrownRight": 0.4},
+    "sad": {"browInnerUp": 0.8, "mouthFrownLeft": 0.6, "mouthFrownRight": 0.6},
+    "surprised": {"browInnerUp": 0.6, "browOuterUpLeft": 0.8, "browOuterUpRight": 0.8, "eyeWideLeft": 0.6, "eyeWideRight": 0.6},
+    "blinkLeft": "propio",
+    "blinkRight": "propio"
+  }
+}
