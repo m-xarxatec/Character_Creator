@@ -50,6 +50,7 @@ func _initialize() -> void:
 	updater = load(repo.path_join("godot/addons/creador/character_updater.gd")).new(species)
 	load(repo.path_join("godot/addons/creador/body_material.gd")).apply(species.mesh)
 	pieces = load(repo.path_join("godot/addons/creador/eye_mesh.gd")).build(species.mesh, species.skeleton, species.eyes)
+	pieces.assign(pieces.filter(func(n: Node) -> bool: return not String(n.name).begins_with("ceja_")))  # AC.6c: las cejas, en probar_cejas.gd
 	for piece in pieces:
 		updater.pieces.append(piece)
 	_check_shader()

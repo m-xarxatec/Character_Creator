@@ -10,13 +10,15 @@ extends RefCounted
 ## del lazo (`elevacion`), con una sola normal.
 ## Una malla por ojo: el blanco es su material y el iris (con los brillos, AC.5), su `next_pass`.
 ## AC.6a: detrás de los dos ojos, tres tiras por ojo (`linea_*`, `linea_inferior_*` y `pliegue_*`, eye_line.gdshader).
+## AC.6c: y la ceja (`ceja_*`, modo 3), si ojos.json trae `ceja`.
 ## Cada vértice de una tira es la mezcla baricéntrica de 3 vértices del cuerpo más un desplazamiento fijo (de Blender).
 
 const MeshBaker := preload("mesh_baker.gd")
 const BodyPiece := preload("body_piece.gd")
 const SHADER := preload("eye_layers.gdshader")
 const LINE_SHADER := preload("eye_line.gdshader")
-const STRIPS := {"tira_superior": ["linea", 0], "tira_inferior": ["linea_inferior", 2], "pliegue": ["pliegue", 1]}  # nodo, modo
+const STRIPS := {"tira_superior": ["linea", 0], "tira_inferior": ["linea_inferior", 2], "pliegue": ["pliegue", 1],
+	"ceja": ["ceja", 3]}  # nodo, modo. AC.6c: la ceja, si ojos.json la trae
 const LINE_PULL := 0.00018  # metros: las líneas, por delante de las capas
 const LINE_PRIORITY := 3  # después del blanco (0), el iris y los brillos (1)
 const PULLS: Array[float] = [0.00005, 0.00010, 0.00012]  # metros: cada capa, un poco más cerca de la cámara
@@ -61,7 +63,8 @@ static func build(body: MeshInstance3D, skeleton: Skeleton3D, eyes: Dictionary) 
 	return out
 
 
-## Material de una línea: modo 0 línea de arriba con pestañas, 1 pliegue, 2 línea de abajo; largo del arco en metros.
+## Material de una línea: modo 0 línea de arriba con pestañas, 1 pliegue, 2 línea de abajo, 3 ceja (AC.6c); largo del arco
+## en metros.
 static func line_material(mode: int, arc_length: float) -> ShaderMaterial:
 	var material := ShaderMaterial.new()
 	material.shader = LINE_SHADER

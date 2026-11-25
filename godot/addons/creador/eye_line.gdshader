@@ -1,5 +1,7 @@
 // Paso AC.6a: líneas del ojo sobre sus tiras de malla (EyeMesh): línea de arriba con 3 pestañas (mode 0), pliegue (1) y
-// línea de abajo, casi negra (2). Valores de AC.4a (pruebas/capturas/ac3/ac4a/medidas.md).
+// línea de abajo, casi negra (2). Valores de AC.4a (pruebas/capturas/ac3/ac4a/medidas.md). AC.6c: ceja (3), dibujada
+// dentro de su banda (UV.x de 0 a 1, de dentro afuera; UV.y en metros sobre la base de la banda); serie: «arco suave»
+// de AC.6c.0. brow_lift, brow_thickness y brow_size son los deslizadores (AC.6c.4).
 // UV.x = u por longitud de arco (0 esquina interior, 1 exterior; la cola de las pestañas llega a ~1,08).
 // UV.y = fila, en metros (+ hacia fuera del lazo), vista de frente: Blender apoya las filas por la normal del ojo. No hace
 // falta corregirla con la superficie (d = v / |∇v|, AC.3b §5.2 d): con las filas de dentro apoyadas en el blanco, el grosor
@@ -45,6 +47,18 @@ uniform float lower_peak = 0.0010;  // grosor máximo de la línea de abajo, cen
 uniform float lower_u_peak = 0.76;
 uniform float lower_start = 0.12;  // invisible antes de aquí
 uniform float lower_end = 0.30;  // grosor en la esquina exterior respecto al pico
+uniform vec3 brow_color : source_color = vec3(0.25, 0.16, 0.12);  // AC.6c: castaño oscuro (D-a)
+uniform float brow_height = 0.0075;  // m sobre la base de la banda: la línea central en los extremos
+uniform float brow_arch = 0.0015;  // m que sube el centro respecto a los extremos
+uniform float brow_tilt = 0.0;  // m que sube el extremo exterior respecto al interior
+uniform float brow_width = 0.0014;  // grosor máximo (m)
+uniform float brow_inner_w = 0.85;  // grosor en el extremo interior, en partes del máximo
+uniform float brow_outer_w = 0.15;  // y en el exterior (la cola se afila)
+uniform float brow_start = 0.1774;  // dónde empieza y acaba en u
+uniform float brow_end = 0.7815;
+uniform float brow_lift = 0.0;  // deslizador Altura (m)
+uniform float brow_thickness = 1.0;  // deslizador Grosor (× brow_width)
+uniform float brow_size = 1.0;  // deslizador Tamaño (× el largo, alrededor de su centro)
 
 // ==== Común (SH.2b): idéntico en toon_soft.gdshader y eye_layers.gdshader; lo vigila probar_base_ojo.gd ====
 const float SHADE_VALUE_LIGHT = 0.78;  // cuánto oscurece un color claro
@@ -146,6 +160,21 @@ float lower_width(float u) {
 	return w * (1.0 - (1.0 - lower_end) * smoothstep(lower_u_peak, 1.0, u));
 }
 
+// AC.6c: posición dentro de la ceja (0 en su extremo interior, 1 en el exterior).
+float brow_t(float u) {
+	float half_len = 0.5 * (brow_end - brow_start) * brow_size;
+	return (u - 0.5 * (brow_start + brow_end) + half_len) / (2.0 * half_len);
+}
+
+float brow_center(float t) {
+	return brow_height + brow_lift + brow_arch * 4.0 * t * (1.0 - t) + brow_tilt * (t - 0.5);
+}
+
+float brow_w(float t) {
+	return brow_width * brow_thickness * mix(brow_inner_w, 1.0, smoothstep(0.0, 0.35, t))
+		* mix(1.0, brow_outer_w, smoothstep(0.55, 1.0, t));
+}
+
 float band(float d, float low, float high) {
 	float aa = max(fwidth(d), 0.0000001);
 	return smoothstep(low - aa, low + aa, d) * (1.0 - smoothstep(high - aa, high + aa, d));
@@ -175,6 +204,11 @@ void fragment() {
 		float w = lower_width(u);
 		alpha = band(d, -0.5 * w, 0.5 * w) * smoothstep(lower_start, lower_start + 0.08, u);
 		color = lower_color;
+	} else if (mode == 3) {
+		float t = brow_t(u);
+		float half_w = 0.5 * brow_w(t);
+		alpha = band(d - brow_center(t), -half_w, half_w) * band(t, 0.0, 1.0);  // los extremos, suavizados en u
+		color = brow_color;
 	} else {
 		float half_c = crease_width * 0.5;
 		alpha = band(d, crease_offset - half_c, crease_offset + half_c) * crease_alpha
