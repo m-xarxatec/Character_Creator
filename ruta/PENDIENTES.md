@@ -9,4 +9,5 @@
 | AB, 9.4 | Juicio visual que falta: las piezas sueltas y los ojos (interfaz y uso de piezas ya juzgados el 2026-11-22) | `pruebas/capturas/piezas/` (y abrir el editor: pestañas Pelo, Ropa, Accesorios y Cara y ojos) |
 | D36 | ¿Lo nuestro sale CC0 y se publica también como pack suelto? (recomendado: sí) | `propuestas/expansion_v2.md` §7 |
 | D39 | ¿Se pueden descargar peinados y armas CC0 (Quaternius, Micket, KayKit), uno a uno y con la licencia comprobada? Necesita tu permiso de red | `propuestas/expansion_v2.md` §5.3 |
-| D41 | ¿Las expresiones salen de las «Face Units» CC0 (sin comprobar aún)? | `propuestas/expansion_v2.md` §7 |
+| D41 | ¿Las expresiones salen de las «Face Units» CC0? Comprobado en la web el 2026-11-24: son el pack faceunits01 (54 formas ARKit, CC0 según la página de packs; falta ver la licencia dentro del zip) | `ruta/pasos/9.7_expresiones.md` §3 y §5.7 |
+| 9.7 | Aprobar la ficha de expresiones y decidir D31, D56 y D57 (con D41) | `ruta/pasos/9.7_expresiones.md` §5.7 |
