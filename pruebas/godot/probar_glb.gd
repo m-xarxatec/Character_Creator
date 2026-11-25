@@ -23,7 +23,8 @@ var piece_count := _int_arg("--piezas=")  # -1 = sin modo piezas
 var rigid_count := _int_arg("--rigidas=")
 var with_eyes := "--ojos" in OS.get_cmdline_user_args()  # paso AC.6b
 
-const EYE_MESHES := ["ojo_l", "ojo_r", "linea_l", "linea_r", "linea_inferior_l", "linea_inferior_r", "pliegue_l", "pliegue_r"]
+const EYE_MESHES := ["ojo_l", "ojo_r", "linea_l", "linea_r", "linea_inferior_l", "linea_inferior_r", "pliegue_l", "pliegue_r",
+	"ceja_l", "ceja_r"]  # AC.6c: las cejas
 const EYE_GAP := 0.0009  # PROVISIONAL (AC.6b): metros que la bolsa del cuerpo queda como mínimo detrás del ojo
 const RIM_MATCH := 0.00001  # PROVISIONAL (AC.6b): metros entre el lazo del ojo y el del cuerpo (no se mueve)
 const CREADOR := "res://../../godot/addons/creador/"
@@ -266,7 +267,8 @@ func _accessor_weight_error(data: PackedByteArray, json: Dictionary, index: int,
 	return worst
 
 
-## Paso AC.6b: las 8 mallas del ojo, como piezas, con su textura y sin shader; la bolsa del cuerpo, detrás de cada ojo.
+## Paso AC.6b: las 8 mallas del ojo (10 con las cejas, AC.6c), como piezas, con su textura y sin shader; la bolsa del
+## cuerpo, detrás de cada ojo.
 func _check_eyes(meshes: Array, body: MeshInstance3D, skel: Skeleton3D) -> void:
 	var by_name := {}
 	for m: MeshInstance3D in meshes:

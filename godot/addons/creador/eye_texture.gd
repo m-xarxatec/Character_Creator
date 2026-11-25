@@ -26,7 +26,10 @@ const LINE_DEFAULTS := {"mode": 0, "arc_length": 0.0374, "line_color": Color(0.1
 	"lash_u": Vector3(0.94, 0.99, 1.035), "lash_length": Vector3(0.0008, 0.0011, 0.0008), "lash_width": 0.0005,
 	"lash_tilt": 0.9, "crease_offset": 0.0022, "crease_width": 0.00016, "crease_alpha": 0.22,
 	"crease_span": Vector2(0.25, 0.85), "lower_color": Color(0.04, 0.03, 0.04), "lower_peak": 0.0010,
-	"lower_u_peak": 0.76, "lower_start": 0.12, "lower_end": 0.30}
+	"lower_u_peak": 0.76, "lower_start": 0.12, "lower_end": 0.30,
+	"brow_color": Color(0.25, 0.16, 0.12), "brow_height": 0.0075, "brow_arch": 0.0015, "brow_tilt": 0.0,  # AC.6c: ceja
+	"brow_width": 0.0014, "brow_inner_w": 0.85, "brow_outer_w": 0.15, "brow_start": 0.1774, "brow_end": 0.7815,
+	"brow_lift": 0.0, "brow_thickness": 1.0, "brow_size": 1.0}
 ## Constantes de eye_layers.gdshader.
 const SHADER_CONSTANTS := {"IRIS_TOP_DARK": 0.12, "IRIS_DARK_FROM": 0.42, "IRIS_LIGHT_GAIN": 1.7, "IRIS_LIGHT_MIX": 0.10,
 	"IRIS_MOON": 0.55, "PUPIL_SIZE": Vector2(0.26, 0.24), "PUPIL_SOFT": 0.45, "PUPIL_SHADE": 0.35,
@@ -241,7 +244,8 @@ static func bake_line(uvs: PackedVector2Array, values: Dictionary, width: int = 
 	var out := PackedVector2Array()
 	for p in uvs:
 		out.append(Vector2((p.x - low.x) / span.x, (high.y - p.y) / span.y))
-	var color: Color = values["lower_color"] if values["mode"] == 2 else values["line_color"]
+	var color: Color = values["lower_color"] if values["mode"] == 2 else values["brow_color"] if values["mode"] == 3 \
+		else values["line_color"]
 	var rgb := PackedByteArray([color.r8, color.g8, color.b8])
 	var data := PackedByteArray()
 	data.resize(width * height * 4)
@@ -257,7 +261,7 @@ static func bake_line(uvs: PackedVector2Array, values: Dictionary, width: int = 
 	return {"image": Image.create_from_data(width, height, false, Image.FORMAT_RGBA8, data), "uv": out}
 
 
-## Lo que solo depende de u en fragment() de eye_line.gdshader: [banda baja, banda alta, factor] y, en la línea de
+## Lo que solo depende de u en fragment() de eye_line.gdshader (modos 0 a 3): [banda baja, banda alta, factor] y, en la línea de
 ## arriba, por cada pestaña [base, largo, lo que se aparta en u (m), medio ancho, aa], y al final la inclinación.
 static func _line_column(u: float, step: Vector2, v: Dictionary) -> PackedFloat32Array:
 	if v["mode"] == 0:
@@ -270,6 +274,14 @@ static func _line_column(u: float, step: Vector2, v: Dictionary) -> PackedFloat3
 				(u - at) * v["arc_length"], v["lash_width"] * 0.5, aa]))
 		out.append(v["lash_tilt"])
 		return out
+	if v["mode"] == 3:  # AC.6c: brow_t, brow_center y brow_w; los extremos, suavizados en u
+		var half_len: float = 0.5 * (v["brow_end"] - v["brow_start"]) * v["brow_size"]
+		var t: float = (u - 0.5 * (v["brow_start"] + v["brow_end"]) + half_len) / (2.0 * half_len)
+		var center: float = v["brow_height"] + v["brow_lift"] + v["brow_arch"] * 4.0 * t * (1.0 - t) \
+			+ v["brow_tilt"] * (t - 0.5)
+		var half_w: float = 0.5 * v["brow_width"] * v["brow_thickness"] * lerpf(v["brow_inner_w"], 1.0, Iris.smooth(0.0, 0.35, t)) \
+			* lerpf(1.0, v["brow_outer_w"], Iris.smooth(0.55, 1.0, t))
+		return PackedFloat32Array([center - half_w, center + half_w, _band(t, 0.0, 1.0, step.x / (2.0 * half_len))])
 	if v["mode"] == 2:
 		var w := _lower_width(u, v)
 		return PackedFloat32Array([-0.5 * w, 0.5 * w, Iris.smooth(v["lower_start"], v["lower_start"] + 0.08, u)])

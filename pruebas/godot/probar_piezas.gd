@@ -8,7 +8,8 @@ extends SceneTree
 ## Paso RE.1b: peinados de Quaternius.
 const MeshBaker := preload("res://../../godot/addons/creador/mesh_baker.gd")
 ## Paso AC.6b: el .glb lleva también los ojos (EyeMesh); no son piezas y no se cuentan (los mira probar_glb.gd --ojos).
-const EYE_MESHES := ["ojo_l", "ojo_r", "linea_l", "linea_r", "linea_inferior_l", "linea_inferior_r", "pliegue_l", "pliegue_r"]
+const EYE_MESHES := ["ojo_l", "ojo_r", "linea_l", "linea_r", "linea_inferior_l", "linea_inferior_r", "pliegue_l", "pliegue_r",
+	"ceja_l", "ceja_r"]  # AC.6c: las cejas
 const QU_HAIR := ["hair_buns", "hair_long", "hair_buzzed_female", "hair_buzzed", "hair_simple_parted"]
 const QU_SHAPES := ["head_width_incr", "head_height_incr", "gender_incr", "torso_length_incr", "neck_length_incr"]
 ## Cambio de la distancia con signo a la piel al deformar, en el pelo pegado al cuero cabelludo. Mide si se despega.
