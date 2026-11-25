@@ -13,6 +13,8 @@ extends RefCounted
 ## El reajuste pisa la posición y el giro de la pose (no la escala): por eso la pose base va después de él.
 ## La pose T lee la escala de la pose: por eso la pose base va después de la escala y no depende de la llamada anterior.
 ## Paso AB.4: las piezas de pieces (BodyPiece.attach) reciben después los pesos de forma y las bind poses del cuerpo.
+## Paso 9.7.2: expressions = {nombre VRM: valor} (happy, angry, sad, surprised, blink, blinkLeft, blinkRight), encima de
+## la cara; lo que falta vale 0. Las piezas (ojos, cejas) las copian con el resto de formas. Lo no válido va a la lista.
 
 const Proportions := preload("proportions.gd")
 const BodyPiece := preload("body_piece.gd")
@@ -30,7 +32,7 @@ func _init(loaded_species) -> void:
 	base = SkeletonRefit.capture_base(species.skeleton)
 
 
-func update(values: Dictionary, pose_t: bool) -> Array[String]:
+func update(values: Dictionary, pose_t: bool, expressions := {}) -> Array[String]:
 	var shape_values: Dictionary = ShapeWeights.neutral_values(species.sliders)
 	var scale_values: Dictionary = Proportions.neutral_values(species.sliders)
 	var rejected: Array[String] = []
@@ -40,7 +42,9 @@ func update(values: Dictionary, pose_t: bool) -> Array[String]:
 		if not is_number or not ShapeWeights.set_value(target, key, values[key], false):
 			rejected.append(key)
 	var neutrals: Dictionary = ShapeWeights.neutral_values(species.sliders)
-	var weights: Dictionary = ShapeWeights.weights(shape_values, ShapeWeights.shape_names(species.mesh.mesh), neutrals)
+	var names := ShapeWeights.shape_names(species.mesh.mesh)
+	var faces := ShapeWeights.expression_weights(expressions, names, rejected)  # paso 9.7.2
+	var weights: Dictionary = ShapeWeights.weights(shape_values, names, neutrals, faces)
 	ShapeWeights.apply(species.mesh, weights)
 	SkeletonRefit.apply(species.skeleton, species.mesh.skin, species.joints, weights, base)
 	Proportions.apply(species.skeleton, Proportions.scales(scale_values, species.sliders))

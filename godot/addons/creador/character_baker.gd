@@ -21,10 +21,14 @@ extends RefCounted
 ##   (el cuerpo sigue siendo su primer hijo). El suelo lo marca el cuerpo.
 ## - rigid (paso AB.11): accesorios rígidos (BoneAttachment3D de RigidPiece), como mallas al 100 % de su hueso.
 ## - cache (paso OPT.3a): formas ya leídas del cuerpo (MeshBaker._add_shapes); solo del cuerpo, no de las piezas.
+## - Paso 9.7.3 (D31): las formas de expresión (expr_*) no se hornean (tampoco la que se prueba en la vista): cada malla
+##   que las tiene sale con ellas como formas, con el nombre VRM (sin expr_), ya en la pose de la variante. A cada una se
+##   le suman sus correcciones (expr_blinkLeft*eye_tall_incr…) con el peso que tiene ahora su otra parte.
 
 const Baker := preload("mesh_baker.gd")
 const TPose := preload("t_pose.gd")
 const RigidPiece := preload("rigid_piece.gd")
+const ShapeWeights := preload("shape_weights.gd")  # paso 9.7.3
 
 
 static func bake(mesh: MeshInstance3D, skeleton: Skeleton3D, t_pose: bool, profile_axes := false, pieces: Array = [],
@@ -72,6 +76,9 @@ static func prepare_bake(mesh: MeshInstance3D, skeleton: Skeleton3D, t_pose: boo
 ## Lo que compute_bake necesita de una malla (la pose ya puesta). cache: la de MeshBaker._add_shapes (solo el cuerpo).
 static func _read_mesh(mesh: MeshInstance3D, skeleton: Skeleton3D, cache: Variant) -> Dictionary:
 	var active := Baker.active_shapes(mesh)
+	for shape: int in active.keys():  # paso 9.7.3: la expresión que se prueba no se hornea
+		if ShapeWeights.is_expression(mesh.mesh.get_blend_shape_name(shape)):
+			active.erase(shape)
 	var shapes := {} if cache == null else cache as Dictionary
 	Baker.cache_shapes(mesh, active, shapes)
 	var used := {}
@@ -82,7 +89,32 @@ static func _read_mesh(mesh: MeshInstance3D, skeleton: Skeleton3D, cache: Varian
 		var bone := mesh.skin.get_bind_bone(i)
 		binds.append(bone if bone >= 0 else skeleton.find_bone(mesh.skin.get_bind_name(i)))
 	return {"name": mesh.name, "arrays": mesh.mesh.surface_get_arrays(0), "active": active, "shapes": used,
-		"matrices": Baker.skin_matrices(skeleton, mesh.skin), "binds": binds}
+		"matrices": Baker.skin_matrices(skeleton, mesh.skin), "binds": binds, "expressions": _read_expressions(mesh, shapes)}
+
+
+## Paso 9.7.3: {nombre VRM: [posiciones de la forma, [[peso, posiciones de una corrección], …]]} de las expr_* de la
+## malla (las correcciones, con el peso de su otra parte ahora). Hilo principal: pide a la malla las que no estén en shapes.
+static func _read_expressions(mesh: MeshInstance3D, shapes: Dictionary) -> Dictionary:
+	var names := ShapeWeights.shape_names(mesh.mesh)
+	var wanted := {}
+	for i in names.size():
+		if ShapeWeights.is_expression(names[i]):
+			wanted[i] = 1.0
+	if wanted.is_empty():
+		return {}
+	Baker.cache_shapes(mesh, wanted, shapes)
+	var out := {}
+	for i: int in wanted:
+		if "*" in names[i]:
+			continue
+		var fixes := []
+		for j: int in wanted:
+			var parts := names[j].split("*")
+			var other := names.find(parts[1]) if parts.size() == 2 and parts[0] == names[i] else -1
+			if other >= 0 and mesh.get_blend_shape_value(other) != 0.0:
+				fixes.append([mesh.get_blend_shape_value(other), shapes[j][0]])
+		out[names[i].trim_prefix(ShapeWeights.EXPRESSION_PREFIX)] = [shapes[i][0], fixes]
+	return out
 
 
 ## compute_bake, en cualquier hilo: solo arrays. Formas y huesos de cada malla (como MeshBaker.bake), suelo y reposo nuevo.
@@ -95,6 +127,7 @@ static func compute_bake(job: Dictionary) -> void:
 		Baker._skin(entry["matrices"], arrays[Mesh.ARRAY_BONES], arrays[Mesh.ARRAY_WEIGHTS], vertices, normals)
 		entry["vertices"] = vertices
 		entry["normals"] = normals
+		entry["morphs"] = _morphs(entry)  # paso 9.7.3
 
 	var body_vertices: PackedVector3Array = job["meshes"][0]["vertices"]
 	var lowest := INF
@@ -119,6 +152,27 @@ static func compute_bake(job: Dictionary) -> void:
 	job["to_ground"] = to_ground
 
 
+## Paso 9.7.3: {nombre VRM: desplazamiento en la pose de la variante} de las expresiones de una malla. Solo arrays.
+static func _morphs(entry: Dictionary) -> Dictionary:
+	var arrays: Array = entry["arrays"]
+	var base: PackedVector3Array = arrays[Mesh.ARRAY_VERTEX]
+	var out := {}
+	for name: String in entry["expressions"]:
+		var source: Array = entry["expressions"][name]
+		var shape: PackedVector3Array = source[0]
+		var delta := PackedVector3Array()
+		delta.resize(base.size())
+		for i in base.size():
+			delta[i] = shape[i] - base[i]
+		for fix: Array in source[1]:
+			var weight: float = fix[0]
+			var correction: PackedVector3Array = fix[1]
+			for i in base.size():
+				delta[i] += weight * (correction[i] - base[i])
+		out[name] = Baker.skinned_deltas(entry["matrices"], arrays[Mesh.ARRAY_BONES], arrays[Mesh.ARRAY_WEIGHTS], delta)
+	return out
+
+
 ## finish_bake, en el hilo principal: crea Character → Skeleton3D → mallas (cuerpo, piezas y accesorios, en este orden).
 static func finish_bake(job: Dictionary) -> Node3D:
 	var globals: Array[Transform3D] = job["globals"]
@@ -129,7 +183,7 @@ static func finish_bake(job: Dictionary) -> Node3D:
 	for entry: Dictionary in job["meshes"]:
 		var new_mesh := MeshInstance3D.new()
 		new_mesh.name = entry["name"]
-		new_mesh.mesh = _mesh(entry["arrays"], entry["vertices"], entry["normals"])
+		new_mesh.mesh = _mesh(entry["arrays"], entry["vertices"], entry["normals"], entry["morphs"])
 		new_mesh.skin = _skin(entry["binds"], globals)
 		new_skeleton.add_child(new_mesh)
 		new_mesh.skeleton = NodePath("..")
@@ -195,11 +249,11 @@ static func _skin(binds: PackedInt32Array, globals: Array[Transform3D]) -> Skin:
 
 
 ## arrays: los de la malla del editor leídos en prepare_bake (UV, color `garment`, índices, huesos y pesos, tal cual).
-static func _mesh(source_arrays: Array, vertices: PackedVector3Array, normals: PackedVector3Array) -> ArrayMesh:
+## morphs (paso 9.7.3): las expresiones de la malla, ya en la pose (vacío: sin formas, como antes).
+static func _mesh(source_arrays: Array, vertices: PackedVector3Array, normals: PackedVector3Array,
+		morphs := {}) -> ArrayMesh:
 	var arrays := source_arrays.duplicate()
 	arrays[Mesh.ARRAY_VERTEX] = vertices
 	arrays[Mesh.ARRAY_NORMAL] = normals
 	arrays[Mesh.ARRAY_TANGENT] = null
-	var mesh := ArrayMesh.new()
-	mesh.add_surface_from_arrays(Mesh.PRIMITIVE_TRIANGLES, arrays)
-	return mesh
+	return Baker.with_morphs(arrays, morphs)

@@ -16,6 +16,8 @@ extends RefCounted
 ## Material: StandardMaterial3D con luz, sin brillo (metálico 0, rugosidad 1; paso 3.11a), para que reciba sombra fuera
 ## del editor, con la prenda horneada en una textura (garment_texture.gd). Con la prenda oculta, sin textura: todo color piel.
 ## SH.8c: en estilo anime, la piel de esa textura lleva el rubor, los labios y las pecas (skin_paint.gd).
+## Paso 9.7.3 (D31): las expresiones salen como formas (morph targets) del cuerpo y de cada malla que las tenga, con el
+## nombre VRM; solo posiciones (las normales del estilo no tienen forma). La bolsa hundida tras el ojo las conserva.
 ## El estilo toon no viaja en el .glb: al lado se guarda heroe.tres (paso 3.11b), el material toon con el contorno y
 ## los shaders incrustados (BodyMaterial.standalone()), que funciona sin el addon. En el juego:
 ##   malla.material_override = load("res://heroe.tres")
@@ -32,6 +34,7 @@ const GarmentTexture := preload("garment_texture.gd")
 const SkinPaint := preload("skin_paint.gd")  # SH.8c
 const StyleNormals := preload("style_normals.gd")
 const EyeTexture := preload("eye_texture.gd")  # AC.6b
+const MeshBaker := preload("mesh_baker.gd")  # paso 9.7.3
 const TEXTURE_SIZE := 2048  # 1 píxel ≈ 0,9 mm en el borde de la prenda (medido en el paso 3.6.6)
 const EYE_SINK := 0.001  # metros: lo que se hunde la bolsa del cuerpo detrás del ojo (AC.3b §5.7)
 const EYE_THREADS := 2  # hilos para las texturas del ojo: con más, la ventana pierde fluidez al exportar (medido)
@@ -105,6 +108,7 @@ static func after_bake(job: Dictionary) -> void:
 	_color_pieces(character, job["colors"], job["eye_values"].map(func(e: Dictionary) -> StringName: return e["name"]))
 	var exported := character.find_children("*", "MeshInstance3D", true, false)[0] as MeshInstance3D
 	job["arrays"] = exported.mesh.surface_get_arrays(0)
+	job["morphs"] = MeshBaker.morph_deltas(exported.mesh)  # paso 9.7.3: las expresiones (desplazamientos)
 	job["head"] = StyleNormals.head_weights(job["arrays"], exported.skin, exported.get_parent() as Skeleton3D)
 	job["eyes"] = _prepare_eyes(character, job["eye_values"], job["eye_data"])
 
@@ -117,7 +121,7 @@ static func _prepare_eyes(character: Node3D, eye_values: Array, eye_data: Dictio
 		var exported := character.find_child(read["name"], true, false) as MeshInstance3D
 		var is_eye: bool = read["is_eye"]
 		var entry := {"name": read["name"], "is_eye": is_eye, "arrays": exported.mesh.surface_get_arrays(0),
-			"values": read["values"]}
+			"values": read["values"], "morphs": MeshBaker.morph_deltas(exported.mesh)}
 		var side := String(read["name"]).get_slice("_", 1)
 		if is_eye and eye_data.has(side):
 			var rim := {}
@@ -194,14 +198,12 @@ static func finish(job: Dictionary) -> Node3D:
 	var character: Node3D = job["character"]
 	if character != null:
 		var exported := character.find_children("*", "MeshInstance3D", true, false)[0] as MeshInstance3D
-		var mesh := ArrayMesh.new()
-		mesh.add_surface_from_arrays(Mesh.PRIMITIVE_TRIANGLES, job["arrays"])
+		var mesh := MeshBaker.with_morphs(job["arrays"], job["morphs"])  # paso 9.7.3: con las expresiones
 		mesh.surface_set_material(0, _material(job))
 		exported.mesh = mesh
 		for entry: Dictionary in job["eyes"]:  # AC.6b
 			var eye := character.find_child(entry["name"], true, false) as MeshInstance3D
-			var eye_mesh := ArrayMesh.new()
-			eye_mesh.add_surface_from_arrays(Mesh.PRIMITIVE_TRIANGLES, entry["arrays"])
+			var eye_mesh := MeshBaker.with_morphs(entry["arrays"], entry["morphs"])
 			eye_mesh.surface_set_material(0, _eye_material(entry))
 			eye.mesh = eye_mesh
 	return character

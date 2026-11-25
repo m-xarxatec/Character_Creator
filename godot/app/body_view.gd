@@ -29,6 +29,7 @@ const CharacterUpdater := preload("../addons/creador/character_updater.gd")
 const Preset := preload("../addons/creador/preset.gd")
 const BodyMaterial := preload("../addons/creador/body_material.gd")
 const GlbExporter := preload("../addons/creador/glb_exporter.gd")
+const ShapeWeights := preload("../addons/creador/shape_weights.gd")  # paso 9.7.2
 const AnimationSet := preload("../addons/creador/animation_set.gd")
 const PoseRetarget := preload("../addons/creador/pose_retarget.gd")
 const StaticPose := preload("../addons/creador/static_pose.gd")
@@ -80,6 +81,7 @@ var hair := {}  # SH.6b: "pack/pieza" → MeshInstance3D de las piezas de ranura
 var eyes: Array[MeshInstance3D] = []  # AC.6b: capas y líneas del ojo (EyeMesh), para exportarlas
 var updater  # CharacterUpdater
 var values: Dictionary
+var expression := ""  # paso 9.7.2: la expresión que se prueba («happy»…); "" = ninguna
 var pose_t := false
 var animations  # AnimationSet; null si no cargó (animation_error dice por qué)
 var animation_error := ""
@@ -152,7 +154,8 @@ func _ready() -> void:
 ## Valores de Forma y Proporción juntos, como en el preset. Devuelve las claves que no aplicó.
 func set_values(new_values: Dictionary) -> Array[String]:
 	values = new_values
-	var rejected: Array[String] = updater.update(values, pose_t or clip != "")  # la animación parte de la pose T
+	var faces := {expression: 1.0} if expression != "" else {}  # paso 9.7.2: la expresión que se prueba
+	var rejected: Array[String] = updater.update(values, pose_t or clip != "", faces)  # la animación parte de la pose T
 	if clip == ROM_ID:
 		_save_t_pose()
 	if not pose_turns.is_empty():
@@ -167,6 +170,23 @@ func set_values(new_values: Dictionary) -> Array[String]:
 		else:
 			restyle_timer.start()
 	return rejected
+
+
+## Paso 9.7.2: prueba una expresión de VRM («happy», «blink»…) encima de la cara; "" = ninguna. No se guarda ni se
+## exporta (el .glb lleva las expresiones como formas, a 0). Devuelve false si la especie no la tiene.
+func set_expression(name: String) -> bool:
+	if name != "" and not has_expression(name):
+		return false
+	expression = name
+	set_values(values)
+	return true
+
+
+## Paso 9.7.4: si la especie tiene esa expresión (sus formas expr_* están en el cuerpo).
+func has_expression(name: String) -> bool:
+	var names := ShapeWeights.shape_names(species.mesh.mesh)
+	var parts: Array = ShapeWeights.EXPRESSION_GROUPS.get(name, [name])
+	return parts.all(func(p: String) -> bool: return ShapeWeights.EXPRESSION_PREFIX + p in names)
 
 
 ## Probar huesos (paso 4.5): true = pose T; false = reposo (pose A).

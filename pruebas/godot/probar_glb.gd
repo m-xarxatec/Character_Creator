@@ -22,6 +22,7 @@ var pose_a := "--pose-a" in OS.get_cmdline_user_args()  # variante en pose A del
 var piece_count := _int_arg("--piezas=")  # -1 = sin modo piezas
 var rigid_count := _int_arg("--rigidas=")
 var with_eyes := "--ojos" in OS.get_cmdline_user_args()  # paso AC.6b
+const EXPRESSIONS := ["happy", "angry", "sad", "surprised", "blinkLeft", "blinkRight"]  # paso 9.7.3, orden de FORMATO.md
 
 const EYE_MESHES := ["ojo_l", "ojo_r", "linea_l", "linea_r", "linea_inferior_l", "linea_inferior_r", "pliegue_l", "pliegue_r",
 	"ceja_l", "ceja_r"]  # AC.6c: las cejas
@@ -144,7 +145,10 @@ func _check_mesh(scene: Node) -> void:
 
 func _check_body(instance: MeshInstance3D) -> void:
 	var mesh: Mesh = instance.mesh
-	check("una sola superficie y sin formas sueltas", mesh.get_surface_count() == 1 and mesh.get_blend_shape_count() == 0)
+	check("una sola superficie y sin formas sueltas (solo expresiones VRM, paso 9.7.3)", mesh.get_surface_count() == 1
+		and _only_expressions(mesh), str(_shape_names(mesh)))
+	if with_eyes:  # datos con expresiones (paso 9.7.1)
+		check("el cuerpo lleva las 6 expresiones VRM", _shape_names(mesh) == EXPRESSIONS, str(_shape_names(mesh)))
 	var arrays := mesh.surface_get_arrays(0)
 	var points: PackedVector3Array = arrays[Mesh.ARRAY_VERTEX]
 	var weights: PackedFloat32Array = arrays[Mesh.ARRAY_WEIGHTS]
@@ -154,6 +158,19 @@ func _check_body(instance: MeshInstance3D) -> void:
 	check("lleva el color de la prenda", arrays[Mesh.ARRAY_COLOR] != null and (arrays[Mesh.ARRAY_COLOR] as PackedColorArray).size() == points.size())
 	var box := mesh.get_aabb()
 	check("metros y pies en el suelo", box.size.y > 1.2 and box.size.y < 2.4 and absf(box.position.y) < 0.001, "alto %.3f" % box.size.y)
+
+
+## Paso 9.7.3: las formas de una malla exportada (nombres VRM, en su orden).
+func _shape_names(mesh: Mesh) -> Array:
+	var names := []
+	for i in mesh.get_blend_shape_count():
+		names.append(String(mesh.get_blend_shape_name(i)))
+	return names
+
+
+## Paso 9.7.3: el .glb solo lleva formas de expresión (D31); las de identidad se hornean.
+func _only_expressions(mesh: Mesh) -> bool:
+	return _shape_names(mesh).all(func(n: String) -> bool: return n in EXPRESSIONS)
 
 
 ## El mayor desvío de 1 en la suma de pesos de un vértice.
@@ -195,7 +212,8 @@ func _check_piece(piece: MeshInstance3D, skel: Skeleton3D) -> void:
 	check("%s: usa el esqueleto de 53 huesos" % piece.name, piece.get_node_or_null(piece.skeleton) == skel and skel.get_bone_count() == 53)
 	_check_binds(piece, skel)
 	var mesh: Mesh = piece.mesh
-	check("%s: una sola superficie y sin formas sueltas" % piece.name, mesh.get_surface_count() == 1 and mesh.get_blend_shape_count() == 0)
+	check("%s: una sola superficie y sin formas sueltas (solo expresiones VRM)" % piece.name, mesh.get_surface_count() == 1
+		and _only_expressions(mesh), str(_shape_names(mesh)))
 	var arrays := mesh.surface_get_arrays(0)
 	var points: PackedVector3Array = arrays[Mesh.ARRAY_VERTEX]
 	var weights: PackedFloat32Array = arrays[Mesh.ARRAY_WEIGHTS]

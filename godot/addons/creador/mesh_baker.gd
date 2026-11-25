@@ -118,6 +118,62 @@ static func add_shape_arrays(vertices: PackedVector3Array, normals: PackedVector
 			normals[i] += weight * (shape_normals[i] - base_normals[i])
 
 
+## Paso 9.7.3: desplazamientos de forma pasados por el esqueleto: Σ w · M.basis · d / Σ w (sin la traslación). Como el
+## piel es lineal, es exactamente lo que se mueve el vértice horneado (_skin) al sumarle d antes. Solo arrays.
+static func skinned_deltas(matrices: Array[Transform3D], bones: PackedInt32Array, weights: PackedFloat32Array,
+		deltas: PackedVector3Array) -> PackedVector3Array:
+	var out := PackedVector3Array()
+	out.resize(deltas.size())
+	for i in deltas.size():
+		var moved := Vector3.ZERO
+		var total := 0.0
+		for k in range(4 * i, 4 * i + 4):
+			var weight := weights[k]
+			if weight > 0.0:
+				moved += weight * (matrices[bones[k]].basis * deltas[i])
+				total += weight
+		out[i] = moved / total
+	return out
+
+
+## Paso 9.7.3: {nombre de forma: desplazamiento} de las formas de una ArrayMesh (forma − base).
+static func morph_deltas(mesh: ArrayMesh) -> Dictionary:
+	var out := {}
+	if mesh.get_blend_shape_count() == 0:
+		return out
+	var base: PackedVector3Array = mesh.surface_get_arrays(0)[Mesh.ARRAY_VERTEX]
+	var shapes := mesh.surface_get_blend_shape_arrays(0)
+	for s in shapes.size():
+		var shape: PackedVector3Array = shapes[s][Mesh.ARRAY_VERTEX]
+		var delta := PackedVector3Array()
+		delta.resize(base.size())
+		for i in base.size():
+			delta[i] = shape[i] - base[i]
+		out[String(mesh.get_blend_shape_name(s))] = delta
+	return out
+
+
+## Paso 9.7.3: ArrayMesh con la superficie arrays y, si hay, sus formas (solo posiciones: forma = vértice + d; las
+## normales, las de la superficie). Sin formas es lo mismo que add_surface_from_arrays.
+static func with_morphs(arrays: Array, morphs: Dictionary) -> ArrayMesh:
+	var mesh := ArrayMesh.new()
+	var shapes := []
+	var vertices: PackedVector3Array = arrays[Mesh.ARRAY_VERTEX]
+	for name: String in morphs:
+		mesh.add_blend_shape(name)
+		var delta: PackedVector3Array = morphs[name]
+		var moved := vertices.duplicate()
+		for i in moved.size():
+			moved[i] += delta[i]
+		var shape := []
+		shape.resize(Mesh.ARRAY_MAX)
+		shape[Mesh.ARRAY_VERTEX] = moved
+		shape[Mesh.ARRAY_NORMAL] = arrays[Mesh.ARRAY_NORMAL]
+		shapes.append(shape)
+	mesh.add_surface_from_arrays(Mesh.PRIMITIVE_TRIANGLES, arrays, shapes)
+	return mesh
+
+
 static func _skin(matrices: Array[Transform3D], bones: PackedInt32Array, weights: PackedFloat32Array,
 		vertices: PackedVector3Array, normals: PackedVector3Array) -> void:
 	for i in vertices.size():

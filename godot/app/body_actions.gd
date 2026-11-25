@@ -5,6 +5,8 @@ extends HBoxContainer
 #   al final, «Rango de movimiento» (5.9).
 # - Exportar .glb: elige dónde guardar y exporta en pose T (GlbExporter); el .tres va al lado. Avisa con la ruta o el error.
 # - Prenda base: muestra u oculta la prenda (BodyMaterial); el .glb sale como se ve. No entra en Deshacer.
+# Paso 9.7.4: Expresión: lista con «Sin expresión» y las de VRM que tenga la especie (encima de la cara; no se guarda
+#   ni se hornea: el .glb las lleva como formas a 0). Va aquí, con las otras pruebas: la pestaña Cara y ojos aún no existe.
 # Paso 5.4: test_changed avisa al cambiar Probar huesos o la lista Animación (main.gd enseña el informe).
 # Paso 7.0: Guardar preset… y Abrir preset… (preset_file.gd). Abrir se deshace con Ctrl+Z (solo los valores);
 #   look_changed avisa de que cambiaron colores y acabado (main.gd refresca el panel Acabado).
@@ -30,6 +32,7 @@ const ThemeBuilder := preload("tema/theme_builder.gd")  # paso IU.2: iconos
 var view: SubViewportContainer  # BodyView
 var bones_button: Button
 var animation_list: OptionButton
+var expression_list: OptionButton  # paso 9.7.4
 var export_button: Button
 var garment_check: CheckBox
 var file_dialog: FileDialog
@@ -53,6 +56,7 @@ func setup(body_view: SubViewportContainer, body_editor = null) -> void:
 	bones_button.icon = ThemeBuilder.icon("vistas")
 	bones_button.toggle_mode = true
 	_add_animation_list()
+	_add_expression_list()
 	export_button = _button("Exportar .glb", func() -> void: popup_file_dialog(file_dialog))
 	export_button.shortcut = _shortcut(KEY_E)
 	export_button.icon = ThemeBuilder.icon("exportar")
@@ -198,6 +202,31 @@ func set_animation(index: int) -> void:
 	var entries: Array = view.animations.entries() if view.animations != null else []
 	view.set_animation("" if index == 0 else (view.ROM_ID if index > entries.size() else entries[index - 1]["id"]))
 	test_changed.emit()
+
+
+## Paso 9.7.4: las expresiones que se pueden probar, en este orden (nombre VRM → texto de la lista).
+const EXPRESSION_NAMES := {"happy": "Alegría", "angry": "Enfado", "sad": "Tristeza", "surprised": "Sorpresa",
+	"blink": "Parpadeo", "blinkLeft": "Guiño izquierdo", "blinkRight": "Guiño derecho"}
+
+
+## Paso 9.7.4: elige una fila: 0 = sin expresión; las demás, las de EXPRESSION_NAMES que tenga la especie.
+func set_expression(index: int) -> void:
+	expression_list.select(index)
+	view.set_expression("" if index == 0 else expression_list.get_item_metadata(index))
+
+
+func _add_expression_list() -> void:
+	expression_list = OptionButton.new()
+	expression_list.add_item("Sin expresión")
+	for name: String in EXPRESSION_NAMES:
+		if view.has_expression(name):  # solo las que tiene la especie
+			expression_list.add_item(EXPRESSION_NAMES[name])
+			expression_list.set_item_metadata(expression_list.item_count - 1, name)
+	expression_list.disabled = expression_list.item_count == 1
+	expression_list.tooltip_text = "Prueba una expresión en la cara (no se guarda; el .glb las lleva todas, a 0)" \
+		if not expression_list.disabled else "Esta especie no tiene expresiones"
+	expression_list.item_selected.connect(set_expression)
+	add_child(expression_list)
 
 
 func _add_animation_list() -> void:

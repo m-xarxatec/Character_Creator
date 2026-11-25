@@ -10,6 +10,9 @@ extends RefCounted
 ##   donde estaba el hueso de anclaje (posición y giro; escala 1 porque el horneado ya quitó las escalas).
 ## - Skin sin los anclajes; los índices de hueso de la malla se corrigen si cambian.
 ## El personaje de entrada no cambia (quien llama lo libera).
+## Paso 9.7.3: las mallas conservan sus formas (las expresiones, en el personaje que se exporta).
+
+const MeshBaker := preload("mesh_baker.gd")
 
 
 ## "" si se puede convertir; si no, el motivo.
@@ -97,6 +100,4 @@ static func _mesh(source: Mesh, new_bind: Dictionary) -> ArrayMesh:
 		bones[i] = new_bind.get(bones[i], 0)
 	arrays[Mesh.ARRAY_BONES] = bones
 	arrays[Mesh.ARRAY_TANGENT] = null
-	var mesh := ArrayMesh.new()
-	mesh.add_surface_from_arrays(Mesh.PRIMITIVE_TRIANGLES, arrays)
-	return mesh
+	return MeshBaker.with_morphs(arrays, MeshBaker.morph_deltas(source as ArrayMesh))
