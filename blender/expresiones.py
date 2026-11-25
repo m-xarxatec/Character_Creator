@@ -8,7 +8,10 @@
   peso = producto, como las de las macros), para que el ojo se cierre tambien con esos deslizadores.
 - Todo pasa por EyeFit.face_delta: la bolsa del ojo sigue al lazo y queda detras de su membrana.
 - Simetricas (promedio con el reflejo, como formas_propias). El parpadeo propio ya sale de un solo ojo.
-- La boca no se abre (D57): ninguna receta usa jawOpen hasta el paso 9.6.
+- Paso 9.8: visemas de VRM (aa, ih, ou, ee, oh) con las de visemes02 (CC0, Mika Suominen; copiadas en
+  blender/visemes02/, sin cambios): viseme_aa, viseme_I, viseme_U, viseme_E y viseme_O. Abren la boca: tras el 9.6
+  la bolsa de la boca ya no esta aplastada (D57).
+- Orden: las expresiones del 9.7, sus correcciones y despues las visemas (las formas de antes no cambian de sitio).
 Uso (lo hace exportar_datos.export_species, con las formas de ojo ya corregidas por fit.fix_eye_shapes):
     shapes.update(expresiones.expression_shapes(basemesh, fit, shapes))
 Unidades y "Left"/"Right": el lado del personaje (Left = +X, el ojo "l" de ojos.json; comprobado con los indices de
@@ -24,7 +27,7 @@ import formas_propias as fp
 
 HERE = os.path.dirname(os.path.abspath(__file__))
 RECIPES = os.path.join(HERE, "expresiones.json")
-UNITS = os.path.join(HERE, "faceunits01")
+UNITS = (os.path.join(HERE, "faceunits01"), os.path.join(HERE, "visemes02"))  # paso 9.8: tambien las visemas
 PREFIX = "expr_"
 OWN = "propio"
 BLINKS = {"blinkLeft": "l", "blinkRight": "r"}
@@ -45,9 +48,11 @@ def unit_deltas(basemesh, names):
     had_keys = basemesh.data.shape_keys is not None
     out = {}
     for name in names:
-        path = os.path.join(UNITS, name + ".target")
-        if not os.path.exists(path):
-            raise ValueError("Falta la unidad %s en %s" % (name, UNITS))
+        found = [os.path.join(folder, name + ".target") for folder in UNITS]
+        found = [p for p in found if os.path.exists(p)]
+        if not found:
+            raise ValueError("Falta la unidad %s en %s" % (name, ", ".join(UNITS)))
+        path = found[0]
         key_name = "_unidad_" + name
         TargetService.load_target(basemesh, path, weight=0.0, name=key_name)
         key = basemesh.data.shape_keys.key_blocks[key_name]
@@ -70,6 +75,7 @@ def expression_shapes(basemesh, fit, shapes):
     to_local = np.linalg.inv(world)
     still = {b.name: (np.zeros(3), np.zeros(3)) for b in basemesh.parent.data.bones}
     out = {}
+    last_blink = [n for n in recipes if n in BLINKS][-1] if any(n in BLINKS for n in recipes) else None
     for name, recipe in recipes.items():
         if recipe == OWN:
             if name not in BLINKS:
@@ -80,6 +86,14 @@ def expression_shapes(basemesh, fit, shapes):
             # las de dos lados, simetricas; las de un lado (A/B del parpadeo), cortadas por x = 0
             delta = fp.symmetric(delta, fit.mirror) if name not in BLINKS else _one_side(delta, fit.points, BLINKS[name])
         out[PREFIX + name] = (delta, still)
+        if name == last_blink:  # las correcciones, justo despues del parpadeo (asi las visemas del 9.8 van al final)
+            out.update(_blink_fixes(fit, shapes, recipes, world, to_local, still))
+    return out
+
+
+def _blink_fixes(fit, shapes, recipes, world, to_local, still):
+    """{"expr_blink<lado>*<forma de ojo>": correccion} del parpadeo propio en los extremos de BLINK_FIXES."""
+    out = {}
     for name, side in BLINKS.items():
         if recipes.get(name) != OWN:
             continue  # con una receta de unidades (A/B de 9.7.0) no hay correcciones

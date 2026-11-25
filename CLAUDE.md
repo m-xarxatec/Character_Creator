@@ -71,7 +71,7 @@
 | Esqueleto | 53 huesos con nombres de `SkeletonProfileHumanoid` (faltan `LeftEye`, `RightEye` y `Jaw` hasta la cara); solo huesos de deformación. En Godot hay que asignar un BoneMap humanoide al importar |
 | Pesos | Máximo 4 influencias por vértice, y suman 1 |
 | Malla | La base completa de MakeHuman, sin proxy; sin Draco |
-| Formas | Ninguna (se hornean), salvo las expresiones VRM (`happy`, `angry`, `sad`, `surprised`, `blinkLeft`, `blinkRight`) en el cuerpo y en las mallas que las tienen: solo posiciones, a 0 (D31, paso 9.7.3) |
+| Formas | Ninguna (se hornean), salvo las expresiones VRM (`happy`, `angry`, `sad`, `surprised`, `blinkLeft`, `blinkRight` y las visemas `aa`, `ih`, `ou`, `ee`, `oh`) en el cuerpo y en las mallas que las tienen: solo posiciones, a 0 (D31, paso 9.7.3) |
 | Puntos de anclaje | `socket_hand_r`, `socket_hand_l`, `socket_back`, `socket_hip`: nodos vacíos hijos del hueso |
 | Cuerpo | De 5 a 60 años (D42), sin deslizador Edad: con Altura (desde ×0,65) y los demás deslizadores; neutro, sin detalle anatómico |
 | Prenda base | Pintada: color por vértice `garment` (1 = prenda), siempre en la malla; el shader la muestra o la oculta (botón) |

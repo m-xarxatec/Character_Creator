@@ -206,7 +206,8 @@ func set_animation(index: int) -> void:
 
 ## Paso 9.7.4: las expresiones que se pueden probar, en este orden (nombre VRM → texto de la lista).
 const EXPRESSION_NAMES := {"happy": "Alegría", "angry": "Enfado", "sad": "Tristeza", "surprised": "Sorpresa",
-	"blink": "Parpadeo", "blinkLeft": "Guiño izquierdo", "blinkRight": "Guiño derecho"}
+	"blink": "Parpadeo", "blinkLeft": "Guiño izquierdo", "blinkRight": "Guiño derecho",
+	"aa": "Vocal A", "ih": "Vocal I", "ou": "Vocal U", "ee": "Vocal E", "oh": "Vocal O"}  # paso 9.8: visemas
 
 
 ## Paso 9.7.4: elige una fila: 0 = sin expresión; las demás, las de EXPRESSION_NAMES que tenga la especie.

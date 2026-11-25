@@ -15,7 +15,7 @@ const BACKGROUND := Color(0.86, 0.87, 0.9)
 const VIEWS := [0.0, 35.0]
 const CLOSE_DOWN := 1.1  # de la coronilla hacia abajo, en cabezas
 const CLOSE_SIDE := 0.7  # a cada lado del centro, en cabezas
-const FACES := ["", "happy", "angry", "sad", "surprised", "blink", "blinkLeft"]
+const FACES := ["", "happy", "angry", "sad", "surprised", "blink", "blinkLeft", "aa", "ih", "ou", "ee", "oh"]  # 9.8: visemas
 const TEMPLATES := {"neutro": "", "femenino": "presets/femenino.json", "masculino": "presets/masculino.json"}
 
 var root_dir: String

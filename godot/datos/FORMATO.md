@@ -137,6 +137,8 @@ Filas de tipo Forma con `incr` = `propia:<forma>` (y `decr` = `propia:<forma>` s
   preset y en el editor valen 0 salvo al probarlas. Van al final de las formas (no cambian las de antes).
 - Correcciones del parpadeo: `expr_blinkLeft*eye_tall_incr` (y `_decr`, y `eye_size_*`, y las de `blinkRight`), con la
   regla del producto: el ojo se cierra también con Ojos › Alto y Tamaño en sus extremos.
+- Paso 9.8: las visemas de VRM `expr_aa`, `expr_ih`, `expr_ou`, `expr_ee` y `expr_oh`, al final (después de las
+  correcciones), de visemes02 (CC0, en `blender/visemes02/`). Abren la boca.
 - Las escribe `blender/expresiones.py`: cejas, mejillas y boca, mezcla de unidades ARKit de faceunits01 (CC0, en
   `blender/faceunits01/`) con los pesos de `blender/expresiones.json`; parpadeo propio (`cara_anime.EyeFit.blink_delta`).
   No mueven huesos. Al exportar no se hornean: salen como formas del `.glb` con su nombre VRM (D31, paso 9.7.3).

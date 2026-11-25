@@ -8,11 +8,13 @@ extends SceneTree
 #   el archivo; poner una a 1 en el .glb mueve lo mismo que en el editor en pose T (≤ MAX_GLB_MM), también con Ojos ›
 #   Alto al máximo (las correcciones del parpadeo).
 # 9.7.4: la lista «Expresión» de la barra (body_actions.gd) pone y quita la expresión.
+# 9.8: las 5 visemas (aa, ih, ou, ee, oh): sin invertidos en las 21 caras, en el .glb y en la lista.
 # Uso: (ulimit -v 4000000; timeout 900 godot --headless --path pruebas/godot -s probar_expresiones.gd 2>&1 | grep -E 'FALLO|MEDIDA|RESULTADO|ERROR')
 # Roturas: en CharacterUpdater, las expr_* fuera de ShapeWeights.weights (se quedan a 0); en CharacterBaker, hornear
 # también las expr_* (el .glb cambia al probar una); skinned_deltas con la traslación (el .glb no da lo mismo).
 
 const EXPRESSIONS := ["happy", "angry", "sad", "surprised", "blinkLeft", "blinkRight"]
+const VISEMES := ["aa", "ih", "ou", "ee", "oh"]  # paso 9.8: van al final, detrás de las correcciones
 const FIXES := ["eye_tall_decr", "eye_tall_incr", "eye_size_decr", "eye_size_incr"]
 const SLIDERS := ["eye_size", "eye_spacing", "eye_position", "eye_tall", "eye_corner"]
 const MAX_GAP_MM := 0.3  # PROVISIONAL (ficha 9.7 §1): hueco entre los arcos del lazo al parpadear
@@ -54,6 +56,7 @@ func _initialize() -> void:
 	for side: String in ["blinkLeft", "blinkRight"]:
 		for fix: String in FIXES:
 			wanted.append("expr_%s*%s" % [side, fix])
+	wanted.append_array(VISEMES.map(func(v: String) -> String: return "expr_" + v))
 	var found := Array(names).filter(func(n: String) -> bool: return n.begins_with("expr_"))
 	if not _check(found == wanted, "cuerpo.glb trae las %d formas expr_* (si no: regenerar con exportar_datos.py)" % wanted.size()):
 		print("  ", found)
@@ -114,7 +117,7 @@ func _check_faces() -> void:
 	for state: Array in _states():
 		updater.update(state[1], false)
 		var neutral: PackedVector3Array = mesh_baker.bake(species.mesh, species.skeleton)["vertices"]
-		for e: String in ["happy", "angry", "sad", "surprised", "blink"]:
+		for e: String in ["happy", "angry", "sad", "surprised", "blink"] + VISEMES:  # 9.8: también las visemas
 			updater.update(state[1], false, {e: 1.0})
 			var baked: Dictionary = mesh_baker.bake(species.mesh, species.skeleton)
 			var n := _inverted(neutral, baked["vertices"])
@@ -236,16 +239,16 @@ func _check_glb() -> void:
 		await process_frame
 		var meshes := scene.find_children("*", "MeshInstance3D", true, false)
 		var exported: MeshInstance3D = meshes.filter(func(m: Node) -> bool: return m.name == species.mesh.name)[0]
-		_check(_names(exported.mesh) == EXPRESSIONS, "%s: el cuerpo lleva las 6 formas VRM %s" % [body[0], _names(exported.mesh)])
+		_check(_names(exported.mesh) == EXPRESSIONS + VISEMES, "%s: el cuerpo lleva las 11 formas VRM %s" % [body[0], _names(exported.mesh)])
 		var eye_ok := true
 		for m: MeshInstance3D in meshes:
-			if m != exported and not _names(m.mesh).all(func(n: String) -> bool: return n in EXPRESSIONS):
+			if m != exported and not _names(m.mesh).all(func(n: String) -> bool: return n in EXPRESSIONS + VISEMES):
 				eye_ok = false
 		var ojo: Array = meshes.filter(func(m: Node) -> bool: return m.name == "ojo_l")
 		_check(eye_ok and not ojo.is_empty() and "blinkLeft" in _names(ojo[0].mesh), "%s: las mallas del ojo llevan las suyas" % body[0])
 		var skeleton := scene.find_children("*", "Skeleton3D", true, false)[0] as Skeleton3D
 		var worst := 0.0
-		for e: String in EXPRESSIONS:
+		for e: String in EXPRESSIONS + VISEMES:
 			worst = maxf(worst, _compare(body[1], e, exported, skeleton))
 		print("MEDIDA %s: expresiones del .glb contra el editor en pose T: máx. %.4f mm" % [body[0], worst * 1000.0])
 		_check(worst * 1000.0 <= MAX_GLB_MM, "%s: en el .glb mueven lo mismo que en el editor" % body[0])
@@ -308,7 +311,7 @@ func _check_bar() -> void:
 	await process_frame
 	var bar = main.body_actions
 	var list: OptionButton = bar.expression_list
-	_check(list.item_count == 8 and not list.disabled, "la lista tiene «Sin expresión» y las 7 (%d)" % list.item_count)
+	_check(list.item_count == 13 and not list.disabled, "la lista tiene «Sin expresión», las 7 y las 5 vocales (%d)" % list.item_count)
 	var happy := -1
 	for i in list.item_count:
 		if list.get_item_metadata(i) == "happy":

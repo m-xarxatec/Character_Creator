@@ -1,7 +1,7 @@
 # SPDX-License-Identifier: GPL-3.0-or-later
 """Paso 9.7.1: formas de expresion (expr_*) de cuerpo.glb, medidas sobre el .glb exportado.
 
-Comprueba: las 6 expresiones y las 8 correcciones del parpadeo, al final de las formas; con -- <carpeta de antes>, que
+Comprueba: las 6 expresiones, las 8 correcciones del parpadeo y las 5 visemas del 9.8, al final de las formas; con -- <carpeta de antes>, que
 las formas de antes, la malla, articulaciones.json y ojos.json son identicos; simetria (blinkLeft contra el reflejo de
 blinkRight); 0 cruces y 0 invertidos en la cabeza con cada expresion a 1 en la cara anime, y con el parpadeo tambien en
 los extremos de Ojos › Alto y Tamano (con sus correcciones). MEDIDA: hueco entre los arcos del lazo al parpadear.
@@ -26,6 +26,7 @@ import expresiones as ex  # noqa: E402
 FOLDER = os.path.join(ROOT, "godot", "datos", "humana")
 EXPRESSIONS = ["happy", "angry", "sad", "surprised", "blinkLeft", "blinkRight"]
 FIXES = ["%s%s*%s" % (ex.PREFIX, b, f) for b in ex.BLINKS for f in ex.BLINK_FIXES]
+VISEMES = ["aa", "ih", "ou", "ee", "oh"]  # paso 9.8: al final, detras de las correcciones
 MAX_ASYMMETRY_MM = 0.5
 failures = []
 
@@ -84,7 +85,7 @@ def check_before(before):
 def main():
     before = os.path.abspath(sys.argv[sys.argv.index("--") + 1]) if "--" in sys.argv else None
     gltf, data, primitive, names = glb(FOLDER)
-    wanted = [ex.PREFIX + e for e in EXPRESSIONS] + FIXES
+    wanted = [ex.PREFIX + e for e in EXPRESSIONS] + FIXES + [ex.PREFIX + v for v in VISEMES]
     check("%d formas de expresion, al final" % len(wanted), names[-len(wanted):] == wanted, str([n for n in names if n.startswith(ex.PREFIX)]))
     if before:
         check_before(before)
@@ -111,7 +112,7 @@ def main():
     rest_cross = crossed(anime, tess)
     deltas = {n: read(n) for n in wanted}
 
-    for e in EXPRESSIONS[:4]:
+    for e in EXPRESSIONS[:4] + VISEMES:
         d = deltas[ex.PREFIX + e]
         asym = float(np.linalg.norm(d - d[fit.mirror] * ca.FLIP, axis=1).max()) * 1000
         check("%s: simetrica" % e, asym <= MAX_ASYMMETRY_MM, "%.4f mm" % asym)
@@ -119,7 +120,7 @@ def main():
     asym = float(np.linalg.norm(left - right[fit.mirror] * ca.FLIP, axis=1).max()) * 1000
     check("blinkLeft es el reflejo de blinkRight", asym <= MAX_ASYMMETRY_MM, "%.4f mm" % asym)
 
-    states = {e: anime + deltas[ex.PREFIX + e] for e in EXPRESSIONS}
+    states = {e: anime + deltas[ex.PREFIX + e] for e in EXPRESSIONS + VISEMES}
     blink = deltas[ex.PREFIX + "blinkLeft"] + deltas[ex.PREFIX + "blinkRight"]
     states["blink"] = anime + blink
     for fix in ex.BLINK_FIXES:
