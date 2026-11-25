@@ -52,6 +52,7 @@
 - Cabezas con licencia CC-BY-SA como pack opcional, con aviso claro de la licencia al elegirlas.
 
 ---
+- **Deslizadores de cara más extremos** (responsable, 2026-11-25): nariz, orejas y boca, un poco más lejos (más curvo, más ancho, más torcido); los de ojos, cuando los ojos no sean solo dibujos. Cómo: un peso mayor que 1 en la celda del CSV (`target=1.3`, leído en `_source` de `exportar_datos.py`) y medir cruces e invertidos antes de dejarlo.
 
 ## Después del MVP: contorno
 
