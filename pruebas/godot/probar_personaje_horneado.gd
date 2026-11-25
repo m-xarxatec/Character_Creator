@@ -139,7 +139,7 @@ func _check(body: String, t_variant: bool) -> void:
 			and new_skeleton.get_bone_rest(bone).basis.get_scale().is_equal_approx(Vector3.ONE) \
 			and new_skeleton.get_bone_pose(bone).is_equal_approx(new_skeleton.get_bone_rest(bone)) \
 			and new_skeleton.get_bone_name(bone) == skeleton.get_bone_name(bone)
-	check(label + "57 huesos con escala 1 y pose = reposo", clean)
+	check(label + "los huesos del editor (60 desde el paso 9.3) con escala 1 y pose = reposo", clean)
 	var mm := _worst_mm(baked, expected, to_ground)
 	check(label + "malla igual que antes de hornear (< %s mm)" % SAME_MM, mm < SAME_MM, "máximo %.5f mm" % mm)
 	mm = _worst_mm(raw, baked, Vector3.ZERO)

@@ -155,8 +155,13 @@ static func morph_deltas(mesh: ArrayMesh) -> Dictionary:
 
 ## Paso 9.7.3: ArrayMesh con la superficie arrays y, si hay, sus formas (solo posiciones: forma = vértice + d; las
 ## normales, las de la superficie). Sin formas es lo mismo que add_surface_from_arrays.
+## Con formas, en modo NORMALIZED (revisión): son posiciones absolutas, como en el cuerpo.glb importado (eye_mesh.gd y
+## body_derived.gd copian su modo). El de serie de ArrayMesh, RELATIVE, las tomaría como desplazamientos, y GLTFDocument
+## solo resta la base al escribir el .glb en NORMALIZED.
 static func with_morphs(arrays: Array, morphs: Dictionary) -> ArrayMesh:
 	var mesh := ArrayMesh.new()
+	if not morphs.is_empty():
+		mesh.blend_shape_mode = Mesh.BLEND_SHAPE_MODE_NORMALIZED
 	var shapes := []
 	var vertices: PackedVector3Array = arrays[Mesh.ARRAY_VERTEX]
 	for name: String in morphs:

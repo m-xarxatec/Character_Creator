@@ -20,6 +20,10 @@ import numpy
 OUT = os.path.join(os.path.dirname(os.path.abspath(__file__)), "salida")
 SHOTS = os.path.join(os.path.dirname(os.path.abspath(__file__)), "..", "capturas", "prenda_blender")
 SOCKETS = {"socket_hand_r": "RightHand", "socket_hand_l": "LeftHand", "socket_back": "UpperChest", "socket_hip": "Hips"}
+# Pasos 9.7.3 y 9.8 (D31): las únicas formas del cuerpo exportado, las expresiones de VRM, en este orden.
+EXPRESSIONS = ["happy", "angry", "sad", "surprised", "blinkLeft", "blinkRight", "aa", "ih", "ou", "ee", "oh"]
+MOUTH_DARK = 0.06  # 9.8b (D58): el RGB del color por vértice en el interior de la boca (glb_exporter.gd MOUTH_DARK)
+COLOR_TOLERANCE = 0.01  # el color puede llegar en 8 bits
 failures = []
 
 
@@ -56,9 +60,10 @@ def check_file(path):
     bones = set(rigs[0].data.bones.keys())
     most = max(sum(1 for g in v.groups if g.weight > 0 and mesh.vertex_groups[g.group].name in bones)
                for v in mesh.data.vertices)
-    check(label + "sin formas, con color por vértice y máximo 4 influencias",
-          mesh.data.shape_keys is None and len(mesh.data.color_attributes) >= 1 and most <= 4,
-          f"{len(mesh.data.vertices)} vértices, {len(mesh.data.color_attributes)} colores, {most} influencias")
+    keys = [k.name for k in mesh.data.shape_keys.key_blocks[1:]] if mesh.data.shape_keys else []
+    check(label + "solo las formas de expresión de VRM (9.7.3 y 9.8), con color por vértice y máximo 4 influencias",
+          keys == EXPRESSIONS and len(mesh.data.color_attributes) >= 1 and most <= 4,
+          f"{keys}; {len(mesh.data.vertices)} vértices, {len(mesh.data.color_attributes)} colores, {most} influencias")
     return mesh
 
 
@@ -73,18 +78,21 @@ def check_garment(path, shown):
     nodes = material.node_tree.nodes if material and material.node_tree else []
     images = [n.image for n in nodes if n.type == "TEX_IMAGE" and n.image]
     colors = mesh.data.color_attributes[0]
-    tinted = any(min(d.color[:3]) < 0.999 for d in colors.data)
+    # 9.8b (D58): el RGB es blanco salvo en el interior de la boca, MOUTH_DARK
+    mouth = sum(1 for d in colors.data if max(d.color[:3]) <= MOUTH_DARK + COLOR_TOLERANCE)
+    tinted = any(min(d.color[:3]) < 0.999 and max(d.color[:3]) > MOUTH_DARK + COLOR_TOLERANCE for d in colors.data)
+    tinted = tinted or mouth == 0
     if not shown:
-        check(label + "prenda oculta: material sin textura y color por vértice blanco", not images and not tinted,
-              [n.type for n in nodes])
+        check(label + "prenda oculta: material sin textura y color por vértice blanco (la boca, oscura)",
+              not images and not tinted, ([n.type for n in nodes], f"{mouth} de la boca"))
         # Sin textura, Workbench dibuja el color de visor, que el importador deja en gris (el color base va a un nodo
         # Mix con el color por vértice): se pone el `baseColorFactor` del .glb.
         material.diffuse_color = base_color(path)
         render(label, os.path.basename(path), False)
         return
-    check(label + "material con una textura de 2048 px y color por vértice blanco",
+    check(label + "material con una textura de 2048 px y color por vértice blanco (la boca, oscura)",
           len(images) == 1 and tuple(images[0].size) == (2048, 2048) and not tinted,
-          ([tuple(i.size) for i in images], [n.type for n in nodes]))
+          ([tuple(i.size) for i in images], [n.type for n in nodes], f"{mouth} de la boca"))
     if len(images) != 1:
         return
     image = images[0]

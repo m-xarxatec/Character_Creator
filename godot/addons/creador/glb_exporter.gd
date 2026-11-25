@@ -100,6 +100,12 @@ static func compute_bake(job: Dictionary) -> void:
 ## Las mallas se crean aquí y se leen otra vez (como antes de OPT.3b): Godot comprime las normales al crear la malla, y
 ## compute tiene que partir de los mismos números para que el archivo salga idéntico.
 static func after_bake(job: Dictionary) -> void:
+	# Paso 9.7.3 (revisión): las expresiones de cada malla, ya calculadas en compute_bake. Leerlas otra vez de las
+	# mallas horneadas serían más pasadas por todos los vértices en el hilo principal.
+	var morphs := {}
+	for entry: Dictionary in job["bake"]["meshes"]:
+		morphs[entry["name"]] = entry["morphs"]
+	var body_morphs: Dictionary = job["bake"]["meshes"][0]["morphs"]  # el cuerpo es la primera
 	var baked: Node3D = CharacterBaker.finish_bake(job["bake"])
 	job.erase("bake")  # ~decenas de MB de arrays y formas: ya no hacen falta
 	var character: Node3D = Sockets.to_nodes(baked, job["sockets"])
@@ -110,20 +116,21 @@ static func after_bake(job: Dictionary) -> void:
 	_color_pieces(character, job["colors"], job["eye_values"].map(func(e: Dictionary) -> StringName: return e["name"]))
 	var exported := character.find_children("*", "MeshInstance3D", true, false)[0] as MeshInstance3D
 	job["arrays"] = exported.mesh.surface_get_arrays(0)
-	job["morphs"] = MeshBaker.morph_deltas(exported.mesh)  # paso 9.7.3: las expresiones (desplazamientos)
+	job["morphs"] = body_morphs  # paso 9.7.3: las expresiones (desplazamientos)
 	job["head"] = StyleNormals.head_weights(job["arrays"], exported.skin, exported.get_parent() as Skeleton3D)
-	job["eyes"] = _prepare_eyes(character, job["eye_values"], job["eye_data"])
+	job["eyes"] = _prepare_eyes(character, job["eye_values"], job["eye_data"], morphs)
 
 
 ## AC.6b: de cada malla del ojo, sus arrays horneados y sus uniforms (leídos en start); de cada ojo con datos, los
-## vértices del cuerpo que se hunden (la bolsa menos el lazo) y la normal del ojo horneado.
-static func _prepare_eyes(character: Node3D, eye_values: Array, eye_data: Dictionary) -> Array:
+## vértices del cuerpo que se hunden (la bolsa menos el lazo) y la normal del ojo horneado. morphs (9.7.3): malla →
+## sus expresiones, de compute_bake.
+static func _prepare_eyes(character: Node3D, eye_values: Array, eye_data: Dictionary, morphs: Dictionary) -> Array:
 	var out := []
 	for read: Dictionary in eye_values:
 		var exported := character.find_child(read["name"], true, false) as MeshInstance3D
 		var is_eye: bool = read["is_eye"]
 		var entry := {"name": read["name"], "is_eye": is_eye, "arrays": exported.mesh.surface_get_arrays(0),
-			"values": read["values"], "morphs": MeshBaker.morph_deltas(exported.mesh)}
+			"values": read["values"], "morphs": morphs.get(read["name"], {})}
 		var side := String(read["name"]).get_slice("_", 1)
 		if is_eye and eye_data.has(side):
 			var rim := {}

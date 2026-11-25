@@ -168,7 +168,7 @@ func _brow_image(path: String) -> Image:
 	var texture: Texture2D = null
 	if ceja != null and ceja.mesh.surface_get_material(0) is StandardMaterial3D:
 		texture = (ceja.mesh.surface_get_material(0) as StandardMaterial3D).albedo_texture
-	var image := texture.get_image() if texture != null else null
+	var image: Image = texture.get_image() if texture != null else null
 	scene.free()
 	return image
 

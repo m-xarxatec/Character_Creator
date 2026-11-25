@@ -4,6 +4,8 @@ extends SceneTree
 
 const SOCKETS := {"socket_hand_r": "RightHand", "socket_hand_l": "LeftHand", "socket_back": "UpperChest", "socket_hip": "Hips"}
 const OPTIONAL := []  # paso 9.3: ya están los 56 del perfil (antes faltaban LeftEye, RightEye y Jaw)
+## Pasos 9.7.3 y 9.8 (D31): las únicas formas del cuerpo exportado, las expresiones de VRM, en este orden.
+const EXPRESSIONS := ["happy", "angry", "sad", "surprised", "blinkLeft", "blinkRight", "aa", "ih", "ou", "ee", "oh"]
 
 var failures := 0
 
@@ -60,8 +62,11 @@ func _check_scene(file: String) -> void:
 	var weights: PackedFloat32Array = arrays[Mesh.ARRAY_WEIGHTS]
 	var count: int = arrays[Mesh.ARRAY_VERTEX].size()
 	var eight: bool = ((mesh.mesh as ArrayMesh).surface_get_format(0) & Mesh.ARRAY_FLAG_USE_8_BONE_WEIGHTS) != 0
-	check(label + "una superficie, 0 formas, 4 influencias por vértice y color por vértice",
-		mesh.mesh.get_surface_count() == 1 and mesh.mesh.get_blend_shape_count() == 0 and not eight
+	var shapes := []
+	for i in mesh.mesh.get_blend_shape_count():
+		shapes.append(String(mesh.mesh.get_blend_shape_name(i)))
+	check(label + "una superficie, solo las formas de expresión de VRM (9.7.3), 4 influencias y color por vértice",
+		mesh.mesh.get_surface_count() == 1 and shapes == EXPRESSIONS and not eight
 		and weights.size() == 4 * count and arrays[Mesh.ARRAY_COLOR] != null and mesh.skin != null, "%d vértices" % count)
 	var upper := skeleton.get_bone_global_rest(skeleton.find_bone("LeftUpperArm")).origin
 	var hand := skeleton.get_bone_global_rest(skeleton.find_bone("LeftHand")).origin

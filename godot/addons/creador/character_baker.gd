@@ -92,29 +92,41 @@ static func _read_mesh(mesh: MeshInstance3D, skeleton: Skeleton3D, cache: Varian
 		"matrices": Baker.skin_matrices(skeleton, mesh.skin), "binds": binds, "expressions": _read_expressions(mesh, shapes)}
 
 
-## Paso 9.7.3: {nombre VRM: [posiciones de la forma, [[peso, posiciones de una corrección], …]]} de las expr_* de la
-## malla (las correcciones, con el peso de su otra parte ahora). Hilo principal: pide a la malla las que no estén en shapes.
+## Paso 9.7.3: lo que _morphs necesita de las expr_* de la malla ({} si no tiene): "list" = [[nombre VRM, forma,
+## [[peso, forma de una corrección], …]], …] (las correcciones, con el peso que tiene ahora su otra parte), "known" =
+## {forma: posiciones} de las que ya están en shapes, "missing" = las demás y "mesh" = la ArrayMesh.
+## Revisión: las que faltan no se piden aquí. La caché de la vista no suele tenerlas (no están activas) y pedirlas lee
+## todas las formas del cuerpo en el hilo principal (335–386 ms, justo lo que quitó OPT.3a): las lee _morphs, en el hilo.
 static func _read_expressions(mesh: MeshInstance3D, shapes: Dictionary) -> Dictionary:
 	var names := ShapeWeights.shape_names(mesh.mesh)
-	var wanted := {}
+	var wanted: Array[int] = []
 	for i in names.size():
 		if ShapeWeights.is_expression(names[i]):
-			wanted[i] = 1.0
+			wanted.append(i)
 	if wanted.is_empty():
 		return {}
-	Baker.cache_shapes(mesh, wanted, shapes)
-	var out := {}
-	for i: int in wanted:
+	var known := {}
+	var missing: Array[int] = []
+	var loaded: Array = Baker._shapes.get(mesh.mesh, [])  # sin caché (o en las piezas) ya se leyeron en este fotograma
+	for i in wanted:
+		if shapes.has(i):
+			known[i] = shapes[i][0]
+		elif not loaded.is_empty():
+			known[i] = loaded[i][Mesh.ARRAY_VERTEX]
+		else:
+			missing.append(i)
+	var list := []
+	for i in wanted:
 		if "*" in names[i]:
 			continue
 		var fixes := []
-		for j: int in wanted:
+		for j in wanted:
 			var parts := names[j].split("*")
 			var other := names.find(parts[1]) if parts.size() == 2 and parts[0] == names[i] else -1
 			if other >= 0 and mesh.get_blend_shape_value(other) != 0.0:
-				fixes.append([mesh.get_blend_shape_value(other), shapes[j][0]])
-		out[names[i].trim_prefix(ShapeWeights.EXPRESSION_PREFIX)] = [shapes[i][0], fixes]
-	return out
+				fixes.append([mesh.get_blend_shape_value(other), j])
+		list.append([names[i].trim_prefix(ShapeWeights.EXPRESSION_PREFIX), i, fixes])
+	return {"list": list, "known": known, "missing": missing, "mesh": mesh.mesh}
 
 
 ## compute_bake, en cualquier hilo: solo arrays. Formas y huesos de cada malla (como MeshBaker.bake), suelo y reposo nuevo.
@@ -152,24 +164,34 @@ static func compute_bake(job: Dictionary) -> void:
 	job["to_ground"] = to_ground
 
 
-## Paso 9.7.3: {nombre VRM: desplazamiento en la pose de la variante} de las expresiones de una malla. Solo arrays.
+## Paso 9.7.3: {nombre VRM: desplazamiento en la pose de la variante} de las expresiones de una malla. Solo arrays y,
+## si faltan formas en la caché, leerlas de la malla (revisión; desde un hilo vale, como en StyleView.refresh_async).
 static func _morphs(entry: Dictionary) -> Dictionary:
+	var source: Dictionary = entry["expressions"]
+	if source.is_empty():
+		return {}
+	var shapes: Dictionary = source["known"].duplicate()
+	var missing: Array[int] = source["missing"]
+	if not missing.is_empty():
+		var all := (source["mesh"] as ArrayMesh).surface_get_blend_shape_arrays(0)
+		for shape in missing:
+			shapes[shape] = all[shape][Mesh.ARRAY_VERTEX]
 	var arrays: Array = entry["arrays"]
 	var base: PackedVector3Array = arrays[Mesh.ARRAY_VERTEX]
 	var out := {}
-	for name: String in entry["expressions"]:
-		var source: Array = entry["expressions"][name]
-		var shape: PackedVector3Array = source[0]
+	for expression: Array in source["list"]:
+		var shape: PackedVector3Array = shapes[expression[1]]
 		var delta := PackedVector3Array()
 		delta.resize(base.size())
 		for i in base.size():
 			delta[i] = shape[i] - base[i]
-		for fix: Array in source[1]:
+		for fix: Array in expression[2]:
 			var weight: float = fix[0]
-			var correction: PackedVector3Array = fix[1]
+			var correction: PackedVector3Array = shapes[fix[1]]
 			for i in base.size():
 				delta[i] += weight * (correction[i] - base[i])
-		out[name] = Baker.skinned_deltas(entry["matrices"], arrays[Mesh.ARRAY_BONES], arrays[Mesh.ARRAY_WEIGHTS], delta)
+		out[expression[0]] = Baker.skinned_deltas(entry["matrices"], arrays[Mesh.ARRAY_BONES], arrays[Mesh.ARRAY_WEIGHTS],
+			delta)
 	return out
 
 
