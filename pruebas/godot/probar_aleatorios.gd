@@ -165,8 +165,8 @@ func _measure(index: int, label: String, variant: String, skeleton: Skeleton3D, 
 		sums.append(absf(weights[4 * i] + weights[4 * i + 1] + weights[4 * i + 2] + weights[4 * i + 3] - 1.0))
 	_add(variant, "suma_pesos", sums)
 	var eight: bool = ((mesh.mesh as ArrayMesh).surface_get_format(0) & Mesh.ARRAY_FLAG_USE_8_BONE_WEIGHTS) != 0
-	check(label + "0 formas, 4 influencias por vértice, color por vértice y una superficie",
-		mesh.mesh.get_blend_shape_count() == 0 and not eight and weights.size() == 4 * vertices.size()
+	check(label + "sin formas sueltas (solo expresiones VRM), 4 influencias por vértice, color por vértice y una superficie",
+		_only_expressions(mesh.mesh) and not eight and weights.size() == 4 * vertices.size()
 		and arrays[Mesh.ARRAY_COLOR] != null and mesh.mesh.get_surface_count() == 1)
 	var influences: Array = Compare.influence_errors(mesh, skeleton, memory_mesh, memory_skeleton)
 	var normals: Array = Compare.normal_errors(mesh, memory_mesh)
@@ -211,3 +211,11 @@ func _limit(variant: String, measure_name: String, label: String, unit: String, 
 func _measure_only(variant: String, measure_name: String, label: String, unit: String) -> void:
 	var s: Vector2 = Compare.stats(errors[variant].get(measure_name, [INF]))
 	print("  medida  %s: máximo %.6f %s, media %.6f %s" % [label, s.x, unit, s.y, unit])
+
+## Pasos 9.7.3 y 9.8: el personaje horneado solo puede llevar como formas las expresiones de VRM (FORMATO.md).
+func _only_expressions(mesh: Mesh) -> bool:
+	for i in mesh.get_blend_shape_count():
+		if not String(mesh.get_blend_shape_name(i)) in ["happy", "angry", "sad", "surprised", "blinkLeft", "blinkRight",
+				"aa", "ih", "ou", "ee", "oh"]:
+			return false
+	return true

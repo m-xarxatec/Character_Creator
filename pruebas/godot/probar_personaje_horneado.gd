@@ -212,10 +212,18 @@ func _check_clean_mesh(label: String, mesh: MeshInstance3D) -> void:
 	for i in count:
 		if absf(weights[4 * i] + weights[4 * i + 1] + weights[4 * i + 2] + weights[4 * i + 3] - 1.0) > WEIGHT_SUM:
 			wrong += 1
-	check(label + "malla sin formas, 4 influencias que suman 1 (± %s)" % WEIGHT_SUM,
-		mesh.mesh.get_blend_shape_count() == 0 and weights.size() == 4 * count and wrong == 0,
+	check(label + "malla sin formas sueltas (solo expresiones VRM), 4 influencias que suman 1 (± %s)" % WEIGHT_SUM,
+		_only_expressions(mesh.mesh) and weights.size() == 4 * count and wrong == 0,
 		"%d vértices no lo cumplen" % wrong)
 	check(label + "UV, color garment, índices, huesos y pesos iguales que en el original",
 		arrays[Mesh.ARRAY_TEX_UV] == original[Mesh.ARRAY_TEX_UV] and arrays[Mesh.ARRAY_COLOR] == original[Mesh.ARRAY_COLOR]
 		and arrays[Mesh.ARRAY_INDEX] == original[Mesh.ARRAY_INDEX] and arrays[Mesh.ARRAY_BONES] == original[Mesh.ARRAY_BONES]
 		and arrays[Mesh.ARRAY_WEIGHTS] == original[Mesh.ARRAY_WEIGHTS])
+
+## Pasos 9.7.3 y 9.8: el personaje horneado solo puede llevar como formas las expresiones de VRM (FORMATO.md).
+func _only_expressions(mesh: Mesh) -> bool:
+	for i in mesh.get_blend_shape_count():
+		if not String(mesh.get_blend_shape_name(i)) in ["happy", "angry", "sad", "surprised", "blinkLeft", "blinkRight",
+				"aa", "ih", "ou", "ee", "oh"]:
+			return false
+	return true

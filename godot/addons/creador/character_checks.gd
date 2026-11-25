@@ -14,6 +14,8 @@ const WEIGHT_SUM_EPS := 1e-4  # Godot guarda los pesos en 16 bits: la suma es 1 
 const SCALE_EPS := 1e-4
 const BUDGET := {"triangulos": 40000, "huesos": 75}  # PC, GUIA_ESTILO.md §7: PROPUESTA sin aprobar, por eso solo avisa
 const LEVELS := ["bien", "aviso", "error"]
+## Pasos 9.7.3 y 9.8: las formas que el .glb puede llevar (expresiones y visemas de VRM 1.0, FORMATO.md).
+const EXPRESSIONS := ["happy", "angry", "sad", "surprised", "blinkLeft", "blinkRight", "aa", "ih", "ou", "ee", "oh"]
 const MeshChecks := preload("mesh_checks.gd")  # paso P.5b: num() pone la coma decimal
 
 
@@ -153,11 +155,16 @@ static func _sockets(skeleton: Skeleton3D, sockets: Array) -> Dictionary:
 	return _result("anclajes", "error", "Anclajes que faltan o están mal: " + ", ".join(missing), bones)
 
 
+## Pasos 9.7.3 y 9.8 (D31): solo pueden quedar las expresiones de VRM (sin el prefijo expr_ de los datos).
 static func _no_shapes(mesh: MeshInstance3D) -> Dictionary:
 	var count: int = mesh.mesh.get_blend_shape_count() if mesh.mesh is ArrayMesh else 0
-	if count == 0:
-		return _result("sin_formas", "bien", "Sin formas: todo horneado")
-	return _result("sin_formas", "error", "La malla lleva %d formas; el personaje no está horneado" % count)
+	var loose := 0
+	for i in count:
+		if not String(mesh.mesh.get_blend_shape_name(i)) in EXPRESSIONS:
+			loose += 1
+	if loose == 0:
+		return _result("sin_formas", "bien", "Sin formas sueltas: todo horneado" + (" (y %d expresiones)" % count if count > 0 else ""))
+	return _result("sin_formas", "error", "La malla lleva %d formas sin hornear; el personaje no está horneado" % loose)
 
 
 static func _budget(mesh: MeshInstance3D, skeleton: Skeleton3D) -> Dictionary:
