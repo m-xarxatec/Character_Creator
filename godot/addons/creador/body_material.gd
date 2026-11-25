@@ -25,6 +25,7 @@ const SHADER := preload("toon.gdshader")
 const OUTLINE_SHADER := preload("outline.gdshader")
 const DEFAULTS := {
 	"skin_color": Color(0.80, 0.80, 0.80), "garment_color": Color(0.20, 0.20, 0.23), "show_garment": true, "unlit": false,
+	"mouth_color": Color(0.03, 0.02, 0.02),  # 9.8b (D58)
 	"mid_shade": 0.9, "shadow_shade": 0.73, "mid_threshold": 0.45,
 	"shadow_threshold": 0.0, "softness": 0.04, "rim_color": Color(1.0, 0.95, 0.92), "rim_strength": 0.25, "rim_width": 0.3}
 const OUTLINE_DEFAULTS := {"outline_color": Color(0.07, 0.05, 0.06), "width_px": 2.5, "outline_tint": 0.0, "face_line": 1.0,
@@ -45,6 +46,7 @@ static var _piece_shader: Shader
 const SOFT_SHADER := preload("toon_soft.gdshader")
 const SOFT_DEFAULTS := {
 	"skin_color": Color(0.80, 0.80, 0.80), "garment_color": Color(0.20, 0.20, 0.23), "show_garment": true, "unlit": false,
+	"mouth_color": Color(0.03, 0.02, 0.02),  # 9.8b (D58)
 	"threshold": 0.05, "softness": 0.09, "shade_strength": 1.0, "ground_weight": 0.025,
 	"rim_color": Color(1.0, 0.95, 0.92), "rim_strength": 0.075, "rim_width": 0.3, "detail_amount": 0.0,
 	"edge_strength": 0.0, "gloss_strength": 0.0, "gloss_size": 0.05, "gloss_softness": 0.05,

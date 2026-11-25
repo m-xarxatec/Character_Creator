@@ -598,6 +598,19 @@ class EyeFit:
         return [int(self.mirror[loop[(len(loop) - i) % len(loop)]]) for i in range(len(loop))]
 
 
+def paint_mouth(basemesh, bag):
+    """Paso 9.8b (D58): el verde del color «garment» es 0 en la bolsa de la boca (mouth_bag) y 1 en el resto (antes
+    repetia la prenda; nadie lo leia): los shaders pintan de mouth_color la piel con verde 0, y el .glb lleva el RGB
+    oscuro en la boca, asi que en su archivo el verde tambien es 0 alli (la misma regla vale con el .tres). Una malla
+    sin color por vertice (blanco en Godot) no se oscurece. El rojo (la prenda), el azul y el alfa no cambian."""
+    colors = basemesh.data.color_attributes["garment"]
+    inside = np.zeros(len(basemesh.data.vertices), bool)
+    inside[np.asarray(bag)] = True
+    for vertex in basemesh.data.vertices:
+        r, _, b, a = colors.data[vertex.index].color
+        colors.data[vertex.index].color = (r, 0.0 if inside[vertex.index] else 1.0, b, a)
+
+
 def add_mask_uv(basemesh, values):
     """Guarda la mascara del contorno en una segunda capa UV (TEXCOORD_1). Va por vertice: no parte ningun vertice."""
     mesh = basemesh.data

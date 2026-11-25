@@ -9,5 +9,5 @@
 | AB, 9.4 | Juicio visual que falta: las piezas sueltas y los ojos (interfaz y uso de piezas ya juzgados el 2026-11-22) | `pruebas/capturas/piezas/` (y abrir el editor: pestañas Pelo, Ropa, Accesorios y Cara y ojos) |
 | D36 | ¿Lo nuestro sale CC0 y se publica también como pack suelto? (recomendado: sí) | `propuestas/expansion_v2.md` §7 |
 | D39 | ¿Se pueden descargar peinados y armas CC0 (Quaternius, Micket, KayKit), uno a uno y con la licencia comprobada? Necesita tu permiso de red | `propuestas/expansion_v2.md` §5.3 |
-| 9.8 | Visto bueno a la ficha de visemas y D58: ¿interior de la boca oscuro? (recomendado: sí, en un paso aparte, si la hoja lo confirma) | `ruta/pasos/9.8_visemas.md` §8 |
+| 9.8, 9.8b | Juicio visual de las visemas y de la boca abierta oscura (hoja de `capturar_expresiones.gd`, tras regenerar los datos) | `pruebas/capturas/expresiones/` |
 | 9.7 | Juicio visual de las expresiones (hoja de 9.7.0, tras regenerar los datos) y del programa | `pruebas/capturas/expresiones/` y la lista «Expresión» de la barra |

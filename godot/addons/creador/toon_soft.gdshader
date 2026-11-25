@@ -5,6 +5,7 @@ render_mode specular_disabled;  // SH.3b: sin ambient_light_disabled, la luz amb
 
 uniform vec3 skin_color : source_color = vec3(0.80, 0.80, 0.80);
 uniform vec3 garment_color : source_color = vec3(0.20, 0.20, 0.23);
+uniform vec3 mouth_color : source_color = vec3(0.03, 0.02, 0.02);  // 9.8b (D58): interior de la boca (verde del color = 0)
 uniform bool show_garment = true;
 uniform bool unlit = false;
 uniform float threshold : hint_range(-1.0, 1.0) = 0.05;
@@ -202,6 +203,7 @@ void fragment() {
 	color = mix(color, tint_of(color, 0.97, 12.0, 1.45, 0.96), zones.r * blush_amount * skin);  // hacia el rosa
 	color = mix(color, tint_of(color, 0.98, 14.0, 1.6, 0.85), zones.b * lips_amount * skin);
 	color = mix(color, tint_of(color, 0.07, 10.0, 1.35, 0.72), freckle_cover(UV, zones.g) * skin);  // hacia el marrón
+	color = mix(color, mouth_color, (1.0 - COLOR.g) * skin);  // 9.8b (D58): el verde es 0 en la bolsa de la boca
 	if (detail_amount > 0.0) {
 		color *= mix(vec3(1.0), texture(detail_tex, UV).rgb / 0.266, detail_amount);
 	}

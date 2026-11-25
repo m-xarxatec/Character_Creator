@@ -9,6 +9,7 @@ render_mode ambient_light_disabled, specular_disabled;
 
 uniform vec3 skin_color : source_color = vec3(0.80, 0.80, 0.80);
 uniform vec3 garment_color : source_color = vec3(0.20, 0.20, 0.23);
+uniform vec3 mouth_color : source_color = vec3(0.03, 0.02, 0.02);  // 9.8b (D58): interior de la boca (verde del color = 0)
 uniform bool show_garment = true;
 uniform bool unlit = false;
 uniform float mid_shade : hint_range(0.0, 1.0) = 0.9;
@@ -25,6 +26,7 @@ void fragment() {
 	// tiña el material; ver glb_exporter.gd). El menor de los dos vale en ambos casos sin interruptor.
 	float garment = show_garment ? step(0.5, min(COLOR.r, COLOR.a)) : 0.0;
 	vec3 color = mix(skin_color, garment_color, garment);
+	color = mix(color, mouth_color, (1.0 - COLOR.g) * (1.0 - garment));  // 9.8b: el verde es 0 en la bolsa de la boca
 	ROUGHNESS = 1.0;
 	SPECULAR = 0.0;
 	if (unlit) {

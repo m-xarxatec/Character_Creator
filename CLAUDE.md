@@ -75,6 +75,7 @@
 | Puntos de anclaje | `socket_hand_r`, `socket_hand_l`, `socket_back`, `socket_hip`: nodos vacíos hijos del hueso |
 | Cuerpo | De 5 a 60 años (D42), sin deslizador Edad: con Altura (desde ×0,65) y los demás deslizadores; neutro, sin detalle anatómico |
 | Prenda base | Pintada: color por vértice `garment` (1 = prenda), siempre en la malla; el shader la muestra o la oculta (botón) |
+| Interior de la boca | Oscuro (D58, paso 9.8b): verde del color por vértice = 0 en la bolsa; en el `.glb`, RGB 0,06 ahí (la norma glTF lo multiplica) |
 | Estilo | Anime tipo VRoid por defecto (SH.7, `toon_soft`): 2 tonos con sombra calculada desde el color, banda cálida, brillo suave de piel, rubor, labios y pecas, contorno fino teñido; el clásico (3 tonos, contorno negro) se elige en Acabado. El shader va en el núcleo y en el `.tres`; el `.glb` lleva rubor y pecas pintados |
 
 ## Convenciones de código

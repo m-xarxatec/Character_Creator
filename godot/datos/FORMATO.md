@@ -127,6 +127,8 @@ Filas de tipo Forma con `incr` = `propia:<forma>` (y `decr` = `propia:<forma>` s
   plano. Donde un triángulo se daría la vuelta, el alisado se queda a medias (PL.0c). Su peso es el producto de sus partes.
 - El preset `anime.json` lleva `alisado` = 1 («sin detalle anatómico» desde el primer momento). Un preset sin la clave la deja en 0.
 
+- Paso 9.8b (D58): el color por vértice `garment` lleva en el **verde** el interior de la boca: 0 en la bolsa, 1 en el
+  resto (antes repetía la prenda). Los shaders lo pintan de `mouth_color` y el `.glb` lo oscurece (RGB `MOUTH_DARK`).
 - Paso 9.6: la bolsa interior de la boca (los vértices de la zona `mouth` que no se ven de frente) no se aplasta en
   `boca_anime` y `nariz_anime`: sigue a los labios (`cara_anime.mouth_bag`). Lo que se ve no cambia.
 

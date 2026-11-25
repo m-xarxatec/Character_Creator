@@ -409,6 +409,7 @@ def export_species(folder):
     shapes.update(expresiones.expression_shapes(basemesh, fit, shapes))
     add_shape_keys(basemesh, shapes)
     cara_anime.add_mask_uv(basemesh, fit.mask())
+    cara_anime.paint_mouth(basemesh, fit.mouth[0])  # paso 9.8b: interior de la boca oscuro (D58)
     export_glb(basemesh, [], os.path.join(folder, "cuerpo.glb"), morph=True, deform_only=False)
     write_full_names(os.path.join(folder, "cuerpo.glb"), list(shapes))
     with open(os.path.join(folder, "presets", "anime.json"), encoding="utf-8") as file:

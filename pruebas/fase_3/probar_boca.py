@@ -9,6 +9,7 @@ y ojos.json son identicos. MEDIDA: lo que se movia la bolsa antes (hasta 58 mm, 
 con la boca abierta (jawOpen de faceunits01 a 0,5 y a 1), para el 9.8.
 Uso: (ulimit -v 4000000; timeout 900 blender -b -P pruebas/fase_3/probar_boca.py [-- <carpeta de antes>] 2>&1 | grep -E 'FALLO|MEDIDA|RESULTADO')
 Rotura: deform sin bags en EyeFit._socket_shapes -> falla «la bolsa conserva su fondo».
+Paso 9.8b (D58), con la carpeta de antes: COLOR_0 con verde 0 en la bolsa y 1 en el resto; lo demas del color, igual.
 """
 import hashlib
 import os
@@ -87,9 +88,25 @@ def check_before(before, fit, bag):
         outside = max(outside, float(diff[~in_bag].max()))
         inside = max(inside, float(diff[in_bag].max()) if in_bag.any() else 0.0)
     print("MEDIDA cuerpo.glb contra el de antes: fuera de la bolsa %.6f mm, en la bolsa %.2f mm" % (outside * 1000, inside * 1000))
+    check_mouth_color(gltf, data, primitive, old_gltf, old_data, old_primitive, in_bag)
     check("cuerpo.glb: fuera de la bolsa no cambia nada", outside == 0.0, "%.6f mm" % (outside * 1000))
     for name in ("articulaciones.json", "ojos.json"):
         check(name + " identico", same_file(os.path.join(FOLDER, name), os.path.join(before, name)))
+
+
+def color(gltf, data, index):
+    values = ca._accessor(gltf, data, index).astype(float)
+    kind = gltf["accessors"][index]["componentType"]
+    return values / {5121: 255.0, 5123: 65535.0}.get(kind, 1.0)
+
+
+def check_mouth_color(gltf, data, primitive, old_gltf, old_data, old_primitive, in_bag):
+    """Paso 9.8b (D58): en COLOR_0, verde 0 en la bolsa y 1 en el resto; rojo (la prenda) y alfa, como antes."""
+    new = color(gltf, data, primitive["attributes"]["COLOR_0"])
+    old = color(old_gltf, old_data, old_primitive["attributes"]["COLOR_0"])
+    check("9.8b: verde 0 en la bolsa de la boca y 1 en el resto", bool((new[in_bag, 1] == 0.0).all() and (new[~in_bag, 1] == 1.0).all()))
+    keep = [c for c in range(new.shape[1]) if c != 1]
+    check("9.8b: el resto del color (la prenda), como antes", bool(np.abs(new[:, keep] - old[:, keep]).max() < 1e-6))
 
 
 def main():

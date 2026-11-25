@@ -22,7 +22,8 @@ extends RefCounted
 ## los shaders incrustados (BodyMaterial.standalone()), que funciona sin el addon. En el juego:
 ##   malla.material_override = load("res://heroe.tres")
 ## Color por vértice: en el archivo, `garment` va en el alfa y el RGB es blanco. La norma glTF multiplica el material
-## por el color por vértice (Blender lo hace): con `garment` en el RGB, la piel saldría negra.
+## por el color por vértice (Blender lo hace): con `garment` en el RGB, la piel saldría negra. 9.8b (D58): justo eso
+## se usa para el interior de la boca: allí el RGB es MOUTH_DARK y la boca abierta se ve oscura en cualquier visor.
 ## Paso AC.6b: eyes (las mallas de EyeMesh) salen como piezas, con sus capas y líneas horneadas en texturas
 ## (eye_texture.gd) en vez de color plano; eye_data (ojos.json) dice qué vértices del cuerpo forman cada bolsa, que en
 ## la copia se hunde EYE_SINK detrás del ojo (sin depth_pull, dos superficies iguales parpadearían). El lazo no se mueve.
@@ -37,6 +38,7 @@ const EyeTexture := preload("eye_texture.gd")  # AC.6b
 const MeshBaker := preload("mesh_baker.gd")  # paso 9.7.3
 const TEXTURE_SIZE := 2048  # 1 píxel ≈ 0,9 mm en el borde de la prenda (medido en el paso 3.6.6)
 const EYE_SINK := 0.001  # metros: lo que se hunde la bolsa del cuerpo detrás del ojo (AC.3b §5.7)
+const MOUTH_DARK := 0.06  # 9.8b (D58): el color por vértice del interior de la boca en el .glb (× la textura: casi negro)
 const EYE_THREADS := 2  # hilos para las texturas del ojo: con más, la ventana pierde fluidez al exportar (medido)
 
 
@@ -156,8 +158,9 @@ static func compute(job: Dictionary) -> void:
 			TEXTURE_SIZE, job["skin"], job["garment"], skin_image)
 	elif skin_image != null:
 		job["image"] = skin_image
-	for i in colors.size():
-		colors[i] = Color(1.0, 1.0, 1.0, colors[i].r)
+	for i in colors.size():  # 9.8b: el RGB, blanco salvo en la boca (el verde de los datos es 0 en su bolsa)
+		var light := lerpf(MOUTH_DARK, 1.0, colors[i].g)
+		colors[i] = Color(light, light, light, colors[i].r)
 	arrays[Mesh.ARRAY_COLOR] = colors
 	if eye_task >= 0:
 		WorkerThreadPool.wait_for_group_task_completion(eye_task)
