@@ -463,6 +463,8 @@ func _load_character() -> String:
 	for eye in eyes:  # siguen a las formas; no son piezas del pack
 		updater.pieces.append(eye)
 		BodyPiece.follow(eye, species.mesh)
+		if String(eye.name).begins_with("ceja_"):  # AC.6c.4a
+			_copy_brow(eye)
 	style = StyleView.new()
 	style.setup(species.mesh, species.skeleton)
 	style.refresh()
@@ -574,7 +576,7 @@ func set_anime_style(on: bool) -> void:
 
 
 ## SH.4b: las piezas y los accesorios llevan la línea teñida como el cuerpo (cada una, del color de la pieza).
-## SH.6b: y las de pelo, la banda de brillo (la fuerza de la piel del cuerpo, hair_band).
+## SH.6b: y las de pelo, la banda de brillo (la fuerza de la piel del cuerpo, hair_band). AC.6c.4a: y las cejas.
 func sync_lines() -> void:
 	var meshes: Array = pieces.values()
 	for holder in accessories.values():
@@ -583,11 +585,23 @@ func sync_lines() -> void:
 		_copy_line(mesh)
 	for mesh: MeshInstance3D in hair.values():
 		_copy_band(mesh)
+	for mesh: MeshInstance3D in eyes:  # AC.6c.4a: las cejas
+		if String(mesh.name).begins_with("ceja_"):
+			_copy_brow(mesh)
 
 
 func _copy_band(mesh: MeshInstance3D) -> void:
 	var strength: float = BodyMaterial.get_skin(species.mesh)["hair_band"] if BodyMaterial.is_soft(species.mesh) else 0.0
 	(mesh.material_override as ShaderMaterial).set_shader_parameter("hair_band_strength", strength)
+
+
+## AC.6c.4a: Altura, Grosor, Tamaño y Color de la ceja, del material del cuerpo a la ceja (EyeTexture los lee de ella).
+func _copy_brow(mesh: MeshInstance3D) -> void:
+	var skin: Dictionary = BodyMaterial.get_skin(species.mesh)
+	var material := mesh.material_override as ShaderMaterial
+	for key: String in BodyMaterial.BROW_SKIN:
+		material.set_shader_parameter(key, skin[key])
+	material.set_shader_parameter("brow_color", BodyMaterial.get_color(species.mesh, "brow_color"))
 
 
 ## SH.6b: mundo → cabeza, con origen en su centro (para la banda del pelo).

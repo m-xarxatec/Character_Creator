@@ -37,6 +37,7 @@ func _initialize() -> void:
 	_check_look()
 	_check_finish()
 	_check_style()
+	_check_brow()
 	_check_values()
 	_check_errors()
 	_check_style_presets()
@@ -212,6 +213,52 @@ func _check_style() -> void:
 
 
 ## Mismas claves y valores iguales hasta el redondeo del formato (4 decimales).
+## AC.6c.4a: los presets de serie no se tocan (sus sha256); al guardarlos de nuevo llevan además las claves de la ceja.
+func _without_brow(data: Dictionary) -> Dictionary:
+	data["colores"].erase("brow_color")
+	for key: String in material.BROW_SKIN:
+		data["piel"].erase(key)
+	return data
+
+
+## AC.6c.4a: Altura, Grosor, Tamaño y Color de la ceja viajan en el preset; un archivo sin ellos se abre con los de serie.
+func _check_brow() -> void:
+	var colors := {"skin_color": Color(0.9, 0.8, 0.7), "garment_color": Color(0.1, 0.2, 0.3), "brow_color": Color(0.5, 0.25, 0.75)}
+	var skin: Dictionary = material.SKIN_START.duplicate()
+	skin["brow_lift"] = -0.002
+	skin["brow_thickness"] = 3.0
+	skin["brow_size"] = 1.25
+	var text: String = preset.to_text(preset.to_dict("Cejas", "humana", _neutral(), colors, true, {}, "anime", skin))
+	var loaded: Dictionary = preset.from_text(text, "humana", species.sliders)
+	check("ceja: ida y vuelta de los 3 valores y el color", loaded["error"] == "" and _same(loaded["piel"], skin)
+		and loaded["colores"]["brow_color"].is_equal_approx(colors["brow_color"]), str(loaded.get("error")))
+	var plain: Dictionary = preset.to_dict("Sin ceja", "humana", _neutral(), {"skin_color": Color.WHITE, "garment_color": Color.BLACK}, true)
+	var serie: Color = material.EXTRA_COLORS["brow_color"]
+	check("ceja: sin color, to_dict escribe el de serie", _same_rgb(plain["colores"]["brow_color"], serie))
+	var old := _valid_dict()
+	old["colores"].erase("brow_color")
+	for key: String in material.BROW_SKIN:
+		old["piel"].erase(key)
+	loaded = _load(old)
+	check("ceja: un archivo de antes (sin ella) se abre con los valores de serie", loaded["error"] == ""
+		and loaded["colores"]["brow_color"].is_equal_approx(serie) and material.BROW_SKIN.all(
+		func(key: String) -> bool: return loaded["piel"][key] == material.SKIN_START[key]), str(loaded.get("error")))
+	var wild: Dictionary = material.SKIN_START.duplicate()
+	wild["brow_thickness"] = 9.0
+	wild["brow_lift"] = -1.0
+	loaded = preset.from_text(preset.to_text(preset.to_dict("Fuera", "humana", _neutral(), colors, true, {}, "anime", wild)),
+		"humana", species.sliders)
+	check("ceja: fuera de rango se recorta", loaded["error"] == "" and loaded["piel"]["brow_thickness"] == 4.0
+		and is_equal_approx(loaded["piel"]["brow_lift"], -0.003), str(loaded.get("piel")))
+	var bad := _valid_dict()
+	bad["colores"]["brow_color"] = [0.5, 2.0, 0.5]
+	_expect_error("color de ceja fuera de [0, 1]", bad, "fuera de [0, 1]")
+
+
+func _same_rgb(rgb: Array, color: Color) -> bool:
+	return absf(rgb[0] - color.r) < MAX_ROUNDING and absf(rgb[1] - color.g) < MAX_ROUNDING and absf(rgb[2] - color.b) < MAX_ROUNDING
+
+
 func _same(a: Dictionary, b: Dictionary) -> bool:
 	return a.size() == b.size() and a.keys().all(func(key: String) -> bool: return b.has(key) and absf(a[key] - b[key]) < MAX_ROUNDING)
 
@@ -331,9 +378,10 @@ func _check_new_character() -> void:
 		and loaded["prenda_visible"] == defaults["show_garment"])
 	check("anime.json: versión 3, estilo anime (SH.7), su acabado y la piel de partida", data["version"] == 3
 		and loaded["estilo"] == "anime" and loaded["acabado"] == material.default_finish(true) and _same(loaded["piel"], material.SKIN_START))
-	var saved: String = preset.to_text(preset.to_dict(loaded["nombre"], "humana", loaded["valores"], loaded["colores"],
-		loaded["prenda_visible"], loaded["acabado"], loaded["estilo"], loaded["piel"]))
-	check("anime.json: cargar y guardar da el mismo texto", saved + "\n" == text)
+	var saved: Dictionary = preset.to_dict(loaded["nombre"], "humana", loaded["valores"], loaded["colores"],
+		loaded["prenda_visible"], loaded["acabado"], loaded["estilo"], loaded["piel"])
+	check("anime.json: cargar y guardar da el mismo texto (sin las claves de la ceja, AC.6c.4a)",
+		preset.to_text(_without_brow(saved)) + "\n" == text)
 
 
 
@@ -355,9 +403,9 @@ func _check_templates() -> void:
 			FACE.all(func(key: String) -> bool: return loaded["valores"][key] == base["valores"][key])
 			and loaded["colores"] == base["colores"] and loaded["prenda_visible"] == base["prenda_visible"]
 			and loaded["acabado"] == base["acabado"] and loaded["estilo"] == base["estilo"] and loaded["piel"] == base["piel"])
-		check("%s: cargar y guardar da el mismo texto" % file, preset.to_text(preset.to_dict(loaded["nombre"], "humana",
-			loaded["valores"], loaded["colores"], loaded["prenda_visible"], loaded["acabado"], loaded["estilo"],
-			loaded["piel"])) + "\n" == text)
+		check("%s: cargar y guardar da el mismo texto (sin las claves de la ceja, AC.6c.4a)" % file,
+			preset.to_text(_without_brow(preset.to_dict(loaded["nombre"], "humana", loaded["valores"], loaded["colores"],
+			loaded["prenda_visible"], loaded["acabado"], loaded["estilo"], loaded["piel"]))) + "\n" == text)
 
 
 

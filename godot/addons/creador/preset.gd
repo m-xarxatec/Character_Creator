@@ -17,7 +17,7 @@ class_name Preset
 ## Formato (version 3: la del formato del preset, no la del manifiesto de datos/):
 ##   {"version": 3, "especie": "humana", "nombre": "…", "prenda_visible": true,
 ##    "valores": {"gender": 0.5, "hand_size_l": 0.5, "hand_size_r": 0.5, …},
-##    "colores": {"skin_color": [r, g, b], "garment_color": [r, g, b]},
+##    "colores": {"skin_color": [r, g, b], "garment_color": [r, g, b], "brow_color": [r, g, b]},  (brow_color: AC.6c.4a, opcional)
 ##    "acabado": {"softness": 0.04, "rim_strength": 0.25, "rim_width": 0.3, "width_px": 2.5},
 ##    "estilo": "clasico", "piel": {"edge_strength": 0.6, "gloss_strength": 0.35, …}}
 ## Carga estricta: los nueve campos son obligatorios y no hay otros; los deslizadores de dos lados llevan _l y _r.
@@ -39,6 +39,9 @@ const VERSION := 3
 const FIELDS := ["version", "especie", "nombre", "valores", "colores", "prenda_visible", "acabado", "estilo", "piel"]
 const STYLES := ["clasico", "anime"]
 const COLORS := ["skin_color", "garment_color"]
+## AC.6c.4a: colores opcionales (BodyMaterial.EXTRA_COLORS): se escriben siempre y, si faltan al leer, va el de serie.
+## Así un preset o un .gmolde de antes se abre igual, sin subir VERSION ni tocar los presets de serie.
+const OPTIONAL_COLORS := ["brow_color"]
 const DECIMALS := 0.0001
 
 
@@ -51,6 +54,10 @@ static func to_dict(preset_name: String, species_id: String, values: Dictionary,
 	for color_name: String in colors:
 		var c: Color = colors[color_name]
 		rgb[color_name] = [snappedf(c.r, DECIMALS), snappedf(c.g, DECIMALS), snappedf(c.b, DECIMALS)]
+	for color_name: String in OPTIONAL_COLORS:
+		if not rgb.has(color_name):
+			var c: Color = BodyMaterial.EXTRA_COLORS[color_name]
+			rgb[color_name] = [snappedf(c.r, DECIMALS), snappedf(c.g, DECIMALS), snappedf(c.b, DECIMALS)]
 	var rounded_finish: Dictionary = BodyMaterial.default_finish(style == "anime")
 	for key: String in rounded_finish:
 		rounded_finish[key] = snappedf(finish.get(key, rounded_finish[key]), DECIMALS)
@@ -181,8 +188,11 @@ static func _load_values(source: Dictionary, sliders: Array) -> Dictionary:
 
 static func _load_colors(source: Dictionary) -> Dictionary:
 	var colors := {}
-	for color_name: String in COLORS:
+	for color_name: String in COLORS + OPTIONAL_COLORS:
 		if not source.has(color_name):
+			if color_name in OPTIONAL_COLORS:  # AC.6c.4a: de un archivo de antes, el de serie
+				colors[color_name] = BodyMaterial.EXTRA_COLORS[color_name]
+				continue
 			return _fail("falta el color '%s'" % color_name)
 		var rgb: Variant = source[color_name]
 		if typeof(rgb) != TYPE_ARRAY or rgb.size() != 3:
@@ -191,8 +201,9 @@ static func _load_colors(source: Dictionary) -> Dictionary:
 			if not _is_number(channel) or not is_finite(channel) or channel < 0.0 or channel > 1.0:
 				return _fail("el color '%s' tiene un valor fuera de [0, 1]" % color_name)
 		colors[color_name] = Color(rgb[0], rgb[1], rgb[2])
-	if source.size() != COLORS.size():
-		return _fail("color desconocido en 'colores'")
+	for color_name: Variant in source:
+		if not color_name in COLORS + OPTIONAL_COLORS:
+			return _fail("color desconocido en 'colores'")
 	return {"colores": colors}
 
 

@@ -59,16 +59,24 @@ const FINISH := {"softness": [0.0, 0.5], "rim_strength": [0.0, 1.0], "rim_width"
 ## SH.7a: piel del estilo anime, solo en el cuerpo (el hint_range de toon_soft). freckles va de uno en uno.
 const SKIN := {"edge_strength": [0.0, 1.0], "gloss_strength": [0.0, 1.0], "blush_amount": [0.0, 1.0],
 	"lips_amount": [0.0, 1.0], "freckles": [0.0, 10.0], "face_shadow_receive": [0.0, 1.0], "face_light": [0.0, 0.5],
-	"outline_tint": [0.0, 1.0], "face_line": [0.0, 1.0], "hair_band": [0.0, 2.0]}
+	"outline_tint": [0.0, 1.0], "face_line": [0.0, 1.0], "hair_band": [0.0, 2.0],
+	"brow_lift": [-0.003, 0.003], "brow_thickness": [0.5, 4.0], "brow_size": [0.6, 1.5]}
 const OUTLINE_SKIN := ["outline_tint", "face_line"]  # SH.4b: van al material del contorno
 ## Al pasar el cuerpo al estilo anime: banda y brillo elegidos (D52); rubor y labios, la propuesta de la hoja de SH.8.
 ## D54: sin sombra proyectada en la cara (la A); luz en la cara, línea teñida y línea en la cara, propuestas de SH.4b y X.7.
 ## hair_band (SH.6b): la vista lo copia como hair_band_strength a las piezas de pelo; en el cuerpo no hace nada.
+## BROW_SKIN (AC.6c.4a): Altura (m), Grosor y Tamaño de la ceja; la vista los copia a ceja_l y ceja_r. En el cuerpo no
+## hacen nada. En estilo clásico, get_skin da SKIN_START: las cejas se ven con los de serie.
 const SKIN_START := {"edge_strength": 0.6, "gloss_strength": 0.35, "blush_amount": 0.35, "lips_amount": 0.45, "freckles": 0.0,
-	"face_shadow_receive": 0.0, "face_light": 0.15, "outline_tint": 0.8, "face_line": 0.5, "hair_band": 0.6}
+	"face_shadow_receive": 0.0, "face_light": 0.15, "outline_tint": 0.8, "face_line": 0.5, "hair_band": 0.6,
+	"brow_lift": 0.0, "brow_thickness": 1.0, "brow_size": 1.0}
+const BROW_SKIN := ["brow_lift", "brow_thickness", "brow_size"]
+## AC.6c.4a: colores que no son uniform del cuerpo pero viven en su material (get_color y set_color), con su valor de
+## serie. brow_color: el de la ceja (D-a), que la vista copia a ceja_l y ceja_r; vale en los dos estilos.
+const EXTRA_COLORS := {"brow_color": Color(0.25, 0.16, 0.12)}
 const SOFT_OUTLINE_PX := 1.25  # grosor de la línea del estilo anime: el de la base aprobada en SH.1
 const EXPORT_ZONES_SIZE := 256  # SH.5: el mapa de zonas va reducido dentro del .tres (1024² en texto: 14 MB; 256²: 0,9 MB)
-const KEEP_ON_SWITCH := ["skin_color", "garment_color", "show_garment", "depth_pull", "skin_zones"]
+const KEEP_ON_SWITCH := ["skin_color", "garment_color", "show_garment", "depth_pull", "skin_zones", "brow_color"]
 
 
 static func apply(mesh: MeshInstance3D, piece := false, soft := soft_enabled) -> ShaderMaterial:
@@ -178,12 +186,12 @@ static func is_garment_visible(mesh: MeshInstance3D) -> bool:
 	return _parameter(mesh, "show_garment")
 
 
-## name: "skin_color" o "garment_color".
+## name: "skin_color", "garment_color" o una clave de EXTRA_COLORS (AC.6c.4a).
 static func get_color(mesh: MeshInstance3D, name: String) -> Color:
 	return _parameter(mesh, name)
 
 
-## name: "skin_color" o "garment_color".
+## name: "skin_color", "garment_color" o una clave de EXTRA_COLORS (AC.6c.4a).
 static func set_color(mesh: MeshInstance3D, name: String, color: Color) -> void:
 	_set_both(mesh, name, color)
 
@@ -306,6 +314,8 @@ static func _parameter(mesh: MeshInstance3D, name: String) -> Variant:
 	var value: Variant = material.get_shader_parameter(name) if ours else null
 	if value != null:
 		return value
+	if EXTRA_COLORS.has(name):  # AC.6c.4a
+		return EXTRA_COLORS[name]
 	return SOFT_DEFAULTS[name] if (ours and is_soft(mesh) and SOFT_DEFAULTS.has(name)) or not DEFAULTS.has(name) else DEFAULTS[name]
 
 

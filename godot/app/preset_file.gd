@@ -9,7 +9,7 @@ extends RefCounted
 
 const Preset := preload("../addons/creador/preset.gd")
 const BodyMaterial := preload("../addons/creador/body_material.gd")
-const COLORS := ["skin_color", "garment_color"]
+const COLORS := ["skin_color", "garment_color", "brow_color"]  # AC.6c.4a: también el de la ceja
 
 
 static func save(path: String, view: SubViewportContainer, values: Dictionary) -> Error:
