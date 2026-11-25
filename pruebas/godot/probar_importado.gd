@@ -4,13 +4,20 @@ extends SceneTree
 
 const SOCKETS := {"socket_hand_r": "RightHand", "socket_hand_l": "LeftHand", "socket_back": "UpperChest", "socket_hip": "Hips"}
 const OPTIONAL := []  # paso 9.3: ya están los 56 del perfil (antes faltaban LeftEye, RightEye y Jaw)
-## Pasos 9.7.3 y 9.8 (D31): las únicas formas del cuerpo exportado, las expresiones de VRM, en este orden.
-const EXPRESSIONS := ["happy", "angry", "sad", "surprised", "blinkLeft", "blinkRight", "aa", "ih", "ou", "ee", "oh"]
+## Pasos 9.7.3 y 9.8 (D31): las únicas formas del cuerpo exportado, las expresiones de VRM de blender/expresiones.json,
+## en su orden. probar_importador.sh pasa la raíz del repositorio (-- <repo>): el proyecto es temporal.
+var EXPRESSIONS: Array = []
 
 var failures := 0
 
 
 func _initialize() -> void:
+	var args := OS.get_cmdline_user_args()
+	if args.is_empty():
+		check("falta la raíz del repositorio (-- <repo>, la pasa probar_importador.sh)", false)
+		quit(1)
+		return
+	EXPRESSIONS = load(args[0].path_join("pruebas/godot/recetas_expresiones.gd")).vrm_names(args[0])
 	for file: String in ["t", "a"]:
 		_check_scene(file)
 	print("RESULTADO: ", "TODO BIEN" if failures == 0 else "%d FALLOS" % failures)
@@ -65,7 +72,7 @@ func _check_scene(file: String) -> void:
 	var shapes := []
 	for i in mesh.mesh.get_blend_shape_count():
 		shapes.append(String(mesh.mesh.get_blend_shape_name(i)))
-	check(label + "una superficie, solo las formas de expresión de VRM (9.7.3), 4 influencias y color por vértice",
+	check(label + "una superficie, solo las formas de expresión de VRM (%d), 4 influencias y color por vértice" % EXPRESSIONS.size(),
 		mesh.mesh.get_surface_count() == 1 and shapes == EXPRESSIONS and not eight
 		and weights.size() == 4 * count and arrays[Mesh.ARRAY_COLOR] != null and mesh.skin != null, "%d vértices" % count)
 	var upper := skeleton.get_bone_global_rest(skeleton.find_bone("LeftUpperArm")).origin

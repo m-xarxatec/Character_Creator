@@ -20,8 +20,9 @@ import numpy
 OUT = os.path.join(os.path.dirname(os.path.abspath(__file__)), "salida")
 SHOTS = os.path.join(os.path.dirname(os.path.abspath(__file__)), "..", "capturas", "prenda_blender")
 SOCKETS = {"socket_hand_r": "RightHand", "socket_hand_l": "LeftHand", "socket_back": "UpperChest", "socket_hip": "Hips"}
-# Pasos 9.7.3 y 9.8 (D31): las únicas formas del cuerpo exportado, las expresiones de VRM, en este orden.
-EXPRESSIONS = ["happy", "angry", "sad", "surprised", "blinkLeft", "blinkRight", "aa", "ih", "ou", "ee", "oh"]
+# Pasos 9.7.3 y 9.8 (D31): las únicas formas del cuerpo exportado, las expresiones de VRM de blender/expresiones.json.
+with open(os.path.join(os.path.dirname(os.path.abspath(__file__)), "..", "..", "blender", "expresiones.json"), encoding="utf-8") as _f:
+    EXPRESSIONS = list(json.load(_f)["expresiones"])
 MOUTH_DARK = 0.06  # 9.8b (D58): el RGB del color por vértice en el interior de la boca (glb_exporter.gd MOUTH_DARK)
 COLOR_TOLERANCE = 0.01  # el color puede llegar en 8 bits
 failures = []
@@ -61,7 +62,7 @@ def check_file(path):
     most = max(sum(1 for g in v.groups if g.weight > 0 and mesh.vertex_groups[g.group].name in bones)
                for v in mesh.data.vertices)
     keys = [k.name for k in mesh.data.shape_keys.key_blocks[1:]] if mesh.data.shape_keys else []
-    check(label + "solo las formas de expresión de VRM (9.7.3 y 9.8), con color por vértice y máximo 4 influencias",
+    check(label + "solo las formas de expresión de VRM de expresiones.json, con color por vértice y máximo 4 influencias",
           keys == EXPRESSIONS and len(mesh.data.color_attributes) >= 1 and most <= 4,
           f"{keys}; {len(mesh.data.vertices)} vértices, {len(mesh.data.color_attributes)} colores, {most} influencias")
     return mesh

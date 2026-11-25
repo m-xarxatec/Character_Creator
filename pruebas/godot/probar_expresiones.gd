@@ -9,6 +9,9 @@ extends SceneTree
 #   Alto al máximo (las correcciones del parpadeo).
 # 9.7.4: la lista «Expresión» de la barra (body_actions.gd) pone y quita la expresión.
 # 9.8: las 5 visemas (aa, ih, ou, ee, oh): sin invertidos en las 21 caras, en el .glb y en la lista.
+# Las formas que se esperan salen de blender/expresiones.json (recetas_expresiones.gd). Sin recetas (vaciado el
+# 2026-11-25): cuerpo.glb sin expr_*, el .glb exportado sin formas y la lista «Expresión» oculta. Con recetas, las
+# comprobaciones de abajo suponen las 11 del 9.7 y del 9.8: al rehacerlas, se adaptan.
 # Uso: (ulimit -v 4000000; timeout 900 godot --headless --path pruebas/godot -s probar_expresiones.gd 2>&1 | grep -E 'FALLO|MEDIDA|RESULTADO|ERROR')
 # Roturas: en CharacterUpdater, las expr_* fuera de ShapeWeights.weights (se quedan a 0); en CharacterBaker, hornear
 # también las expr_* (el .glb cambia al probar una); skinned_deltas con la traslación (el .glb no da lo mismo).
@@ -52,14 +55,18 @@ func _initialize() -> void:
 	for eye in eyes:
 		updater.pieces.append(eye)
 	var names: PackedStringArray = shape_weights.shape_names(species.mesh.mesh)
-	var wanted := EXPRESSIONS.map(func(e: String) -> String: return "expr_" + e)
-	for side: String in ["blinkLeft", "blinkRight"]:
-		for fix: String in FIXES:
-			wanted.append("expr_%s*%s" % [side, fix])
-	wanted.append_array(VISEMES.map(func(v: String) -> String: return "expr_" + v))
+	var recipes: GDScript = load(repo.path_join("pruebas/godot/recetas_expresiones.gd"))
+	var wanted: Array = recipes.shape_names(repo)
 	var found := Array(names).filter(func(n: String) -> bool: return n.begins_with("expr_"))
 	if not _check(found == wanted, "cuerpo.glb trae las %d formas expr_* (si no: regenerar con exportar_datos.py)" % wanted.size()):
 		print("  ", found)
+		_finish()
+		return
+	if wanted.is_empty():
+		await _check_none()
+		_finish()
+		return
+	if not _check(recipes.vrm_names(repo) == EXPRESSIONS + VISEMES, "las recetas son las 11 del 9.7 y del 9.8 (si no, adaptar la prueba)"):
 		_finish()
 		return
 	_head_triangles()
@@ -255,6 +262,33 @@ func _check_glb() -> void:
 		scene.queue_free()
 		await process_frame
 	updater.update(values, false)
+
+
+## Sin recetas: el .glb sale sin formas (cuerpo y mallas del ojo) y la barra no enseña la lista «Expresión».
+func _check_none() -> void:
+	var exporter: GDScript = load(repo.path_join("godot/addons/creador/glb_exporter.gd"))
+	var material: GDScript = load(repo.path_join("godot/addons/creador/body_material.gd"))
+	var path := OS.get_user_data_dir().path_join("probar_expresiones").path_join("sin_expresiones.glb")
+	DirAccess.make_dir_recursive_absolute(path.get_base_dir())
+	updater.update(values, false)
+	_check(_export(exporter, material, path) == OK, "sin expresiones: exportar")
+	var scene := _load_glb(path)
+	if _check(scene != null, "sin expresiones: el .glb se lee"):
+		var meshes := scene.find_children("*", "MeshInstance3D", true, false)
+		_check(not meshes.is_empty() and meshes.all(func(m: MeshInstance3D) -> bool: return m.mesh.get_blend_shape_count() == 0),
+			"sin expresiones: el .glb no lleva formas")
+		scene.free()
+	for eye in eyes:
+		eye.get_parent().remove_child(eye)
+		eye.free()
+	eyes.clear()
+	species.scene.free()
+	var main: Control = load(repo.path_join("godot/app/main.gd")).new()
+	root.add_child(main)
+	await process_frame
+	var list: OptionButton = main.body_actions.expression_list
+	_check(list.item_count == 1 and not list.is_visible_in_tree(), "sin expresiones: la lista «Expresión» no está en la barra")
+	main.free()
 
 
 func _export(exporter: GDScript, material: GDScript, path: String) -> Error:

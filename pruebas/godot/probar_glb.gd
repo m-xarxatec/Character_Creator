@@ -22,7 +22,8 @@ var pose_a := "--pose-a" in OS.get_cmdline_user_args()  # variante en pose A del
 var piece_count := _int_arg("--piezas=")  # -1 = sin modo piezas
 var rigid_count := _int_arg("--rigidas=")
 var with_eyes := "--ojos" in OS.get_cmdline_user_args()  # paso AC.6b
-const EXPRESSIONS := ["happy", "angry", "sad", "surprised", "blinkLeft", "blinkRight", "aa", "ih", "ou", "ee", "oh"]  # 9.7.3 y 9.8, orden de FORMATO.md
+# Las formas VRM que puede llevar el .glb: las de blender/expresiones.json, en su orden (9.7.3 y 9.8).
+var EXPRESSIONS: Array = preload("recetas_expresiones.gd").vrm_names(ProjectSettings.globalize_path("res://").path_join("../..").simplify_path())
 
 const EYE_MESHES := ["ojo_l", "ojo_r", "linea_l", "linea_r", "linea_inferior_l", "linea_inferior_r", "pliegue_l", "pliegue_r",
 	"ceja_l", "ceja_r"]  # AC.6c: las cejas
@@ -148,7 +149,8 @@ func _check_body(instance: MeshInstance3D) -> void:
 	check("una sola superficie y sin formas sueltas (solo expresiones VRM, paso 9.7.3)", mesh.get_surface_count() == 1
 		and _only_expressions(mesh), str(_shape_names(mesh)))
 	if with_eyes:  # datos con expresiones (paso 9.7.1)
-		check("el cuerpo lleva las 11 expresiones VRM (9.7 y 9.8)", _shape_names(mesh) == EXPRESSIONS, str(_shape_names(mesh)))
+		check("el cuerpo lleva las %d expresiones VRM de expresiones.json" % EXPRESSIONS.size(), _shape_names(mesh) == EXPRESSIONS,
+			str(_shape_names(mesh)))
 	var arrays := mesh.surface_get_arrays(0)
 	var points: PackedVector3Array = arrays[Mesh.ARRAY_VERTEX]
 	var weights: PackedFloat32Array = arrays[Mesh.ARRAY_WEIGHTS]

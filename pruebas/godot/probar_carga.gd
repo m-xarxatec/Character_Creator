@@ -35,8 +35,10 @@ func _check_species(species) -> void:
 	var skeleton: Skeleton3D = species.skeleton
 	var mesh: Mesh = species.mesh.mesh
 	check("60 huesos (56 + 4 anclajes; paso 9.3)", skeleton.get_bone_count() == 60, str(skeleton.get_bone_count()))
-	check("345 formas (199 + 5 de cara + 7 propias + 115 correcciones de alisado + 19 de expresión, pasos 9.7 y 9.8)",
-		mesh.get_blend_shape_count() == 345, str(mesh.get_blend_shape_count()))
+	var repo := ProjectSettings.globalize_path("res://").path_join("../..").simplify_path()
+	var expressions: int = preload("recetas_expresiones.gd").shape_names(repo).size()  # las de expresiones.json
+	check("%d formas (199 + 5 de cara + 7 propias + 115 correcciones de alisado + %d de expresión)" % [326 + expressions, expressions],
+		mesh.get_blend_shape_count() == 326 + expressions, str(mesh.get_blend_shape_count()))
 	check("articulaciones.json: 60 huesos (56 + 4 anclajes; paso 9.3)", species.joints.size() == 60, str(species.joints.size()))
 	check("deslizadores.csv: 66 filas", species.sliders.size() == 66, str(species.sliders.size()))
 	var arrays := mesh.surface_get_arrays(0)

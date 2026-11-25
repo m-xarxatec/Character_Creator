@@ -8,7 +8,7 @@ extends SceneTree
 # los sha256 con los de antes del cambio; un compute_bake sin suelo lo ve probar_personaje_horneado.
 # Las medidas que valen son con ventana: quitar --headless.
 
-const MAX_GAP_MS := 300  # PROVISIONAL
+const MAX_GAP_MS := 400  # aprobado por el responsable el 2026-11-25 (medido con ventana 287–312 ms tras 9.7–9.3)
 
 var failures := 0
 

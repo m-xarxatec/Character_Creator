@@ -42,6 +42,18 @@ def load_recipes(path=RECIPES):
     return data["expresiones"]
 
 
+def shape_names(recipes=None):
+    """Nombres expr_* de cuerpo.glb, en el orden de expression_shapes (lo usan las pruebas)."""
+    recipes = load_recipes() if recipes is None else recipes
+    blinks = [n for n in recipes if n in BLINKS]
+    out = []
+    for name in recipes:
+        out.append(PREFIX + name)
+        if blinks and name == blinks[-1]:
+            out += ["%s%s*%s" % (PREFIX, b, f) for b in BLINKS if recipes.get(b) == OWN for f in BLINK_FIXES]
+    return out
+
+
 def unit_deltas(basemesh, names):
     """{unidad: desplazamiento de cada vertice} (espacio de la malla), cargando cada .target con MPFB en una shape key
     temporal y restandole su base. La malla queda como estaba."""

@@ -6,6 +6,8 @@ las formas de antes, la malla, articulaciones.json y ojos.json son identicos; si
 blinkRight); 0 cruces y 0 invertidos en la cabeza con cada expresion a 1 en la cara anime, y con el parpadeo tambien en
 los extremos de Ojos › Alto y Tamano (con sus correcciones). MEDIDA: hueco entre los arcos del lazo al parpadear.
 Uso: (ulimit -v 4000000; timeout 900 blender -b -P pruebas/fase_3/probar_expresiones.py -- <copia de godot/datos/humana de antes> 2>&1 | grep -E 'FALLO|MEDIDA|RESULTADO')
+Las formas esperadas salen de blender/expresiones.json (expresiones.shape_names). Sin recetas (vaciado el 2026-11-25):
+cuerpo.glb sin expr_* (y, con carpeta de antes, lo de antes identico). Con recetas, lo de abajo supone las del 9.7 y el 9.8.
 Rotura: en blender/expresiones.py, sin fp.symmetric (falla la simetria); sin las correcciones (el ojo no cierra en los
 extremos: lo mide el hueco, y lo comprueba probar_expresiones.gd).
 """
@@ -85,12 +87,21 @@ def check_before(before):
 def main():
     before = os.path.abspath(sys.argv[sys.argv.index("--") + 1]) if "--" in sys.argv else None
     gltf, data, primitive, names = glb(FOLDER)
-    wanted = [ex.PREFIX + e for e in EXPRESSIONS] + FIXES + [ex.PREFIX + v for v in VISEMES]
-    check("%d formas de expresion, al final" % len(wanted), names[-len(wanted):] == wanted, str([n for n in names if n.startswith(ex.PREFIX)]))
+    wanted = ex.shape_names()
+    found = [n for n in names if n.startswith(ex.PREFIX)]
+    check("las %d formas de expresion de expresiones.json, al final" % len(wanted),
+          names[len(names) - len(wanted):] == wanted and found == wanted, str(found))
     if before:
         check_before(before)
     else:
         print("  (sin carpeta de antes: no se comparan las formas de antes ni los .json)")
+    if not wanted or found != wanted:
+        print("RESULTADO:", "TODO BIEN" if not failures else "%d FALLOS" % len(failures))
+        return
+    expected = [ex.PREFIX + e for e in EXPRESSIONS] + FIXES + [ex.PREFIX + v for v in VISEMES]
+    if not check("las recetas son las del 9.7 y el 9.8 (si no, adaptar la prueba)", wanted == expected):
+        print("RESULTADO: %d FALLOS" % len(failures))
+        return
     basemesh = ed.build_base()[0]
     fit = ca.EyeFit(basemesh)
     base = ca._accessor(gltf, data, primitive["attributes"]["POSITION"]).astype(float)

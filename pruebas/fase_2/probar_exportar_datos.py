@@ -29,11 +29,9 @@ COMBINED_MM = 1.0  # macros combinadas, con sus correcciones
 RANDOM_BODIES = 243
 BONE_MM, BONE_DEG = 1.0, 1.0
 REFERENCE = Vector((0.0, 1.0, 0.0))  # +Y de Blender = -Z de Godot
-# Pasos 9.7 y 9.8: las formas expr_* de cuerpo.glb, al final y en este orden (expresiones.expression_shapes).
-EXPRESSION_SHAPES = (["expr_" + e for e in ("happy", "angry", "sad", "surprised", "blinkLeft", "blinkRight")]
-                     + [f"expr_{side}*{fix}" for side in ("blinkLeft", "blinkRight")
-                        for fix in ("eye_tall_decr", "eye_tall_incr", "eye_size_decr", "eye_size_incr")]
-                     + ["expr_" + v for v in ("aa", "ih", "ou", "ee", "oh")])
+# Pasos 9.7 y 9.8: las formas expr_* de cuerpo.glb, al final y en este orden: las de blender/expresiones.json.
+import expresiones  # noqa: E402
+EXPRESSION_SHAPES = expresiones.shape_names()
 failures = []
 
 
@@ -168,8 +166,8 @@ check("glb: correcciones de alisado sobre las macros de SMOOTHING_SLIDERS", smoo
     f"{len(smoothing)} correcciones")
 check("glb: nombres _decr / _incr (y _l / _r)", all(p.rsplit("_", 2)[-1] in ("decr", "incr", "l", "r")
       for n in set(shapes) - set(face) - set(expressions) - {"alisado"} for p in n.split("*") if p != "alisado"))
-check("glb: las 19 formas de expresión, las últimas y en su orden (pasos 9.7 y 9.8, como probar_expresiones.gd)",
-      list(shapes)[-len(EXPRESSION_SHAPES):] == EXPRESSION_SHAPES and len(expressions) == len(EXPRESSION_SHAPES),
+check("glb: las %d formas de expresión de expresiones.json, las últimas y en su orden" % len(EXPRESSION_SHAPES),
+      list(shapes)[len(shapes) - len(EXPRESSION_SHAPES):] == EXPRESSION_SHAPES and expressions == EXPRESSION_SHAPES,
       expressions)
 colors = mesh.data.color_attributes
 values = np.empty(len(colors[0].data) * 4) if colors else np.zeros(1)
