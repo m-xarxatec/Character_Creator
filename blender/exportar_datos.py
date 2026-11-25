@@ -37,6 +37,7 @@ from prenda_base import paint_base_garment  # noqa: E402
 FORMAT_VERSION = 3
 FACE = "cara:"  # fuente de las formas de cara: cara:<forma de cara_anime.py>
 OWN = "propia:"  # fuente de las formas propias: propia:<forma de formas_propias.py>
+REACH = "@"  # alcance de una celda de targets: «a+b@1.3» lleva la forma al 130 % (ideas, 2026-11-25)
 SMOOTHING_SLIDERS = ("gender", "muscle", "weight", "breast_volume", "breast_firmness")  # ver own_shapes
 SPECIES = "humana"
 SOURCE = "MakeHuman system assets (CC0) con MPFB 2.0.18"
@@ -73,14 +74,22 @@ def own_rows(rows):
 
 
 def shape_specs(rows):
-    """[(nombre de la forma, macros, {target: peso})] de cada deslizador Forma de MPFB, por sentido y lado."""
+    """[(nombre de la forma, macros, {target: peso}, alcance)] de cada deslizador Forma de MPFB, por sentido y lado."""
     specs = []
     for row in (r for r in rows if r["tipo"] == "Forma" and r not in face_rows(rows) and r not in own_rows(rows)):
         for direction in ("decr", "incr"):
             for side in ("l", "r") if row["lados"] == "2" else (None,):
                 name = f"{row['id']}_{direction}" + (f"_{side}" if side else "")
-                specs.append((name, *_source(row[direction], side)))
+                cell, reach = split_reach(row[direction])
+                specs.append((name, *_source(cell, side), reach))
     return specs
+
+
+def split_reach(value):
+    """(celda sin alcance, alcance): 'a+b@1.3' -> ('a+b', 1.3); sin '@', alcance 1. MPFB limita el valor de una forma
+    a 1 (shape_key.value), asi que el alcance no va en el peso del target: escala la forma ya medida (es lineal)."""
+    cell, _, reach = value.partition(REACH)
+    return cell, float(reach) if reach else 1.0
 
 
 def _source(value, side):
@@ -141,7 +150,8 @@ def measure_shapes(rows):
     respecto al cuerpo neutro. Primero las formas de la tabla y despues las correcciones de las macros combinadas.
     """
     neutral = sample(raw_body(neutral_macros(), {}))
-    shapes = {name: _minus(sample(raw_body(macros, targets)), neutral) for name, macros, targets in shape_specs(rows)}
+    shapes = {name: _scale(_minus(sample(raw_body(macros, targets)), neutral), reach)
+              for name, macros, targets, reach in shape_specs(rows)}
     bodies = corner_bodies(macro_sliders(rows))
     shapes.update(corrections(bodies))
     return neutral[0], shapes, bodies
@@ -149,6 +159,10 @@ def measure_shapes(rows):
 
 def _minus(a, b):
     return a[0] - b[0], {bone: (h - b[1][bone][0], t - b[1][bone][1]) for bone, (h, t) in a[1].items()}
+
+
+def _scale(shape, factor):
+    return shape[0] * factor, {bone: (h * factor, t * factor) for bone, (h, t) in shape[1].items()}
 
 
 def _combine(terms):

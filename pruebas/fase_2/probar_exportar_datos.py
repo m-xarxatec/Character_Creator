@@ -3,6 +3,7 @@
 
 Uso: blender -b -P pruebas/fase_2/probar_exportar_datos.py
 Genera los datos dos veces en pruebas/fase_2/salida/ (a y b) y compara con cuerpos creados por MPFB.
+Alcance «@» de deslizadores.csv: orejas al 50 % = MPFB con sus targets a 0,5 × alcance. Rotura: _scale sin escalar.
 """
 import itertools
 import json
@@ -145,7 +146,7 @@ check("anclaje de cadera en la cadera (no en la mano)", 0.05 < hip[0] < 0.25 and
 
 # --- cuerpo.glb ---
 rows = ed.read_sliders(folder)
-expected = [name for name, _, _ in ed.shape_specs(rows)]
+expected = [name for name, *_ in ed.shape_specs(rows)]
 mesh, rig, base, shapes = read_glb(os.path.join(folder, "cuerpo.glb"))
 expressions = [n for n in shapes if n.startswith("expr_")]  # pasos 9.7 y 9.8: van aparte (las comprueba abajo)
 smoothing = [n for n in shapes if n.startswith("alisado*")]
@@ -248,6 +249,10 @@ compare("dos targets: cuello 60 % + dedos izq. 30 %", EXACT_MM,
         macros={}, shape_weights={"neck_length_incr": 0.6, "finger_length_incr_l": 0.3},
         targets={"measure-neck-height-incr": 0.6, "l-hand-fingers-length-incr": 0.3})
 compare("una macro sola: músculo 80 %", EXACT_MM, macros={"muscle": 0.8})
+ear = next(r for r in rows if r["id"] == "ear_size")  # alcance «@» (2026-11-25): la forma, escalada tras medirla
+ear_cell, ear_reach = ed.split_reach(ear["incr"])
+compare(f"un target con alcance: orejas 50 % × {ear_reach}", EXACT_MM, macros={}, shape_weights={"ear_size_incr": 0.5},
+        targets={t: 0.5 * ear_reach for t in ear_cell.split("+")})
 compare("macros combinadas (a): músculo 100 % + peso 100 %", COMBINED_MM, macros={"muscle": 1.0, "weight": 1.0})
 compare("macros combinadas (b): sexo 0 % + músculo 0 % + peso 100 %", COMBINED_MM,
         macros={"gender": 0.0, "muscle": 0.0, "weight": 1.0})

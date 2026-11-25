@@ -109,7 +109,10 @@ def mpfb_inputs(values, rows):
             macros[key] = v
             continue
         for direction, w in (("decr", max(0.0, 1 - 2 * v)), ("incr", max(0.0, 2 * v - 1))):
-            for target in row[direction].split("+") if w > 0 else ():
+            cell, reach = ed.split_reach(row[direction])
+            if w > 0 and reach != 1.0:
+                raise ValueError(f"{slider}: la referencia no sabe de alcances (@)")  # MPFB limita el peso a 1
+            for target in cell.split("+") if w > 0 else ():
                 targets[f"{side}-{target}" if side else target] = w
     return macros, targets
 

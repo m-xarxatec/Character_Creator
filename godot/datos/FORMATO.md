@@ -79,6 +79,7 @@ peso(<id>)      = el de <id>_incr               (forma de un lado; con n = 0, pe
 El neutro **se lee de la tabla**: el código no supone 0,5. En los Proporción, el neutro da escala 1.
 
 - Los deslizadores Forma con targets usan la misma regla con sus formas `_decr` e `_incr`: todos van de 0 a 1 y se manejan igual.
+- **Alcance** (2026-11-25): una celda de targets puede acabar en `@<factor>` (de 1 a 1,3), p. ej. `nose-scale-horiz-incr@1.3`: esa forma sale al 130 % de lo que mide MPFB. Solo cambia `cuerpo.glb`; el deslizador sigue yendo de 0 a 1.
 - Si solo se mueve **una** macro, el resultado es igual al de MakeHuman, porque entre 0 y 0,5 y entre 0,5 y 1 MakeHuman también mezcla en línea recta.
 - Si se mueven **varias**, sumar no basta: en MakeHuman, mucho músculo y mucho peso juntos dan un cuerpo que no es
   "el musculado + el gordo". Ese extra se guarda como **forma de corrección**.
