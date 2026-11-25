@@ -147,6 +147,10 @@ Lo escribe `blender/cara_anime.py` (`eye_data`) tras exportar `cuerpo.glb`. Si e
   Van por columnas (de la esquina interior a la exterior) y, en cada columna, `filas` vértices. `uv`: u por longitud de
   arco (1 en la esquina exterior), fila en metros (+ hacia fuera). `largo`: metros del arco. Apoyadas en la piel (fuera)
   o en el blanco (dentro), 0,12 mm por encima; sin superficie, rectas (`ids` repetido y `offset` hasta el punto).
+- AC.6c: `ceja` (opcional; sin ella no hay cejas), banda sobre la frente con el mismo formato: 32 columnas (de dentro
+  afuera) × 15 filas (de abajo arriba). `uv`: u de 0 a 1; fila = metros sobre la base de la banda. `largo`: ancho de la
+  banda en metros. Caja desde el marco del ojo: de 8 mm antes de la esquina interior a 12 mm después de la exterior, y de
+  2 a 28 mm sobre lo alto del lazo; apoyada siempre en la piel, 0,12 mm por encima. La derecha es el reflejo de la izquierda.
 
 `cuerpo.glb` lleva en `TEXCOORD_1` (x) la máscara del contorno, por vértice: 1 en bolsa, lazo y anillos 1–5; 0,5 en el anillo 6; 0 en el resto.
 

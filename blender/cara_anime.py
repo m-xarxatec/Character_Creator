@@ -9,7 +9,8 @@ nariz_anime a 0 (nariz de MakeHuman). Salida determinista y CC0 (ver README.md).
 Prueba: pruebas/fase_3/probar_cara_anime.py (la suma de las formas da la cara aprobada en la 3.13a-4).
 Ojo anime (AC.3b.1): EyeFit abre la cuenca nueva, corrige lazo, bolsa y corona, y da las 10 formas de ojo, la mascara
 del contorno (TEXCOORD_1) y ojos.json. Prueba: pruebas/fase_3/probar_forma_ojo.py.
-Tiras del ojo (AC.6a): linea de arriba (con cola para las pestanas), linea de abajo y pliegue, en ojos.json. Cada vertice
+Tiras del ojo (AC.6a): linea de arriba (con cola para las pestanas), linea de abajo y pliegue, en ojos.json.
+Banda de la ceja (AC.6c): rejilla sobre la frente, encima de cada ojo, con el mismo formato (brow_band). Cada vertice
 es la mezcla baricentrica de 3 vertices del .glb mas un desplazamiento fijo: asi sigue a las formas y a los huesos.
 
 Zonas: blender/cara_anime_zonas.json, listas de indices de vertice de la malla base de MakeHuman, elegidas una vez
@@ -74,6 +75,13 @@ STRIP_LIFT = 0.00012  # elevacion sobre la superficie en la que se apoya cada ve
 RAY_FROM = 0.005  # el rayo de apoyo empieza 5 mm por delante
 MAX_SNAP = 0.0045  # solo se apoya en una superficie a menos de 4,5 mm del punto
 SKIN_RADIUS = 0.025  # piel en la que se apoyan las tiras: a menos de 25 mm del centro del ojo
+# Banda de la ceja (AC.6c; caja y rejilla aprobadas en AC.6c.0, ruta/pasos/AC.6c_cejas.md 5.2)
+BROW_COLUMNS, BROW_ROWS = 32, 15
+BROW_BEFORE, BROW_AFTER = 0.008, 0.012  # en el lado: desde 8 mm antes de la esquina interior a 12 mm despues de la exterior
+BROW_LOW, BROW_HIGH = 0.002, 0.028  # hacia arriba: de 2 a 28 mm sobre lo alto del lazo
+BROW_RAY_FROM = 0.030  # la rejilla va en el plano del centro del ojo y el rayo empieza 30 mm por delante
+BROW_MAX_SNAP = 0.030  # vale cualquier piel entre el origen del rayo y 30 mm detras del plano (el prototipo no tenia limite)
+BROW_RADIUS = 0.050  # piel en la que se apoya la banda: a menos de 50 mm del centro del ojo
 
 
 def relax(points, edges, mask, steps, keep):
@@ -559,12 +567,12 @@ def _style_normal(anime, weights, joints, head, rim):
     return total / np.linalg.norm(total), float(head_weight[rim].min())
 
 
-def _hit(point, normal, surface):
-    """Primera cara visible de surface desde fuera: rayo desde point + normal * RAY_FROM hacia -normal (Moller-Trumbore).
+def _hit(point, normal, surface, ray_from=RAY_FROM):
+    """Primera cara visible de surface desde fuera: rayo desde point + normal * ray_from hacia -normal (Moller-Trumbore).
     surface: {"tris": (T, 3) indices del .glb, "pos": posiciones, "out": normal de cada cara hacia fuera}.
     Devuelve (distancia, indices, baricentricas, normal de la cara) o None si no toca ninguna."""
     tris, pos = surface["tris"], surface["pos"]
-    origin, direction = point + normal * RAY_FROM, -normal
+    origin, direction = point + normal * ray_from, -normal
     a, b, c = pos[tris[:, 0]], pos[tris[:, 1]], pos[tris[:, 2]]
     e1, e2 = b - a, c - a
     h = np.cross(direction, e2)
@@ -583,14 +591,14 @@ def _hit(point, normal, surface):
     return t[best], tris[best], np.array((1.0 - u[best] - v[best], u[best], v[best])), surface["out"][best]
 
 
-def _support(point, normal, surfaces):
+def _support(point, normal, surfaces, ray_from=RAY_FROM, max_snap=MAX_SNAP):
     """La primera cara visible entre varias superficies (piel y blanco): (superficie, indices, baricentricas, normal),
-    o None si no hay ninguna o queda a mas de MAX_SNAP del punto."""
-    hits = [(hit, surface) for surface in surfaces for hit in [_hit(point, normal, surface)] if hit is not None]
+    o None si no hay ninguna o queda a mas de max_snap del punto. ray_from y max_snap propios: la banda de la ceja."""
+    hits = [(hit, surface) for surface in surfaces for hit in [_hit(point, normal, surface, ray_from)] if hit is not None]
     if not hits:
         return None
     hit, surface = min(hits, key=lambda pair: pair[0][0])
-    return None if abs(hit[0] - RAY_FROM) > MAX_SNAP else (surface, *hit[1:])
+    return None if abs(hit[0] - ray_from) > max_snap else (surface, *hit[1:])
 
 
 def _faces(tris, pos):
@@ -637,6 +645,62 @@ def eye_strip(arc, anime, style, rows, center, surfaces, ahead, tail=0):
             "uv": [[round(float(x), 7) for x in t] for t in uv], "filas": len(rows), "largo": round(total, 7)}
 
 
+def brow_frame(anime, rim, upper, center, ahead):
+    """Caja de la banda de la ceja (AC.6c), desde el marco del ojo: (lado, arriba, (s0, s1), (h0, h1)) en metros desde
+    center. lado: de la esquina interior a la exterior, sin la parte de ahead; arriba: ahead x lado, hacia +Y."""
+    inner, outer = anime[rim[upper[0]]], anime[rim[upper[-1]]]
+    side = outer - inner
+    side = side - ahead * np.dot(side, ahead)
+    side /= np.linalg.norm(side)
+    up = np.cross(ahead, side)
+    up /= np.linalg.norm(up)
+    if up[1] < 0.0:
+        up = -up
+    top = float(((anime[rim] - center) @ up).max())
+    return side, up, (float((inner - center) @ side) - BROW_BEFORE, float((outer - center) @ side) + BROW_AFTER), \
+        (top + BROW_LOW, top + BROW_HIGH)
+
+
+def brow_band(center, frame, ahead, skin, columns=BROW_COLUMNS, rows=BROW_ROWS):
+    """Banda de la ceja (AC.6c): columnas de la parte interior a la exterior, filas de abajo arriba, apoyadas en la piel
+    con un rayo por ahead (la normal del ojo) y elevadas STRIP_LIFT. Mismo formato que eye_strip; uv = (u de 0 a 1,
+    metros sobre la base de la banda); largo = ancho de la banda. Si un punto no encuentra piel, para (ValueError)."""
+    side, up, (s0, s1), (h0, h1) = frame
+    ids, bary, offset, uv = [], [], [], []
+    for k in range(columns):
+        s = s0 + (s1 - s0) * k / (columns - 1)
+        for r in range(rows):
+            h = h0 + (h1 - h0) * r / (rows - 1)
+            hit = _support(center + side * s + up * h, ahead, (skin,), BROW_RAY_FROM, BROW_MAX_SNAP)
+            if hit is None:
+                raise ValueError("Banda de la ceja: el punto (%d, %d) no encuentra piel" % (k, r))
+            _, corners, weights, out = hit
+            ids.append([int(i) for i in corners])
+            bary.append(list(weights))
+            offset.append(out * STRIP_LIFT)  # la piel no tiene elevacion propia
+            uv.append([k / (columns - 1), h - h0])
+    return {"ids": ids, "bary": [[round(float(x), 6) for x in b] for b in bary],
+            "offset": [[round(float(x), 8) for x in o] for o in offset],
+            "uv": [[round(float(x), 7) for x in t] for t in uv], "filas": rows, "largo": round(s1 - s0, 7)}
+
+
+def _brows(anime, tris, eyes, bag):
+    """Las dos bandas de la ceja (AC.6c). eyes: {lado: (lazo, arco_superior, centro, normal)}. La derecha es el reflejo
+    de la izquierda (caja, ejes y direccion del rayo), apoyada en su propia piel; las columnas siguen de dentro afuera."""
+    in_bag = np.zeros(len(anime), bool)
+    in_bag[bag] = True
+    rim, upper, center, ahead = eyes["l"]
+    side, up, s_range, h_range = brow_frame(anime, rim, upper, center, ahead)
+    frames = {"l": (center, (side, up, s_range, h_range), ahead),
+              "r": (center * FLIP, (side * FLIP, up * FLIP, s_range, h_range), ahead * FLIP)}
+    out = {}
+    for name, (c, frame, normal) in frames.items():
+        near = np.linalg.norm(anime[tris[:, 0]] - c, axis=1) < BROW_RADIUS
+        skin = _faces(tris[near & ~in_bag[tris].all(1)], anime)
+        out[name] = brow_band(c, frame, normal, skin)
+    return out
+
+
 def eye_data(fit, glb_path, preset_values):
     """Contenido de ojos.json: indices del .glb y datos fijos de cada ojo, en el estado anime (FORMATO.md)."""
     from mathutils import kdtree
@@ -672,6 +736,7 @@ def eye_data(fit, glb_path, preset_values):
     corners = {"l": [0, 20], "r": [0, 16]}
     upper = {"l": list(range(20, -1, -1)), "r": list(range(16, 36)) + [0]}
     lower = {"l": list(range(20, 36)) + [0], "r": list(range(16, -1, -1))}
+    frames = {}  # AC.6c: marco de cada ojo para la banda de la ceja
     for side in "lr":
         loop = loops[side]
         inner = free if side == "l" else fit.mirror[free]
@@ -694,12 +759,15 @@ def eye_data(fit, glb_path, preset_values):
                 height.append(round(float(h), 5))
                 rise.append(round(lift.get(int(v), 0.0), 7))
         order = np.argsort(bag)
+        frames[side] = (rim, upper[side], center, normal)
         strips = _strips(anime, tris, (weights, joints, head), rim, (upper[side], lower[side]), center,
                          dict(zip(bag, rise)))
         out[side] = {**strips, "lazo": [int(i) for i in rim], "esquinas": corners[side], "arco_superior": upper[side], "arco_inferior": lower[side],
                      "bolsa": [bag[i] for i in order], "uv": [uv[i] for i in order], "altura": [height[i] for i in order],
                      "elevacion": [rise[i] for i in order], "centro": [round(float(c), 7) for c in center],
                      "normal": [round(float(c), 7) for c in normal]}
+    for side, band in _brows(anime, tris, frames, out["l"]["bolsa"] + out["r"]["bolsa"]).items():
+        out[side]["ceja"] = band
     return out
 
 
