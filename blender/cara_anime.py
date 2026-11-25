@@ -63,7 +63,7 @@ SOFT_RADIUS = 0.020  # reparto suave de las formas de ojo alrededor del lazo
 BAG_MARGIN = 0.0003  # la bolsa queda al menos a esta distancia detras de la membrana del lazo
 EYE_SHAPES = ("eye_size", "eye_spacing", "eye_position", "eye_tall", "eye_corner")
 OWN_EYE = {"eye_size_decr": ("size", -0.25), "eye_size_incr": ("size", 0.16), "eye_tall_decr": ("tall", -0.20),
-           "eye_tall_incr": ("tall", 0.16), "eye_corner_decr": ("corner", -9.0), "eye_corner_incr": ("corner", 9.0)}
+           "eye_tall_incr": ("tall", 0.16), "eye_corner_decr": ("corner", -15.0), "eye_corner_incr": ("corner", 15.0)}  # 15° (antes 9°): ojos más rasgados (2026-11-25; limpio hasta 18°)
 EYE_CLIP = {"eye_spacing_incr": 0.70, "eye_position_incr": 0.65}
 FLIP = np.array((-1.0, 1.0, 1.0))
 TAU = 2.0 * math.pi
