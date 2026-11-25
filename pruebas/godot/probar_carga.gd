@@ -34,7 +34,7 @@ func check(label: String, ok: bool, detail := "") -> void:
 func _check_species(species) -> void:
 	var skeleton: Skeleton3D = species.skeleton
 	var mesh: Mesh = species.mesh.mesh
-	check("57 huesos (53 + 4 anclajes)", skeleton.get_bone_count() == 57, str(skeleton.get_bone_count()))
+	check("60 huesos (56 + 4 anclajes; paso 9.3)", skeleton.get_bone_count() == 60, str(skeleton.get_bone_count()))
 	check("326 formas (199 + 5 de cara + 7 propias + 115 correcciones de alisado)", mesh.get_blend_shape_count() == 326,
 		str(mesh.get_blend_shape_count()))
 	check("articulaciones.json: 57 huesos", species.joints.size() == 57)

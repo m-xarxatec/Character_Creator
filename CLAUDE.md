@@ -68,7 +68,7 @@
 | --- | --- |
 | Unidades y ejes | Metros; Y arriba; mirando a +Z |
 | Pose de reposo | Pose T (MPFB sale en pose A, que rompe los brazos al animar) |
-| Esqueleto | 53 huesos con nombres de `SkeletonProfileHumanoid` (faltan `LeftEye`, `RightEye` y `Jaw` hasta la cara); solo huesos de deformación. En Godot hay que asignar un BoneMap humanoide al importar |
+| Esqueleto | 56 huesos con nombres de `SkeletonProfileHumanoid` (`LeftEye`, `RightEye` y `Jaw` desde el paso 9.3, sin pesos); solo huesos de deformación. En Godot hay que asignar un BoneMap humanoide al importar |
 | Pesos | Máximo 4 influencias por vértice, y suman 1 |
 | Malla | La base completa de MakeHuman, sin proxy; sin Draco |
 | Formas | Ninguna (se hornean), salvo las expresiones VRM (`happy`, `angry`, `sad`, `surprised`, `blinkLeft`, `blinkRight` y las visemas `aa`, `ih`, `ou`, `ee`, `oh`) en el cuerpo y en las mallas que las tienen: solo posiciones, a 0 (D31, paso 9.7.3) |

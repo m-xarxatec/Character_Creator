@@ -51,8 +51,8 @@ func _initialize() -> void:
 	check("la barra dice la altura con coma y las cabezas", text.begins_with("%s m" % ("%.2f" % tall["height"]).replace(".", ","))
 		and text.ends_with("cabezas"), text)
 	var triangles: int = mesh.mesh.surface_get_array_index_len(0) / 3
-	check("la barra dice el presupuesto: %d triángulos con punto de miles y los 53 huesos que se exportan" % triangles,
-		main.status_bar.budget_label.text == "%s triángulos  ·  53 huesos" % main.status_bar.thousands(triangles),
+	check("la barra dice el presupuesto: %d triángulos con punto de miles y los 56 huesos que se exportan" % triangles,
+		main.status_bar.budget_label.text == "%s triángulos  ·  56 huesos" % main.status_bar.thousands(triangles),
 		main.status_bar.budget_label.text)
 	check("26756 se escribe «26.756»", main.status_bar.thousands(26756) == "26.756" and main.status_bar.thousands(53) == "53")
 

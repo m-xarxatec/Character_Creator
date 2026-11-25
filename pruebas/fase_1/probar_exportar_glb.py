@@ -58,7 +58,7 @@ def check_glb(path, expected_vertices_min):
     nodes = gltf["nodes"]
     parent = {child: node["name"] for node in nodes for child in node.get("children", [])}
     joints = [nodes[i]["name"] for i in gltf["skins"][0]["joints"]]
-    check("53 huesos con nombres del perfil humanoide", sorted(joints) == sorted(humanoid_names().values()), str(len(joints)))
+    check("56 huesos con nombres del perfil humanoide", sorted(joints) == sorted(humanoid_names().values()), str(len(joints)))
     check("sin extensiones (sin Draco)", not gltf.get("extensionsUsed"), str(gltf.get("extensionsUsed")))
     for socket, bone in SOCKETS.items():
         index = next((i for i, n in enumerate(nodes) if n["name"] == socket), None)

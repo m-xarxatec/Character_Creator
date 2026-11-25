@@ -1,5 +1,5 @@
 # SPDX-License-Identifier: GPL-3.0-or-later
-"""Pruebas del paso 1.2. Uso: blender -b -P pruebas/fase_1/probar_rig_y_prenda.py"""
+"""Pruebas del paso 1.2 (y 9.3: huesos de ojos y mandibula). Uso: blender -b -P pruebas/fase_1/probar_rig_y_prenda.py"""
 import os
 import sys
 
@@ -41,11 +41,23 @@ for body in BODIES:
     height = gc.measure(mesh)["height"]
     skin = skin_vertices(mesh)
 
-    check("53 huesos", len(rig.data.bones) == 53, str(len(rig.data.bones)))
+    check("56 huesos (53 del rig + LeftEye, RightEye y Jaw, paso 9.3)", len(rig.data.bones) == 56, str(len(rig.data.bones)))
     head_top = (rig.matrix_world @ rig.data.bones["head"].tail_local).z
     check("la cabeza del rig queda dentro del cuerpo", 0.85 * height < head_top <= height * 1.01, f"{head_top:.3f} de {height:.3f}")
     foot = (rig.matrix_world @ rig.data.bones["ball_l"].head_local).z
     check("el pie del rig queda junto al suelo", 0 <= foot < 0.06, f"{foot:.3f}")
+    face = {name: rig.matrix_world @ rig.data.bones[name].head_local for name in ("LeftEye", "RightEye", "Jaw")}
+    head = rig.matrix_world @ rig.data.bones["head"].head_local
+    check("9.3: ojos y mandibula, hijos de la cabeza, de deformacion y sin pesos",
+          all(rig.data.bones[n].parent.name == "head" and rig.data.bones[n].use_deform for n in face)
+          and not any(n in mesh.vertex_groups for n in face))
+    check("9.3: ojos simetricos (x opuesta, misma altura y fondo; < 1 mm)", abs(face["LeftEye"].x + face["RightEye"].x) < 0.001
+          and abs(face["LeftEye"].z - face["RightEye"].z) < 0.001 and abs(face["LeftEye"].y - face["RightEye"].y) < 0.001,
+          f"{face['LeftEye'][:]} / {face['RightEye'][:]}")
+    check("9.3: ojo izquierdo en +X, ojos por encima de la mandibula y la mandibula en el centro",
+          face["LeftEye"].x > 0.01 and face["LeftEye"].z > face["Jaw"].z and abs(face["Jaw"].x) < 0.001)
+    print("  MEDIDA ojos y mandibula sobre la base de la cabeza: %.1f / %.1f mm"
+          % ((face["LeftEye"].z - head.z) * 1000, (face["Jaw"].z - head.z) * 1000))
 
     counts = [len(bone_weights(mesh, v)) for v in skin]
     check("cada vertice de piel tiene de 1 a 4 huesos", min(counts) >= 1 and max(counts) <= 4, f"min {min(counts)}, max {max(counts)}")

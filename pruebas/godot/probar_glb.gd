@@ -13,7 +13,7 @@ extends SceneTree
 # para salir todo en verde: cada hueso con el nombre y el padre del SkeletonProfileHumanoid.
 
 const SOCKETS := {"socket_hand_r": "RightHand", "socket_hand_l": "LeftHand", "socket_back": "UpperChest", "socket_hip": "Hips"}
-const OPTIONAL := ["LeftEye", "RightEye", "Jaw"]  # el rig Game engine no los trae
+const OPTIONAL := []  # paso 9.3: ya están los 56 del perfil (antes faltaban LeftEye, RightEye y Jaw)
 const BIND_MAX_ERROR := 0.001  # aprobado por el responsable el 2026-11-21 (medido 0,000000): diferencia entre la bind pose y la inversa del reposo del hueso
 const WEIGHT_MAX_ERROR := 0.001  # aprobado por el responsable el 2026-11-21 (medido 0,00000): desvío de 1 en la suma de pesos de una malla
 
@@ -110,7 +110,7 @@ func _check_profile(skel: Skeleton3D) -> void:
 	for i in skel.get_bone_count():
 		if profile.find_bone(skel.get_bone_name(i)) < 0:
 			extra.append(skel.get_bone_name(i))
-	check("estan los 53 huesos del perfil (menos ojos y mandibula)", missing.is_empty() and skel.get_bone_count() == 53, ", ".join(missing))
+	check("estan los 56 huesos del perfil (paso 9.3: con ojos y mandibula)", missing.is_empty() and skel.get_bone_count() == 56, ", ".join(missing))
 	check("no hay huesos que el perfil no conozca", extra.is_empty(), ", ".join(extra))
 	check("cada hueso tiene el padre que pide el perfil", wrong_parent.is_empty(), ", ".join(wrong_parent))
 
@@ -209,7 +209,7 @@ func _check_piece(piece: MeshInstance3D, skel: Skeleton3D) -> void:
 	check("%s: tiene piel" % piece.name, piece.skin != null)
 	if piece.skin == null:
 		return
-	check("%s: usa el esqueleto de 53 huesos" % piece.name, piece.get_node_or_null(piece.skeleton) == skel and skel.get_bone_count() == 53)
+	check("%s: usa el esqueleto de 56 huesos" % piece.name, piece.get_node_or_null(piece.skeleton) == skel and skel.get_bone_count() == 56)
 	_check_binds(piece, skel)
 	var mesh: Mesh = piece.mesh
 	check("%s: una sola superficie y sin formas sueltas (solo expresiones VRM)" % piece.name, mesh.get_surface_count() == 1

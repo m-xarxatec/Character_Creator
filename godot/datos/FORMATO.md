@@ -39,7 +39,7 @@ Al cargar, el núcleo comprueba `version` y el `sha256` de cada archivo; si no c
 ## `cuerpo.glb`
 
 - La malla base de MakeHuman sin proxy (13.380 vértices) y con los pies en el suelo.
-- 53 huesos humanoides + 4 **huesos de anclaje** sin peso: `socket_hand_r` / `socket_hand_l` (hijos de la mano), `socket_back` (hijo de `UpperChest`) y `socket_hip` (hijo de `Hips`). Al ser huesos, se reajustan como los demás. Al exportar el personaje (paso 3.6) pasan a ser nodos vacíos, como pide `CLAUDE.md`.
+- 56 huesos humanoides (paso 9.3: `LeftEye`, `RightEye` y `Jaw`, hijos de `Head`, sin pesos, en los cubos de articulación de MakeHuman) + 4 **huesos de anclaje** sin peso: `socket_hand_r` / `socket_hand_l` (hijos de la mano), `socket_back` (hijo de `UpperChest`) y `socket_hip` (hijo de `Hips`). Al ser huesos, se reajustan como los demás. Al exportar el personaje (paso 3.6) pasan a ser nodos vacíos, como pide `CLAUDE.md`.
 - Color por vértice `garment` (ver más abajo).
 - Formas (*blend shapes*): `<id>_decr` e `<id>_incr`, con `<id>` del CSV. Si `lados` = 2, hay una por lado: `<id>_incr_l`, `<id>_incr_r`.
   Un deslizador Forma sin `decr` (**de un lado**) tiene una sola forma, que se llama como su `<id>`.

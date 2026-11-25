@@ -42,7 +42,7 @@ def check_file(path):
     # El importador de Blender añade una esfera para dibujar los huesos, en la colección glTF_not_exported.
     meshes = [o for o in bpy.data.objects if o.type == "MESH"
               and not any(c.name == "glTF_not_exported" for c in o.users_collection)]
-    check(label + "un esqueleto con 53 huesos", len(rigs) == 1 and len(rigs[0].data.bones) == 53,
+    check(label + "un esqueleto con 56 huesos", len(rigs) == 1 and len(rigs[0].data.bones) == 56,
           [len(r.data.bones) for r in rigs])
     sockets = {o.name: o for o in bpy.data.objects if o.name.startswith("socket_")}
     hung = all(name in sockets and sockets[name].type == "EMPTY" and sockets[name].parent_type == "BONE"

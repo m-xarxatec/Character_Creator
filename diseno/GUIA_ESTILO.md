@@ -115,7 +115,7 @@ Piel y prenda comparten material: un solo `shadeColorFactor` no da las dos sombr
 
 ## 7. Presupuesto técnico por personaje
 
-Medido hoy (solo cuerpo, `datos/humana/cuerpo.glb`): **26.756 triángulos**, 14.517 vértices, 53 huesos exportados, 1 material, textura de prenda de 2048 px, `.glb` exportado de 1,4 MB.
+Medido hoy (solo cuerpo, `datos/humana/cuerpo.glb`): **26.756 triángulos**, 14.517 vértices, 53 huesos exportados (56 desde el paso 9.3: ojos y mandíbula, sin pesos), 1 material, textura de prenda de 2048 px, `.glb` exportado de 1,4 MB.
 
 | Recurso | PC | Móvil |
 | --- | --- | --- |

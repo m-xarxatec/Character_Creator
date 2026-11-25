@@ -142,7 +142,7 @@ func _check_rest(plain: Node3D, proto: Node3D) -> void:
 			if _angle(rest.basis, a[0].get_bone_global_rest(bone).basis) < SAME_AXES_DEG:
 				same += 1
 	check("los huesos no se mueven (< %s mm)" % SAME_BONE_MM, moved < SAME_BONE_MM, "%.6f mm, %d huesos" % [moved, a[0].get_bone_count()])
-	check("giro de reposo global = el del perfil (< %s°)" % SAME_AXES_DEG, turned < SAME_AXES_DEG and in_profile == 53,
+	check("giro de reposo global = el del perfil (< %s°)" % SAME_AXES_DEG, turned < SAME_AXES_DEG and in_profile == 56,  # paso 9.3
 		"%.6f°, %d huesos del perfil" % [turned, in_profile])
 	check("la prueba distingue: sin el prototipo casi ningún hueso tiene los ejes del perfil", same < 10, "%d de %d" % [same, in_profile])
 	var bind := 0.0
@@ -210,8 +210,8 @@ func _save(character: Node3D, folder: String) -> void:
 	var turned := 0.0
 	for bone in skeleton.get_bone_count():
 		turned = maxf(turned, _angle(skeleton.get_bone_global_rest(bone).basis, bases[skeleton.get_bone_name(bone)]))
-	check("en el archivo, los 53 huesos conservan los ejes del perfil (< %s°)" % FILE_AXES_DEG,
-		turned < FILE_AXES_DEG and skeleton.get_bone_count() == 53, "%.6f°" % turned)
+	check("en el archivo, los 56 huesos conservan los ejes del perfil (< %s°)" % FILE_AXES_DEG,
+		turned < FILE_AXES_DEG and skeleton.get_bone_count() == 56, "%.6f°" % turned)
 	scene.free()
 	saved = true
 

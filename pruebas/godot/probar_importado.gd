@@ -3,7 +3,7 @@ extends SceneTree
 # No se lanza a mano: lo ejecuta pruebas/fase_3/probar_importador.sh, que crea el proyecto e importa.
 
 const SOCKETS := {"socket_hand_r": "RightHand", "socket_hand_l": "LeftHand", "socket_back": "UpperChest", "socket_hip": "Hips"}
-const OPTIONAL := ["LeftEye", "RightEye", "Jaw"]  # el rig Game engine no los trae
+const OPTIONAL := []  # paso 9.3: ya están los 56 del perfil (antes faltaban LeftEye, RightEye y Jaw)
 
 var failures := 0
 
@@ -47,7 +47,7 @@ func _check_scene(file: String) -> void:
 			wrong.append(name)
 		unit = unit and skeleton.get_bone_rest(bone).basis.get_scale().is_equal_approx(Vector3.ONE) \
 			and skeleton.get_bone_pose_scale(bone).is_equal_approx(Vector3.ONE)
-	check(label + "53 huesos del perfil humanoide, con escala 1", skeleton.get_bone_count() == 53 and wrong.is_empty() and unit,
+	check(label + "56 huesos del perfil humanoide, con escala 1", skeleton.get_bone_count() == 56 and wrong.is_empty() and unit,
 		"%d huesos; mal: %s" % [skeleton.get_bone_count(), wrong])
 	var hung := true
 	for socket: String in SOCKETS:

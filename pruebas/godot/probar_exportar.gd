@@ -111,8 +111,8 @@ func _compare(label: String, skeleton: Skeleton3D, mesh: MeshInstance3D, memory_
 	var bones: Dictionary = Compare.bone_errors(skeleton, memory_skeleton)
 	var mm: float = Compare.stats(bones["mm"]).x
 	var deg: float = Compare.stats(bones["deg"]).x
-	check(label + "53 huesos iguales que en memoria (< %s mm) y con escala 1" % SAME_MM,
-		bones["count"] == 53 and mm < SAME_MM and bones["unit"], "máximo %.5f mm, %.4f°" % [mm, deg])
+	check(label + "56 huesos iguales que en memoria (< %s mm) y con escala 1" % SAME_MM,
+		bones["count"] == 56 and mm < SAME_MM and bones["unit"], "máximo %.5f mm, %.4f°" % [mm, deg])
 
 	# Anclajes.
 	var sockets: Dictionary = Compare.socket_errors(skeleton, memory_skeleton, socket_names)

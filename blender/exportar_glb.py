@@ -11,6 +11,7 @@ def humanoid_names():
     names = {
         "Root": "Root", "pelvis": "Hips", "spine_01": "Spine", "spine_02": "Chest",
         "spine_03": "UpperChest", "neck_01": "Neck", "head": "Head",
+        "LeftEye": "LeftEye", "RightEye": "RightEye", "Jaw": "Jaw",  # paso 9.3 (poner_rig.add_face_bones)
     }
     fingers = {"thumb": ("Thumb", ("Metacarpal", "Proximal", "Distal")), "pinky": ("Little", None)}
     for suffix, side in (("_l", "Left"), ("_r", "Right")):

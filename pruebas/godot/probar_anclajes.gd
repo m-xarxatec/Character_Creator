@@ -7,7 +7,7 @@ extends SceneTree
 const SOCKET_MM := 0.1
 const SOCKET_DEG := 1.0
 const MESH_MM := 0.01
-const OPTIONAL := ["LeftEye", "RightEye", "Jaw"]  # el rig Game engine no los trae
+const OPTIONAL := []  # paso 9.3: ya están los 56 del perfil (antes faltaban LeftEye, RightEye y Jaw)
 const SCALES := {
 	"extremo": {"height": 1.0, "head_size": 1.0, "hand_size_l": 1.0, "hand_size_r": 1.0, "foot_size_l": 1.0, "foot_size_r": 1.0},
 	"al_azar": {"height": 0.3, "head_size": 0.8, "hand_size_l": 1.0, "hand_size_r": 0.0, "foot_size_l": 0.2, "foot_size_r": 0.9},
@@ -189,8 +189,8 @@ func _check_profile(label: String, skeleton: Skeleton3D) -> void:
 	for i in profile.bone_size:
 		if skeleton.find_bone(profile.get_bone_name(i)) < 0 and not profile.get_bone_name(i) in OPTIONAL:
 			missing.append(profile.get_bone_name(i))
-	check(label + "53 huesos con nombre y padre del perfil humanoide, sin anclajes",
-		skeleton.get_bone_count() == 53 and wrong.is_empty() and missing.is_empty(),
+	check(label + "56 huesos con nombre y padre del perfil humanoide, sin anclajes",
+		skeleton.get_bone_count() == 56 and wrong.is_empty() and missing.is_empty(),
 		"%d huesos; mal: %s; faltan: %s" % [skeleton.get_bone_count(), wrong, missing])
 
 

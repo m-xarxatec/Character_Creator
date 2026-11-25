@@ -128,8 +128,8 @@ with open(os.path.join(folder, "articulaciones.json"), encoding="utf-8") as file
 check("manifiesto: versión 3, humana, pose A",
       (manifest["version"], manifest["species"], manifest["pose"]) == (3, "humana", "A"))
 check("manifiesto: 13380 vértices", manifest["vertex_count"] == 13380, manifest["vertex_count"])
-check("manifiesto: 53 huesos de deformación y 4 de anclaje",
-      len(manifest["bones"]["deform"]) == 53 and sorted(manifest["bones"]["sockets"]) == sorted(SOCKET_PARENTS))
+check("manifiesto: 56 huesos de deformación (paso 9.3) y 4 de anclaje",
+      len(manifest["bones"]["deform"]) == 56 and sorted(manifest["bones"]["sockets"]) == sorted(SOCKET_PARENTS))
 check(f"manifiesto: sha256 de los {len(ed.FILES)} archivos",
       all(manifest["files"][f]["sha256"] == ed.sha256(os.path.join(folder, f)) for f in ed.FILES))
 

@@ -7,8 +7,8 @@ extends RefCounted
 ##   CharacterChecks.worst(results)   # "bien", "aviso" o "error"
 ## Cada resultado: {"id": String, "nivel": "bien" | "aviso" | "error", "texto": String, "huesos": PackedStringArray}
 ## Una entrada por comprobación, también cuando pasa. `huesos`: los afectados, para señalar la zona (paso 5.4).
-## Los huesos se comparan con el manifiesto (53 en la humana) y con SkeletonProfileHumanoid (todos deben ser suyos);
-## no se exigen los 56 del perfil: los ojos y la mandíbula llegan con la cara (decisión D10).
+## Los huesos se comparan con el manifiesto (56 en la humana desde el paso 9.3) y con SkeletonProfileHumanoid (todos
+## deben ser suyos); no se exigen los 56 del perfil, para que otra especie pueda tener menos (D10).
 
 const WEIGHT_SUM_EPS := 1e-4  # Godot guarda los pesos en 16 bits: la suma es 1 ± 0,00005 (FORMATO.md)
 const SCALE_EPS := 1e-4

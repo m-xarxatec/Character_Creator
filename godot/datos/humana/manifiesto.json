@@ -46,6 +46,9 @@
    "RightThumbDistal",
    "Neck",
    "Head",
+   "LeftEye",
+   "RightEye",
+   "Jaw",
    "LeftUpperLeg",
    "LeftLowerLeg",
    "LeftFoot",
@@ -64,10 +67,10 @@
  },
  "files": {
   "articulaciones.json": {
-   "sha256": "cb4088677a396768390123d7fea94c0b10a7d3ee77afab7adcb6881195c9cdfc"
+   "sha256": "fbd2ee078a507a1f1ea2818234b730b2d6966f8c0c7b55b17fe4cb3544301c66"
   },
   "cuerpo.glb": {
-   "sha256": "887d855e72ab1832d5dbbae048618912d21bf9a6a8bd2c1224140958981ac408"
+   "sha256": "3a1b03528041f4fd3d0102d0f0ccf57ec62da0663cdd1330b689e0a4c8234eba"
   },
   "deslizadores.csv": {
    "sha256": "286cbbebe0b64678bc9342ceff65a93d623b00148a8ac098a992329e7183fb5f"
