@@ -127,6 +127,9 @@ Filas de tipo Forma con `incr` = `propia:<forma>` (y `decr` = `propia:<forma>` s
   plano. Donde un triángulo se daría la vuelta, el alisado se queda a medias (PL.0c). Su peso es el producto de sus partes.
 - El preset `anime.json` lleva `alisado` = 1 («sin detalle anatómico» desde el primer momento). Un preset sin la clave la deja en 0.
 
+- Paso 9.6: la bolsa interior de la boca (los vértices de la zona `mouth` que no se ven de frente) no se aplasta en
+  `boca_anime` y `nariz_anime`: sigue a los labios (`cara_anime.mouth_bag`). Lo que se ve no cambia.
+
 ### Formas de expresión (paso 9.7.1)
 
 - Prefijo `expr_` + nombre de VRM 1.0: `expr_happy`, `expr_angry`, `expr_sad`, `expr_surprised`, `expr_blinkLeft` y

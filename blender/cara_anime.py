@@ -23,6 +23,8 @@ Como deforma:
   tensa; `keep` devuelve una parte del relieve original. Asi se aplanan las cuencas, la nariz y los labios.
   Con pocas pasadas solo suaviza (cejas, y el escalon entre nariz y boca).
 - mandibula / menton: de la boca hacia abajo, estrecha la mandibula (X) y sube el menton (Z), con caida suave.
+- Paso 9.6: con bags (la bolsa de la boca, mouth_bag), el relajado no aplasta la bolsa interior: tras cada paso de
+  relajar, la bolsa sigue a su borde con un operador armonico (como la bolsa del ojo). La piel que se ve no cambia.
 Cada forma es lo que mueven sus pasos, aplicados en el orden de STEPS sobre el resultado del anterior: la suma de
 todas a 1 da la cara entera. La nariz va la ultima, para que nariz_anime = 0 deje la nariz sin escalones.
 """
@@ -84,6 +86,9 @@ BROW_MAX_SNAP = 0.030  # vale cualquier piel entre el origen del rayo y 30 mm de
 BROW_RADIUS = 0.050  # piel en la que se apoya la banda: a menos de 50 mm del centro del ojo
 BLINK_GAP = 0.0002  # paso 9.7.1: al parpadear, el arco de arriba del lazo queda 0,2 mm por encima del de abajo
 UPPER_ARC, LOWER_ARC = list(range(0, 21)), list(range(20, 36)) + [0]  # posiciones en EyeSide.loop (las de eye_data)
+# Bolsa de la boca (paso 9.6): lo de la zona mouth que no se ve de frente con la boca cerrada
+MOUTH_RAY = 0.10  # el rayo de visibilidad empieza 10 cm por delante (-Y de Blender) de cada vertice
+MOUTH_EPS = 0.0002  # tapado: algo corta el rayo a mas de 0,2 mm por delante del vertice
 
 
 def relax(points, edges, mask, steps, keep):
@@ -111,28 +116,50 @@ def falloff(mask, edges, steps):
     return weight
 
 
-def deform(points, edges, zones, steps):
+def deform(points, edges, zones, steps, bags=()):
     """Aplica los pasos [(nombre, zona, pasadas, relieve)] en orden: {nombre: desplazamiento sumado de sus pasos}.
-    Ejes de Blender: X a los lados, Z arriba."""
+    Ejes de Blender: X a los lados, Z arriba.
+    bags (paso 9.6): [(libres, frontera, matriz)] de _harmonic. Todo se calcula como sin ellas, y luego en las filas de
+    los libres: en los pasos de relajar, el movimiento de su frontera (matriz @ frontera: no se aplastan); en mandibula
+    y menton, el mismo calculo sobre su posicion sin aplastar. Las demas filas salen identicas a las de sin bags."""
     masks = {name: np.isin(np.arange(len(points)), zones[name]) for name in ("eyes", "nose", "mouth", "brow", "chin")}
     mouth_z = points[masks["mouth"], 2].mean()
     chin_z = points[zones["chin_tip"], 2]
     weight = falloff(masks["chin"], edges, FALLOFF_STEPS)
     moved = points.copy()
-    down = None
+    fixed = points.copy()  # paso 9.6: con las bolsas sin aplastar
+    down = down_fixed = None
     deltas = {}
     for name, zone, passes, keep in steps:
         before = moved.copy()
-        if zone == "jaw":  # el menton usa el mismo «down»: separar X y Z no cambia el resultado
-            down = np.clip((mouth_z - moved[:, 2]) / (mouth_z - chin_z), 0.0, 1.0) * weight
-            moved[:, 0] *= 1.0 - JAW_NARROW * down
-        elif zone == "chin":
-            moved[:, 2] += CHIN_SHORTEN * (mouth_z - chin_z) * down
+        if zone in ("jaw", "chin"):
+            if zone == "jaw":  # el menton usa el mismo «down»: separar X y Z no cambia el resultado
+                down = np.clip((mouth_z - moved[:, 2]) / (mouth_z - chin_z), 0.0, 1.0) * weight
+                down_fixed = np.clip((mouth_z - fixed[:, 2]) / (mouth_z - chin_z), 0.0, 1.0) * weight
+            moved, fixed_step = _jaw_chin(moved, zone, down, mouth_z, chin_z), _jaw_chin(fixed, zone, down_fixed, mouth_z, chin_z) - fixed
+            step = moved - before
+            for free, _, _ in bags:
+                step[free] = fixed_step[free]
         else:
             mask = np.any([masks[z] for z in zone.split("+")], axis=0)
             moved = relax(moved, edges, mask, passes, keep)
-        deltas[name] = deltas.get(name, 0.0) + (moved - before)
+            step = moved - before
+            for free, border, matrix in bags:
+                if mask[free].any():
+                    step[free] = matrix @ step[border]
+        fixed = fixed + step
+        deltas[name] = deltas.get(name, 0.0) + step
     return deltas
+
+
+def _jaw_chin(points, zone, down, mouth_z, chin_z):
+    """Paso de mandibula (estrecha X) o de menton (sube Z) sobre una copia de points."""
+    out = points.copy()
+    if zone == "jaw":
+        out[:, 0] *= 1.0 - JAW_NARROW * down
+    else:
+        out[:, 2] += CHIN_SHORTEN * (mouth_z - chin_z) * down
+    return out
 
 
 def neutral_head():
@@ -210,6 +237,43 @@ def _harmonic(free, adj):
             else:
                 B[i, border_index[o]] += 1.0
     return np.array(free), np.array(border), np.linalg.solve(A, B)
+
+
+def mouth_bag(points, head, edges, zones, mirror):
+    """Paso 9.6: la bolsa interior de la boca y su operador armonico (libres, frontera, matriz). Bolsa: los vertices de
+    la zona mouth tapados vistos de frente (un rayo desde MOUTH_RAY por delante, -Y, corta otra cara antes), la mayor
+    pieza conexa, con su simetrico. Asi no entra la piel de las comisuras, que queda detras de los labios pero se ve."""
+    tree = BVHTree.FromPolygons([tuple(map(float, p)) for p in points], [tuple(int(i) for i in t) for t in head],
+                                all_triangles=True)
+    hidden = set()
+    for v in zones["mouth"]:
+        origin = points[v] - np.array((0.0, MOUTH_RAY, 0.0))
+        hit = tree.ray_cast(tuple(map(float, origin)), (0.0, 1.0, 0.0), MOUTH_RAY)
+        if hit[0] is not None and hit[3] < MOUTH_RAY - MOUTH_EPS:
+            hidden.add(int(v))
+    adj = {}
+    for a, b in edges:
+        adj.setdefault(int(a), set()).add(int(b))
+        adj.setdefault(int(b), set()).add(int(a))
+    pieces, seen = [], set()
+    for start in sorted(hidden):
+        if start in seen:
+            continue
+        piece, stack = [], [start]
+        seen.add(start)
+        while stack:
+            v = stack.pop()
+            piece.append(v)
+            for o in adj[v]:
+                if o in hidden and o not in seen:
+                    seen.add(o)
+                    stack.append(o)
+        pieces.append(piece)
+    if not pieces:
+        raise ValueError("Bolsa de la boca: ningun vertice de la zona mouth queda tapado")
+    largest = max(pieces, key=len)
+    bag = sorted(set(largest) | {int(mirror[v]) for v in largest})
+    return _harmonic(bag, adj)
 
 
 def _poly_radius(poly, c, angle):
@@ -367,6 +431,7 @@ class EyeFit:
         triangles = np.asarray(fp.mesh_arrays(basemesh)[2])
         self.head, self.in_head = head_triangles(basemesh, triangles)
         self.mirror = np.asarray(fp.mirror_map(self.points))
+        self.mouth = mouth_bag(self.points, self.head, self.edges, self.zones, self.mirror)  # paso 9.6
         self.kept = self._kept_zones()
         self.shapes = self._socket_shapes()
         before = self.points + sum(self.shapes[n] for n in PRESET_FACE)
@@ -432,7 +497,7 @@ class EyeFit:
         bag = np.array(zones["inner_l"] + zones["inner_r"])
         spread[bag] = self._with_wall(opening, ring, inner, right, WALL_BAG)[bag]
         socket = spread + deform(spread, edges, kept, [("cuenca_plana", "brow", 3, 0.0)])["cuenca_plana"]
-        deltas = deform(socket, edges, kept, [s for s in STEPS if s[0] != "cuenca_plana"])
+        deltas = deform(socket, edges, kept, [s for s in STEPS if s[0] != "cuenca_plana"], (self.mouth,))  # 9.6
         deltas["cuenca_plana"] = socket - points
         return deltas
 

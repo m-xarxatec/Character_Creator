@@ -43,7 +43,7 @@
 - Deslizador de separación de los ojos con las formas CC0 de MakeHuman que mueven los ojos; el ancla de la calcomanía es un vértice fijo, así que el ojo lo sigue. En el preset anime los ojos se ven algo separados.
 - Los ojos de calcomanía se deforman en tres cuartos y de perfil: hará falta otro sistema de ojos.
 - Un deslizador por rasgo a partir de las formas de la cara anime (`cuenca_plana`, `boca_anime`, `mandibula_anime`, `menton_anime`, `nariz_anime`): cada una, una fila de la tabla del 2.1.
-- Esas formas aplastan las bolsas interiores de la boca y los ojos (hasta 58 mm): hay que resolverlo antes de abrir la boca (expresiones, visemas).
+- ~~Esas formas aplastan las bolsas interiores de la boca y los ojos (hasta 58 mm)~~: ojos, resuelto en AC.3; boca, en el 9.6 (`ruta/pasos/9.6_bolsa_boca.md`).
 - Candidatas CC0 de OpenGameArt para la pestaña Cara y la base chibi: Generic Anime Face (Barely_Banquo, con expresiones), 3d female anime head (ColdOneK), Base Rigged Stylized Humanoid YW (Girush) y Tiby (PINKCANNON, chibi).
 - Cabezas con licencia CC-BY-SA como pack opcional, con aviso claro de la licencia al elegirlas.
 
