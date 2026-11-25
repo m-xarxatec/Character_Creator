@@ -147,6 +147,8 @@ El zip está en `referencias/` (git no lo guarda). Versión gratis: 2 cuerpos es
 
 ## Descartadas (y por qué)
 
+- **Pelo anime por parámetros** (PE.1, 2026-11-25): casquete y mechones en hoja generados en Blender. Probado en el programa: «las formas están raras, no parecen cabello». Se sigue con huesos para los peinados que ya hay (Fase PE).
+
 - **VRoid Studio como base:** es cerrado y sus mallas son de pixiv.
 - **MB-Lab:** sus personajes son AGPL.
 - **SMPL / SMPL-X:** licencias restringidas.

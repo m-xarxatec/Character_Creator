@@ -45,7 +45,7 @@ func _initialize() -> void:
 	root.add_child(main)
 	await process_frame
 	var view = main.body_view
-	_check_quaternius(main, view)
+	_check_hairs(main, view, "quaternius", QU_HAIR, "Quaternius")
 	_check_overscore(main, view)
 	_check_makehuman(main, view)
 	_check_wear(main, view)
@@ -62,25 +62,25 @@ func check(label: String, ok: bool, detail := "") -> void:
 		failures += 1
 
 
-## Paso RE.1b: cada peinado de Quaternius se pone, sigue a la cabeza, no se hunde en cuello y hombros y se exporta.
-func _check_quaternius(main: Control, view) -> void:
+## Paso RE.1b: cada peinado del pack se pone, sigue a la cabeza, no se hunde en cuello y hombros y se exporta.
+func _check_hairs(main: Control, view, pack: String, ids: Array, label: String) -> void:
 	var start: Dictionary = main.editor.values.duplicate()
 	var head_weight := _bone_weight(view.species.mesh, view.species.skeleton, "Head")
 	var previous := ""
-	for id: String in QU_HAIR:
-		check("Quaternius: poner %s" % id, view.set_piece("quaternius", id, true))
-		var mesh: MeshInstance3D = view.pieces.get("quaternius/" + id)
+	for id: String in ids:
+		check("%s: poner %s" % [label, id], view.set_piece(pack, id, true))
+		var mesh: MeshInstance3D = view.pieces.get(pack + "/" + id)
 		if mesh == null:
 			continue
-		check("Quaternius: %s cuelga del esqueleto y trae las formas" % id, mesh.get_parent() == view.species.skeleton
+		check("%s: %s cuelga del esqueleto y trae las formas" % [label, id], mesh.get_parent() == view.species.skeleton
 			and QU_SHAPES.all(func(shape: String) -> bool: return mesh.find_blend_shape_by_name(shape) >= 0))
 		if previous != "":
-			check("Quaternius: %s quita el anterior (misma ranura)" % id, not view.is_on("quaternius/" + previous))
+			check("%s: %s quita el anterior (misma ranura)" % [label, id], not view.is_on(pack + "/" + previous))
 		previous = id
 		_check_follows(main, view, mesh, id, start, head_weight)
 		_check_big_head(main, view, mesh, id, start, head_weight)
-		_check_exports(view, id)
-	view.set_piece("quaternius", previous, false)
+		_check_exports(view, id, label)
+	view.set_piece(pack, previous, false)
 	main.editor.load_values(start)
 
 
@@ -99,7 +99,7 @@ func _check_follows(main: Control, view, mesh: MeshInstance3D, id: String, start
 			measured.append(all[k])
 			before.append(neutral["gaps"][k])
 	print("  MEDIDA %s: %d de %d vértices medidos (%.1f %%)" % [id, measured.size(), all.size(), 100.0 * measured.size() / all.size()])
-	check("Quaternius: %s tiene vértices sobre el cuero cabelludo" % id, measured.size() > 0)
+	check("%s tiene vértices sobre el cuero cabelludo" % id, measured.size() > 0)
 	if measured.is_empty():
 		return
 	for label: String in QU_CASES:
@@ -116,7 +116,7 @@ func _check_follows(main: Control, view, mesh: MeshInstance3D, id: String, start
 			peak = maxf(peak, change)
 		var rms := sqrt(sum / measured.size())
 		print("  MEDIDA %s (%s): cambio de distancia a la piel RMS %.2f mm, pico %.2f mm" % [id, label, rms * 1000, peak * 1000])
-		check("Quaternius: %s no se despega de la piel (%s)" % [id, label], rms <= QU_GAP_RMS_MAX and peak <= QU_GAP_PEAK_MAX,
+		check("%s no se despega de la piel (%s)" % [id, label], rms <= QU_GAP_RMS_MAX and peak <= QU_GAP_PEAK_MAX,
 			"RMS %.2f, pico %.2f mm" % [rms * 1000, peak * 1000])
 	main.editor.load_values(start)
 
@@ -129,7 +129,7 @@ func _check_big_head(main: Control, view, mesh: MeshInstance3D, id: String, star
 	var body: Dictionary = MeshBaker.bake(view.species.mesh, view.species.skeleton)
 	var depth := _neck_depth(MeshBaker.bake(mesh, view.species.skeleton)["vertices"], body, head_weight)
 	print("  MEDIDA %s con cabeza ×2,5: %.1f mm bajo la piel de cuello y hombros" % [id, depth * 1000])
-	check("Quaternius: %s no se hunde en cuello y hombros a ×2,5" % id, depth <= QU_NECK_DEPTH_MAX, "%.1f mm" % (depth * 1000))
+	check("%s no se hunde en cuello y hombros a ×2,5" % id, depth <= QU_NECK_DEPTH_MAX, "%.1f mm" % (depth * 1000))
 	main.editor.load_values(start)
 
 
