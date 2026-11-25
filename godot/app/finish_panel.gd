@@ -4,6 +4,8 @@ extends VBoxContainer
 # (BodyMaterial), así que el .glb y el .tres salen como se ve. No entra en Deshacer: tiene su botón Restablecer acabado.
 # Paso P.5a: nombres en español claro y una ayuda de una línea en cada deslizador (sin «Rim»).
 # SH.7a: interruptor «Estilo anime (beta)» (cuerpo y piezas a toon_soft) y, solo con él, la sección Piel (BodyMaterial.SKIN).
+# AC.6c.4b: y la sección Cejas (Altura, Grosor, Tamaño: BodyMaterial.BROW_SKIN; Color: brow_color). Van al material del
+# cuerpo y la vista los copia a las cejas (sync_lines). Sus barras no tienen paso: así el valor de serie es exacto.
 # Uso: var panel := FinishPanel.new(); panel.setup(body_view)
 
 const BodyMaterial := preload("../addons/creador/body_material.gd")
@@ -24,6 +26,10 @@ const SKIN_HELP := {"edge_strength": "Franja cálida entre la luz y la sombra, c
 	"face_light": "Más luz en la cara que en el cuerpo", "outline_tint": "0: línea negra; 1: del color de cada zona, más oscuro",
 	"face_line": "Grosor de la línea en la cara, respecto al del cuerpo",
 	"hair_band": "Anillo de brillo en el pelo, solo donde le da la luz"}
+const BROW_NAMES := {"brow_lift": "Altura", "brow_thickness": "Grosor", "brow_size": "Tamaño"}  # AC.6c.4b
+const BROW_HELP := {"brow_lift": "Sube o baja la ceja (hasta 3 mm)", "brow_thickness": "De la mitad a cuatro veces más gruesa",
+	"brow_size": "Más corta o más larga, desde su centro"}
+const BROW := "brow_color"
 const NAME_WIDTH := 130.0
 const STEPS := 400.0  # SH.7: fino para que 1,25 px y 0,075 (los del estilo anime) caigan en un paso
 
@@ -34,6 +40,7 @@ var sliders := {}  # clave de BodyMaterial.FINISH → HSlider
 var skin_sliders := {}  # SH.7a: clave de BodyMaterial.SKIN → HSlider
 var anime_button: CheckButton
 var skin_box: VBoxContainer  # SH.7a: la sección Piel, visible solo en estilo anime
+var brow_button: ColorPickerButton  # AC.6c.4b: color de la ceja (dentro de skin_box, con la sección Cejas)
 var reset_button: Button
 
 
@@ -62,6 +69,19 @@ func setup(body_view: SubViewportContainer) -> void:
 	add_child(skin_box)
 	for key: String in SKIN_NAMES:
 		_add_skin_slider(key)
+	var brow_title := Label.new()  # AC.6c.4b
+	brow_title.text = "Cejas"
+	skin_box.add_child(brow_title)
+	for key: String in BROW_NAMES:
+		_add_skin_slider(key)
+	brow_button = ColorPickerButton.new()
+	brow_button.edit_alpha = false
+	brow_button.size_flags_horizontal = Control.SIZE_EXPAND_FILL
+	brow_button.tooltip_text = "Color de las cejas"
+	brow_button.color_changed.connect(func(color: Color) -> void:
+		BodyMaterial.set_color(mesh, BROW, color)
+		view.sync_lines())
+	_add_row("Color", brow_button, skin_box)
 	reset_button = Button.new()
 	reset_button.text = "Restablecer acabado"
 	reset_button.size_flags_horizontal = Control.SIZE_SHRINK_END
@@ -73,6 +93,7 @@ func setup(body_view: SubViewportContainer) -> void:
 ## Pone los controles como el material (sin avisar: no lo cambia).
 func refresh() -> void:
 	skin_button.color = BodyMaterial.get_color(mesh, SKIN)
+	brow_button.color = BodyMaterial.get_color(mesh, BROW)
 	var finish: Dictionary = BodyMaterial.get_finish(mesh)
 	for key: String in sliders:
 		sliders[key].set_value_no_signal(finish[key])
@@ -93,6 +114,7 @@ func set_anime(on: bool) -> void:
 ## Vuelve a la piel y al acabado por defecto del estilo (sin cambiar de estilo).
 func reset() -> void:
 	BodyMaterial.set_color(mesh, SKIN, BodyMaterial.DEFAULTS[SKIN])
+	BodyMaterial.set_color(mesh, BROW, BodyMaterial.EXTRA_COLORS[BROW])  # AC.6c.4b
 	var anime := BodyMaterial.is_soft(mesh)
 	var finish: Dictionary = BodyMaterial.default_finish(anime)
 	for key: String in finish:
@@ -100,7 +122,7 @@ func reset() -> void:
 	if anime:
 		for key: String in BodyMaterial.SKIN_START:
 			BodyMaterial.set_skin(mesh, key, BodyMaterial.SKIN_START[key])
-		view.sync_lines()
+	view.sync_lines()  # AC.6c.4b: también en clásico, por el color de la ceja
 	refresh()
 
 
@@ -124,17 +146,18 @@ func _add_skin_slider(key: String) -> void:
 	var slider := HSlider.new()
 	slider.min_value = limits[0]
 	slider.max_value = limits[1]
-	slider.step = 1.0 if key == "freckles" else (limits[1] - limits[0]) / STEPS
+	var brow := key in BROW_NAMES  # AC.6c.4b
+	slider.step = 1.0 if key == "freckles" else 0.0 if brow else (limits[1] - limits[0]) / STEPS
 	slider.scrollable = false
 	slider.size_flags_horizontal = Control.SIZE_EXPAND_FILL
 	slider.size_flags_vertical = Control.SIZE_SHRINK_CENTER
 	slider.value_changed.connect(func(value: float) -> void:
 		BodyMaterial.set_skin(mesh, key, value)
-		if key in ["outline_tint", "hair_band"]:
+		if key in ["outline_tint", "hair_band"] or brow:
 			view.sync_lines())
-	slider.tooltip_text = SKIN_HELP[key]
+	slider.tooltip_text = BROW_HELP[key] if brow else SKIN_HELP[key]
 	skin_sliders[key] = slider
-	_add_row(SKIN_NAMES[key], slider, skin_box)
+	_add_row(BROW_NAMES[key] if brow else SKIN_NAMES[key], slider, skin_box)
 
 
 func _add_row(text: String, control: Control, parent: Container = self) -> void:

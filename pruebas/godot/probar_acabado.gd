@@ -5,6 +5,8 @@ extends SceneTree
 # SH.7a: el interruptor «Estilo anime (beta)» pasa cuerpo y piezas a toon_soft sin perder colores, la sección Piel solo
 # se ve en estilo anime, sus barras mueven el material (Pecas, de uno en uno) y el preset guardado lleva estilo y piel.
 # Detecta el fallo (en una copia): set_anime_style sin el bucle de las piezas; Pecas con step 0,1.
+# AC.6c.4b: la sección Cejas está en estilo anime, sus barras y su color llegan a las dos cejas y Restablecer acabado las
+# devuelve a serie. Rotura: una barra de Cejas sin conectar (sin view.sync_lines()).
 
 var failures := 0
 var BodyMaterial: GDScript
@@ -21,6 +23,7 @@ func _initialize() -> void:
 		_check_panel(main.finish_panel, main.body_view)
 		_check_names(main.finish_panel)
 		_check_anime(main.finish_panel, main.body_view)
+		_check_brows(main.finish_panel, main.body_view)
 	main.free()
 	print("RESULTADO: ", "TODO BIEN" if failures == 0 else "%d FALLOS" % failures)
 	quit(1 if failures else 0)
@@ -89,6 +92,48 @@ func _check_anime(panel, view) -> void:
 		and not BodyMaterial.is_soft(piece) and not panel.skin_box.visible)
 	check("apagado: el acabado clásico", BodyMaterial.get_finish(mesh) == BodyMaterial.default_finish())
 	view.set_piece("makehuman", "short02", false)
+
+
+## AC.6c.4b: sección Cejas de Acabado.
+func _check_brows(panel, view) -> void:
+	var mesh: MeshInstance3D = view.species.mesh
+	panel.anime_button.button_pressed = true
+	var titles: Array = panel.skin_box.find_children("*", "Label", true, false).map(func(l: Label) -> String: return l.text)
+	check("Cejas: la sección está en estilo anime, con Altura, Grosor, Tamaño y Color", panel.skin_box.visible
+		and "Cejas" in titles and BodyMaterial.BROW_SKIN.all(func(k: String) -> bool: return panel.skin_sliders.has(k))
+		and panel.brow_button != null and panel.brow_button.get_parent().get_parent() == panel.skin_box)
+	var cejas: Array = view.eyes.filter(func(n: Node) -> bool: return String(n.name).begins_with("ceja_"))
+	check("Cejas: hay dos cejas en la vista", cejas.size() == 2)
+	var limits: Array = BodyMaterial.SKIN["brow_thickness"]
+	var slider: HSlider = panel.skin_sliders["brow_thickness"]
+	check("Cejas: Grosor va de %s a %s" % limits, slider.min_value == limits[0] and slider.max_value == limits[1])
+	slider.value = 2.5
+	panel.skin_sliders["brow_lift"].value = -0.002
+	panel.skin_sliders["brow_size"].value = 1.4
+	var reached := cejas.size() == 2  # antes del color: su botón también llama a sync_lines y taparía una barra sin conectar
+	for ceja: MeshInstance3D in cejas:
+		var m := ceja.material_override as ShaderMaterial
+		reached = reached and is_equal_approx(m.get_shader_parameter("brow_thickness"), 2.5)
+		reached = reached and is_equal_approx(m.get_shader_parameter("brow_lift"), -0.002)
+		reached = reached and is_equal_approx(m.get_shader_parameter("brow_size"), 1.4)
+	check("Cejas: mover las barras cambia las dos cejas", reached)
+	var green := Color(0.2, 0.6, 0.3)
+	panel.brow_button.color_changed.emit(green)
+	reached = cejas.size() == 2
+	for ceja: MeshInstance3D in cejas:
+		reached = reached and ((ceja.material_override as ShaderMaterial).get_shader_parameter("brow_color") as Color) \
+			.is_equal_approx(green)
+	check("Cejas: el color cambia las dos cejas", reached)
+	panel.reset()
+	var back := cejas.size() == 2
+	for ceja: MeshInstance3D in cejas:
+		var m := ceja.material_override as ShaderMaterial
+		for key: String in BodyMaterial.BROW_SKIN:
+			back = back and m.get_shader_parameter(key) == BodyMaterial.SKIN_START[key]
+		back = back and (m.get_shader_parameter("brow_color") as Color).is_equal_approx(BodyMaterial.EXTRA_COLORS["brow_color"])
+	check("Cejas: Restablecer acabado las devuelve a serie (material, cejas y panel)", back
+		and panel.brow_button.color.is_equal_approx(BodyMaterial.EXTRA_COLORS["brow_color"])
+		and BodyMaterial.BROW_SKIN.all(func(k: String) -> bool: return panel.skin_sliders[k].value == BodyMaterial.SKIN_START[k]))
 
 
 func _skin_values(panel) -> Dictionary:
