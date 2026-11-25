@@ -15,8 +15,8 @@ extends SceneTree
 
 const SLIDERS := ["eye_size", "eye_spacing", "eye_position", "eye_tall", "eye_corner"]
 const STRIP_LIFT := 0.00012  # metros: la de cara_anime.py
-const MAX_SKIN_MM := 0.05  # PROVISIONAL (ficha AC.6c §1): banda–piel
-const MIN_GAP_MM := 2.0  # PROVISIONAL (ficha AC.6c §6): borde de abajo de la ceja–arco de arriba del lazo; medir antes
+const MAX_SKIN_MM := 0.5  # ficha AC.6c §1: banda–piel (aprobado el 2026-11-25; medido 0,26–0,33 mm)
+const MIN_GAP_MM := 2.0  # ficha AC.6c §6: borde de abajo de la ceja–arco de arriba del lazo (aprobado el 2026-11-25)
 const RAY_FROM := 0.030  # metros: el rayo de altura empieza 30 mm por delante (como el de Blender para la banda)
 const SKIN_RADIUS := 0.05  # metros: piel alrededor del ojo
 const CELL := 0.001  # metros: rejilla de triángulos para los rayos

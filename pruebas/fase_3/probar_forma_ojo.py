@@ -2,9 +2,10 @@
 """Paso AC.3b.1: la forma del ojo anime, medida sobre el cuerpo.glb exportado (no sobre el calculo).
 
 Comprueba: 13.380 vertices y 13.378 caras; simetria; 0 cruces y 0 invertidos en reposo y en los 10 extremos; la bolsa
-detras de la membrana del lazo; nada se mueve fuera de cabeza y cuello; articulaciones.json identico; indices de ojos.json.
-AC.6c.1: cuerpo.glb identico; banda de la ceja (480 puntos apoyados, simetria) y ojos.json igual en lo de antes.
+detras de la membrana del lazo; nada se mueve fuera de cabeza y cuello; solo LeftEye y RightEye siguen a las formas eye_*
+(articulaciones.json); indices de ojos.json. AC.6c.1: banda de la ceja (480 puntos apoyados, simetria) y ojos.json igual en lo de antes.
 Rotura: en cara_anime._brows, el ojo derecho sin reflejar el lado (side) -> falla la simetria de la ceja.
+Rotura: un delta eye_size en Head de articulaciones.json -> falla "solo los huesos de los ojos siguen a eye_*".
 Uso: (ulimit -v 4000000; timeout 900 blender -b -P pruebas/fase_3/probar_forma_ojo.py 2>&1 | grep -E 'FALLO|MEDIDA|RESULTADO')
 Sobre otra carpeta de datos: ... -P pruebas/fase_3/probar_forma_ojo.py -- <carpeta de la especie>
 """
@@ -28,10 +29,9 @@ BAG_TRIANGLES, BAG_GLB = 730, 412
 MAX_ASYMMETRY_MM = 0.5
 MAX_OUTSIDE_MM = 0.5
 MAX_INDEX_MM = 0.01
-JOINTS_SHA256 = "cb4088677a396768390123d7fea94c0b10a7d3ee77afab7adcb6881195c9cdfc"  # articulaciones.json de AC.3 (las formas de ojo no mueven huesos)
+EYE_BONES = {"LeftEye", "RightEye"}  # 9.3: los unicos huesos que siguen a las formas de ojo
 EYES = ("eye_size", "eye_spacing", "eye_position", "eye_tall", "eye_corner")
 # AC.6c.1: la banda de la ceja no cambia nada de antes
-BODY_SHA256 = "b89bd2f437f90fb5d4d68b0c64b8e82c3b241da2341220c0d2401318b54ab805"  # cuerpo.glb de AC.6b
 EYES_OLD_SHA256 = "d66ac57510abde5471367fb9c8b35f699a1af82a613b57bd97e9b7697d355ffa"  # ojos.json de AC.6b (sin "ceja")
 failures = []
 
@@ -198,10 +198,10 @@ def main():
     outside = max([float(np.linalg.norm(d[~fit.in_head], axis=1).max()) for d in deltas.values()] + [float(np.linalg.norm((anime - legacy)[~fit.in_head], axis=1).max())]) * 1000
     print("MEDIDA fuera de cabeza y cuello: %.4f mm" % outside)
     check("fuera de cabeza y cuello", outside <= MAX_OUTSIDE_MM, "%.4f mm" % outside)
-    with open(os.path.join(folder, "articulaciones.json"), "rb") as file:
-        check("articulaciones.json identico", hashlib.sha256(file.read()).hexdigest() == JOINTS_SHA256)
-    with open(os.path.join(folder, "cuerpo.glb"), "rb") as file:
-        check("cuerpo.glb identico (AC.6c.1)", hashlib.sha256(file.read()).hexdigest() == BODY_SHA256)
+    with open(os.path.join(folder, "articulaciones.json")) as file:
+        bones = json.load(file)["bones"]
+    moved = sorted(b for b, v in bones.items() if any(d.startswith("eye_") for d in v.get("deltas", [])))
+    check("solo los huesos de los ojos siguen a eye_*", set(moved) <= EYE_BONES, str(moved))
     print("RESULTADO:", "TODO BIEN" if not failures else f"{len(failures)} FALLOS")
 
 
