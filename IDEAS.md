@@ -11,6 +11,8 @@
 - Comparar antes y después (dos maniquíes lado a lado).
 - Medidas reales (altura en cm) junto a los deslizadores.
 - Atajos de teclado.
+- Rehacer expresiones y visemas cuando la cara esté lista (quitadas el 2026-11-25: se veían mal; el código del 9.7 y del 9.8 se queda, `blender/expresiones.json` vacío).
+- Pesos de mandíbula y ojos (junto con el montaje de ojos): los huesos `Jaw`, `LeftEye` y `RightEye` del 9.3 no tienen pesos y no mueven nada.
 - Guardar el `.glb` en un hilo (OPT.3c, quitado el 2026-11-25): funciona y quita ~180 ms del final, pero `GlbExporter.write` necesita el hilo principal libre (bloquearlo con `wait_to_finish()` lo cuelga). Antes hay que resolver qué pasa si se cierra la ventana a mitad (`body_actions._exit_tree` espera al hilo) y que la puerta espere dibujando.
 - Pies al suelo al animar (IK de pies): sin él, con las rodillas dobladas los pies flotan según las proporciones (medido en el 5.1: hasta 168 mm al sentarse).
 

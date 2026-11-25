@@ -224,6 +224,7 @@ func _add_expression_list() -> void:
 			expression_list.add_item(EXPRESSION_NAMES[name])
 			expression_list.set_item_metadata(expression_list.item_count - 1, name)
 	expression_list.disabled = expression_list.item_count == 1
+	expression_list.visible = not expression_list.disabled  # sin expresiones, fuera de la barra
 	expression_list.tooltip_text = "Prueba una expresión en la cara (no se guarda; el .glb las lleva todas, a 0)" \
 		if not expression_list.disabled else "Esta especie no tiene expresiones"
 	expression_list.item_selected.connect(set_expression)
