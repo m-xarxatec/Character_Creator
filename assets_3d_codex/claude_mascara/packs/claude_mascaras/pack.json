@@ -1,0 +1,46 @@
+{
+ "formato": "gamemolde-pack",
+ "version": 1,
+ "id": "claude_mascaras",
+ "nombre": "Máscaras (pruebas)",
+ "autor": "GameMolde",
+ "licencia": "propia",
+ "origen": "",
+ "piezas": [
+  {
+   "id": "mascara_gas",
+   "nombre": "Máscara de gas",
+   "archivo": "mascara_gas.glb",
+   "sha256": "3661d29e7b8a5f606eda3bd98b0507fdd227436cffbbce63180aeb60a8bbc2b1",
+   "tipo": "accesorio",
+   "ranura": "accesorio",
+   "especies": [
+    "humana"
+   ],
+   "colores": [
+    "principal"
+   ],
+   "color": [
+    0.2,
+    0.2,
+    0.21
+   ],
+   "sigue_al_cuerpo": true,
+   "fisica": [],
+   "miniatura": "",
+   "anclaje": {
+    "hueso": "",
+    "transform": [
+     0,
+     0,
+     0,
+     0,
+     0,
+     0,
+     1,
+     1
+    ]
+   }
+  }
+ ]
+}
