@@ -1,0 +1,49 @@
+{
+ "formato": "gamemolde-pack",
+ "version": 1,
+ "id": "claude_kigurumis",
+ "nombre": "Kigurumis (pruebas)",
+ "autor": "GameMolde",
+ "licencia": "propia",
+ "origen": "",
+ "piezas": [
+  {
+   "id": "kigurumi_conejo",
+   "nombre": "Kigurumi de conejito",
+   "archivo": "kigurumi_conejo.glb",
+   "sha256": "cfc0b729d635d64b4ea622d4f139b599a5ed0d8a1f29dee7eb8f8543799c8bac",
+   "tipo": "ropa",
+   "ranura": "ropa_exterior",
+   "especies": [
+    "humana"
+   ],
+   "colores": [
+    "principal"
+   ],
+   "color": [
+    0.93,
+    0.45,
+    0.62
+   ],
+   "sigue_al_cuerpo": true,
+   "fisica": [],
+   "miniatura": "",
+   "anclaje": {
+    "hueso": "",
+    "transform": [
+     0,
+     0,
+     0,
+     0,
+     0,
+     0,
+     1,
+     1
+    ]
+   },
+   "cubre": [
+    "pelo"
+   ]
+  }
+ ]
+}

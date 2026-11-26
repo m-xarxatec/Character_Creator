@@ -35,6 +35,9 @@ Assets 3D propios para ir llenando el programa. **No se toca el repo principal**
 | Coraza medieval de acero | Aprobada | `claude_coraza/`; peto y espaldar en una, cresta en el peto, cuello en V, bajo en pico (y=0,935 delante, 0,985 en el costado), reborde en los bordes, costuras en los costados, tirantes de cuero con hebilla y 2 correas con hebilla por costado. **Una sola pieza** (ranura `ropa_exterior`: sustituye a la sudadera), zonas en `COLOR_0`. Envolvente del tronco (+1,5 cm, lisa: cubre el pecho por encima); sisas automáticas a ≥ 2,5 cm del brazo en reposo. Formas: la envolvente recalculada con cada forma (las del pecho, sobre el cuerpo femenino), nunca por dentro de la piel; hueco mínimo ≥ 5,5 mm en 5 cuerpos de prueba. Pesos de la piel, solo tronco y hombros. 137 formas, 11,5 MB |
 | Orejas de conejo (sin diadema) | Aprobadas | `claude_conejo/`; reutiliza el generador de las de gato (solo cambia la forma). 2 piezas: orejas (blanco) e interior (rosa). 17 cm, estrechas en la base (2,4 cm), 4,8 cm de ancho a media altura, punta redonda y 2,2 cm hacia delante. Nacen del cráneo (base hundida 1,2 cm), casi verticales. Rígidas con `Head` (13 formas), 1,8 MB. En Linux se genera con el Python de Blender (trae numpy) |
 | Sombrero de bruja (grande, estilo RPG) | Aprobado | `claude_sombrero/`; 3 piezas: sombrero (copa + ala), cinta y hebilla. Ranura `accesorio`: va encima del peinado (copa medida sobre la cabeza + 2,4 cm de holgura en la banda y 3,5 cm arriba; hueco mínimo medido 2,0 cm). Banda a y=1,583 (2,5 cm sobre la oreja, deja ver los ojos) e inclinado 8° hacia atrás. Copa de 55 cm por su eje que cede por el peso: recta alrededor de la cabeza, luego 4 pliegues que tuercen el eje en zigzag (14–24°, la tela recogida abulta bajo cada uno, en diagonal) y la punta caída 120° hacia atrás; arrugas pequeñas encima. Alto 45,5 cm; ala de 56 cm, ondulada y caída 3 cm. 100 % `Head`; formas afines por ejes de la caja de la cabeza, como el casco (30 formas), 9,5 MB |
+| Traje rosa: mono | Aprobado | `claude_traje/`; base: la «Malla de cuerpo completo» (`tights.glb`, CC0), recortada por planos: sin mangas (sisa en \|x\| = 0,168), cuello alto (y=1,45) y bajo en el tobillo (y=0,095); a 3 mm de la piel cerca de los bordes. Cremallera delante (hasta y=1,00), costuras en relieve (dos curvas delante, una detrás) y 3 franjas en el muslo izquierdo y 3 en la pantorrilla derecha. **Una sola pieza** (ranura `ropa_torso`, `cubre: ["ropa_piernas"]`), zonas en `COLOR_0` (r = 1 franjas, g = 1 cremallera). Pesos y formas: los de la malla (interpolados en los cortes); los detalles, del mono. 191 formas, 6,3 MB |
+| Traje rosa: chaqueta corta con capucha | Aprobada | `claude_traje/generar_chaqueta.py` (la llama `generar_traje.py`; usa las herramientas de la sudadera). Ranura `ropa_exterior` (sustituye a la sudadera). Piel copiada e hinchada (2 cm; antebrazo abombado hasta 4,2 cm); bajo detrás a y=1,17 y delante en arco hasta y=1,27; mangas que se recogen en un puño de 4 cm hasta la muñeca; capucha bajada que cae 10 cm. Logos en relieve: gato delante, píxeles en el pecho izquierdo, doble flecha detrás y estrella en cada manga. Zonas en `COLOR_0`: r = 1 puños, g = 1 logos. 218 formas, 4,3 MB |
+| Kigurumi de conejito | Aprobado | `claude_kigurumi/`; usa las herramientas de la sudadera y la chaqueta. **Una sola prenda** con la capucha puesta: ranura `ropa_exterior` (debajo se ve la ropa ajustada del personaje), `cubre: ["pelo"]` (quita el peinado). Piel copiada e hinchada: tronco +3,5 cm, mangas abullonadas con puño hasta la muñeca, perneras bombachas (+4 cm en el muslo, +6,5 cm en la pantorrilla) recogidas en un puño de 5 cm en el tobillo; las perneras no pasan de x = ±6 mm (no se cruzan). Cremallera abierta en V del cuello a la pelvis (y=0,83, a 5 cm de la entrepierna; ±11 cm arriba), dos cintas y cursor abajo; detrás, cerrado. 2 franjas en cada pierna. Zonas en `COLOR_0`: r = 1 puños (oscuros), g = 1 franjas, r = g = 1 cremallera. Capucha (`generar_capucha.py`): nace del borde del cuello del pijama (esquinas de la V y detrás) y envuelve la cabeza sobre una envolvente redonda del cráneo (+3,5 cm; detrás, más); abierta: no ciñe el cuello; por los lados la abertura sigue a la cremallera y arriba se cierra en arco sobre la frente, a la altura de las cejas (y=1,60). Sin orejas (las quitó el responsable). Cordones desde el borde de la capucha, junto al cuello, hasta un pompón. Zonas en `COLOR_0` también: b = 1 pompones. 273 formas, 10,6 MB. Movimiento: ver J y K |
 | (siguiente) | — | — |
 
 ## Pendiente: se hace en el propio asset (sin tocar el núcleo)
@@ -48,6 +51,25 @@ Hoy va rígida con la cadera (ya se adapta al cuerpo: hecho el 2026-11-23).
 - Riesgo que queda: con la pierna muy levantada («Atacar», sentarse) el muslo atravesará la tela; sin
   físicas no se evita del todo.
 - Si se pasa a la ranura `ropa_piernas`, decidir antes qué hacer con los shorts (lo decide el responsable).
+
+### J. Kigurumi: pesos para que se mueva sin rasgarse (pedido por el responsable; no hecho)
+
+Hoy cada vértice lleva los pesos y las formas del vértice de piel del que sale. Con 3,5–6,5 cm de holgura eso falla
+al animar: la tela lejos de la piel gira como si estuviera pegada al hueso. Riesgos y arreglo, todo en
+`generar_kigurumi.py`:
+1. **Entrepierna (se rasga al abrir las piernas)**: como en el qipao y la falda (C), el centro (|x| < 5 cm,
+   y = 0,75–0,92) se reparte entre `Hips` y los dos `UpperLeg` (más `Hips` cuanto más al centro). Así, al abrir las
+   piernas, la tela se estira en vez de partirse.
+2. **Axilas e ingles (picos y pliegues)**: difuminar los pesos sobre la malla (media con los vecinos, 10–20 pasadas,
+   y después volver a 4 influencias que sumen 1) solo en las zonas de la articulación: axila (`UpperChest`,
+   `Shoulder`, `UpperArm`) e ingle (`Hips`, `UpperLeg`). Lo demás no se toca, para que la manga y la pernera no pierdan
+   su forma.
+3. **Codo y rodilla (la parte de dentro se mete en el brazo o la pierna al doblar)**: en el antebrazo y la
+   pantorrilla, que pesen más `LowerArm` y `LowerLeg` (el abombado sigue al hueso de abajo) y la transición sea corta
+   en el codo y la rodilla. Sin físicas no se evita del todo con el codo o la rodilla muy doblados: se acepta.
+4. **Prueba**: una captura en las poses del programa (andar, «Atacar», sentado si la hay) y la medida por pose de
+   cuántos vértices del kigurumi quedan dentro de la piel (como `check_shapes` del traje). Antes y después del
+   cambio, para ver que mejora.
 
 ## Pendiente: requiere tocar el núcleo (proponer a quien lleva el proyecto)
 
@@ -136,6 +158,22 @@ huesos nuevos, es mover los vértices en el shader:
    en el juego exige la otra vía: 4–6 huesos por tentáculo, colgados de `UpperChest`, y una animación en bucle dentro del
    `.glb`. Eso rompe la regla de los 53 huesos del `CLAUDE.md`, así que la decide el responsable.
 - Pausa: si se quiere quieto en las capturas y miniaturas, que el núcleo lo pare ahí (no el usuario).
+
+### K. Kigurumi: movimiento y peso de los pompones (pedido por el responsable; no hecho)
+
+Las orejas se quitaron; quedan los cordones con pompones, hoy rígidos con el pecho. Para que cuelguen y se balanceen:
+1. **Asset**: cada cordón con su cadena de huesos propios (3; el pompón, en el último), colgada de `Neck` o
+   `UpperChest`. Nombres con `x_` (por ejemplo, `x_cordon_l_01`…`x_cordon_l_03`). Pesos rígidos por tramo y suaves
+   entre tramos.
+2. **`pack.json`**: el campo `fisica`, que ya existe en el formato (`ruta/ARQUITECTURA.md` §6), una cadena por cordón:
+   `{"raiz", "fin", "rigidez", "arrastre", "gravedad", "radio"}`. De partida: rigidez baja y gravedad alta (péndulo).
+3. **Núcleo**: hoy solo comprueba que `fisica` sea una lista. Falta crear, para cada cadena, un
+   `SpringBoneSimulator3D` (apuntado en `IDEAS.md` para las coletas), con el pecho como colisionador (`radio`), para
+   que los pompones no atraviesen el cuerpo. Primero hay que comprobar su API en Godot 4.7.
+4. **Riesgos**: (a) huesos extra frente a la regla de los 53 huesos del `.glb` exportado (`CLAUDE.md`): lo decide el
+   responsable (exportarlos aparte o fijar la pose); (b) sin colisionador, el pompón entra en el pecho: el `radio` es
+   obligatorio; (c) en Android, coste de la simulación: limitarla a estas cadenas.
+- Vía corta sin núcleo nuevo: un vaivén en el shader, como en I (no tiene peso real ni choca, pero no añade huesos).
 
 ## Ficha de integración (para cuando se metan en el proyecto)
 
@@ -240,3 +278,14 @@ con `python generar_<asset>.py` desde su carpeta.
     gire dentro.
   - Pesa el doble que la gorra por las formas densas (todas mueven todos los vértices); F lo resuelve.
   - Al integrarlo, la decisión del responsable: ¿visor espejo y abierto como ahora, o esperar a E?
+- **Kigurumi de conejito** (aprobado):
+  - **Al integrarlo, obligatorio (pedido por el responsable): huesos o movimiento en los pompones (borlas) y en la
+    capucha.** Hoy van rígidos: los cordones y los pompones siguen al pecho y la capucha sigue a la piel más cercana
+    (cabeza y cuello). Pompones: K (una cadena `x_` por cordón con `fisica`, o el vaivén en el shader). Capucha: que
+    se mueva con la cabeza sin despegarse del cuello del pijama: pesos repartidos de `Neck` (abajo) a `Head` (arriba)
+    y, si se quiere caída propia al girar la cabeza, una cadena `x_capucha` con `fisica`, como K. Mismo riesgo de los
+    53 huesos (K, 4a): lo decide el responsable.
+  - Pesos del cuerpo holgado (entrepierna, axilas, codo y rodilla): J.
+  - Hoy de un color; zonas en `COLOR_0`: `r = 1` puños (oscuros), `g = 1` franjas, `r = g = 1` cremallera, `b = 1`
+    pompones. Con G: «Pijama», «Puños», «Franjas», «Cremallera» y «Pompones».
+  - Lleva `cubre: ["pelo"]` (la capucha va puesta): quita el peinado mientras se lleva.
