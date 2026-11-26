@@ -1,0 +1,49 @@
+{
+ "formato": "gamemolde-pack",
+ "version": 1,
+ "id": "claude_leotardos",
+ "nombre": "Leotardos (pruebas)",
+ "autor": "GameMolde",
+ "licencia": "propia",
+ "origen": "",
+ "piezas": [
+  {
+   "id": "leotardo_negro",
+   "nombre": "Leotardo negro",
+   "archivo": "leotardo_negro.glb",
+   "sha256": "67d1d92b7acc4dd067f36f214ac4bdcfe150c5108f50d9bed9352412e54db345",
+   "tipo": "ropa",
+   "ranura": "ropa_torso",
+   "especies": [
+    "humana"
+   ],
+   "colores": [
+    "principal"
+   ],
+   "color": [
+    0.1,
+    0.1,
+    0.11
+   ],
+   "sigue_al_cuerpo": true,
+   "fisica": [],
+   "miniatura": "",
+   "anclaje": {
+    "hueso": "",
+    "transform": [
+     0,
+     0,
+     0,
+     0,
+     0,
+     0,
+     1,
+     1
+    ]
+   },
+   "cubre": [
+    "ropa_piernas"
+   ]
+  }
+ ]
+}
