@@ -1,0 +1,51 @@
+{
+ "formato": "gamemolde-pack",
+ "version": 1,
+ "id": "claude_evas",
+ "nombre": "Trajes espaciales (pruebas)",
+ "autor": "GameMolde",
+ "licencia": "propia",
+ "origen": "",
+ "piezas": [
+  {
+   "id": "traje_eva",
+   "nombre": "Traje espacial EVA",
+   "archivo": "traje_eva.glb",
+   "sha256": "86a0b88f911bd49a0aaaa43d9fe9cc804dd6e615a873c48f6d07388ab121990d",
+   "tipo": "ropa",
+   "ranura": "ropa_exterior",
+   "especies": [
+    "humana"
+   ],
+   "colores": [
+    "principal"
+   ],
+   "color": [
+    0.9,
+    0.9,
+    0.88
+   ],
+   "sigue_al_cuerpo": true,
+   "fisica": [],
+   "miniatura": "",
+   "anclaje": {
+    "hueso": "",
+    "transform": [
+     0,
+     0,
+     0,
+     0,
+     0,
+     0,
+     1,
+     1
+    ]
+   },
+   "cubre": [
+    "ropa_torso",
+    "ropa_piernas",
+    "ropa_pies"
+   ]
+  }
+ ]
+}
