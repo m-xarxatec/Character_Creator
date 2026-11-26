@@ -1,0 +1,46 @@
+{
+ "formato": "gamemolde-pack",
+ "version": 1,
+ "id": "claude_botas",
+ "nombre": "Botas (pruebas)",
+ "autor": "GameMolde",
+ "licencia": "propia",
+ "origen": "",
+ "piezas": [
+  {
+   "id": "botas_medievales",
+   "nombre": "Botas blindadas medievales",
+   "archivo": "botas_medievales.glb",
+   "sha256": "5063c7a3c9f907c9188348f2860b368d76cea7de31c44bb9ec2d7575fc1ab5e0",
+   "tipo": "ropa",
+   "ranura": "ropa_pies",
+   "especies": [
+    "humana"
+   ],
+   "colores": [
+    "principal"
+   ],
+   "color": [
+    0.42,
+    0.27,
+    0.16
+   ],
+   "sigue_al_cuerpo": true,
+   "fisica": [],
+   "miniatura": "",
+   "anclaje": {
+    "hueso": "",
+    "transform": [
+     0,
+     0,
+     0,
+     0,
+     0,
+     0,
+     1,
+     1
+    ]
+   }
+  }
+ ]
+}
