@@ -1,0 +1,84 @@
+{
+ "formato": "gamemolde-pack",
+ "version": 1,
+ "id": "claude_trajes",
+ "nombre": "Trajes (pruebas)",
+ "autor": "GameMolde",
+ "licencia": "propia",
+ "origen": "",
+ "piezas": [
+  {
+   "id": "mono_rosa",
+   "nombre": "Mono rosa",
+   "archivo": "mono_rosa.glb",
+   "sha256": "e08f1964d7afec9cda5b8be98dee32dfb0d2ed765e2dfbfaf2c54ee41b2e9bfc",
+   "tipo": "ropa",
+   "ranura": "ropa_torso",
+   "especies": [
+    "humana"
+   ],
+   "colores": [
+    "principal"
+   ],
+   "color": [
+    0.95,
+    0.62,
+    0.74
+   ],
+   "sigue_al_cuerpo": true,
+   "fisica": [],
+   "miniatura": "",
+   "anclaje": {
+    "hueso": "",
+    "transform": [
+     0,
+     0,
+     0,
+     0,
+     0,
+     0,
+     1,
+     1
+    ]
+   },
+   "cubre": [
+    "ropa_piernas"
+   ]
+  },
+  {
+   "id": "chaqueta_capucha",
+   "nombre": "Chaqueta corta con capucha",
+   "archivo": "chaqueta_capucha.glb",
+   "sha256": "6817a5a1f09ab2995f71b8e305c5bd98caef1f56b62b256a971c6c6b1b001af8",
+   "tipo": "ropa",
+   "ranura": "ropa_exterior",
+   "especies": [
+    "humana"
+   ],
+   "colores": [
+    "principal"
+   ],
+   "color": [
+    0.96,
+    0.94,
+    0.95
+   ],
+   "sigue_al_cuerpo": true,
+   "fisica": [],
+   "miniatura": "",
+   "anclaje": {
+    "hueso": "",
+    "transform": [
+     0,
+     0,
+     0,
+     0,
+     0,
+     0,
+     1,
+     1
+    ]
+   }
+  }
+ ]
+}
