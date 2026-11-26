@@ -1,0 +1,46 @@
+{
+ "formato": "gamemolde-pack",
+ "version": 1,
+ "id": "claude_cascos_felinos",
+ "nombre": "Cascos felinos (pruebas)",
+ "autor": "GameMolde",
+ "licencia": "propia",
+ "origen": "",
+ "piezas": [
+  {
+   "id": "casco_felino",
+   "nombre": "Casco felino neón",
+   "archivo": "casco_felino.glb",
+   "sha256": "57eab6d7206c2203335cc3f870bbb840aba9dd3eba510973a396f0bbf9659d15",
+   "tipo": "accesorio",
+   "ranura": "pelo",
+   "especies": [
+    "humana"
+   ],
+   "colores": [
+    "principal"
+   ],
+   "color": [
+    0.13,
+    0.1,
+    0.14
+   ],
+   "sigue_al_cuerpo": true,
+   "fisica": [],
+   "miniatura": "",
+   "anclaje": {
+    "hueso": "",
+    "transform": [
+     0,
+     0,
+     0,
+     0,
+     0,
+     0,
+     1,
+     1
+    ]
+   }
+  }
+ ]
+}

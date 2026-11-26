@@ -13,8 +13,10 @@ Assets 3D propios para ir llenando el programa. **No se toca el repo principal**
 3. **Encaje**: medir el cuerpo (y los peinados o prendas con los que convive) y dejar la holgura justa.
 4. **Seguir al cuerpo**: pesos al hueso que toque (rígido) o copiados de la piel (flexible), y las formas
    del cuerpo transferidas desde la piel cercana (solo las que mueven esa zona).
-5. **Un color por pieza**: el shader de piezas pinta un solo color, así que los detalles de otro color
-   (logos, hebillas…) van como **pieza aparte**.
+5. **Siempre una sola pieza, con zonas de color** (decidido por el responsable): todo el asset va en un solo `.glb`,
+   y cada parte que deba poder tener otro color (visor, logos, hebillas, ribetes…) se marca como zona en `COLOR_0`
+   (r, g, b, o sus mezclas), como el casco felino y el qipao. Hoy el shader lo pinta todo de un color; al integrarlo
+   (G), cada zona se podrá cambiar de color sin rehacer el asset. Nada de piezas aparte para los detalles.
 6. **Ranura**: `accesorio` si debe convivir con todo; la de ropa o pelo si debe sustituir a otra.
 7. **Licencia**: `propia`; nada de marcas registradas (por eso GM y no NY).
 8. **Prueba**: instalar el pack, abrir el programa y juzgarlo a mano (el responsable). Capturas solo si se piden
@@ -40,6 +42,7 @@ Assets 3D propios para ir llenando el programa. **No se toca el repo principal**
 | Kigurumi de conejito | Aprobado | `claude_kigurumi/`; usa las herramientas de la sudadera y la chaqueta. **Una sola prenda** con la capucha puesta: ranura `ropa_exterior` (debajo se ve la ropa ajustada del personaje), `cubre: ["pelo"]` (quita el peinado). Piel copiada e hinchada: tronco +3,5 cm, mangas abullonadas con puño hasta la muñeca, perneras bombachas (+4 cm en el muslo, +6,5 cm en la pantorrilla) recogidas en un puño de 5 cm en el tobillo; las perneras no pasan de x = ±6 mm (no se cruzan). Cremallera abierta en V del cuello a la pelvis (y=0,83, a 5 cm de la entrepierna; ±11 cm arriba), dos cintas y cursor abajo; detrás, cerrado. 2 franjas en cada pierna. Zonas en `COLOR_0`: r = 1 puños (oscuros), g = 1 franjas, r = g = 1 cremallera. Capucha (`generar_capucha.py`): nace del borde del cuello del pijama (esquinas de la V y detrás) y envuelve la cabeza sobre una envolvente redonda del cráneo (+3,5 cm; detrás, más); abierta: no ciñe el cuello; por los lados la abertura sigue a la cremallera y arriba se cierra en arco sobre la frente, a la altura de las cejas (y=1,60). Sin orejas (las quitó el responsable). Cordones desde el borde de la capucha, junto al cuello, hasta un pompón. Zonas en `COLOR_0` también: b = 1 pompones. 273 formas, 10,6 MB. Movimiento: ver J y K |
 | Leotardo negro | Aprobado (provisional: falta L) | `claude_leotardo/`; como el mono rosa: la `tights.glb` (CC0) recortada y luego «tela tensa» (alisada sin meterse en la piel; a 2,5 mm). Cuello redondo alto (1 cm bajo la base del cuello: sobre y = 1,39 − 0,3·z y dentro de una elipse de ±8,5 cm; tirante hasta la sisa en \|x\| = 0,15). Piernas de corte alto tipo bikini: delante sube por la ingle sin pasar a los muslos, detrás en curva; tira de la entrepierna medida desde el centro (\|x\| + lo que baja por el muslo < 3 cm): continua y cubre el surco. Ribete plano de 8 mm en cada borde. **Una sola pieza** (ranura `ropa_torso`, `cubre: ["ropa_piernas"]`), de un color. Pesos y formas de la malla; con cada forma, nunca por dentro de la piel. 184 formas, 12,4 MB |
 | Bikini negro (liso) | Aprobado (falta M, en el núcleo) | `claude_bikini/`; del plano solo la forma (sin flores, borlas, cuentas ni anillas). La tela es **la piel del cuerpo recortada** y separada 2,5 mm: copas triangulares, banda de 1,2 cm bajo el pecho y braguita baja (cintura y=0,905 delante y 0,925 detrás). Delante en **V** (media anchura 1,6 cm en la entrepierna) y sin pasar al muslo (corta también donde la piel pesa más de 0,4 de pierna); detrás **tanga**: triángulo de 15 cm bajo la cintura que acaba en hilo de 1,2 cm desde y=0,845. **Tira halter plana**: cinta de 1,2 cm sobre la piel, de dentro de cada copa alrededor del cuello, con lazo en la nuca; tira de 1 cm en cada cadera, también cinta sobre la piel, con su lazo. Sin ribete: en los bordes la tela baja hasta la piel en 6 mm (el contorno no parpadea). Cada vértice sigue a su triángulo de piel (pesos y formas). Hueco mínimo con cada forma 1,5 mm lejos de los bordes. **Una sola pieza** (ranura `ropa_torso`, `cubre: ["ropa_piernas"]`), negra; zonas en `COLOR_0` (r = 1 lazos). 237 formas, 11,3 MB |
+| Casco felino neón | Pendiente de probar | `claude_casco_felino/`; casco integral de moto con orejas de gato. **Una sola pieza** (ranura `pelo`: quita el peinado) con las zonas en `COLOR_0` para cuando el núcleo pinte un color por zona (G): carcasa (0,0,0), visor r = 1, neón g = 1, galones b = 1; hoy, de un color. Carcasa: el elipsoide que contiene la cabeza + 2,2 cm (6 mm de grosor), cerrada delante (el visor es opaco, en relieve encima) y abierta abajo desde 47° bajo el centro de la cabeza; hueco a la piel por dentro 16 mm (13 mm con la peor forma). Orejas de 8,8 cm (las de `claude_orejas`, más grandes) con el interior de neón; logo del gato en cada lado; barra de luz detrás; franjas de neón abajo; dos galones «<» en cada lado; rejillas en la mentonera. 100 % `Head`, formas afines como el casco de astronauta (26 formas), 8,6 MB |
 | (siguiente) | — | — |
 
 ## Pendiente: se hace en el propio asset (sin tocar el núcleo)
@@ -81,6 +84,17 @@ Arreglo en el asset: cortar por el **pliegue de la ingle del cuerpo**, no por un
 ejemplo, quitar delante donde la piel más cercana pesa más de `UpperLeg` que de `Hips` (el pliegue sale solo y sigue
 al cuerpo), o medir el pliegue en la piel y usarlo como línea. Detrás se queda como está (aprobado). Comprobar con
 capturas de frente y de tres cuartos que delante solo cubre la ingle hasta la entrepierna.
+
+### N. Pasar a una sola pieza con zonas de color (pedido por el responsable; no hecho)
+
+Según la receta (paso 5), cada asset va en un solo `.glb` con sus partes como zonas en `COLOR_0`. Estos se hicieron con
+piezas aparte y hay que fundirlas (en su generador; mismas formas y pesos, que ya son comunes):
+- **Casco de astronauta**: carcasa (0,0,0), metal r = 1, acolchado g = 1, visor b = 1. Una sola pieza en la ranura
+  `pelo`. Ya no harán falta los «conjuntos» de G: «sin visor» sería una segunda pieza sin la zona del visor.
+- **Orejas de gato** y **orejas de conejo**: orejas (0,0,0), interior r = 1.
+- **Sombrero de bruja**: sombrero (0,0,0), cinta r = 1, hebilla g = 1.
+- **Gorra plana** (holgada y ajustada): gorra (0,0,0), GM r = 1.
+Comprobar después que el pack carga y se ve igual (capturas solo para comprobar) y actualizar su línea en la tabla.
 
 ## Pendiente: requiere tocar el núcleo (proponer a quien lleva el proyecto)
 
