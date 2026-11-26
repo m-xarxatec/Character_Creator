@@ -1,0 +1,46 @@
+{
+ "formato": "gamemolde-pack",
+ "version": 1,
+ "id": "claude_zapatillas",
+ "nombre": "Zapatillas (pruebas)",
+ "autor": "GameMolde",
+ "licencia": "propia",
+ "origen": "",
+ "piezas": [
+  {
+   "id": "zapatillas_altas",
+   "nombre": "Zapatillas altas negras",
+   "archivo": "zapatillas_altas.glb",
+   "sha256": "311a434f2c54e59124762ca118e4414a1bdfba676676b7eccf0cd64a056e9c62",
+   "tipo": "ropa",
+   "ranura": "ropa_pies",
+   "especies": [
+    "humana"
+   ],
+   "colores": [
+    "principal"
+   ],
+   "color": [
+    0.13,
+    0.13,
+    0.14
+   ],
+   "sigue_al_cuerpo": true,
+   "fisica": [],
+   "miniatura": "",
+   "anclaje": {
+    "hueso": "",
+    "transform": [
+     0,
+     0,
+     0,
+     0,
+     0,
+     0,
+     1,
+     1
+    ]
+   }
+  }
+ ]
+}
