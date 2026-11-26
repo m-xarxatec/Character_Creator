@@ -1,0 +1,81 @@
+{
+ "formato": "gamemolde-pack",
+ "version": 1,
+ "id": "claude_conejo",
+ "nombre": "Orejas de conejo (pruebas)",
+ "autor": "GameMolde",
+ "licencia": "propia",
+ "origen": "",
+ "piezas": [
+  {
+   "id": "orejas_conejo",
+   "nombre": "Orejas de conejo",
+   "archivo": "orejas_conejo.glb",
+   "sha256": "3c8a4b859f4e09d3ee5b2cb4e8bda323e2b683dbe33250a184f9adf0c2bffdc1",
+   "tipo": "accesorio",
+   "ranura": "accesorio",
+   "especies": [
+    "humana"
+   ],
+   "colores": [
+    "principal"
+   ],
+   "color": [
+    0.95,
+    0.94,
+    0.93
+   ],
+   "sigue_al_cuerpo": true,
+   "fisica": [],
+   "miniatura": "",
+   "anclaje": {
+    "hueso": "",
+    "transform": [
+     0,
+     0,
+     0,
+     0,
+     0,
+     0,
+     1,
+     1
+    ]
+   }
+  },
+  {
+   "id": "orejas_conejo_interior",
+   "nombre": "Orejas de conejo: interior",
+   "archivo": "orejas_conejo_interior.glb",
+   "sha256": "464cfd30bb716b47e084378d8463f3ce81aba9726ccc3794daa4ac5522274e1a",
+   "tipo": "accesorio",
+   "ranura": "accesorio",
+   "especies": [
+    "humana"
+   ],
+   "colores": [
+    "principal"
+   ],
+   "color": [
+    0.93,
+    0.6,
+    0.65
+   ],
+   "sigue_al_cuerpo": true,
+   "fisica": [],
+   "miniatura": "",
+   "anclaje": {
+    "hueso": "",
+    "transform": [
+     0,
+     0,
+     0,
+     0,
+     0,
+     0,
+     1,
+     1
+    ]
+   }
+  }
+ ]
+}

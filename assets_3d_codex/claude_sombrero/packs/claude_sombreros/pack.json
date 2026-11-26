@@ -1,0 +1,116 @@
+{
+ "formato": "gamemolde-pack",
+ "version": 1,
+ "id": "claude_sombreros",
+ "nombre": "Sombreros (pruebas)",
+ "autor": "GameMolde",
+ "licencia": "propia",
+ "origen": "",
+ "piezas": [
+  {
+   "id": "sombrero_bruja",
+   "nombre": "Sombrero de bruja",
+   "archivo": "sombrero_bruja.glb",
+   "sha256": "1cdfae3c0336b199c5bed68bace1853738589b0d0c858cde316dd3676211ab95",
+   "tipo": "accesorio",
+   "ranura": "accesorio",
+   "especies": [
+    "humana"
+   ],
+   "colores": [
+    "principal"
+   ],
+   "color": [
+    0.2,
+    0.18,
+    0.22
+   ],
+   "sigue_al_cuerpo": true,
+   "fisica": [],
+   "miniatura": "",
+   "anclaje": {
+    "hueso": "",
+    "transform": [
+     0,
+     0,
+     0,
+     0,
+     0,
+     0,
+     1,
+     1
+    ]
+   }
+  },
+  {
+   "id": "sombrero_bruja_cinta",
+   "nombre": "Sombrero de bruja: cinta",
+   "archivo": "sombrero_bruja_cinta.glb",
+   "sha256": "df3b16938ceeb71ee0ac107502f5662a4016f6990a22e8bee7ba2525bab0560a",
+   "tipo": "accesorio",
+   "ranura": "accesorio",
+   "especies": [
+    "humana"
+   ],
+   "colores": [
+    "principal"
+   ],
+   "color": [
+    0.11,
+    0.1,
+    0.11
+   ],
+   "sigue_al_cuerpo": true,
+   "fisica": [],
+   "miniatura": "",
+   "anclaje": {
+    "hueso": "",
+    "transform": [
+     0,
+     0,
+     0,
+     0,
+     0,
+     0,
+     1,
+     1
+    ]
+   }
+  },
+  {
+   "id": "sombrero_bruja_hebilla",
+   "nombre": "Sombrero de bruja: hebilla",
+   "archivo": "sombrero_bruja_hebilla.glb",
+   "sha256": "5278419e0eecdaf6280a6b436a77002cac559924af210b2227af1c0e08c36502",
+   "tipo": "accesorio",
+   "ranura": "accesorio",
+   "especies": [
+    "humana"
+   ],
+   "colores": [
+    "principal"
+   ],
+   "color": [
+    0.66,
+    0.52,
+    0.3
+   ],
+   "sigue_al_cuerpo": true,
+   "fisica": [],
+   "miniatura": "",
+   "anclaje": {
+    "hueso": "",
+    "transform": [
+     0,
+     0,
+     0,
+     0,
+     0,
+     0,
+     1,
+     1
+    ]
+   }
+  }
+ ]
+}
