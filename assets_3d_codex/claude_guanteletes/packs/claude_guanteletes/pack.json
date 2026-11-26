@@ -1,0 +1,46 @@
+{
+ "formato": "gamemolde-pack",
+ "version": 1,
+ "id": "claude_guanteletes",
+ "nombre": "Guanteletes (pruebas)",
+ "autor": "GameMolde",
+ "licencia": "propia",
+ "origen": "",
+ "piezas": [
+  {
+   "id": "guanteletes_dragon",
+   "nombre": "Guanteletes de garras de dragón",
+   "archivo": "guanteletes_dragon.glb",
+   "sha256": "1c19f54b9f2ecb0a9fecd31928b1c5642ce3edef2c2ac80137a1731d24e59867",
+   "tipo": "accesorio",
+   "ranura": "accesorio",
+   "especies": [
+    "humana"
+   ],
+   "colores": [
+    "principal"
+   ],
+   "color": [
+    0.29,
+    0.24,
+    0.27
+   ],
+   "sigue_al_cuerpo": true,
+   "fisica": [],
+   "miniatura": "",
+   "anclaje": {
+    "hueso": "",
+    "transform": [
+     0,
+     0,
+     0,
+     0,
+     0,
+     0,
+     1,
+     1
+    ]
+   }
+  }
+ ]
+}
