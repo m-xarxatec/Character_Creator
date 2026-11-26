@@ -30,6 +30,9 @@
 
 - **Cara y ojos:** forma de la cara, ojos (forma y color), cejas, nariz, boca, orejas; expresiones y visemas.
 - **Pelo:** peinados como piezas; melenas y coletas que se mueven con `SpringBoneSimulator3D`; más adelante, un pincel de pelo como el de VRoid.
+- **Pelo con la cabeza muy grande** (PE.4b, 2026-11-26): con Cabeza › Tamaño ×2,5 las cadenas crecen con la cabeza y la nuca se hunde hasta 41,6 mm en cuello y hombros (hair_long). En el editor la apartan los choques del simulador; en el `.glb`, no. Apartarla también ahí (por ejemplo, posar las cadenas fuera de los choques antes de hornear).
+- **Pelo que traspasa la piel al moverse** (juicio del responsable, 2026-11-26: «se ve natural, me gusta, aunque traspasan la piel con el movimiento»): los choques son por articulación, no por vértice. Probar más radio de articulación, colisiones más ajustadas o más articulaciones por cadena.
+- **Ajustes de física por peinado** (PE.4): el campo `fisica` de `pack.json` (rigidez, freno, gravedad, sectores) para afinar cada peinado; hoy todos usan `HairPhysics.DEFAULTS`.
 - **Ropa:** prendas que siguen al cuerpo (anclaje tipo `.mhclo`), capas, ocultar la piel que queda bajo la ropa.
 - **Accesorios:** cascos, gafas o armas en los puntos de anclaje.
 - **Materiales:** texturas de piel, estilo pixel art. (El color de piel pasó al MVP el 2026-11-12, solo el color: paso 4.7 de `PLAN.md`.) (El estilo ilustración con contorno ya está en `PLAN.md`.)

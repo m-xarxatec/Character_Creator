@@ -26,6 +26,10 @@ static func apply(skeleton: Skeleton3D, skin: Skin, joints: Dictionary, weights:
 	var globals: Array[Transform3D] = []
 	for i in skeleton.get_bone_count():
 		var bone := skeleton.get_bone_name(i)
+		if not joints.has(bone):  # paso PE.3b: hueso añadido (cadena de pelo): sigue a su padre con su reposo
+			var parent := skeleton.get_bone_parent(i)
+			globals.append(skeleton.get_bone_rest(i) if parent < 0 else globals[parent] * skeleton.get_bone_rest(i))
+			continue
 		var data: Dictionary = joints[bone]
 		var head: Vector3 = positions[bone][0]
 		var basis: Basis = Refit.refit_basis(base[bone], _vector(data["head"]), _vector(data["tail"]), head, positions[bone][1])

@@ -4,9 +4,13 @@ extends SceneTree
 # Sin ventana.
 # Uso: (ulimit -v 4000000; timeout 300 godot --headless --path pruebas/godot -s probar_piezas.gd 2>&1 | grep -E 'FALLO|MEDIDA|RESULTADO|ERROR')
 # Que detecta el fallo: en BodyPiece.follow, quitar ShapeWeights.apply -> falla «las mallas siguen a weight».
+# Paso PE.4b: un peinado que cuelga lleva cadenas y simulador; poner y quitar con un clip y en ROM sin errores; el .glb
+# sin huesos de pelo, igual que sin cadenas, y pasa CharacterChecks. Que detecta el fallo: en CharacterBaker._read_mesh,
+# quitar el paso de los binds de cadena a la cabeza -> falla «PE.4b: la piel del peinado exportado apunta a huesos que existen».
 
 ## Paso RE.1b: peinados de Quaternius.
 const MeshBaker := preload("res://../../godot/addons/creador/mesh_baker.gd")
+const BodyPiece := preload("res://../../godot/addons/creador/body_piece.gd")  # paso PE.4b
 ## Paso AC.6b: el .glb lleva también los ojos (EyeMesh); no son piezas y no se cuentan (los mira probar_glb.gd --ojos).
 const EYE_MESHES := ["ojo_l", "ojo_r", "linea_l", "linea_r", "linea_inferior_l", "linea_inferior_r", "pliegue_l", "pliegue_r",
 	"ceja_l", "ceja_r"]  # AC.6c: las cejas
@@ -19,6 +23,7 @@ const QU_SCALP := 0.015  # metros: en neutro, más cerca de la piel de la cabeza
 const QU_GAP_CELL := 0.03  # metros: celda de la rejilla de triángulos (se busca en la celda y sus vecinas)
 const QU_CASES := {"torso": {"torso_length": 1.0}, "complexión": {"gender": 1.0}, "ambos": {"torso_length": 1.0, "gender": 1.0}}
 const QU_NECK_DEPTH_MAX := 0.02  # PROVISIONAL: metros bajo la piel de cuello y hombros con la cabeza a ×2,5; medido 14,4 mm
+const QU_NECK_DEPTH_CHAINS_MAX := 0.045  # PROVISIONAL (2026-11-26, aprobado): con cadenas el pelo crece con la cabeza (PE.3b, opción A); medido 41,6 mm con hair_long
 const QU_CELL := 0.04  # metros: celda de la rejilla que busca el vértice de piel más cercano
 
 ## Paso RE.1c: ropa de OverScore. Distancia tela-piel al deformar y piel que asoma por la tela en «Atacar».
@@ -51,6 +56,7 @@ func _initialize() -> void:
 	_check_wear(main, view)
 	_check_export(view)
 	_check_project(main, view)
+	await _check_hair_physics(main, view)
 	main.free()
 	print("RESULTADO: ", "TODO BIEN" if failures == 0 else "%d FALLOS" % failures)
 	quit(1 if failures else 0)
@@ -128,8 +134,10 @@ func _check_big_head(main: Control, view, mesh: MeshInstance3D, id: String, star
 	main.editor.load_values(values)
 	var body: Dictionary = MeshBaker.bake(view.species.mesh, view.species.skeleton)
 	var depth := _neck_depth(MeshBaker.bake(mesh, view.species.skeleton)["vertices"], body, head_weight)
-	print("  MEDIDA %s con cabeza ×2,5: %.1f mm bajo la piel de cuello y hombros" % [id, depth * 1000])
-	check("%s no se hunde en cuello y hombros a ×2,5" % id, depth <= QU_NECK_DEPTH_MAX, "%.1f mm" % (depth * 1000))
+	var chains: bool = view.hair_physics.keys().any(func(key: String) -> bool: return key.get_file() == id)
+	var limit := QU_NECK_DEPTH_CHAINS_MAX if chains else QU_NECK_DEPTH_MAX
+	print("  MEDIDA %s con cabeza ×2,5: %.1f mm bajo la piel de cuello y hombros%s" % [id, depth * 1000, " (con cadenas)" if chains else ""])
+	check("%s no se hunde en cuello y hombros a ×2,5" % id, depth <= limit, "%.1f mm" % (depth * 1000))
 	main.editor.load_values(start)
 
 
@@ -728,3 +736,70 @@ func _check_project(main: Control, view) -> void:
 ## Paso AC.6b: las mallas del .glb sin las de los ojos.
 func _without_eyes(meshes: Array) -> Array:
 	return meshes.filter(func(m: MeshInstance3D) -> bool: return not m.name in EYE_MESHES)
+
+
+## Paso PE.4b: el pelo con movimiento en el editor.
+func _check_hair_physics(main: Control, view) -> void:
+	var skeleton: Skeleton3D = view.species.skeleton
+	var base := skeleton.get_bone_count()
+	check("PE.4b: poner bob02", view.set_piece("makehuman", "bob02", true))
+	var key := "makehuman/bob02"
+	var simulator: SpringBoneSimulator3D = view.hair_physics.get(key)
+	check("PE.4b: bob02 lleva simulador y cadenas", simulator != null and simulator.get_parent() == skeleton
+		and skeleton.get_bone_count() > base, "%d huesos" % skeleton.get_bone_count())
+	_check_hair_export(view, skeleton, key, base)
+	var reports: Array[Dictionary] = view.check_report()
+	var errors := reports.filter(func(r: Dictionary) -> bool: return r["nivel"] == "error")
+	check("PE.4b: con cadenas, el informe no tiene errores", errors.is_empty(), str(errors.map(func(r: Dictionary) -> String: return r["id"])))
+	for clip: String in ["atacar", view.ROM_ID]:
+		view.set_animation(clip)
+		for f in 20:
+			await process_frame
+		view.set_piece("makehuman", "bob02", false)
+		for f in 5:
+			await process_frame
+		check("PE.4b: quitar bob02 con «%s» deja los huesos del cuerpo" % clip, skeleton.get_bone_count() == base
+			and view.hair_physics.is_empty() and skeleton.find_children("*", "SpringBoneSimulator3D", false, false).is_empty())
+		view.set_piece("makehuman", "bob02", true)
+		for f in 5:
+			await process_frame
+	view.set_animation("")
+	view.set_piece("makehuman", "bob02", false)
+	check("PE.4b: al final, los huesos del cuerpo", skeleton.get_bone_count() == base)
+	view.set_piece("quaternius", "hair_buzzed", true)
+	check("PE.4b: el rapado no lleva cadenas", view.hair_physics.is_empty() and skeleton.get_bone_count() == base,
+		"%d huesos" % skeleton.get_bone_count())
+	view.set_piece("quaternius", "hair_buzzed", false)
+
+
+## El .glb sin huesos de pelo; en pose A, el peinado como el mismo sin cadenas (pasar los pesos de la cadena a la cabeza
+## es exacto). En pose T solo se mide: las puntas que pesaban algo en el hombro ya no suben con él (siguen a la cabeza).
+func _check_hair_export(view, skeleton: Skeleton3D, key: String, base: int) -> void:
+	var baker: GDScript = load(ProjectSettings.globalize_path("res://").path_join("../../godot/addons/creador/character_baker.gd").simplify_path())
+	var plain: MeshInstance3D = BodyPiece.attach(view.library.load_piece("makehuman", "bob02"), skeleton)
+	BodyPiece.follow(plain, view.species.mesh)
+	for t_pose: bool in [false, true]:
+		var with_chains: Node3D = baker.bake(view.species.mesh, skeleton, t_pose, false, [view.pieces[key]])
+		var without: Node3D = baker.bake(view.species.mesh, skeleton, t_pose, false, [plain])
+		var a_skeleton: Skeleton3D = with_chains.find_children("*", "Skeleton3D", true, false)[0]
+		var b_skeleton: Skeleton3D = without.find_children("*", "Skeleton3D", true, false)[0]
+		var a: PackedVector3Array = MeshBaker.bake(a_skeleton.get_child(1), a_skeleton)["vertices"]
+		var b: PackedVector3Array = MeshBaker.bake(b_skeleton.get_child(1), b_skeleton)["vertices"]
+		var worst := 0.0
+		for i in mini(a.size(), b.size()):
+			worst = maxf(worst, a[i].distance_to(b[i]))
+		var pose := "T" if t_pose else "A"
+		print("  MEDIDA PE.4b: en pose %s, el peinado exportado con cadenas a %.4f mm de sin ellas" % [pose, worst * 1000.0])
+		if t_pose:
+			check("PE.4b: el .glb no lleva huesos de pelo", a_skeleton.get_bone_count() == base, "%d" % a_skeleton.get_bone_count())
+			var hair_skin: Skin = (a_skeleton.get_child(1) as MeshInstance3D).skin
+			var valid: bool = hair_skin != null and hair_skin.get_bind_count() == (view.pieces[key] as MeshInstance3D).skin.get_bind_count()
+			for i in hair_skin.get_bind_count() if hair_skin != null else 0:
+				valid = valid and hair_skin.get_bind_bone(i) >= 0 and hair_skin.get_bind_bone(i) < a_skeleton.get_bone_count()
+			check("PE.4b: la piel del peinado exportado apunta a huesos que existen", valid)
+		else:
+			check("PE.4b: exportar con cadenas da lo mismo que sin ellas (pose A)", a.size() == b.size()
+				and worst * 1000.0 <= 0.1, "%.4f mm" % (worst * 1000.0))
+		with_chains.free()
+		without.free()
+	BodyPiece.detach(plain)

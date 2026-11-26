@@ -19,6 +19,8 @@ extends SubViewportContainer
 # Paso 5.9: set_animation(ROM_ID) recorre el rango de movimiento (rom.gd): cada fotograma vuelve a la pose T y gira.
 # Paso AB.4: set_piece() pone o quita una pieza de los packs (library: godot/packs y user://packs) que sigue al cuerpo
 #   (BodyPiece; una por ranura, salvo accesorios), con el mismo toon y contorno. Paso AB.7: se exportan con el cuerpo.
+# Paso PE.4b: un peinado que cuelga lleva cadenas de huesos (HairChains) y su simulador (HairPhysics); al quitarlo se
+#   quitan. Las colisiones se miden otra vez al dejar quietos los deslizadores (frame_timer).
 
 ## Paso IU.7a: clic sin arrastrar en el cuerpo, con touch_zones encendido.
 signal zone_touched(zone: String)
@@ -46,6 +48,8 @@ const FloorShadow := preload("floor_shadow.gd")
 const ZoneRay := preload("zone_ray.gd")
 const PackLibrary := preload("../addons/creador/pack_library.gd")  # paso AB.4
 const BodyPiece := preload("../addons/creador/body_piece.gd")
+const HairChains := preload("../addons/creador/hair_chains.gd")  # paso PE.4b
+const HairPhysics := preload("../addons/creador/hair_physics.gd")  # paso PE.4b
 const BodyDerived := preload("../addons/creador/body_derived.gd")  # paso AB.9a
 const EyeMesh := preload("../addons/creador/eye_mesh.gd")  # paso AC.3c
 const RigidPiece := preload("../addons/creador/rigid_piece.gd")  # paso AB.11
@@ -78,6 +82,7 @@ var library  # PackLibrary (paso AB.4)
 var pieces := {}  # paso AB.4: "pack/pieza" → MeshInstance3D puesta
 var accessories := {}  # paso AB.11: "pack/pieza" → BoneAttachment3D de un accesorio rígido
 var hair := {}  # SH.6b: "pack/pieza" → MeshInstance3D de las piezas de ranura pelo (llevan la banda de brillo)
+var hair_physics := {}  # paso PE.4b: "pack/pieza" → SpringBoneSimulator3D del peinado (si cuelga)
 var eyes: Array[MeshInstance3D] = []  # AC.6b: capas y líneas del ojo (EyeMesh), para exportarlas
 var updater  # CharacterUpdater
 var values: Dictionary
@@ -129,6 +134,7 @@ func _ready() -> void:
 	frame_timer.one_shot = true
 	frame_timer.wait_time = RESTYLE_WAIT
 	frame_timer.timeout.connect(frame_character)
+	frame_timer.timeout.connect(_refit_hair)  # paso PE.4b
 	add_child(frame_timer)
 	hover_timer = Timer.new()
 	hover_timer.one_shot = true
@@ -222,7 +228,7 @@ func _process(delta: float) -> void:
 	if clip == ROM_ID:
 		rom_time += delta
 		pose_turns = rom.turns_at(rom_time)
-		for bone in t_rotations.size():
+		for bone in mini(t_rotations.size(), species.skeleton.get_bone_count()):  # PE.4b: el pelo quita y pone huesos
 			species.skeleton.set_bone_pose_rotation(bone, t_rotations[bone])
 			species.skeleton.set_bone_pose_position(bone, t_positions[bone])
 		StaticPose.apply(species.skeleton, pose_turns, animations.hips, animations.feet)
@@ -505,7 +511,13 @@ func set_piece(pack_id: String, piece_id: String, on: bool) -> bool:
 	if not on or pieces.has(key):
 		if not on and pieces.has(key):
 			updater.pieces.erase(pieces[key])
-			BodyPiece.detach(pieces[key])
+			if hair_physics.has(key):  # paso PE.4b: primero el simulador, luego la malla y al final sus huesos
+				hair_physics[key].free()
+				hair_physics.erase(key)
+				BodyPiece.detach(pieces[key])
+				HairChains.remove(species.skeleton)
+			else:
+				BodyPiece.detach(pieces[key])
 			pieces.erase(key)
 			hair.erase(key)
 			pieces_changed.emit()
@@ -550,8 +562,18 @@ func set_piece(pack_id: String, piece_id: String, on: bool) -> bool:
 		_copy_band(mesh)
 	updater.pieces.append(mesh)
 	BodyPiece.follow(mesh, species.mesh)
+	if card["ranura"] == HAIR_SLOT:  # paso PE.4b: cadenas y simulador (con el cuerpo de ahora)
+		var simulator := HairPhysics.attach(species.skeleton, HairChains.build(mesh, species.skeleton), species.mesh)
+		if simulator != null:
+			hair_physics[key] = simulator
 	pieces_changed.emit()
 	return true
+
+
+## Paso PE.4b: con el cuerpo nuevo, colisiones medidas otra vez y simulación reiniciada (al dejar los deslizadores).
+func _refit_hair() -> void:
+	for simulator: SpringBoneSimulator3D in hair_physics.values():
+		HairPhysics.refit(simulator, species.mesh)
 
 
 ## Paso AB.11: pone o quita un accesorio rígido (RigidPiece, colgado de su hueso). Varios a la vez (ranura accesorio).

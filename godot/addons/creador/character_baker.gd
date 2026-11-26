@@ -24,11 +24,14 @@ extends RefCounted
 ## - Paso 9.7.3 (D31): las formas de expresión (expr_*) no se hornean (tampoco la que se prueba en la vista): cada malla
 ##   que las tiene sale con ellas como formas, con el nombre VRM (sin expr_), ya en la pose de la variante. A cada una se
 ##   le suman sus correcciones (expr_blinkLeft*eye_tall_incr…) con el peso que tiene ahora su otra parte.
+## - Paso PE.4b: los huesos de cadena de pelo (HairChains, los últimos del esqueleto) no salen; sus pesos pasan al primer
+##   antecesor que no es de cadena (la cabeza). Es exacto: en reposo y en pose T la cadena está quieta respecto a él.
 
 const Baker := preload("mesh_baker.gd")
 const TPose := preload("t_pose.gd")
 const RigidPiece := preload("rigid_piece.gd")
 const ShapeWeights := preload("shape_weights.gd")  # paso 9.7.3
+const HairChains := preload("hair_chains.gd")  # paso PE.4b
 
 
 static func bake(mesh: MeshInstance3D, skeleton: Skeleton3D, t_pose: bool, profile_axes := false, pieces: Array = [],
@@ -62,8 +65,11 @@ static func prepare_bake(mesh: MeshInstance3D, skeleton: Skeleton3D, t_pose: boo
 	var names := PackedStringArray()
 	var parents := PackedInt32Array()
 	for bone in skeleton.get_bone_count():
+		if HairChains.is_chain_bone(skeleton.get_bone_name(bone)):  # paso PE.4b: las cadenas van al final
+			break
 		names.append(skeleton.get_bone_name(bone))
 		parents.append(skeleton.get_bone_parent(bone))
+	posed.resize(names.size())
 	var accessories := []
 	for holder: BoneAttachment3D in rigid:
 		var bone := skeleton.find_bone(holder.bone_name)
@@ -87,7 +93,11 @@ static func _read_mesh(mesh: MeshInstance3D, skeleton: Skeleton3D, cache: Varian
 	var binds := PackedInt32Array()  # hueso de cada bind (la Skin del editor cambia con los deslizadores: se copia)
 	for i in mesh.skin.get_bind_count():
 		var bone := mesh.skin.get_bind_bone(i)
-		binds.append(bone if bone >= 0 else skeleton.find_bone(mesh.skin.get_bind_name(i)))
+		if bone < 0:
+			bone = skeleton.find_bone(mesh.skin.get_bind_name(i))
+		while bone >= 0 and HairChains.is_chain_bone(skeleton.get_bone_name(bone)):  # paso PE.4b: a la cabeza
+			bone = skeleton.get_bone_parent(bone)
+		binds.append(bone)
 	return {"name": mesh.name, "arrays": mesh.mesh.surface_get_arrays(0), "active": active, "shapes": used,
 		"matrices": Baker.skin_matrices(skeleton, mesh.skin), "binds": binds, "expressions": _read_expressions(mesh, shapes)}
 
