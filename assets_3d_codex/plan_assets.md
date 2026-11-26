@@ -38,6 +38,8 @@ Assets 3D propios para ir llenando el programa. **No se toca el repo principal**
 | Traje rosa: mono | Aprobado | `claude_traje/`; base: la «Malla de cuerpo completo» (`tights.glb`, CC0), recortada por planos: sin mangas (sisa en \|x\| = 0,168), cuello alto (y=1,45) y bajo en el tobillo (y=0,095); a 3 mm de la piel cerca de los bordes. Cremallera delante (hasta y=1,00), costuras en relieve (dos curvas delante, una detrás) y 3 franjas en el muslo izquierdo y 3 en la pantorrilla derecha. **Una sola pieza** (ranura `ropa_torso`, `cubre: ["ropa_piernas"]`), zonas en `COLOR_0` (r = 1 franjas, g = 1 cremallera). Pesos y formas: los de la malla (interpolados en los cortes); los detalles, del mono. 191 formas, 6,3 MB |
 | Traje rosa: chaqueta corta con capucha | Aprobada | `claude_traje/generar_chaqueta.py` (la llama `generar_traje.py`; usa las herramientas de la sudadera). Ranura `ropa_exterior` (sustituye a la sudadera). Piel copiada e hinchada (2 cm; antebrazo abombado hasta 4,2 cm); bajo detrás a y=1,17 y delante en arco hasta y=1,27; mangas que se recogen en un puño de 4 cm hasta la muñeca; capucha bajada que cae 10 cm. Logos en relieve: gato delante, píxeles en el pecho izquierdo, doble flecha detrás y estrella en cada manga. Zonas en `COLOR_0`: r = 1 puños, g = 1 logos. 218 formas, 4,3 MB |
 | Kigurumi de conejito | Aprobado | `claude_kigurumi/`; usa las herramientas de la sudadera y la chaqueta. **Una sola prenda** con la capucha puesta: ranura `ropa_exterior` (debajo se ve la ropa ajustada del personaje), `cubre: ["pelo"]` (quita el peinado). Piel copiada e hinchada: tronco +3,5 cm, mangas abullonadas con puño hasta la muñeca, perneras bombachas (+4 cm en el muslo, +6,5 cm en la pantorrilla) recogidas en un puño de 5 cm en el tobillo; las perneras no pasan de x = ±6 mm (no se cruzan). Cremallera abierta en V del cuello a la pelvis (y=0,83, a 5 cm de la entrepierna; ±11 cm arriba), dos cintas y cursor abajo; detrás, cerrado. 2 franjas en cada pierna. Zonas en `COLOR_0`: r = 1 puños (oscuros), g = 1 franjas, r = g = 1 cremallera. Capucha (`generar_capucha.py`): nace del borde del cuello del pijama (esquinas de la V y detrás) y envuelve la cabeza sobre una envolvente redonda del cráneo (+3,5 cm; detrás, más); abierta: no ciñe el cuello; por los lados la abertura sigue a la cremallera y arriba se cierra en arco sobre la frente, a la altura de las cejas (y=1,60). Sin orejas (las quitó el responsable). Cordones desde el borde de la capucha, junto al cuello, hasta un pompón. Zonas en `COLOR_0` también: b = 1 pompones. 273 formas, 10,6 MB. Movimiento: ver J y K |
+| Leotardo negro | Aprobado (provisional: falta L) | `claude_leotardo/`; como el mono rosa: la `tights.glb` (CC0) recortada y luego «tela tensa» (alisada sin meterse en la piel; a 2,5 mm). Cuello redondo alto (1 cm bajo la base del cuello: sobre y = 1,39 − 0,3·z y dentro de una elipse de ±8,5 cm; tirante hasta la sisa en \|x\| = 0,15). Piernas de corte alto tipo bikini: delante sube por la ingle sin pasar a los muslos, detrás en curva; tira de la entrepierna medida desde el centro (\|x\| + lo que baja por el muslo < 3 cm): continua y cubre el surco. Ribete plano de 8 mm en cada borde. **Una sola pieza** (ranura `ropa_torso`, `cubre: ["ropa_piernas"]`), de un color. Pesos y formas de la malla; con cada forma, nunca por dentro de la piel. 184 formas, 12,4 MB |
+| Bikini negro (liso) | Aprobado (falta M, en el núcleo) | `claude_bikini/`; del plano solo la forma (sin flores, borlas, cuentas ni anillas). La tela es **la piel del cuerpo recortada** y separada 2,5 mm: copas triangulares, banda de 1,2 cm bajo el pecho y braguita baja (cintura y=0,905 delante y 0,925 detrás). Delante en **V** (media anchura 1,6 cm en la entrepierna) y sin pasar al muslo (corta también donde la piel pesa más de 0,4 de pierna); detrás **tanga**: triángulo de 15 cm bajo la cintura que acaba en hilo de 1,2 cm desde y=0,845. **Tira halter plana**: cinta de 1,2 cm sobre la piel, de dentro de cada copa alrededor del cuello, con lazo en la nuca; tira de 1 cm en cada cadera, también cinta sobre la piel, con su lazo. Sin ribete: en los bordes la tela baja hasta la piel en 6 mm (el contorno no parpadea). Cada vértice sigue a su triángulo de piel (pesos y formas). Hueco mínimo con cada forma 1,5 mm lejos de los bordes. **Una sola pieza** (ranura `ropa_torso`, `cubre: ["ropa_piernas"]`), negra; zonas en `COLOR_0` (r = 1 lazos). 237 formas, 11,3 MB |
 | (siguiente) | — | — |
 
 ## Pendiente: se hace en el propio asset (sin tocar el núcleo)
@@ -70,6 +72,15 @@ al animar: la tela lejos de la piel gira como si estuviera pegada al hueso. Ries
 4. **Prueba**: una captura en las poses del programa (andar, «Atacar», sentado si la hay) y la medida por pose de
    cuántos vértices del kigurumi quedan dentro de la piel (como `check_shapes` del traje). Antes y después del
    cambio, para ver que mejora.
+
+### L. Leotardo: delante más «bikini» (pedido por el responsable; no hecho; antes de integrarlo)
+
+Delante la tela todavía se va hacia el muslo: el corte se hace en la vista de frente, (|x|, y), y la cara delantera
+del muslo junto a la ingle (|x| = 0,04–0,10, y = 0,80–0,90) queda por encima de la línea, así que la tela pasa al muslo.
+Arreglo en el asset: cortar por el **pliegue de la ingle del cuerpo**, no por una línea en la vista de frente. Por
+ejemplo, quitar delante donde la piel más cercana pesa más de `UpperLeg` que de `Hips` (el pliegue sale solo y sigue
+al cuerpo), o medir el pliegue en la piel y usarlo como línea. Detrás se queda como está (aprobado). Comprobar con
+capturas de frente y de tres cuartos que delante solo cubre la ingle hasta la entrepierna.
 
 ## Pendiente: requiere tocar el núcleo (proponer a quien lleva el proyecto)
 
@@ -175,6 +186,13 @@ Las orejas se quitaron; quedan los cordones con pompones, hoy rígidos con el pe
    obligatorio; (c) en Android, coste de la simulación: limitarla a estas cadenas.
 - Vía corta sin núcleo nuevo: un vaivén en el shader, como en I (no tiene peso real ni choca, pero no añade huesos).
 
+### M. Contorno en los bordes de la ropa pegada a la piel (visto con el bikini; no hecho)
+
+En los bordes de la tela pegada a la piel, el contorno negro (`outline.gdshader`, malla invertida empujada en pantalla)
+se mezcla con la piel y, según el ángulo, el borde sale dentado o se cuela el color de la piel. En el asset ya se hizo
+lo posible: la tela baja hasta la piel en los bordes, sin ribete. El arreglo es del shader del contorno (por ejemplo,
+empujar también en profundidad o no dibujarlo donde la pieza toca la piel). De momento no molesta (el responsable).
+
 ## Ficha de integración (para cuando se metan en el proyecto)
 
 Hoy viven fuera del repo. Meterlos es un **paso del PLAN con su ficha en `ruta/pasos/`** (reglas 1, 9 y 10 del
@@ -278,6 +296,8 @@ con `python generar_<asset>.py` desde su carpeta.
     gire dentro.
   - Pesa el doble que la gorra por las formas densas (todas mueven todos los vértices); F lo resuelve.
   - Al integrarlo, la decisión del responsable: ¿visor espejo y abierto como ahora, o esperar a E?
+- **Leotardo negro** (aprobado provisionalmente): **antes de integrarlo, L** (delante más bikini, sin pasar al muslo).
+  Hoy de un color, sin zonas.
 - **Kigurumi de conejito** (aprobado):
   - **Al integrarlo, obligatorio (pedido por el responsable): huesos o movimiento en los pompones (borlas) y en la
     capucha.** Hoy van rígidos: los cordones y los pompones siguen al pecho y la capucha sigue a la piel más cercana

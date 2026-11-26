@@ -1,0 +1,49 @@
+{
+ "formato": "gamemolde-pack",
+ "version": 1,
+ "id": "claude_bikinis",
+ "nombre": "Bikinis (pruebas)",
+ "autor": "GameMolde",
+ "licencia": "propia",
+ "origen": "",
+ "piezas": [
+  {
+   "id": "bikini_negro",
+   "nombre": "Bikini negro",
+   "archivo": "bikini_negro.glb",
+   "sha256": "e2f4df89ace36140e62c6fbb620b803370b6571046553cc2a515736ddaa0b552",
+   "tipo": "ropa",
+   "ranura": "ropa_torso",
+   "especies": [
+    "humana"
+   ],
+   "colores": [
+    "principal"
+   ],
+   "color": [
+    0.1,
+    0.1,
+    0.11
+   ],
+   "sigue_al_cuerpo": true,
+   "fisica": [],
+   "miniatura": "",
+   "anclaje": {
+    "hueso": "",
+    "transform": [
+     0,
+     0,
+     0,
+     0,
+     0,
+     0,
+     1,
+     1
+    ]
+   },
+   "cubre": [
+    "ropa_piernas"
+   ]
+  }
+ ]
+}
