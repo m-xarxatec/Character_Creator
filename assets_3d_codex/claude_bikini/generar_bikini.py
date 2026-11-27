@@ -290,8 +290,10 @@ def normal_at(N, i, w):
     return n / np.maximum(np.linalg.norm(n, axis=1, keepdims=True), 1e-12)
 
 
-def write(v, f, zc, si, sw, hgt, pid="bikini_negro"):
-    """Como kigurumi.write, pero la separación hgt (sobre la normal de la piel) gira con la piel en cada forma."""
+def write(v, f, zc, si, sw, hgt, pid="bikini_negro", min_move=None):
+    """Como kigurumi.write, pero la separación hgt (sobre la normal de la piel) gira con la piel en cada forma.
+    min_move (por vértice, opcional): en cada forma, los vértices que se mueven menos se quedan quietos (piezas rígidas:
+    pesa menos)."""
     joints, weights = sud.blend_weights(si, sw)
     n0 = normal_at(SKIN_N, si, sw)
     lift = hgt[:, None]
@@ -301,6 +303,10 @@ def write(v, f, zc, si, sw, hgt, pid="bikini_negro"):
         if np.abs(moved).max() < 0.0005:
             continue
         moved += (normal_at(sud.vertex_normals(P0 + d, F0), si, sw) - n0) * lift
+        if min_move is not None:
+            moved[np.linalg.norm(moved, axis=1) < min_move] = 0
+            if np.abs(moved).max() < 2e-4:                             # ya no mueve nada: sin forma (Godot no
+                continue                                               # admite accesores vacíos)
         targets[name] = moved.astype(np.float32)
     to_rig = np.array([tr.RIG_JN.index(n) if n in tr.RIG_JN else -1 for n in sud.JN])
     jr = to_rig[joints]

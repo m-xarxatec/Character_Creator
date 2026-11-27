@@ -128,15 +128,18 @@ def refine_near(V, F, field, band=0.03):
     return V, np.concatenate(out)
 
 
-def cut_skin(cuts):
-    """La piel recortada (sobre la piel): vértices, caras y bordes."""
+def cut_skin(cuts, y_range=(0.70, 1.50), refine=1):
+    """La piel recortada (sobre la piel), entre las alturas y_range: vértices, caras y bordes. refine: veces que se
+    divide cerca de los cortes, o un campo para dividir una vez más solo cerca de él (tiras estrechas: si no, una tira
+    que cruza un triángulo sin tocar sus vértices se pierde)."""
     field = lambda V: np.max([c(V) for c in cuts], 0)
     V = skin_attrs()
-    keep = (P0[:, 1] > 0.70) & (P0[:, 1] < 1.50) & ~sud.hand_like & (sud.main_bone != "Head")
+    keep = (P0[:, 1] > y_range[0]) & (P0[:, 1] < y_range[1]) & ~sud.hand_like & (sud.main_bone != "Head")
     F = F0[keep[F0].all(1)]
     F = F[field(V)[F].min(1) < 0.03]
     V, F = bk._compact(V, F)
-    V, F = refine_near(V, F, field)
+    for fld in ([field] * refine if isinstance(refine, int) else [field, refine]):
+        V, F = refine_near(V, F, fld)
     V, F = tr.clip(V, F, field(V))
     V, F = tr.largest_part(V, F)
     V, F = bk._compact(V[:, :3], F)
@@ -147,9 +150,19 @@ def cut_skin(cuts):
     return V, F, loops
 
 
-def sheet(cuts):
-    """La tela: separada, tensa, bajando a la piel en los bordes; y de qué piel sale cada vértice (si, sw)."""
-    V, F, loops = cut_skin(cuts)
+def sheet(cuts, y_range=(0.70, 1.50), gap=None, refine=1):
+    """La tela: separada (gap; por defecto la del bikini), tensa, bajando a la piel en los bordes; y de qué piel sale
+    cada vértice (si, sw)."""
+    old = bk.GAP
+    bk.GAP = gap or old
+    try:
+        return _sheet(cuts, y_range, refine)
+    finally:
+        bk.GAP = old
+
+
+def _sheet(cuts, y_range, refine):
+    V, F, loops = cut_skin(cuts, y_range, refine)
     q, si, sw, n = bk.on_skin(V)
     O = bk.to_edges(bk.tense(bk.push_out(q + n * bk.GAP, bk.GAP), F, loops), loops)
     q, si, sw, n = bk.on_skin(O)                                       # anclada a la piel que tiene debajo…
@@ -177,25 +190,38 @@ def pad8(a):
     return np.c_[a, np.zeros((len(a), 8 - a.shape[1]), a.dtype)]
 
 
-def build(cuts, out, pack_id, pack_name, pid, name, color, extras=None):
+def build(cuts, out, pack_id, pack_name, pid, name, color, extras=None, zone_of=None, min_move=0.0,
+          thick=True, shape=None, refine=1):
     """Escribe el .glb (una pieza, ranura «ropa_torso», cubre «ropa_piernas») y el pack.json.
-    extras(O, F) → [((v, f), zona, (índices, pesos) de piel por vértice o una máscara de piel)]: piezas añadidas
-    (siguen a su piel por índice o a la piel más cercana de la máscara)."""
+    extras(O, F) → [((v, f), zona, (índices, pesos) de piel por vértice o una máscara de piel[, separación[, mín]])]:
+    piezas añadidas (siguen a su piel por índice o a la piel más cercana de la máscara); la zona, un nombre o una por
+    vértice; mín: en cada forma no se mueven si se mueven menos (piezas rígidas).
+    zone_of(si, sw) → zona (RGBA) de cada vértice de la tela, según su piel (p. ej. las mangas de otro color).
+    min_move: en cada forma, la tela que se mueve menos se queda quieta (pesa menos).
+    thick=False: tela de una cara (la mitad de vértices; los bordes ya bajan a la piel, el grosor no se ve).
+    shape(O, F, si, sw) → O: cambia la tela antes de escribirla (p. ej. mangas hinchadas o canalé)."""
     out.mkdir(parents=True, exist_ok=True)
     bk.OUT = out
-    O, F, loops, si, sw = sheet(cuts)
-    v, f, src = tr.thick_sheet(O, F, bk.THICK)
+    O, F, loops, si, sw = sheet(cuts, refine=refine)
+    if shape:
+        O = shape(O, F, si, sw)
+    v, f, src = tr.thick_sheet(O, F, bk.THICK) if thick else (O, F, np.arange(len(O)))
     i, w = si[src], sw[src]
-    V, Fs, Z, I, W = [v], [f], [np.tile(ZONES["tela"], (len(v), 1))], [pad8(i)], [pad8(w)]
+    Z0 = zone_of(i, w) if zone_of else np.tile(ZONES["tela"], (len(v), 1))
+    V, Fs, Z, I, W = [v], [f], [Z0], [pad8(i)], [pad8(w)]
     H = [((v - (P0[i] * w[..., None]).sum(1)) * bk.normal_at(bk.SKIN_N, i, w)).sum(1)]
-    for (pv, pf), zone, src in (extras(O, F) if extras else []):
+    M = [np.full(len(v), min_move)]
+    for item in (extras(O, F) if extras else []):
+        (pv, pf), zone, src = item[:3]
         pv = np.asarray(pv, float)
         pi, pw = src if isinstance(src, tuple) else sud.nearest_skin(pv, 8, src)
         Fs.append(np.asarray(pf, int) + sum(len(x) for x in V))
-        V.append(pv); Z.append(np.tile(ZONES[zone], (len(pv), 1))); I.append(pad8(pi)); W.append(pad8(pw))
-        H.append(np.zeros(len(pv)))
+        V.append(pv); I.append(pad8(pi)); W.append(pad8(pw))
+        Z.append(np.tile(ZONES[zone], (len(pv), 1)) if isinstance(zone, str) else np.asarray(zone, float))
+        H.append(item[3] if len(item) > 3 else np.zeros(len(pv)))
+        M.append(np.full(len(pv), item[4] if len(item) > 4 else 0.0))
     sha, targets = bk.write(np.concatenate(V), np.concatenate(Fs), np.concatenate(Z), np.concatenate(I),
-                            np.concatenate(W), np.concatenate(H), pid)
+                            np.concatenate(W), np.concatenate(H), pid, np.concatenate(M))
     measure(O, F, loops, si, sw, targets)
     cards = [tr.card(pid, name, sha, color, "ropa", "ropa_torso", ["ropa_piernas"])]
     pack = {"formato": "gamemolde-pack", "version": 1, "id": pack_id, "nombre": pack_name, "autor": "GameMolde",
