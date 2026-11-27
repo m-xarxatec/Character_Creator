@@ -1,0 +1,46 @@
+{
+ "formato": "gamemolde-pack",
+ "version": 1,
+ "id": "claude_botas_futuristas",
+ "nombre": "Botas futuristas (pruebas)",
+ "autor": "GameMolde",
+ "licencia": "propia",
+ "origen": "",
+ "piezas": [
+  {
+   "id": "botas_futuristas",
+   "nombre": "Botas futuristas",
+   "archivo": "botas_futuristas.glb",
+   "sha256": "f95550c0c9c8689e1251bb4f8ea6d080e352fa883086ebe95e1918be3af48475",
+   "tipo": "ropa",
+   "ranura": "ropa_pies",
+   "especies": [
+    "humana"
+   ],
+   "colores": [
+    "principal"
+   ],
+   "color": [
+    0.9,
+    0.87,
+    0.85
+   ],
+   "sigue_al_cuerpo": true,
+   "fisica": [],
+   "miniatura": "",
+   "anclaje": {
+    "hueso": "",
+    "transform": [
+     0,
+     0,
+     0,
+     0,
+     0,
+     0,
+     1,
+     1
+    ]
+   }
+  }
+ ]
+}
