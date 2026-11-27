@@ -40,8 +40,6 @@ const NOTES := {
 	"cameras": "se quitan las cámaras",
 	"targets": "se quitan las formas (morph targets)",
 	"color": "se quita el color por vértice",
-	"other": "se quitan otros datos de los vértices",
-	"extensions": "se quitan extensiones de glTF que GameMolde no usa",
 	"texture": "se quita una textura que no se puede leer (ha de ser PNG o JPG, dentro del .glb o junto a él): queda su color base",
 }
 
@@ -429,8 +427,6 @@ static func _clean_textures(json: Dictionary, ctx: Dictionary) -> Array:
 	var textures: Array = json.get("textures", [])
 	for i: int in textures.size():
 		var source := _int(textures[i].get("source"), MAX_ITEMS)
-		if textures[i].has("extensions"):
-			ctx["avisos"]["extensions"] = true
 		if not ctx["imagenes"].has(source):
 			ctx["avisos"]["texture"] = true
 			continue
@@ -461,7 +457,7 @@ static func _clean_mesh(mesh: Dictionary, ctx: Dictionary) -> Dictionary:
 		var out := _pick_ints(primitive, ["indices", "material"])
 		out.merge({"attributes": _pick_ints(primitive["attributes"], ATTRIBUTES.keys()), "mode": 4})
 		for attribute: String in primitive["attributes"]:
-			if not ATTRIBUTES.has(attribute):
+			if not ATTRIBUTES.has(attribute) and _dropped_attribute(attribute) != "":
 				ctx["avisos"][_dropped_attribute(attribute)] = true
 		if primitive.has("targets") or mesh.has("weights"):
 			ctx["avisos"]["targets"] = true
@@ -469,10 +465,11 @@ static func _clean_mesh(mesh: Dictionary, ctx: Dictionary) -> Dictionary:
 	return {"primitives": primitives}
 
 
+## Solo avisa de lo que se vería (color, piel); tangentes, UV extra y demás se quitan en silencio.
 static func _dropped_attribute(attribute: String) -> String:
 	if attribute.begins_with("COLOR_"):
 		return "color"
-	return "skins" if attribute.begins_with("JOINTS_") or attribute.begins_with("WEIGHTS_") else "other"
+	return "skins" if attribute.begins_with("JOINTS_") or attribute.begins_with("WEIGHTS_") else ""
 
 
 static func _clean_material(material: Dictionary, ctx: Dictionary) -> Dictionary:
@@ -494,8 +491,6 @@ static func _clean_material(material: Dictionary, ctx: Dictionary) -> Dictionary
 	if extensions is Dictionary and extensions.has("KHR_materials_unlit"):
 		out["extensions"] = {"KHR_materials_unlit": {}}
 		ctx["usadas"]["KHR_materials_unlit"] = true
-	if not extensions is Dictionary or extensions.size() > int(out.has("extensions")):
-		ctx["avisos"]["extensions"] = true
 	return out
 
 
@@ -538,9 +533,6 @@ static func _clean_accessor(accessor: Dictionary) -> Dictionary:
 
 
 static func _clean_extensions(json: Dictionary, out: Dictionary, ctx: Dictionary) -> void:
-	var used: Variant = json.get("extensionsUsed", [])
-	if json.has("extensions") or not used is Array or used.any(func(e: Variant) -> bool: return not e in EXTENSIONS):
-		ctx["avisos"]["extensions"] = true
 	if ctx["usadas"].is_empty():
 		return
 	out["extensionsUsed"] = ctx["usadas"].keys()

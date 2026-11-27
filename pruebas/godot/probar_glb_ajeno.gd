@@ -23,6 +23,7 @@ func _initialize() -> void:
 	_check_bad_json()
 	_check_bad_images()
 	_check_clean()
+	_check_silent()
 	_measure_heavy()
 	for file_name: String in DirAccess.get_files_at(DIR):
 		DirAccess.remove_absolute(DIR.path_join(file_name))
@@ -159,7 +160,8 @@ func _check_clean() -> void:
 	json["extensions"] = {"KHR_lights_punctual": {"lights": [{"type": "point"}]}}
 	var r := GlbInspect.read(_write("sucio.glb", g))
 	var notes := " | ".join(r["avisos"])
-	check("con piel, animación, formas, color por vértice y luces: pasa con avisos", r["error"] == "" and r["avisos"].size() == 5, notes)
+	check("con piel, animación, formas y color por vértice: pasa con 4 avisos (las luces, en silencio)",
+			r["error"] == "" and r["avisos"].size() == 4, notes)
 	if r["error"] != "":
 		return
 	var clean := _json_of(r["bytes"])
@@ -174,6 +176,42 @@ func _check_clean() -> void:
 	check("la copia limpia carga", scene != null)
 	if scene:
 		scene.free()
+
+
+## Decisión del líder (2026-11-28): solo se avisa de lo que el usuario vería; lo demás se quita en silencio.
+func _check_silent() -> void:
+	var root := MeshInstance3D.new()
+	root.mesh = BoxMesh.new()
+	var material := StandardMaterial3D.new()
+	var png := Image.create(4, 4, false, Image.FORMAT_RGBA8)
+	png.fill(Color.WHITE)
+	material.albedo_texture = ImageTexture.create_from_image(png)
+	root.mesh.material = material
+	var state := GLTFState.new()
+	var doc := GLTFDocument.new()
+	doc.append_from_scene(root, state)
+	var path := _store("godot.glb", doc.generate_buffer(state))
+	root.free()
+	var r := GlbInspect.read(path)
+	check("un .glb exportado por Godot (con textura): sin avisos y con su textura", r["error"] == "" and r["avisos"].is_empty()
+			and _json_of(r["bytes"])["images"].size() == 1, str(r["error"], r["avisos"]))
+	var g := _box()
+	var json: Dictionary = g["json"]
+	var attributes: Dictionary = json["meshes"][0]["primitives"][0]["attributes"]
+	attributes["TANGENT"] = attributes["POSITION"]
+	attributes["TEXCOORD_2"] = attributes["TEXCOORD_0"]
+	json["materials"][0]["extensions"] = {"KHR_materials_emissive_strength": {"emissiveStrength": 2.0}}
+	json["textures"][0]["extensions"] = {"EXT_algo": {}}
+	json["extensionsUsed"] = ["KHR_materials_emissive_strength", "EXT_algo"]
+	r = GlbInspect.read(_write("silencio.glb", g))
+	check("tangentes, UV extra y extensiones no obligatorias: se quitan sin avisos", r["error"] == "" and r["avisos"].is_empty()
+			and not _json_of(r["bytes"])["meshes"][0]["primitives"][0]["attributes"].has("TANGENT"), str(r["error"], r["avisos"]))
+	json["extensionsRequired"] = ["EXT_algo"]
+	_reject("extensión obligatoria desconocida", _write("obligatoria.glb", g))
+	g = _box()
+	g["json"]["images"][0] = {"uri": "falta.png"}
+	r = GlbInspect.read(_write("sin_textura.glb", g))
+	check("quitar una textura sí avisa", GlbInspect.NOTES["texture"] in r["avisos"] and r["avisos"].size() == 1, str(r["avisos"]))
 
 
 ## Unos 250 MB solo de geometría: 70.000 vértices y el resto índices u32 (hay que mirarlos todos). Se acepta (D59).
