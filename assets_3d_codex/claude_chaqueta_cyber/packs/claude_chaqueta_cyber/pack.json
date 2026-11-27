@@ -1,0 +1,46 @@
+{
+ "formato": "gamemolde-pack",
+ "version": 1,
+ "id": "claude_chaqueta_cyber",
+ "nombre": "Chaqueta cyberpunk (pruebas)",
+ "autor": "GameMolde",
+ "licencia": "propia",
+ "origen": "",
+ "piezas": [
+  {
+   "id": "chaqueta_cyber",
+   "nombre": "Chaqueta cyberpunk",
+   "archivo": "chaqueta_cyber.glb",
+   "sha256": "19e6ad43175454da0da74ce2ce36148a822929abec6692bbb4dacb455d076007",
+   "tipo": "ropa",
+   "ranura": "ropa_exterior",
+   "especies": [
+    "humana"
+   ],
+   "colores": [
+    "principal"
+   ],
+   "color": [
+    0.16,
+    0.12,
+    0.16
+   ],
+   "sigue_al_cuerpo": true,
+   "fisica": [],
+   "miniatura": "",
+   "anclaje": {
+    "hueso": "",
+    "transform": [
+     0,
+     0,
+     0,
+     0,
+     0,
+     0,
+     1,
+     1
+    ]
+   }
+  }
+ ]
+}
