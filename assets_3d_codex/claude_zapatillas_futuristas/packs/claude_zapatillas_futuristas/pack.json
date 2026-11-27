@@ -1,0 +1,46 @@
+{
+ "formato": "gamemolde-pack",
+ "version": 1,
+ "id": "claude_zapatillas_futuristas",
+ "nombre": "Zapatillas futuristas (pruebas)",
+ "autor": "GameMolde",
+ "licencia": "propia",
+ "origen": "",
+ "piezas": [
+  {
+   "id": "zapatillas_futuristas",
+   "nombre": "Zapatillas futuristas",
+   "archivo": "zapatillas_futuristas.glb",
+   "sha256": "4b33706de234faad90cb9cedf8887269d5f3f5c711883248176fc3f4daa4c106",
+   "tipo": "ropa",
+   "ranura": "ropa_pies",
+   "especies": [
+    "humana"
+   ],
+   "colores": [
+    "principal"
+   ],
+   "color": [
+    0.17,
+    0.16,
+    0.19
+   ],
+   "sigue_al_cuerpo": true,
+   "fisica": [],
+   "miniatura": "",
+   "anclaje": {
+    "hueso": "",
+    "transform": [
+     0,
+     0,
+     0,
+     0,
+     0,
+     0,
+     1,
+     1
+    ]
+   }
+  }
+ ]
+}
