@@ -14,6 +14,7 @@ extends RefCounted
 ##   BodyMaterial.set_skin_zones(species.mesh, species.skin_zones)   # SH.8: rubor, labios y pecas (null: sin zonas)
 ##   BodyMaterial.set_style(species.mesh, true)          # SH.7a: estilo anime (toon_soft) en esta malla; false: clásico
 ##   BodyMaterial.set_skin(species.mesh, "freckles", 3)   # SH.7a: piel del estilo anime (claves de SKIN), solo el cuerpo
+##   BodyMaterial.set_hide_mask(species.mesh, mask)       # 12.1b: piel que no se dibuja (A > 0,5 sobre las UV; null: nada)
 ## Paso AB.6: una pieza usa una copia del toon que se adelanta PIECE_PULL metros hacia la cámara: tapa la piel que
 ## asoma a menos de esa distancia al moverse (sin borrar nada). El shader del cuerpo no cambia.
 ## El interruptor de la prenda, los colores y el grosor son parámetros del material: el exportador (paso 3.6) lee
@@ -30,7 +31,7 @@ const DEFAULTS := {
 	"shadow_threshold": 0.0, "softness": 0.04, "rim_color": Color(1.0, 0.95, 0.92), "rim_strength": 0.25, "rim_width": 0.3}
 const OUTLINE_DEFAULTS := {"outline_color": Color(0.07, 0.05, 0.06), "width_px": 2.5, "outline_tint": 0.0, "face_line": 1.0,
 	"skin_color": Color(0.80, 0.80, 0.80), "garment_color": Color(0.20, 0.20, 0.23), "show_garment": true}
-const OUTLINE_SYNC := ["skin_color", "garment_color", "show_garment", "skin_zones"]  # SH.4b: los lee también el contorno
+const OUTLINE_SYNC := ["skin_color", "garment_color", "show_garment", "skin_zones", "hide_mask"]  # SH.4b: los lee también el contorno
 const MAX_OUTLINE_PX := 10.0  # el máximo de width_px en outline.gdshader
 const PIECE_PULL := 0.005  # metros (paso AB.6)
 const PULL_CODE := """uniform float depth_pull = 0.0;
@@ -78,7 +79,7 @@ const BROW_SKIN := ["brow_lift", "brow_thickness", "brow_size"]
 const EXTRA_COLORS := {"brow_color": Color(0.25, 0.16, 0.12)}
 const SOFT_OUTLINE_PX := 1.25  # grosor de la línea del estilo anime: el de la base aprobada en SH.1
 const EXPORT_ZONES_SIZE := 256  # SH.5: el mapa de zonas va reducido dentro del .tres (1024² en texto: 14 MB; 256²: 0,9 MB)
-const KEEP_ON_SWITCH := ["skin_color", "garment_color", "show_garment", "depth_pull", "skin_zones", "brow_color"]
+const KEEP_ON_SWITCH := ["skin_color", "garment_color", "show_garment", "depth_pull", "skin_zones", "brow_color", "hide_mask"]
 
 
 static func apply(mesh: MeshInstance3D, piece := false, soft := soft_enabled) -> ShaderMaterial:
@@ -180,6 +181,17 @@ static func set_skin_zones(mesh: MeshInstance3D, zones: Texture2D) -> void:
 	_set_both(mesh, "skin_zones", zones)
 
 
+## Paso 12.1b: máscara de piel oculta (PNG RGBA sobre las UV del cuerpo; A > 0,5 = no se dibuja, tampoco el contorno).
+## null: nada oculto. El .tres de standalone() va sin ella (ocultar en el .glb y en el juego es el 12.5).
+static func set_hide_mask(mesh: MeshInstance3D, mask: Texture2D) -> void:
+	_set_both(mesh, "hide_mask", mask)
+
+
+static func get_hide_mask(mesh: MeshInstance3D) -> Texture2D:
+	var material := mesh.material_override as ShaderMaterial
+	return material.get_shader_parameter("hide_mask") if material != null else null
+
+
 static func set_garment_visible(mesh: MeshInstance3D, visible: bool) -> void:
 	_set_both(mesh, "show_garment", visible)
 
@@ -267,6 +279,7 @@ static func standalone(mesh: MeshInstance3D) -> ShaderMaterial:
 	if soft:
 		material.set_shader_parameter("skin_zones", _small_zones((mesh.material_override as ShaderMaterial).get_shader_parameter("skin_zones")))
 	material.set_shader_parameter("unlit", false)
+	material.set_shader_parameter("hide_mask", null)  # 12.1b: sin máscara (12.5)
 	var outline := ShaderMaterial.new()
 	outline.shader = _embedded(OUTLINE_SHADER)
 	outline.set_shader_parameter("outline_color", OUTLINE_DEFAULTS["outline_color"])

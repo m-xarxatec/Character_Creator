@@ -20,8 +20,10 @@ uniform float softness : hint_range(0.0, 0.5) = 0.04;
 uniform vec3 rim_color : source_color = vec3(1.0, 0.95, 0.92);
 uniform float rim_strength : hint_range(0.0, 1.0) = 0.25;
 uniform float rim_width : hint_range(0.0, 1.0) = 0.3;
+uniform sampler2D hide_mask : hint_default_transparent, filter_nearest, repeat_disable;  // 12.1b: piel bajo la ropa
 
 void fragment() {
+	if (texture(hide_mask, UV).a > 0.5) { discard; }
 	// `garment` está en el rojo en el editor (alfa 1) y en el alfa en el .glb (RGB blanco, para que la norma glTF no
 	// tiña el material; ver glb_exporter.gd). El menor de los dos vale en ambos casos sin interruptor.
 	float garment = show_garment ? step(0.5, min(COLOR.r, COLOR.a)) : 0.0;
