@@ -36,6 +36,10 @@
    "id": "os_golf_shorts",
    "miniatura": "",
    "nombre": "Shorts de golf",
+   "oculta": {
+    "archivo": "os_golf_shorts_oculta.png",
+    "sha256": "50cb185a313af3c3407833a54504dc4fdf47f3a16461330c2203379017dd216d"
+   },
    "ranura": "ropa_piernas",
    "sha256": "d96f3f084487d966ac1795141e3b0fb12b1650a4b04407ed2ff62baf833d319d",
    "sigue_al_cuerpo": true,
@@ -71,6 +75,10 @@
    "id": "os_short_shorts",
    "miniatura": "",
    "nombre": "Shorts muy cortos",
+   "oculta": {
+    "archivo": "os_short_shorts_oculta.png",
+    "sha256": "8b8716815786a77a9b35649a93347c82ee2e5d1bda8d35402eae35bb9b85b222"
+   },
    "ranura": "ropa_piernas",
    "sha256": "b60db6b6df5a3d33af24c505a5e20740844a40ad4aab68c5957e7ba4104f21f3",
    "sigue_al_cuerpo": true,
@@ -106,6 +114,10 @@
    "id": "os_vneck_top",
    "miniatura": "",
    "nombre": "Camiseta de pico",
+   "oculta": {
+    "archivo": "os_vneck_top_oculta.png",
+    "sha256": "7ca4b5bb7adc786207121d2bd13a7ce55d044040ff16b9fff00d52413aacb606"
+   },
    "ranura": "ropa_torso",
    "sha256": "b8b1d6e0644a161910f89da1cdf594b0d3d2e6eea29811c8076d11a335784d58",
    "sigue_al_cuerpo": true,
@@ -141,6 +153,10 @@
    "id": "os_scrubs_top",
    "miniatura": "",
    "nombre": "Casaca sanitaria",
+   "oculta": {
+    "archivo": "os_scrubs_top_oculta.png",
+    "sha256": "6f46349bc5933e05b7eaf97b7f32312c3d4617ea6d0b95b69c8063a088d1b511"
+   },
    "ranura": "ropa_torso",
    "sha256": "1031443e6370e6e2ec6487f77cbcd86d9a52bd4404960a013599a0b607e67d4c",
    "sigue_al_cuerpo": true,
@@ -176,6 +192,10 @@
    "id": "os_tank_top",
    "miniatura": "",
    "nombre": "Camiseta de tirantes",
+   "oculta": {
+    "archivo": "os_tank_top_oculta.png",
+    "sha256": "5688f6139647df7325cbc28a3377138a91bbc84cb48066e88e67217ff9a33972"
+   },
    "ranura": "ropa_torso",
    "sha256": "28d154b647bd6d8c6f852cba6ac59083025432795b1fa2d2c503822a43d1279d",
    "sigue_al_cuerpo": true,
@@ -211,6 +231,10 @@
    "id": "os_camisole_top",
    "miniatura": "",
    "nombre": "Top de tirantes finos",
+   "oculta": {
+    "archivo": "os_camisole_top_oculta.png",
+    "sha256": "0957c8a05e80422d15b244cb871ffaa2fb2c1c56be9ec2481d1f5998a20d5da4"
+   },
    "ranura": "ropa_torso",
    "sha256": "12ba18ca70c53cbfca234f0e15924e9d88045d7978022303cf7d5aed5b825677",
    "sigue_al_cuerpo": true,
