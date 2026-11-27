@@ -7,6 +7,8 @@ extends RefCounted
 ## - Las piezas se abren con GLTFDocument, como cuerpo.glb; sus .glb van con importer="keep" (viajan tal cual en el .pck).
 ## - Paso AB.9a: una pieza con «derivada»: {"mascara", "separacion"} no tiene archivo: la hace BodyDerived con caras
 ##   del cuerpo (load_piece da null; quien la pone llama a BodyDerived.build).
+## - Paso 12.1b: una pieza con «oculta»: {"archivo", "sha256"} (opcional) trae un PNG RGBA sobre las UV del cuerpo con la
+##   piel que tapa (A = oculta); lo da hide_image y lo une SkinHide.
 ## Uso:
 ##   var library := PackLibrary.new()
 ##   var warnings := library.scan(PackedStringArray(["res://packs", "user://packs"]))
@@ -79,6 +81,21 @@ func load_piece(pack_id: String, piece_id: String) -> Node3D:
 	return document.generate_scene(state) as Node3D
 
 
+## Paso 12.1b: la máscara de piel oculta de la pieza (RGBA8), o null si no tiene, si falta o si su sha256 no coincide.
+func hide_image(pack_id: String, piece_id: String) -> Image:
+	var card := piece(pack_id, piece_id)
+	if card.get("oculta") == null:  # no está la pieza o no trae máscara
+		return null
+	var path: String = (packs[pack_id]["carpeta"] as String).path_join(card["oculta"]["archivo"])
+	if not FileAccess.file_exists(path) or FileAccess.get_sha256(path) != card["oculta"]["sha256"]:
+		return null
+	var image := Image.new()
+	if image.load_png_from_buffer(FileAccess.get_file_as_bytes(path)) != OK:
+		return null
+	image.convert(Image.FORMAT_RGBA8)
+	return image
+
+
 func _add(folder: String) -> String:
 	var path := folder.path_join("pack.json")
 	if not FileAccess.file_exists(path):
@@ -134,6 +151,10 @@ func _check_piece(item: Variant, folder: String, ids: Dictionary) -> String:
 	if derived == null and generator == null and cut == null and (typeof(card.get("archivo")) != TYPE_STRING
 			or not FileAccess.file_exists(folder.path_join(card["archivo"]))):
 		return "pieza %s: falta su archivo" % id
+	var hide: Variant = card.get("oculta")  # paso 12.1b: máscara de piel oculta (SkinHide)
+	if hide != null and (typeof(hide) != TYPE_DICTIONARY or typeof(hide.get("archivo")) != TYPE_STRING
+			or typeof(hide.get("sha256")) != TYPE_STRING or not FileAccess.file_exists(folder.path_join(hide["archivo"]))):
+		return "pieza %s: «oculta» no es válida o falta su archivo" % id
 	var covers: Variant = card.get("cubre", [])  # paso RE.1a: otras ranuras que esta pieza ocupa (un traje: ropa_piernas)
 	if typeof(covers) != TYPE_ARRAY or covers.any(func(slot: Variant) -> bool: return not slot in SLOTS):
 		return "pieza %s: «cubre» no es una lista de ranuras" % id

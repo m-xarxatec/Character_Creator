@@ -55,6 +55,7 @@ const BodyDerived := preload("../addons/creador/body_derived.gd")  # paso AB.9a
 const EyeMesh := preload("../addons/creador/eye_mesh.gd")  # paso AC.3c
 const RigidPiece := preload("../addons/creador/rigid_piece.gd")  # paso AB.11
 const GarmentCut := preload("../addons/creador/garment_cut.gd")  # paso AB.5
+const SkinHide := preload("../addons/creador/skin_hide.gd")  # paso 12.1b
 ## Paso AB.6: capa de cada ranura (más alta = más por fuera): se adelanta BodyMaterial.PIECE_PULL × capa.
 const LAYERS := {"ropa_interior": 1, "ropa_torso": 2, "ropa_piernas": 2, "pelo": 2, "ropa_pies": 3, "ropa_exterior": 3,
 	"accesorio": 4}
@@ -532,6 +533,7 @@ func set_piece(pack_id: String, piece_id: String, on: bool) -> bool:
 				BodyPiece.detach(pieces[key])
 			pieces.erase(key)
 			hair.erase(key)
+			_update_hide()
 			pieces_changed.emit()
 		return true
 	var card: Dictionary = library.piece(pack_id, piece_id)
@@ -578,8 +580,17 @@ func set_piece(pack_id: String, piece_id: String, on: bool) -> bool:
 		var simulator := HairPhysics.attach(species.skeleton, HairChains.build(mesh, species.skeleton), species.mesh)
 		if simulator != null:
 			hair_physics[key] = simulator
+	_update_hide()
 	pieces_changed.emit()
 	return true
+
+
+## Paso 12.1b: la piel que tapan las piezas puestas no se dibuja (máscaras unidas en el material del cuerpo).
+func _update_hide() -> void:
+	var images: Array[Image] = []
+	for key: String in pieces:
+		images.append(library.hide_image(key.get_base_dir(), key.get_file()))
+	BodyMaterial.set_hide_mask(species.mesh, SkinHide.union(images))
 
 
 ## Paso PE.4b: con el cuerpo nuevo, colisiones medidas otra vez y simulación reiniciada (al dejar los deslizadores).
