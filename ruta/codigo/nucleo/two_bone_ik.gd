@@ -14,7 +14,7 @@ extends RefCounted
 ## - La pose se escribe con WorldPose (giros en el mundo), así que no depende de los ejes locales de los huesos.
 ## - Las longitudes se miden en la pose actual: vale también con escalas de Proporción.
 
-const WorldPose := preload("world_pose.gd")
+const WorldPose := preload("res://../../godot/addons/creador/world_pose.gd")  # el del núcleo (10.3a); ruta válida desde pruebas/godot
 
 const EPS := 0.000001
 const STRAIGHT := 0.9999  # la cadena nunca se estira del todo: evita que el codo pierda su plano
