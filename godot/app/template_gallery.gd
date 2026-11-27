@@ -44,12 +44,22 @@ func setup(folder: String, species_id: String, sliders: Array) -> void:
 		card.icon_alignment = HORIZONTAL_ALIGNMENT_CENTER
 		card.vertical_icon_alignment = VERTICAL_ALIGNMENT_TOP
 		card.expand_icon = true
-		var image := Image.load_from_file(folder.path_join(id + ".png")) if FileAccess.file_exists(folder.path_join(id + ".png")) else null
-		if image != null:
-			card.icon = ImageTexture.create_from_image(image)
+		card.icon = thumbnail(folder.path_join(id + ".png"))
 		card.pressed.connect(func() -> void: template_chosen.emit(templates[id].duplicate()))
 		grid.add_child(card)
 		cards[id] = card
+
+
+## Miniatura del preset (PNG con «Keep File», sin textura importada): se leen los bytes, que vale en res://, en el
+## .pck y en rutas absolutas (Image.load_from_file avisa de que no funciona al exportar). null si no existe.
+static func thumbnail(path: String) -> Texture2D:
+	if not FileAccess.file_exists(path):
+		return null
+	var bytes := FileAccess.get_file_as_bytes(path)
+	var image := Image.new()
+	if bytes.is_empty() or image.load_png_from_buffer(bytes) != OK:
+		return null
+	return ImageTexture.create_from_image(image)
 
 
 ## Paso PL.5: tarjeta «Aleatorio» con el dado (la usa también start_screen.gd).
