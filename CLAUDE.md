@@ -47,7 +47,7 @@
 - Renderizador fijado en `project.godot`: Forward+ en PC y Mobile en Android. No cambiarlo sin un paso del PLAN.
 - Sin dependencias nuevas sin aprobación.
 - Lanzar siempre Godot y Blender con límite de tiempo y memoria: `(ulimit -v 4000000; timeout 120 ...)`.
-- Abrir el editor para probarlo a mano: `(ulimit -v 4000000; timeout 900 godot --path godot)` (con 120 s se cierra a medio probar).
+- Abrir el editor para probarlo a mano: `(ulimit -v 8000000; timeout 900 godot --path godot)` (con 120 s se cierra a medio probar; con ventana el driver ya reserva 3,5 GB y con 4 GB se cerraba sin memoria).
 - Crear un personaje: `blender -b -P blender/generar_cuerpo.py -- cuerpo.json salida.glb`
 - Pruebas de Blender (una por archivo `pruebas/fase_*/probar_*.py`): `blender -b -P <archivo> 2>&1 | grep -E 'FALLO|RESULTADO'`
 - Pruebas de Godot: proyecto `pruebas/godot/`, `godot --headless --path pruebas/godot -s <script>.gd`
