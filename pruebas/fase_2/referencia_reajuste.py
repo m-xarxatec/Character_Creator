@@ -4,6 +4,7 @@
 Uso: blender -b -P pruebas/fase_2/referencia_reajuste.py
 Lee datos/humana/ y escribe pruebas/fase_2/salida/referencia_reajuste.json (lo usa pruebas/godot/probar_reajuste.gd).
 
+Se dejan fuera los deslizadores que datos/ ya no saca tal cual de MPFB (ojos de EyeFit y alcances @): PT.1.
 Cada cuerpo se define con los valores de los deslizadores Forma (0 a 1; 0,5 = neutro; los de dos lados, por lado).
 Se guardan, en ejes de Godot, los valores de los deslizadores, los pesos de las formas (regla de FORMATO.md) y la cabeza, la cola y el giro de cada
 hueso según MPFB (sin su descarte de pesos < 0,01, como en el paso 2.3). Los anclajes no existen en MPFB: se colocan
@@ -27,6 +28,7 @@ from mathutils import Matrix, Vector
 
 ROOT = os.path.dirname(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
 sys.path.insert(0, os.path.join(ROOT, "blender"))
+import cara_anime  # noqa: E402
 import exportar_datos as ed  # noqa: E402
 from exportar_glb import humanoid_names  # noqa: E402
 import pose_t  # noqa: E402
@@ -51,8 +53,9 @@ IDENTITY = [[1.0, 0.0, 0.0], [0.0, 1.0, 0.0], [0.0, 0.0, 1.0]]
 
 
 def slots(rows):
-    """[(id, lado)] de cada deslizador Forma de MPFB (sin las de cara ni las propias, que MPFB no tiene); lado None si es uno solo."""
+    """[(id, lado)] de cada deslizador Forma que datos/ saca tal cual de MPFB: sin cara, propias, ojos (EyeFit) ni alcances (@); lado None si es uno solo."""
     return [(r["id"], side) for r in rows if r["tipo"] == "Forma" and r not in ed.face_rows(rows) and r not in ed.own_rows(rows)
+            and not r["id"].startswith(cara_anime.EYE_SHAPES) and "@" not in r["decr"] + r["incr"]
             for side in (("l", "r") if r["lados"] == "2" else (None,))]
 
 

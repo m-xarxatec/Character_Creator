@@ -14,6 +14,7 @@ const DRIFT_DEG := 0.1  # cuánto cambia ese ángulo al animar, en brazos y pier
 const FLOOR_MM := 45.0  # al caminar, el pie más bajo contra el de la fuente a escala (medida real: 30,9 mm, cuerpo alto).
 # En los demás clips solo se mide: sin IK, con las rodillas dobladas el pie flota según las proporciones (hasta 168 mm).
 const BROKEN_DEG := 20.0  # con la referencia mal tomada (pose A) el brazo debe pasar de aquí: la prueba lo detecta
+const FACE_BONES := ["Jaw", "LeftEye", "RightEye"]  # paso 9.3: sin pesos y sin pareja en los clips
 const ARMS := [["LeftUpperArm", "LeftLowerArm"], ["LeftLowerArm", "LeftHand"], ["RightUpperArm", "RightLowerArm"], ["RightLowerArm", "RightHand"]]
 const LEGS := [["LeftUpperLeg", "LeftLowerLeg"], ["LeftLowerLeg", "LeftFoot"], ["RightUpperLeg", "RightLowerLeg"], ["RightLowerLeg", "RightFoot"]]
 const FEET := ["LeftFoot", "RightFoot", "LeftToes", "RightToes"]
@@ -49,9 +50,9 @@ func _initialize() -> void:
 		check("un clip que no existe se rechaza", not animations.play("volar"))
 		check("un archivo que no existe da error", load(addon.path_join("animation_set.gd")).new().load_file("nada.json") != "")
 		retarget = load(addon.path_join("pose_retarget.gd")).new(animations.skeleton, species.skeleton, animations.bones, animations.hips)
-		var sockets: Array = species.manifest["bones"]["sockets"].duplicate()
-		sockets.sort()
-		check("todos los huesos de deformación tienen pareja", _unpaired() == sockets, str(_unpaired()))
+		var expected: Array = species.manifest["bones"]["sockets"] + FACE_BONES
+		expected.sort()
+		check("todos los huesos de deformación tienen pareja", _unpaired() == expected, str(_unpaired()))
 		check("cada hueso y su pareja están en el mismo lado", _wrong_side() == [], str(_wrong_side()))
 		_check_identity()
 		for body: String in BODIES:
