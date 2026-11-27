@@ -9,3 +9,5 @@
 | D36 | ¿Lo nuestro sale CC0 y se publica también como pack suelto? (recomendado: sí) | `propuestas/expansion_v2.md` §7 |
 | D39 | ¿Se pueden descargar peinados y armas CC0 (Quaternius, Micket, KayKit), uno a uno y con la licencia comprobada? Necesita tu permiso de red | `propuestas/expansion_v2.md` §5.3 |
 | PE.5 | Aplazado a una versión más adelantada (2026-11-26): abrir `heroe.tscn` (exportado con long01) en un proyecto de Godot vacío, sin y con BoneMap: ¿abre sin errores?, ¿el pelo se mueve como en el editor? | `ruta/pasos/PE.5_exportar_pelo.md` §8 |
+| 10.3b | Estudio: entrar tarda 1,7 s con 3 piezas (ficha pide 1 s); estudiar horneado en hilo | `godot/app/studio_view.gd` |
+| 10.3b | Estudio debe usar el mismo acabado que Cuerpo (máscara de piel, contorno, depth_pull, línea teñida, banda del pelo): tras el juicio de 12.1b-b4 | `godot/app/studio_view.gd` (`_paint`) |
