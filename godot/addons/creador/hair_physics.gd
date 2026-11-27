@@ -9,6 +9,7 @@ extends RefCounted
 ##   HairPhysics.refit(simulator, body)   # tras cambiar el cuerpo: mide otra vez y reinicia
 ## Comprobado en Godot 4.7.2: las colisiones no escalan con su hueso (refit pone medidas reales) y Godot prueba el
 ## choque de cada hueso en su punta a la longitud SIN la escala de Proporción (por eso `_tail`).
+## Paso PE.5: con el ajuste «escalas» ({hueso: escala}, de HairScene), refit usa esas (en el .glb todas son 1).
 
 const MeshBaker := preload("mesh_baker.gd")
 
@@ -47,6 +48,7 @@ static func attach(skeleton: Skeleton3D, chains: Array[PackedStringArray], body:
 	simulator.name = "FisicaPelo"
 	simulator.set_meta("percentil", config["percentil"])
 	simulator.set_meta("radio", config["radio"])
+	simulator.set_meta("escalas", config.get("escalas", {}))
 	skeleton.add_child(simulator)
 	for entry: Array in COLLIDERS:
 		if skeleton.find_bone(entry[0]) >= 0:
@@ -90,7 +92,7 @@ static func refit(simulator: SpringBoneSimulator3D, body: MeshInstance3D) -> voi
 			var mine := _local(points, owners, skeleton.find_bone(shape.bone_name), frame)
 			if mine.size() >= 4:
 				_fit(shape, mine, frame, simulator.get_meta("percentil"))
-	var grow := globals[skeleton.find_bone(simulator.get_root_bone_name(0))].basis.get_scale().x  # el pelo crece con la cabeza
+	var grow := _scale(simulator, skeleton, globals, skeleton.find_bone(simulator.get_root_bone_name(0)))  # crece con la cabeza
 	for entry: Array in STRIPS:
 		if skeleton.find_bone(entry[0]) >= 0:
 			_strip(simulator, skeleton, entry, points, owners, globals, grow)
@@ -104,7 +106,7 @@ static func refit(simulator: SpringBoneSimulator3D, body: MeshInstance3D) -> voi
 static func _strip(simulator: SpringBoneSimulator3D, skeleton: Skeleton3D, entry: Array, points: PackedVector3Array,
 		owners: PackedInt32Array, globals: Array[Transform3D], grow: float) -> void:
 	var bone := skeleton.find_bone(entry[0])
-	var k := globals[bone].basis.get_scale().x  # Proporción: con Altura 0,65 la tira también es más pequeña
+	var k := _scale(simulator, skeleton, globals, bone)  # Proporción: con Altura 0,65 la tira también es más pequeña
 	var step: float = STRIP["paso"] * k
 	var radius: float = STRIP["radio"] * k
 	var skin: float = STRIP["piel"] if entry.size() < 4 else lerpf(entry[3], STRIP["piel"], clampf((grow - 1.0) * 2.0, 0.0, 1.0))
@@ -213,6 +215,11 @@ static func _distance(skeleton: Skeleton3D, shape: SpringBoneCollision3D, global
 		var half: float = shape.height * 0.5 - shape.radius
 		return point.distance_to(place.origin + axis * clampf((point - place.origin).dot(axis), -half, half)) - shape.radius
 	return point.distance_to(place.origin) - shape.radius
+
+
+## Escala de un hueso: la del ajuste «escalas» si la tiene (paso PE.5).
+static func _scale(simulator: SpringBoneSimulator3D, skeleton: Skeleton3D, globals: Array[Transform3D], bone: int) -> float:
+	return simulator.get_meta("escalas").get(skeleton.get_bone_name(bone), globals[bone].basis.get_scale().x)
 
 
 ## Marco de un hueso sin la escala.

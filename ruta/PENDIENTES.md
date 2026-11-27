@@ -10,4 +10,5 @@
 | D36 | ¿Lo nuestro sale CC0 y se publica también como pack suelto? (recomendado: sí) | `propuestas/expansion_v2.md` §7 |
 | D39 | ¿Se pueden descargar peinados y armas CC0 (Quaternius, Micket, KayKit), uno a uno y con la licencia comprobada? Necesita tu permiso de red | `propuestas/expansion_v2.md` §5.3 |
 | 9.8, 9.8b | Juicio visual de las visemas y de la boca abierta oscura (hoja de `capturar_expresiones.gd`, tras regenerar los datos) | `pruebas/capturas/expresiones/` |
+| PE.5 | Aplazado a una versión más adelantada (2026-11-26): abrir `heroe.tscn` (exportado con long01) en un proyecto de Godot vacío, sin y con BoneMap: ¿abre sin errores?, ¿el pelo se mueve como en el editor? | `ruta/pasos/PE.5_exportar_pelo.md` §8 |
 | 9.7 | Juicio visual de las expresiones (hoja de 9.7.0, tras regenerar los datos) y del programa | `pruebas/capturas/expresiones/` y la lista «Expresión» de la barra |

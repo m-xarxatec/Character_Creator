@@ -4,9 +4,12 @@ extends SceneTree
 # Sin ventana.
 # Uso: (ulimit -v 4000000; timeout 300 godot --headless --path pruebas/godot -s probar_piezas.gd 2>&1 | grep -E 'FALLO|MEDIDA|RESULTADO|ERROR')
 # Que detecta el fallo: en BodyPiece.follow, quitar ShapeWeights.apply -> falla «las mallas siguen a weight».
-# Paso PE.4b: un peinado que cuelga lleva cadenas y simulador; poner y quitar con un clip y en ROM sin errores; el .glb
-# sin huesos de pelo, igual que sin cadenas, y pasa CharacterChecks. Que detecta el fallo: en CharacterBaker._read_mesh,
-# quitar el paso de los binds de cadena a la cabeza -> falla «PE.4b: la piel del peinado exportado apunta a huesos que existen».
+# Paso PE.4b: un peinado que cuelga lleva cadenas y simulador; poner y quitar con un clip y en ROM sin errores.
+# Paso PE.5: el .glb lleva los mismos x_pelo_* que el editor y la piel del peinado apunta a ellos; en pose A, igual que
+# sin cadenas; pasa CharacterChecks. Que detecta el fallo: volver al CharacterBaker de PE.4b (sin cadenas y sus binds a
+# la cabeza) -> falla «PE.5: el .glb lleva los huesos de pelo del editor» (solo el `break`: la exportación se rompe).
+# Exportar con bob02 deja también la .tscn (HairScene); con el rapado, no. Que detecta el fallo: en
+# BodyView.finish_export, no llamar a HairScene.save -> falla «PE.5: exportar con bob02 deja .glb, .tres y .tscn».
 
 ## Paso RE.1b: peinados de Quaternius.
 const MeshBaker := preload("res://../../godot/addons/creador/mesh_baker.gd")
@@ -748,6 +751,7 @@ func _check_hair_physics(main: Control, view) -> void:
 	check("PE.4b: bob02 lleva simulador y cadenas", simulator != null and simulator.get_parent() == skeleton
 		and skeleton.get_bone_count() > base, "%d huesos" % skeleton.get_bone_count())
 	_check_hair_export(view, skeleton, key, base)
+	check("PE.5: exportar con bob02 deja .glb, .tres y .tscn", _exported_files(view) == [true, true, true])
 	var reports: Array[Dictionary] = view.check_report()
 	var errors := reports.filter(func(r: Dictionary) -> bool: return r["nivel"] == "error")
 	check("PE.4b: con cadenas, el informe no tiene errores", errors.is_empty(), str(errors.map(func(r: Dictionary) -> String: return r["id"])))
@@ -769,11 +773,23 @@ func _check_hair_physics(main: Control, view) -> void:
 	view.set_piece("quaternius", "hair_buzzed", true)
 	check("PE.4b: el rapado no lleva cadenas", view.hair_physics.is_empty() and skeleton.get_bone_count() == base,
 		"%d huesos" % skeleton.get_bone_count())
+	check("PE.5: exportar con el rapado no deja .tscn", _exported_files(view) == [true, true, false])
 	view.set_piece("quaternius", "hair_buzzed", false)
 
 
-## El .glb sin huesos de pelo; en pose A, el peinado como el mismo sin cadenas (pasar los pesos de la cadena a la cabeza
-## es exacto). En pose T solo se mide: las puntas que pesaban algo en el hombro ya no suben con él (siguen a la cabeza).
+## Paso PE.5: exporta con el editor y dice qué hay: [.glb, .tres, .tscn]; luego los borra.
+func _exported_files(view) -> Array:
+	var path := OS.get_user_data_dir().path_join("pe5_prueba.glb")
+	view.export_glb(path)
+	var found := []
+	for file: String in [path, path.get_basename() + ".tres", path.get_basename() + ".tscn"]:
+		found.append(FileAccess.file_exists(file))
+		DirAccess.remove_absolute(file)
+	return found
+
+
+## Paso PE.5: el .glb con los huesos de pelo del editor (nombre y padre) y la piel del peinado en ellos; en pose A, el
+## peinado como el mismo sin cadenas. En pose T solo se mide la distancia.
 func _check_hair_export(view, skeleton: Skeleton3D, key: String, base: int) -> void:
 	var baker: GDScript = load(ProjectSettings.globalize_path("res://").path_join("../../godot/addons/creador/character_baker.gd").simplify_path())
 	var plain: MeshInstance3D = BodyPiece.attach(view.library.load_piece("makehuman", "bob02"), skeleton)
@@ -791,14 +807,21 @@ func _check_hair_export(view, skeleton: Skeleton3D, key: String, base: int) -> v
 		var pose := "T" if t_pose else "A"
 		print("  MEDIDA PE.4b: en pose %s, el peinado exportado con cadenas a %.4f mm de sin ellas" % [pose, worst * 1000.0])
 		if t_pose:
-			check("PE.4b: el .glb no lleva huesos de pelo", a_skeleton.get_bone_count() == base, "%d" % a_skeleton.get_bone_count())
+			var family := func(s: Skeleton3D) -> Array:  # [hueso, padre] de cada x_pelo_*
+				return range(s.get_bone_count()).filter(func(b: int) -> bool: return s.get_bone_name(b).begins_with("x_pelo_")).map(
+					func(b: int) -> Array: return [s.get_bone_name(b), s.get_bone_name(s.get_bone_parent(b))])
+			check("PE.5: el .glb lleva los huesos de pelo del editor", a_skeleton.get_bone_count() > base
+				and family.call(a_skeleton) == family.call(skeleton), "%d" % a_skeleton.get_bone_count())
 			var hair_skin: Skin = (a_skeleton.get_child(1) as MeshInstance3D).skin
 			var valid: bool = hair_skin != null and hair_skin.get_bind_count() == (view.pieces[key] as MeshInstance3D).skin.get_bind_count()
+			var on_chain := 0
 			for i in hair_skin.get_bind_count() if hair_skin != null else 0:
-				valid = valid and hair_skin.get_bind_bone(i) >= 0 and hair_skin.get_bind_bone(i) < a_skeleton.get_bone_count()
-			check("PE.4b: la piel del peinado exportado apunta a huesos que existen", valid)
+				var bone := hair_skin.get_bind_bone(i)
+				valid = valid and bone >= 0 and bone < a_skeleton.get_bone_count()
+				on_chain += int(valid and a_skeleton.get_bone_name(bone).begins_with("x_pelo_"))
+			check("PE.5: la piel del peinado exportado apunta a huesos que existen, también x_pelo_*", valid and on_chain > 0, "%d" % on_chain)
 		else:
-			check("PE.4b: exportar con cadenas da lo mismo que sin ellas (pose A)", a.size() == b.size()
+			check("PE.5: exportar con cadenas da lo mismo que sin ellas (pose A)", a.size() == b.size()
 				and worst * 1000.0 <= 0.1, "%.4f mm" % (worst * 1000.0))
 		with_chains.free()
 		without.free()

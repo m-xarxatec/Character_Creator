@@ -46,6 +46,7 @@ const CharacterBox := preload("character_box.gd")
 const SettingsFile := preload("settings_file.gd")
 const FloorShadow := preload("floor_shadow.gd")
 const ZoneRay := preload("zone_ray.gd")
+const HairScene := preload("../addons/creador/hair_scene.gd")  # paso PE.5
 const PackLibrary := preload("../addons/creador/pack_library.gd")  # paso AB.4
 const BodyPiece := preload("../addons/creador/body_piece.gd")
 const HairChains := preload("../addons/creador/hair_chains.gd")  # paso PE.4b
@@ -252,12 +253,23 @@ func export_glb(path: String, use_cache := true) -> Error:
 ## OPT.3a: con las formas de la caché de la vista; use_cache = false las pide a la malla (para comparar en las pruebas).
 func start_export(use_cache := true) -> Dictionary:
 	var cache: Variant = style.shape_cache() if use_cache and style != null else null
-	return GlbExporter.start(species.mesh, species.skeleton, species.manifest["bones"]["sockets"], true, pieces.values(),
+	var job := GlbExporter.start(species.mesh, species.skeleton, species.manifest["bones"]["sockets"], true, pieces.values(),
 		accessories.values(), eyes, species.eyes, cache)  # AC.6b: con los ojos
+	job["hair"] = HairScene.read(hair_physics.values()[0]) if not hair_physics.is_empty() else {}  # PE.5: un solo peinado
+	return job
 
 
+## Paso PE.5: con un peinado con cadenas, también <archivo>.tscn con la física del pelo (HairScene).
 func finish_export(job: Dictionary, path: String) -> Error:
-	return GlbExporter.write(GlbExporter.finish(job), job["toon"], path)
+	var character := GlbExporter.finish(job)
+	var hair: SpringBoneSimulator3D = HairScene.measure(job["hair"], character) if character and job["hair"] else null
+	var skeleton_path := "Armature/" + String(character.find_children("*", "Skeleton3D", true, false)[0].name) if hair else ""
+	var error := GlbExporter.write(character, job["toon"], path)
+	if hair:
+		if error == OK:
+			error = HairScene.save(hair, path, skeleton_path)
+		hair.free()
+	return error
 
 
 ## Informe del banco de pruebas (paso 5.4): comprobaciones del personaje que se exporta y, si hay una pose fija o un

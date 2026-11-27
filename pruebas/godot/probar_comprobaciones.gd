@@ -153,6 +153,23 @@ func _check_broken() -> void:
 	found = _errors(checks.run(species.scene, species.manifest))
 	check("roto 5 (personaje vivo): sin_formas da error", found.has("sin_formas"), str(found.keys()))
 
+	# Paso PE.5: 3 x_pelo_0_* bajo Head son sanos y no cuentan en el presupuesto; roto 6: x_pelo_0_0 bajo Hips
+	for parent: String in ["Head", "Hips"]:
+		character = _neutral()
+		skeleton = character.find_children("*", "Skeleton3D", true, false)[0]
+		for j in 3:
+			skeleton.add_bone("x_pelo_0_%d" % j)
+			skeleton.set_bone_parent(skeleton.get_bone_count() - 1, skeleton.find_bone(parent) if j == 0 else skeleton.get_bone_count() - 2)
+		var results: Array[Dictionary] = checks.run(character, species.manifest)
+		found = _errors(results)
+		var budget: String = results.filter(func(r): return r["id"] == "presupuesto")[0]["texto"]
+		if parent == "Head":
+			check("sano con cadena: todo bien y el presupuesto cuenta 56 huesos", found.is_empty() and " 56 huesos" in budget, str(found) + budget)
+		else:
+			check("roto 6 (x_pelo_0_0 bajo Hips): solo huesos_del_perfil, y lo nombra",
+				found.keys() == ["huesos_del_perfil"] and found["huesos_del_perfil"] == PackedStringArray(["x_pelo_0_0"]), str(found))
+		character.free()
+
 
 func _report_missing_profile_bones() -> void:
 	var profile := SkeletonProfileHumanoid.new()

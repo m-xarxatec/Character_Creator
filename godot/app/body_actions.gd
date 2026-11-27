@@ -296,7 +296,8 @@ func _export_done(path: String, error: Error) -> void:
 	export_button.text = "Exportar .glb"
 	export_button.disabled = false
 	if error == OK:
-		_tell("Exportar .glb", "Guardado:\n%s\n%s" % [path, path.get_basename() + ".tres"])
+		_tell("Exportar .glb", "Guardado:\n%s\n%s%s" % [path, path.get_basename() + ".tres",  # PE.5: y la física del pelo
+			"" if view.hair_physics.is_empty() else "\n" + path.get_basename() + ".tscn"])
 	else:
 		_tell("Exportar .glb", "No se pudo exportar a\n%s\n(error %d: %s)" % [path, error, error_string(error)])
 

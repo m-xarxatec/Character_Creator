@@ -9,6 +9,7 @@ extends SceneTree
 # --piezas) se exigen las 8, con textura y sin shader, y la bolsa del cuerpo detrás del ojo; y además se comparan los
 # valores de serie y las constantes de eye_texture.gd con el texto de eye_layers.gdshader y eye_line.gdshader.
 #   godot --headless --path pruebas/godot -s probar_glb.gd -- "$PWD/pruebas/godot/salida/glb_piezas" --piezas=4 --rigidas=2 --ojos
+# Paso PE.5: admite huesos de pelo x_pelo_* que cuelgan de Head o de otro x_pelo_*; con --pelo exige al menos uno.
 # El autorrelleno del BoneMap solo existe en la ventana del editor; aqui se comprueba lo que necesita
 # para salir todo en verde: cada hueso con el nombre y el padre del SkeletonProfileHumanoid.
 
@@ -22,6 +23,7 @@ var pose_a := "--pose-a" in OS.get_cmdline_user_args()  # variante en pose A del
 var piece_count := _int_arg("--piezas=")  # -1 = sin modo piezas
 var rigid_count := _int_arg("--rigidas=")
 var with_eyes := "--ojos" in OS.get_cmdline_user_args()  # paso AC.6b
+var with_hair := "--pelo" in OS.get_cmdline_user_args()  # paso PE.5
 # Las formas VRM que puede llevar el .glb: las de blender/expresiones.json, en su orden (9.7.3 y 9.8).
 var EXPRESSIONS: Array = preload("recetas_expresiones.gd").vrm_names(ProjectSettings.globalize_path("res://").path_join("../..").simplify_path())
 
@@ -108,12 +110,26 @@ func _check_profile(skel: Skeleton3D) -> void:
 		if actual != parent:
 			wrong_parent.append("%s (padre %s, se esperaba %s)" % [bone, actual, parent])
 	var extra: PackedStringArray = []
+	var hair := 0
 	for i in skel.get_bone_count():
-		if profile.find_bone(skel.get_bone_name(i)) < 0:
+		var parent := skel.get_bone_name(skel.get_bone_parent(i)) if skel.get_bone_parent(i) >= 0 else ""
+		if skel.get_bone_name(i).begins_with("x_pelo_") and (parent == "Head" or parent.begins_with("x_pelo_")):
+			hair += 1
+		elif profile.find_bone(skel.get_bone_name(i)) < 0:
 			extra.append(skel.get_bone_name(i))
-	check("estan los 56 huesos del perfil (paso 9.3: con ojos y mandibula)", missing.is_empty() and skel.get_bone_count() == 56, ", ".join(missing))
+	check("estan los 56 huesos del perfil (paso 9.3: con ojos y mandibula)", missing.is_empty() and _body_bones(skel) == 56, ", ".join(missing))
+	if with_hair:
+		check("lleva huesos de pelo x_pelo_* (paso PE.5)", hair > 0)
 	check("no hay huesos que el perfil no conozca", extra.is_empty(), ", ".join(extra))
 	check("cada hueso tiene el padre que pide el perfil", wrong_parent.is_empty(), ", ".join(wrong_parent))
+
+
+## Huesos que no son de pelo (paso PE.5).
+func _body_bones(skel: Skeleton3D) -> int:
+	var count := 0
+	for i in skel.get_bone_count():
+		count += int(not skel.get_bone_name(i).begins_with("x_pelo_"))
+	return count
 
 
 func _check_t_pose(skel: Skeleton3D) -> void:
@@ -211,7 +227,7 @@ func _check_piece(piece: MeshInstance3D, skel: Skeleton3D) -> void:
 	check("%s: tiene piel" % piece.name, piece.skin != null)
 	if piece.skin == null:
 		return
-	check("%s: usa el esqueleto de 56 huesos" % piece.name, piece.get_node_or_null(piece.skeleton) == skel and skel.get_bone_count() == 56)
+	check("%s: usa el esqueleto de 56 huesos" % piece.name, piece.get_node_or_null(piece.skeleton) == skel and _body_bones(skel) == 56)
 	_check_binds(piece, skel)
 	var mesh: Mesh = piece.mesh
 	check("%s: una sola superficie y sin formas sueltas (solo expresiones VRM)" % piece.name, mesh.get_surface_count() == 1
