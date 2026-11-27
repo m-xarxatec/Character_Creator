@@ -1,0 +1,46 @@
+{
+ "formato": "gamemolde-pack",
+ "version": 1,
+ "id": "claude_colas",
+ "nombre": "Colas (pruebas)",
+ "autor": "GameMolde",
+ "licencia": "propia",
+ "origen": "",
+ "piezas": [
+  {
+   "id": "colas_kitsune",
+   "nombre": "Nueve colas de kitsune",
+   "archivo": "colas_kitsune.glb",
+   "sha256": "44d600e75c631f8a80e10935e0f56c89023ebc58a34fc124bd6466c2b2e42a27",
+   "tipo": "accesorio",
+   "ranura": "accesorio",
+   "especies": [
+    "humana"
+   ],
+   "colores": [
+    "principal"
+   ],
+   "color": [
+    0.96,
+    0.92,
+    0.92
+   ],
+   "sigue_al_cuerpo": true,
+   "fisica": [],
+   "miniatura": "",
+   "anclaje": {
+    "hueso": "",
+    "transform": [
+     0,
+     0,
+     0,
+     0,
+     0,
+     0,
+     1,
+     1
+    ]
+   }
+  }
+ ]
+}

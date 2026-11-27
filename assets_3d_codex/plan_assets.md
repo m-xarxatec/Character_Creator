@@ -48,6 +48,7 @@ dedos y la curva del pie; eso ya no se acepta.
 7. **Revisión propia** antes de enseñarlo: un visor rápido (render ortográfico con las caras traseras en rojo) para cazar
    caras al revés y huecos; luego, pack a `user://packs` y abrir el editor para el responsable.
 Ejemplos: `generar_zapatillas_futuristas.py` (todo desde cero), `generar_zapatillas.py` (zapatilla alta, suela doble),
+`generar_botas_futuristas.py` (líneas sobre la superficie exacta con `project`, correa en relieve, puño, plataforma con hendidura),
 `generar_botas.py` (caña alta con arrugas, acero y correas).
 
 ## Assets
@@ -77,6 +78,10 @@ Ejemplos: `generar_zapatillas_futuristas.py` (todo desde cero), `generar_zapatil
 | Guanteletes de garras de dragón | Aprobados | `claude_guanteletes/`; la piel de la mano y del final del antebrazo copiada e hinchada (pesos y formas por índice: crece con las manos), con grosor. **Más grandes que la mano**: dorso y palma 8 mm, dedos 6 mm (nunca más de 0,45 × el hueco con el dedo de al lado), puño acampanado de 2 a 3,2 cm (tapa el anillo de muñeca del EVA); surco en cada nudillo. `SIZE` escala todo lo grande a la vez. Garras rígidas con la última falange (curvadas hacia la palma; la del pulgar, hacia el índice), escudo con cresta y chevrón en el dorso (rígidos con la mano), correas en X y muñequera con bloque. Ranura `accesorio` (va encima de cualquier ropa). Zonas en `COLOR_0`: r = 1 correas y escudo, g = 1 garras. 56 formas, 5,4 MB |
 | Zapatillas altas negras | Aprobadas (rehechas con horma) | `claude_zapatillas_altas/`; **horma propia** (`claude_zapatillas_futuristas/horma.py`, ver Q), no la piel: no se notan los dedos ni la curva del pie. Grandes, estilo VTuber: caña hasta 10 cm sobre el tobillo; puntera alta para asomar sobre la suela. **Suela doble** (pared de 6 cm, sube en la punta) con franja; puntera de goma en arco, en relieve con canto; lengüeta bajo los cordones que asoma sobre la boca; 7 pares de ojales de metal sobre la línea central con cordones cruzados; 2 ojales de ventilación por dentro; tira detrás. **Sin el parche de la estrella** (logotipo de una marca). Ranura `ropa_pies`, sin `cubre`. Zonas en `COLOR_0`: r = 1 goma, g = 1 cordones, r = g = 1 ojales, b = 1 franja. Pesos y formas de la piel cercana; hueco mínimo 4,9 mm; 27 formas, 8,8 MB |
 | Zapatillas futuristas | Aprobadas (el responsable: «perfectas») | `claude_zapatillas_futuristas/`; **forma sacada del plano, no de la piel del pie**: horma propia (caja del pie de sección supereléptica con punta redonda y talón recto, unida en suave a una caña elíptica que se estrecha arriba), medida sobre el cuerpo solo para la holgura (hueco mínimo 6,4 mm; caña a ~1,6 cm); malla con rayos desde un eje que baja por la pierna y se curva hasta la punta. Paneles negros en relieve (1,6 mm, con canto) recortados de la horma: cuello acolchado, talón, galón lateral, ojales y dos franjas en diagonal; lengüeta con pestaña rosa, 5 pares de cordones cruzados, correa con hebilla en el tobillo. Suela de plataforma: cuña blanca con ranura, base negra con tacos que suben, puntera, franjas y planta rosas. Tirador y pestaña rosas detrás, triángulo (adorno genérico) a cada lado y en la lengüeta. Ranura `ropa_pies`, sin `cubre`. Zonas en `COLOR_0`: (0,0,0) negro, r = 1 blanco, g = 1 rosa, b = 1 metal, r = g = 1 cordones. Pesos y formas de la piel cercana; 27 formas, 10,3 MB |
+| Botas futuristas | Aprobadas (el responsable: «perfectas») | `claude_botas_futuristas/`; **horma propia** (ver Q): botín con caña hasta y = 0,205 a ~1,2 cm de la pierna (tablas de las botas medievales), puntera ancha y alta; la planta de la horma sube a y = 0,019 (queda dentro de la suela). **Sin el tacón del plano** (decidido por el responsable): plataforma plana con tacos abajo y una hendidura en el arco que separa el bloque del talón. Puño de tela arrugado que tapa la boca (hueco a la pierna 5,9 mm). En relieve: banda oscura en cada lado y X delante; correa del tobillo (anillo) con hebilla y triángulo rosa; correa del empeine (relieve más alto, de suela a suela) con hebilla fuera; «///» fuera. Neón rosa: barra delante, tres tiras en el talón y cuña en el arco. Las líneas se proyectan sobre la superficie exacta de la horma (gradiente de su campo), no con los vecinos de la rejilla. Ranura `ropa_pies`, sin `cubre`. Zonas en `COLOR_0`: (0,0,0) crema, r = 1 oscuro, g = 1 rosa, b = 1 metal, r = g = 1 puño, r = b = 1 suela. Pesos y formas de la piel cercana; hueco mínimo 8,4 mm; 27 formas, 10,3 MB |
+| Chaqueta cyberpunk | Aprobada | `claude_chaqueta_cyber/`; parte de la chaqueta del traje rosa (`generar_chaqueta.py`: piel copiada e hinchada, pesos y formas por índice). Corta (bajo a y = 1,06 detrás, 1,09 delante) y **abierta delante** (sin la piel de \|x\| < 7 cm; cuello, abertura y bajo son un solo borde, alisado sobre su plano). Forro rosa. Mangas globo desde el antebrazo (+6 cm) que se recogen en un puño acanalado de 6 cm con franja rosa. Capucha bajada grande, de pie alrededor del cuello, con forro rosa (sobre el arco del cuello: abierta delante). Cremalleras en los bordes; correas rosas del hombro al bajo que **cuelgan 11 cm** (hasta la cadera, decidido por el responsable) con hebilla de clip y puntera, y dos cintas detrás; cinturón en el pecho que cruza la abertura (a ≥ 8 mm de la piel con el pecho al máximo) con hebilla y dos anillas. Bolsillo cargo rígido con solapa y X en cada antebrazo; **kanji 東京** en relieve en la manga izquierda (único dibujo, decidido por el responsable). Ranura `ropa_exterior`. Zonas en `COLOR_0`: (0,0,0) negro, r = 1 rosa, g = 1 metal, b = 1 kanji, r = g = 1 puños, r = b = 1 plástico. Hueco a la piel ≥ 0,7 mm (en el borde del cuello, bajo la capucha). 257 formas, 8,4 MB |
+| Alas demoníacas | Aprobadas (pendiente R: deslizadores de tamaño, ubicación y postura) | `claude_alas/`; **pequeñas** (35 cm de la espalda a la punta) y **abiertas** (decidido por el responsable): a los lados, 30° hacia atrás, plano inclinado 10°; envergadura hasta x = ±0,34. Silueta medida en el plano: base (placa hundida 1,2 cm en la espalda que sale 3 cm: asoma sobre la ropa), hueso del brazo hasta la muñeca con nudillo, borde de ataque hasta la punta y tres dedos (tubos que se estrechan); membrana con grosor y borde de salida en arcos; el ala se curva hacia atrás a la punta. Raíces en x = ±5,5 cm, y = 1,24; a 10,4 cm del brazo y 24 cm de la cabeza. Ranura `accesorio`. 100 % `UpperChest`; cada ala, entera con su raíz (36 formas), 2,0 MB. Zonas en `COLOR_0`: (0,0,0) membrana, r = 1 hueso y base. Tamaño, ubicación y postura con deslizadores: ver R |
+| Nueve colas de kitsune | Aprobadas (el responsable: «perfectas»; pendientes S y T) | `claude_colas/`; del tamaño del plano (decidido por el responsable): 52–62 cm, abanico **simétrico** (decidido por el responsable: en remolino parecían girar; la de arriba recta, las de arriba y los lados caen hacia fuera, las de abajo se abren lejos de las piernas) de x = ±0,69 e y = 0,46 a 1,56, hasta 42 cm detrás. Nacen juntas en el coxis (y = 0,95, hundidas 2 cm), salen hacia atrás enseguida (hueco mínimo al cuerpo 1,2 cm) y se abren; las de abajo pasan detrás de las piernas (al andar pueden cruzarlas; ver T). **Muy fur** (decidido): núcleo en lágrima cubierto de mechones aplanados en punta hacia la punta de la cola, solapados como escamas y abiertos en la punta (borde dentado). Punta roja: zona propia, cada mechón cambia a una altura algo distinta (borde en llamas). Ranura `accesorio`. 100 % `Hips`; todas enteras con su raíz, solo las formas que mueven la raíz ≥ 8 mm (19 formas), 10,2 MB. Zonas en `COLOR_0`: (0,0,0) blanco, r = 1 rojo. Pelo suave por capas: ver S; deslizadores y movimiento: ver T |
 | (siguiente) | — | — |
 
 ## Pendiente: se hace en el propio asset (sin tocar el núcleo)
@@ -259,6 +264,37 @@ correas pasan a ir a 2–3 mm del pelo aplastado. Necesita el núcleo.
 Hoy las botas (`ropa_pies`) no quitan nada y un pantalón holgado (`ropa_piernas`) asoma a través de la caña. La forma correcta:
 cuando se llevan los dos, la pernera se estrecha por debajo de la boca de la caña hasta quedar dentro de la bota (en CPU, como
 la gorra con B: los vértices de la pernera bajo la boca se acercan a la piel hasta 2–3 mm menos que el cuero). Necesita el núcleo.
+
+### R. Alas demoníacas: tamaño y ubicación con deslizadores (pedido por el responsable; no hecho)
+
+Hoy salen pequeñas (~35 cm cada una) y fijas. Se quieren deslizadores propios de la pieza, visibles cuando está puesta:
+- **Tamaño**: un deslizador que las agranda y las encoge (p. ej. de ×0,5 a ×2), creciendo desde su raíz.
+- **Ubicación**: sus propios deslizadores para moverlas por la espalda (p. ej. altura, separación entre las dos y
+  cuánto se hunden o salen), sin despegarse del cuerpo.
+- **Postura**: hoy van abiertas (decidido por el responsable). Un deslizador para abrirlas y plegarlas, o huesos propios
+  (base, muñeca y dedos de cada ala) para posarlas y animarlas; con huesos, el `.glb` exportado los llevaría colgando de
+  `UpperChest`.
+Cómo: lo mismo que H (deslizadores de la pieza en `pack.json`, que el núcleo respete, la interfaz muestre y el proyecto
+guarde). Para el tamaño, formas propias `alas_mas` / `alas_menos` (cada vértice se aleja o acerca a la raíz de su ala) o
+escala en CPU. La ubicación cabe mejor en CPU: mover cada ala rígida (son 100 % `UpperChest`) y volver a apoyar la raíz
+en la piel de su nuevo sitio. Necesita el núcleo.
+
+### S. Pelo suave por capas («shell fur») para las colas y lo peludo (idea propuesta; no hecho)
+
+Hoy el «fur» de las colas es pelo esculpido (mechones de geometría): da la silueta, pero no el pelo suave ni el
+degradado blanco → rojo del plano (las zonas son de un color). La mejora, en el núcleo: un shader de pelo por capas
+(la pieza se dibuja N veces, cada capa algo hinchada por su normal, y en cada una solo se ven los «pelos» de una textura
+de ruido, más finos hacia fuera), con el color de la raíz a la punta por la coordenada a lo largo de la cola (o un
+`COLOR_1`). Va encima del pelo esculpido. Coste: N pasadas de dibujo; en PC bien, en Android con pocas capas o sin
+ellas. Necesita el núcleo (shader, material por pieza y una textura de ruido con licencia limpia o generada).
+
+### T. Nueve colas: deslizadores y movimiento predefinido (pedido por el responsable; no hecho)
+
+- **Deslizadores**, como las alas (R): tamaño (crecen desde la raíz) y ubicación en el cuerpo.
+- **Movimiento predefinido** (no lo controla el usuario): un vaivén propio en bucle, cada cola con su fase, que se ve
+  en el editor y sale con el personaje (huesos propios de cada cola colgando de `Hips` con su animación, o un
+  movimiento en el shader de vértices). Como I con los tentáculos. Las de abajo pasan por detrás de las piernas: con
+  el movimiento, que se aparten de ellas al andar. Necesita el núcleo.
 
 ## Ficha de integración (para cuando se metan en el proyecto)
 
