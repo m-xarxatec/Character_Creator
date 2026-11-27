@@ -24,7 +24,7 @@ const CELL := 0.05
 const HEM := 0.025
 const HAND_BONES := ["Hand", "Thumb", "Index", "Middle", "Ring", "Little"]
 const VISIBLE_MAX := 0  # PROVISIONAL (2026-11-27): vértices visibles en el editor; el objetivo de la fase
-const ASOMA_MAX := 30.0  # PROVISIONAL (2026-11-27): % de la piel tapada que asoma; medido 28,3 % (traje: 23,9 % ya en neutro), 19,1 % sin él
+const ASOMA_MAX := 30.0  # aprobado (2026-11-27): % de la piel tapada que asoma; medido 28,3 % (traje: 23,9 % ya en neutro), 19,1 % sin él
 const WORST := 5
 
 var failures := 0
