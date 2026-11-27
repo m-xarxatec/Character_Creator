@@ -3,9 +3,10 @@
 Uso:  python generar_botas.py   (en Linux: ~/.venvs/gamemolde_assets/bin/python generar_botas.py; numpy y scipy)
 Escribe packs/claude_botas/: botas_medievales, el par en **una sola pieza**, ranura «ropa_pies» (no quita nada: van
 con shorts, mallas y trajes ceñidos; un pantalón holgado asomará, ver P en plan_assets.md).
-- Cuero: la piel de la pantorrilla y del pie copiada e hinchada (pesos y formas por índice: sigue a cualquier edición
-  del cuerpo), con grosor. Caña hasta 4 cm bajo la rodilla, a 9 mm de la piel y con arrugas abajo; pie a 6 mm, puntera
-  1,5 cm más larga que los dedos y dedos alisados. Suela que sobresale 4 mm, con tacón detrás.
+- Cuero: una horma propia (../claude_zapatillas_futuristas/horma.py), **no la piel**: no se notan los dedos ni la curva
+  del pie. Caña hasta 4 cm bajo la rodilla, sección elíptica que sigue la pantorrilla medida + 1 cm, con arrugas abajo;
+  pie a 7–9 mm, puntera 1,7 cm más larga que los dedos. Pesos y formas, de la piel más cercana (sigue a cualquier
+  edición del cuerpo). Suela que sobresale 4 mm, con tacón detrás.
 - Acero (rígido con su hueso; las formas, de la piel de debajo): espinillera con cresta y punta arriba, que acaba bajo
   la rodilla (decidido por el responsable), con remaches; empeine de tres láminas (pie y dedos).
 - Correas con hebilla: dos arriba, una a media caña, una en el tobillo y una por debajo del pie.
@@ -17,21 +18,20 @@ import numpy as np
 from scipy.spatial import cKDTree
 
 HERE = Path(__file__).parent
-for d in ("claude_sudadera", "claude_traje", "claude_casco", "claude_eva"):
+for d in ("claude_sudadera", "claude_traje", "claude_casco", "claude_eva", "claude_zapatillas_futuristas"):
     sys.path.insert(0, str(HERE.parent / d))
 import generar_sudadera as sud
 import generar_traje as tr
 import generar_casco as casco
 import generar_eva as eva
+import horma
 
 OUT = HERE / "packs" / "claude_botas"
 PID = "botas_medievales"
 
 # --- medidas (metros); t: a lo largo de la pierna, 0 rodilla y 1 tobillo ---
 TOP_T = 0.10                                # boca de la caña (unos 4 cm bajo la rodilla)
-OFF_SHAFT, OFF_FOOT, OFF_UNDER = 0.009, 0.006, 0.003
-THICK = 0.003                               # grosor del cuero
-TOE_EXTRA = 0.015                           # la puntera, más larga que los dedos
+THICK, LINING_ROWS = 0.003, 32             # grosor del cuero; forro: solo lo que se ve por la boca
 FOLD_AMP, FOLD_STEP, FOLD_T = 0.0035, 0.028, (0.42, 0.86)
 SOLE_OUT, SOLE_Y0, SOLE_H, HEEL_H = 0.004, -0.004, 0.012, 0.012
 GREAVE_T = (0.15, 0.90)                     # espinillera (la punta de arriba sube 3 cm más)
@@ -71,85 +71,56 @@ def side_of(p, s):
     return np.sign(p[:, 0]) == SIDES[s]
 
 
-# ---------------- 1. cuero ----------------
-def select_region():
-    keep = np.zeros(len(P0), bool)
-    for s in SIDES:
-        keep |= side_of(P0, s) & (np.abs(P0[:, 0]) > 0.01) & (leg_t(P0, s) > TOP_T) & (LOWER_W + FOOT_W > 0.5)
-    faces = F0[keep[F0].all(1)]
-    verts = np.unique(faces)
-    remap = -np.ones(len(P0), int); remap[verts] = np.arange(len(verts))
-    return verts, remap[faces]
+# ---------------- 1. cuero: la horma ----------------
+# pierna izquierda medida por rodajas (centro y medio ancho de cada una); la caña, + 1 cm
+_LY = [0.08, 0.11, 0.14, 0.17, 0.20, 0.23, 0.26, 0.29, 0.32, 0.35, 0.38, 0.41, 0.44]
+_LX = [0.1856, 0.1851, 0.1836, 0.1807, 0.1776, 0.1744, 0.1712, 0.1682, 0.1663, 0.1642, 0.1621, 0.1577, 0.1512]
+_LZ = [0.0252, 0.0181, 0.0141, 0.0125, 0.0111, 0.0097, 0.0080, 0.0071, 0.0064, 0.0071, 0.0088, 0.0117, 0.0199]
+_HX = [0.0268, 0.0250, 0.0270, 0.0312, 0.0366, 0.0420, 0.0474, 0.0522, 0.0557, 0.0565, 0.0561, 0.0540, 0.0524]
+_HZ = [0.0470, 0.0379, 0.0371, 0.0386, 0.0420, 0.0455, 0.0490, 0.0524, 0.0554, 0.0566, 0.0573, 0.0564, 0.0556]
+GAP_SHAFT = 0.010
+_g = LEG["Left"]
+Y_TOP = float(_g["knee"][1] + _g["dir"][1] * TOP_T * _g["len"])
 
 
-def offsets(idx, v, nrm):
-    fw = FOOT_W[idx]
-    off = np.full(len(v), OFF_SHAFT)
-    for s in SIDES:
-        m = side_of(v, s)
-        t, a = leg_t(v[m], s), leg_angle(v[m], s)
-        g = LEG[s]
-        win = eva.smoothstep((t - FOLD_T[0]) / 0.08) * eva.smoothstep((FOLD_T[1] - t) / 0.08)
-        amp = FOLD_AMP * (0.5 + 0.5 * (1 - np.cos(a)) / 2)           # más arrugas detrás y en los lados
-        fold = amp * win * (0.5 + 0.5 * np.sin(2 * math.pi * t * g["len"] / FOLD_STEP + 1.3 * np.sin(2 * a)))
-        off[m] += fold
-    foot = np.where(nrm[:, 1] < -0.5, OFF_UNDER, OFF_FOOT)
-    return off * (1 - fw) + foot * fw
+def fold(y, a):
+    """Arrugas del cuero abajo (más detrás y en los lados): fracción que crece la caña."""
+    t = (_g["knee"][1] - y) / (-_g["dir"][1] * _g["len"])
+    win = eva.smoothstep((t - FOLD_T[0]) / 0.08) * eva.smoothstep((FOLD_T[1] - t) / 0.08)
+    amp = FOLD_AMP * (0.5 + 0.5 * (1 - np.cos(a)) / 2)
+    return amp * win * (0.5 + 0.5 * np.sin(2 * math.pi * t * _g["len"] / FOLD_STEP + 1.3 * np.sin(2 * a))) / 0.05
 
 
-def stretch_toes(v, idx):
-    """La puntera: los dedos se alargan hacia delante (más en la punta)."""
-    for s in SIDES:
-        g = LEG[s]
-        m = side_of(v, s) & (FOOT_W[idx] > 0.3)
-        z_ball, z_tip = g["toes"][2] - 0.03, P0[idx][m, 2].max()
-        k = eva.smoothstep((v[m, 2] - z_ball) / (z_tip - z_ball))
-        v[m] += np.outer(k * TOE_EXTRA, g["fwd"] * [1, 0, 1])
-    return v
-
-
-def top_plane(s):
-    g = LEG[s]
-    p0 = g["knee"] + g["dir"] * TOP_T * g["len"]
-    return lambda q: q - np.outer((q - p0) @ g["dir"], g["dir"])
+H = horma.Horma(
+    pz=[-0.038, -0.015, 0.020, 0.060, 0.100, 0.140, 0.170, 0.200, 0.222],
+    pw=[0.026, 0.030, 0.037, 0.043, 0.051, 0.056, 0.053, 0.045, 0.037],
+    pc=[0.185, 0.186, 0.188, 0.190, 0.191, 0.188, 0.186, 0.180, 0.176],
+    pt=[0.080, 0.085, 0.090, 0.095, 0.070, 0.056, 0.047, 0.040, 0.036],
+    heel_r=0.025, toe_r=0.045, axis_y=_LY, axis_x=_LX, axis_z=_LZ, shaft_y=_LY,
+    shaft_ax=list(np.add(_HX, GAP_SHAFT)), shaft_az=list(np.add(_HZ, GAP_SHAFT)), fold=fold,
+    collar=(Y_TOP, 0.006, 0.0), na=56, n_shaft=48, n_arc=24, n_foot=20)
+LEGS = (LOWER_W > 0.3) | (FOOT_W > 0.3)
 
 
 def build_shell():
-    idx, f = select_region()
-    loops = sud.boundary_loops(f)
-    assert len(loops) == 2, [len(l) for l in loops]
-    skin0 = P0[idx]
-    nrm = sud.vertex_normals(skin0, f)
-    off = offsets(idx, skin0, nrm)
-    v = stretch_toes(skin0 + nrm * off[:, None], idx)
-    tops = {("Left" if skin0[lp, 0].mean() > 0 else "Right"): lp for lp in loops}
-    fixed = np.zeros(len(v), bool)
-    for s, lp in tops.items():
-        v[lp] = top_plane(s)(v[lp]); fixed[lp] = True
-    foot = FOOT_W[idx] > 0.3
-    folds = np.zeros(len(v), bool)
-    for s in SIDES:
-        t = leg_t(v, s)
-        folds |= side_of(v, s) & (t > FOLD_T[0] - 0.05) & (t < FOLD_T[1] + 0.05) & ~foot
+    """La horma de los dos pies; idx: el vértice de piel más cercano a cada uno (para saber qué es pie)."""
+    v, f, _ = H.build_shell()
+    v, f = horma.mirror_both(v, f)
+    i, _ = sud.nearest_skin(v, 2, LEGS)
+    return i[:, 0], v, f
 
-    def keep_out(v):
-        proj = np.einsum("ij,ij->i", v - skin0, nrm)
-        return v + nrm * np.maximum(0.7 * off - proj, 0)[:, None]
 
-    for _ in range(3):
-        v = keep_out(sud.taubin(v, f, fixed | folds, 6))
-    for _ in range(6):                                               # sin la forma de los dedos
-        v = keep_out(sud.taubin(v, f, fixed | ~foot, 10))
-    for s, lp in tops.items():
-        v = sud.smooth_loop(v, lp, 10, top_plane(s))
-    return idx, v, f
+def lining():
+    v, f, _ = H.build_shell()
+    (iv, fi), (lv, fl) = H.lining(v, f, LINING_ROWS, THICK)
+    return [horma.mirror_both(iv, fi), horma.mirror_both(lv, fl)]
 
 
 # ---------------- 2. suela ----------------
 def sole(shell, s, n=72):
     pts = shell[side_of(shell, s) & (shell[:, 1] < 0.035)]
     g = LEG[s]
-    c = pts[:, [0, 2]].mean(0)
+    c = 0.5 * (pts[:, [0, 2]].min(0) + pts[:, [0, 2]].max(0))
     d = pts[:, [0, 2]] - c
     ang = np.arctan2(d[:, 0], d[:, 1])                               # 0 = delante (+z)
     bins = ((ang + math.pi) / (2 * math.pi) * n).astype(int) % n
@@ -218,7 +189,27 @@ class LegRadius:
         return g["knee"] + (t * g["len"])[..., None] * g["dir"] + r[..., None] * u
 
 
-def greave(lr, nt=44, na=26):
+class HormaRadius(LegRadius):
+    """Como LegRadius, pero medido con rayos sobre la horma (sin los dientes de la rejilla)."""
+    def __init__(self, s):
+        self.s = s
+
+    def __call__(self, t, a):
+        t, a = np.broadcast_arrays(np.asarray(t, float), np.asarray(a, float))
+        g, sx = LEG[self.s], SIDES[self.s]
+        u = np.cos(a)[..., None] * g["fwd"] - sx * np.sin(a)[..., None] * g["side"]
+        O = (g["knee"] + (t * g["len"])[..., None] * g["dir"]).reshape(-1, 3) * [sx, 1, 1]
+        p = H.cast(O, u.reshape(-1, 3) * [sx, 1, 1])
+        return np.linalg.norm(p - O, axis=1).reshape(t.shape)
+
+
+def top_y(X, Z, s):
+    """Alto de la horma en cada (x, z) del pie (rayo hacia arriba)."""
+    O = np.stack([X.ravel() * SIDES[s], np.full(X.size, 0.01), Z.ravel()], 1)
+    return H.cast(O, np.tile([0, 1.0, 0], (len(O), 1)), n=80, strict=False)[:, 1].reshape(X.shape)   # hasta 13 cm
+
+
+def greave(lr, nt=32, na=22):
     s_, q = np.meshgrid(np.linspace(0, 1, nt), np.linspace(-1, 1, na), indexing="ij")
     amax = 1.20 - 0.30 * s_
     a = q * amax
@@ -253,28 +244,19 @@ def sabaton(shell, s):
     g = LEG[s]
     m = side_of(shell, s) & (shell[:, 1] > 0.015) & (shell[:, 1] < 0.13)
     pts = shell[m]
-    kd = cKDTree(pts[:, [0, 2]])
     z0, z1 = g["ankle"][2] + 0.035, pts[:, 2].max() - 0.006
-    cx = np.median(pts[pts[:, 2] > z0, 0])
     plates = []
     for k, (a, b) in enumerate(((0.0, 0.40), (0.32, 0.70), (0.62, 1.0))):
         zz = np.linspace(z0 + (z1 - z0) * a, z0 + (z1 - z0) * b, 10)
-        xs = []
-        for z in zz:
-            row = pts[np.abs(pts[:, 2] - z) < 0.006]
-            xs.append((row[:, 0].min(), row[:, 0].max()))
-        xs = np.array(xs)
         q = np.linspace(-1, 1, 14)
-        half = 0.42 * (xs[:, 1] - xs[:, 0]) * (1 - 0.35 * np.linspace(a, b, 10) ** 3)
-        mid = 0.5 * (xs[:, 0] + xs[:, 1])
+        width = np.interp(zz, H.pz, H.pw) * H.ends(zz)                # ancho de la horma (sus perfiles)
+        half = 0.84 * width * (1 - 0.35 * np.linspace(a, b, 10) ** 3)
+        mid = np.interp(zz, H.pz, H.pc) * SIDES[s]
         X = mid[:, None] + half[:, None] * q[None]
         Z = np.broadcast_to(zz[:, None], X.shape)
-        _, ii = kd.query(np.c_[X.ravel(), Z.ravel()], k=6)
-        Y = pts[ii, 1].max(1).reshape(X.shape)
-        for _ in range(3):
-            Y[1:-1, 1:-1] = 0.5 * Y[1:-1, 1:-1] + 0.125 * (Y[:-2, 1:-1] + Y[2:, 1:-1] + Y[1:-1, :-2] + Y[1:-1, 2:])
+        Y = top_y(X, Z, s)
         lift = 0.003 + 0.002 * (2 - k)                               # la de arriba pisa a la siguiente
-        Y = np.maximum(Y, pts[ii, 1].max(1).reshape(X.shape)) + lift
+        Y = Y + lift
         inner = np.stack([X, Y, Z], -1)
         outer = inner + [0, STEEL, 0]
         plates.append((grid_slab(outer, inner), "Toes" if k == 2 else "Foot"))
@@ -327,13 +309,14 @@ def build():
             src_idx.append(i); src_w.append(w)
 
     nrm = sud.vertex_normals(shell, f_shell)
-    add(shell, f_shell, "cuero", skin_idx=idx)
-    add(shell - nrm * THICK, f_shell[:, ::-1], "cuero", skin_idx=idx)
+    add(shell, f_shell, "cuero", mask=LEGS)
+    for lv, lf in lining():
+        add(lv, lf, "cuero", mask=LEGS)
     for s in SIDES:
         leg = side_of(P0, s) & ((LOWER_W > 0.3) | (FOOT_W > 0.3))
         foot = side_of(P0, s) & (FOOT_W > 0.3)
         add(*sole(shell, s), "suela", mask=foot)
-        lr = LegRadius(shell[side_of(shell, s) & (FOOT_W[idx] < 0.5)], s)
+        lr = HormaRadius(s)
         (gv, gf), tar = greave(lr)
         add(gv, gf, "acero", mask=leg, bone=s + "LowerLeg")
         for rv, rf in rivets(lr, tar):
@@ -356,7 +339,6 @@ def build():
         add(*eva.band(under, np.ones(len(under), bool), c, g["fwd"], 0.008, eva.bevel_prof(0.008, 0.0035), n=64),
             "correas", mask=foot)
     v, f = np.concatenate(verts), np.concatenate(faces)
-    v, f = sud.bridge_open(v, f)                                     # boca de la caña: fuera ↔ dentro
     return write(v, f, np.concatenate(zones), np.concatenate(src_idx), np.concatenate(src_w), np.concatenate(bones))
 
 
