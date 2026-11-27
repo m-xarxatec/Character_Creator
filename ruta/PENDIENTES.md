@@ -6,9 +6,6 @@
 | --- | --- | --- |
 | 7.2 | ¿Qué 3 o 4 capturas van al README y en qué orden? El vídeo, cuando el editor esté como quieres | `pruebas/capturas/interfaz/iu11/` y `pruebas/capturas/readme_candidatas/` |
 | 7.4 | Cuando estén los de arriba, publicar la 0.2.0 como versión preliminar (D29): `git tag v0.2.0 && git push origin v0.2.0` y `gh release create v0.2.0 build/GameMolde-0.2.0-linux.zip build/GameMolde-0.2.0-linux.zip.sha256 --title "GameMolde 0.2.0" --notes-file build/NOTAS_0.2.0.md --prerelease`. Después, que lo pruebe otra persona sin ayuda Si el `.zip` (62,5 MB) no se puede subir a GitHub, se publica con un enlace externo (decisión del responsable, 2026-11-21). | `build/NOTAS_0.2.0.md` |
-| AB, 9.4 | Juicio visual que falta: las piezas sueltas y los ojos (interfaz y uso de piezas ya juzgados el 2026-11-22) | `pruebas/capturas/piezas/` (y abrir el editor: pestañas Pelo, Ropa, Accesorios y Cara y ojos) |
 | D36 | ¿Lo nuestro sale CC0 y se publica también como pack suelto? (recomendado: sí) | `propuestas/expansion_v2.md` §7 |
 | D39 | ¿Se pueden descargar peinados y armas CC0 (Quaternius, Micket, KayKit), uno a uno y con la licencia comprobada? Necesita tu permiso de red | `propuestas/expansion_v2.md` §5.3 |
-| 9.8, 9.8b | Juicio visual de las visemas y de la boca abierta oscura (hoja de `capturar_expresiones.gd`, tras regenerar los datos) | `pruebas/capturas/expresiones/` |
 | PE.5 | Aplazado a una versión más adelantada (2026-11-26): abrir `heroe.tscn` (exportado con long01) en un proyecto de Godot vacío, sin y con BoneMap: ¿abre sin errores?, ¿el pelo se mueve como en el editor? | `ruta/pasos/PE.5_exportar_pelo.md` §8 |
-| 9.7 | Juicio visual de las expresiones (hoja de 9.7.0, tras regenerar los datos) y del programa | `pruebas/capturas/expresiones/` y la lista «Expresión» de la barra |

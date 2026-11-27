@@ -1,7 +1,7 @@
 class_name RigidPiece
 extends RefCounted
 ## Paso AB.11: accesorio rígido hecho por un generador (pack.json: «generador»: {tipo, parametros, simetria}; hoy, cuernos)
-## (cuernos y aros: orejas de gato, halo) y colgado de un hueso con un BoneAttachment3D: sigue su pose, su escala (Cabeza › Tamaño) y el reajuste del esqueleto.
+## (cuernos y aros: halo) y colgado de un hueso con un BoneAttachment3D: sigue su pose, su escala (Cabeza › Tamaño) y el reajuste del esqueleto.
 ## «anclaje.transform» lo coloca respecto al hueso (posición, giro como cuaternión y escala uniforme); con «simetria»,
 ## una segunda copia reflejada en X (geometría reflejada, sin escala negativa). Sin assets: la malla sale de los
 ## parámetros (se regenera igual al abrir).

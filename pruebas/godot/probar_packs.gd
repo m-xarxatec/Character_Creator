@@ -4,7 +4,7 @@ extends SceneTree
 # Uso: (ulimit -v 4000000; timeout 120 godot --headless --path pruebas/godot -s probar_packs.gd 2>&1 | grep -E 'FALLO|RESULTADO|ERROR')
 # Que detecta el fallo: en PackLibrary._add, quitar la comprobación de LICENSES -> falla «licencia CC-BY: rechazado».
 
-const BASE_PIECES := ["tights", "hair", "casquete", "melena", "cuernos", "orejas_gato", "halo"]
+const BASE_PIECES := ["tights", "hair", "casquete", "melena", "cuernos", "halo"]
 
 ## Paso RE.1a: el pack de MakeHuman (ranura de cada pieza y tamaño total del pack).
 const MH_SLOTS := {"short02": "pelo", "bob02": "pelo", "long01": "pelo", "ponytail01": "pelo", "afro01": "pelo",

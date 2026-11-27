@@ -47,11 +47,6 @@ GENERATED = [  # accesorios rígidos hechos en Godot por un generador (RigidPiec
                    "afilado": 1.2, "segmentos": 14, "lados": 10, "anillos": 4, "relieve": 0.12}},
      "anclaje": {"hueso": "Head", "transform": [0.045, 0.125, 0.04, 0, 0, -0.1736, 0.9848, 1]},
      "sigue_al_cuerpo": False, "colores": ["principal"]},
-    {"id": "orejas_gato", "nombre": "Orejas de gato", "tipo": "accesorio", "ranura": "accesorio", "especies": ["humana"],
-     "generador": {"tipo": "cuernos", "simetria": True, "parametros": {"largo": 0.07, "radio": 0.028, "curva": 0,
-                   "afilado": 1.0, "segmentos": 4, "lados": 3, "anillos": 0}},
-     "anclaje": {"hueso": "Head", "transform": [0.055, 0.12, 0.0, 0, 0, -0.1305, 0.9914, 1]},
-     "sigue_al_cuerpo": False, "colores": ["principal"]},
     {"id": "halo", "nombre": "Halo", "tipo": "accesorio", "ranura": "accesorio", "especies": ["humana"],
      "generador": {"tipo": "aro", "parametros": {"radio": 0.08, "grosor": 0.007}},
      "anclaje": {"hueso": "Head", "transform": [0, 0.205, -0.01, -0.1305, 0, 0, 0.9914, 1]},
@@ -63,7 +58,7 @@ CUTS = [  # piezas recortadas en Godot de otra (GarmentCut): sin archivo
      "sigue_al_cuerpo": True, "colores": ["principal"]},
 ]
 COLORS = {"tights": [0.22, 0.26, 0.4], "hair": [0.24, 0.16, 0.12], "melena": [0.24, 0.16, 0.12],
-          "casquete": [0.24, 0.16, 0.12], "cuernos": [0.85, 0.82, 0.72], "orejas_gato": [0.24, 0.16, 0.12],
+          "casquete": [0.24, 0.16, 0.12], "cuernos": [0.85, 0.82, 0.72],
           "halo": [0.95, 0.82, 0.4]}  # color de partida de cada pieza (RGB de 0 a 1)
 PACK = {"formato": "gamemolde-pack", "version": 1, "id": "base", "nombre": "Pack base",
         "autor": "GameMolde (de la malla base de MakeHuman)", "licencia": "CC0-1.0",

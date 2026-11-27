@@ -178,50 +178,6 @@
    "anclaje": {
     "hueso": "Head",
     "transform": [
-     0.055,
-     0.12,
-     0.0,
-     0,
-     0,
-     -0.1305,
-     0.9914,
-     1
-    ]
-   },
-   "color": [
-    0.24,
-    0.16,
-    0.12
-   ],
-   "colores": [
-    "principal"
-   ],
-   "especies": [
-    "humana"
-   ],
-   "generador": {
-    "parametros": {
-     "afilado": 1.0,
-     "anillos": 0,
-     "curva": 0,
-     "lados": 3,
-     "largo": 0.07,
-     "radio": 0.028,
-     "segmentos": 4
-    },
-    "simetria": true,
-    "tipo": "cuernos"
-   },
-   "id": "orejas_gato",
-   "nombre": "Orejas de gato",
-   "ranura": "accesorio",
-   "sigue_al_cuerpo": false,
-   "tipo": "accesorio"
-  },
-  {
-   "anclaje": {
-    "hueso": "Head",
-    "transform": [
      0,
      0.205,
      -0.01,
