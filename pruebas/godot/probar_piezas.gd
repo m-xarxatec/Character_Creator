@@ -343,9 +343,9 @@ func _cross_pairs(a: PackedVector3Array, ta: PackedInt32Array, b: PackedVector3A
 
 
 func _edges_hit(p: Vector3, q: Vector3, r: Vector3, u: Vector3, v: Vector3, w: Vector3) -> bool:
-	return Geometry3D.segment_intersects_triangle(p, q, u, v, w) != null \
-		or Geometry3D.segment_intersects_triangle(q, r, u, v, w) != null \
-		or Geometry3D.segment_intersects_triangle(r, p, u, v, w) != null
+	return Cloth.segment_hit(p, q, u, v, w) != null \
+		or Cloth.segment_hit(q, r, u, v, w) != null \
+		or Cloth.segment_hit(r, p, u, v, w) != null
 
 
 ## Peso de un hueso en cada vértice de la malla.
