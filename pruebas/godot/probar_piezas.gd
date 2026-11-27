@@ -21,10 +21,10 @@ const MeshBaker := preload("res://../../godot/addons/creador/mesh_baker.gd")
 const BodyPiece := preload("res://../../godot/addons/creador/body_piece.gd")  # paso PE.4b
 const Cloth := preload("medidas_tela.gd")  # paso 12.1a: medidas de tela sobre piel
 const RigidPiece := preload("res://../../godot/addons/creador/rigid_piece.gd")  # paso 13.1c
-const PLACE_MAX := 1e-6  # PROVISIONAL (13.1c, ficha §1.3): cada uno de los 8 números de la colocación
-const HAND_CENTER_MAX := 0.05  # PROVISIONAL (13.1c, ficha §1.4): metros del centro del halo exportado a RightHand
-const HAND_WEIGHT_MAX := 0.001  # PROVISIONAL (13.1c): lo que le falta a un vértice del halo para pesar 1 en RightHand
-const SOCKET_CENTER_MAX := 0.001  # PROVISIONAL (13.3a, ficha §6): metros del centro del halo en un anclaje al del editor
+const PLACE_MAX := 1e-6  # (13.1c, ficha §1.3): cada uno de los 8 números de la colocación
+const HAND_CENTER_MAX := 0.05  # (13.1c, ficha §1.4): metros del centro del halo exportado a RightHand
+const HAND_WEIGHT_MAX := 0.001  # (13.1c): lo que le falta a un vértice del halo para pesar 1 en RightHand
+const SOCKET_CENTER_MAX := 0.001  # (13.3a, ficha §6): metros del centro del halo en un anclaje al del editor
 ## Paso AC.6b: el .glb lleva también los ojos (EyeMesh); no son piezas y no se cuentan (los mira probar_glb.gd --ojos).
 const EYE_MESHES := ["ojo_l", "ojo_r", "linea_l", "linea_r", "linea_inferior_l", "linea_inferior_r", "pliegue_l", "pliegue_r",
 	"ceja_l", "ceja_r"]  # AC.6c: las cejas

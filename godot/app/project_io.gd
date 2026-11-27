@@ -20,7 +20,7 @@ const RigidPiece := preload("../addons/creador/rigid_piece.gd")
 const EXTENSION := "gmolde"
 const THUMB := 256  # px de la miniatura: cuadrada, con fondo transparente (la vista lo tiene)
 const FOLDER := "user://proyectos"  # carpeta por defecto de Guardar y Abrir
-const TURN_MIN := 0.001  # PROVISIONAL (13.1c): un giro (cuaternión) más corto que esto no es un giro
+const TURN_MIN := 0.001  # (13.1c): un giro (cuaternión) más corto que esto no es un giro
 
 
 static func is_project(path: String) -> bool:

@@ -6,9 +6,9 @@ extends SceneTree
 
 const WorldPose := preload("res://addons/creador/world_pose.gd")
 const BodyMaterial := preload("res://addons/creador/body_material.gd")
-const JOINT_MAX := 0.0001  # PROVISIONAL (10.3b, ficha §1.3): metros entre las articulaciones de la misma pose
-const TURN_MAX_DEG := 0.01  # PROVISIONAL (10.3b): grados entre los giros de la misma pose en dos cuerpos
-const MOVED_MIN := 0.05  # PROVISIONAL (10.3b): metros que se mueve la mano al posar (la prueba no es vacía)
+const JOINT_MAX := 0.0001  # (10.3b, ficha §1.3): metros entre las articulaciones de la misma pose
+const TURN_MAX_DEG := 0.01  # (10.3b): grados entre los giros de la misma pose en dos cuerpos
+const MOVED_MIN := 0.05  # (10.3b): metros que se mueve la mano al posar (la prueba no es vacía)
 ## «pack/pieza» → color puesto antes de entrar: una prenda, un peinado con cadenas y un accesorio.
 const WORN := {"base/tights": Color(0.1, 0.6, 0.3), "makehuman/bob02": Color(0.7, 0.3, 0.1),
 	"base/cuernos": Color(0.2, 0.3, 0.8)}

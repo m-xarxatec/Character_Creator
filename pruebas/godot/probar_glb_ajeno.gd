@@ -9,7 +9,7 @@ extends SceneTree
 const GlbInspect := preload("res://../../godot/addons/creador/glb_inspect.gd")
 const DIR := "user://glb_ajeno"
 const COLOR := Color(0.5, 0.25, 1.0)  # lineal, como en glTF
-const COLOR_MAX := 1.0 / 255.0  # PROVISIONAL (13.3b): diferencia del color leído de la copia limpia
+const COLOR_MAX := 1.0 / 255.0  # (13.3b): diferencia del color leído de la copia limpia
 
 const HEAVY_BYTES := 250 * 1024 * 1024  # cerca del tope de 256 MB, para medir
 
@@ -136,8 +136,8 @@ func _check_bad_images() -> void:
 		g["json"]["images"][0] = {"uri": uri}
 		_without_texture("imagen «%s»" % uri, _write("uri.glb", g))
 	_without_texture("firma falsa", _write("firma.glb", _box(PackedByteArray([1, 2, 3, 4, 5, 6, 7, 8]))))
-	var wide := Image.create(9000, 1, false, Image.FORMAT_L8)
-	_without_texture("9.000 px de lado", _write("ancha.glb", _box(wide.save_png_to_buffer())))
+	var wide := Image.create(20000, 1, false, Image.FORMAT_L8)
+	_without_texture("20.000 px de lado", _write("ancha.glb", _box(wide.save_png_to_buffer())))
 	var webp := _box()
 	webp["json"]["textures"][0] = {"extensions": {"EXT_texture_webp": {"source": 0}}}
 	_without_texture("textura WebP (sin source)", _write("webp.glb", webp), 1)  # la imagen PNG es buena y se queda

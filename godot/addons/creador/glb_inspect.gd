@@ -10,15 +10,15 @@ extends RefCounted
 ##   if r["error"] == "": GLTFDocument.new().append_from_buffer(r["bytes"], "", state)
 
 const MAX_FILE_BYTES := 256 * 1024 * 1024  # líder (D59): el archivo y también la copia limpia con sus texturas
-const MAX_JSON_BYTES := 8 * 1024 * 1024  # PROVISIONAL (y los de abajo): contra bombas, no contra piezas grandes
-const MAX_NODES := 4096
+const MAX_JSON_BYTES := 32 * 1024 * 1024  # contra bombas, no contra piezas grandes (y los de abajo)
+const MAX_NODES := 16384
 const MAX_ITEMS := 65536  # por lista: accessors, bufferViews, mallas, materiales, texturas, imágenes…
 const MAX_PRIMITIVES := 4096  # en total
 const MESH_SURFACES := 256  # por malla: límite de ArrayMesh (comprobado en Godot 4.7.2)
 ## Sin tope de geometría (D59, líder 2026-11-28): los bytes de geometría que leen las primitivas (sumados por malla
 ## definida y por nodo que la usa) no pasan de MAX_FILE_BYTES; solo los multiplica un accessor compartido o repetido.
-const MAX_IMAGE_SIDE := 8192
-const MAX_PIXELS := 8192 * 8192  # todas las imágenes juntas (cada una se decodifica en RGBA)
+const MAX_IMAGE_SIDE := 16384
+const MAX_PIXELS := 16384 * 16384 # todas las imágenes juntas (cada una se decodifica en RGBA)
 const GLB_MAGIC := 0x46546C67
 const CHUNK_JSON := 0x4E4F534A
 const CHUNK_BIN := 0x004E4942
