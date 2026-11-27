@@ -1,0 +1,49 @@
+{
+ "formato": "gamemolde-pack",
+ "version": 1,
+ "id": "claude_bodysuit_espalda",
+ "nombre": "Bodysuit espalda (pruebas)",
+ "autor": "GameMolde",
+ "licencia": "propia",
+ "origen": "",
+ "piezas": [
+  {
+   "id": "bodysuit_espalda",
+   "nombre": "Bodysuit de espalda abierta",
+   "archivo": "bodysuit_espalda.glb",
+   "sha256": "c8b9b809b76bdf5cc362bc66dc32c3e2bf680ea7dfea0a1f99ae8997876be23f",
+   "tipo": "ropa",
+   "ranura": "ropa_torso",
+   "especies": [
+    "humana"
+   ],
+   "colores": [
+    "principal"
+   ],
+   "color": [
+    0.12,
+    0.1,
+    0.13
+   ],
+   "sigue_al_cuerpo": true,
+   "fisica": [],
+   "miniatura": "",
+   "anclaje": {
+    "hueso": "",
+    "transform": [
+     0,
+     0,
+     0,
+     0,
+     0,
+     0,
+     1,
+     1
+    ]
+   },
+   "cubre": [
+    "ropa_piernas"
+   ]
+  }
+ ]
+}
