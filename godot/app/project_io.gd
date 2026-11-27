@@ -16,9 +16,11 @@ const Preset := preload("../addons/creador/preset.gd")
 const PresetFile := preload("preset_file.gd")
 const BodyMaterial := preload("../addons/creador/body_material.gd")
 const PackLibrary := preload("../addons/creador/pack_library.gd")
+const RigidPiece := preload("../addons/creador/rigid_piece.gd")
 const EXTENSION := "gmolde"
 const THUMB := 256  # px de la miniatura: cuadrada, con fondo transparente (la vista lo tiene)
 const FOLDER := "user://proyectos"  # carpeta por defecto de Guardar y Abrir
+const TURN_MIN := 0.001  # PROVISIONAL (13.1c): un giro (cuaternión) más corto que esto no es un giro
 
 
 static func is_project(path: String) -> bool:
@@ -80,19 +82,25 @@ static func read(path: String, view: SubViewportContainer) -> Dictionary:
 	return {"error": "", "proyecto": project, "preset": preset, "avisos": warnings}
 
 
-## Paso AB.13: las piezas puestas en la vista, como el bloque «piezas» del proyecto (siguen al cuerpo: hueso Root).
+## Paso AB.13: las piezas puestas en la vista, como el bloque «piezas» del proyecto. Las que siguen al cuerpo van con
+## hueso Root; los accesorios (paso 13.1c), con su hueso y su colocación respecto a él.
 static func worn_pieces(view: SubViewportContainer) -> Array:
 	var worn := []
 	for key: String in view.pieces.keys() + view.accessories.keys():
 		var card: Dictionary = view.library.piece(key.get_base_dir(), key.get_file())
 		var color: Color = view.piece_color(key)
+		var holder: BoneAttachment3D = view.accessories.get(key)
 		worn.append({"pack": key.get_base_dir(), "pieza": key.get_file(), "sha256": card.get("sha256", ""),
-			"ranura": card.get("ranura", ""), "hueso": "Root", "transform": [0, 0, 0, 0, 0, 0, 1, 1],
+			"ranura": card.get("ranura", ""), "hueso": "Root" if holder == null else String(holder.bone_name),
+			"transform": ProjectFile.NO_TRANSFORM.duplicate() if holder == null
+				else RigidPiece.to_array(RigidPiece.get_place(holder)),
 			"colores": {"principal": [color.r, color.g, color.b]}, "parametros": {}})
 	return worn
 
 
-## Paso AB.13: quita las piezas de la vista y pone las del proyecto, con su color. Devuelve avisos de las que faltan.
+## Paso AB.13: quita las piezas de la vista y pone las del proyecto, con su color y, en los accesorios, su hueso y
+## colocación (13.1c; con «Root», el anclaje de serie). Devuelve avisos de las piezas o huesos que faltan y de las
+## colocaciones no válidas (la pieza se queda en su anclaje de serie).
 static func wear_pieces(view: SubViewportContainer, pieces: Array) -> Array[String]:
 	for key: String in view.pieces.keys() + view.accessories.keys():
 		view.set_piece(key.get_base_dir(), key.get_file(), false)
@@ -101,10 +109,26 @@ static func wear_pieces(view: SubViewportContainer, pieces: Array) -> Array[Stri
 		if not view.set_piece(piece["pack"], piece["pieza"], true):
 			warnings.append("falta la pieza %s del pack %s (se conserva en el archivo)" % [piece["pieza"], piece["pack"]])
 			continue
+		var key := String(piece["pack"]).path_join(piece["pieza"])
 		var color: Variant = piece["colores"].get("principal")
 		if color is Array and color.size() == 3:
-			view.set_piece_color(String(piece["pack"]).path_join(piece["pieza"]), PackLibrary.to_color(color))
+			view.set_piece_color(key, PackLibrary.to_color(color))
+		if not view.accessories.has(key) or piece["hueso"] == "Root":
+			continue
+		if not _is_place(piece["transform"]):
+			warnings.append("la pieza %s tiene una colocación no válida: vuelve a su sitio" % piece["pieza"])
+		elif not RigidPiece.set_place(view.accessories[key], piece["hueso"], RigidPiece.to_place(piece["transform"])):
+			warnings.append("la pieza %s iba en el hueso %s, que no existe: vuelve a su sitio" % [piece["pieza"], piece["hueso"]])
 	return warnings
+
+
+## Paso 13.1c: ¿sirven estos 8 números (de un archivo que se puede editar a mano)? Finitos, también ya como
+## Transform3D, escala mayor que 0 y giro con longitud (to_place lo normaliza).
+static func _is_place(numbers: Array) -> bool:
+	if not numbers.all(func(n: float) -> bool: return is_finite(n)):
+		return false
+	var turn := Quaternion(numbers[3], numbers[4], numbers[5], numbers[6]).length()
+	return numbers[7] > 0.0 and is_finite(turn) and turn > TURN_MIN and RigidPiece.to_place(numbers).is_finite()
 
 
 ## La miniatura guardada en un proyecto, o null.

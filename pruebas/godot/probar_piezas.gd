@@ -10,11 +10,18 @@ extends SceneTree
 # la cabeza) -> falla «PE.5: el .glb lleva los huesos de pelo del editor» (solo el `break`: la exportación se rompe).
 # Exportar con bob02 deja también la .tscn (HairScene); con el rapado, no. Que detecta el fallo: en
 # BodyView.finish_export, no llamar a HairScene.save -> falla «PE.5: exportar con bob02 deja .glb, .tres y .tscn».
+# Paso 13.1c: el hueso y la colocación de un accesorio se guardan en el .gmolde y salen en el .glb. Que detecta el
+# fallo: en ProjectIO.worn_pieces, dejar "Root" -> falla «mismo hueso al abrir». En ProjectIO.wear_pieces, no mirar
+# _is_place -> falla «escala 0: avisa».
 
 ## Paso RE.1b: peinados de Quaternius.
 const MeshBaker := preload("res://../../godot/addons/creador/mesh_baker.gd")
 const BodyPiece := preload("res://../../godot/addons/creador/body_piece.gd")  # paso PE.4b
 const Cloth := preload("medidas_tela.gd")  # paso 12.1a: medidas de tela sobre piel
+const RigidPiece := preload("res://../../godot/addons/creador/rigid_piece.gd")  # paso 13.1c
+const PLACE_MAX := 1e-6  # PROVISIONAL (13.1c, ficha §1.3): cada uno de los 8 números de la colocación
+const HAND_CENTER_MAX := 0.05  # PROVISIONAL (13.1c, ficha §1.4): metros del centro del halo exportado a RightHand
+const HAND_WEIGHT_MAX := 0.001  # PROVISIONAL (13.1c): lo que le falta a un vértice del halo para pesar 1 en RightHand
 ## Paso AC.6b: el .glb lleva también los ojos (EyeMesh); no son piezas y no se cuentan (los mira probar_glb.gd --ojos).
 const EYE_MESHES := ["ojo_l", "ojo_r", "linea_l", "linea_r", "linea_inferior_l", "linea_inferior_r", "pliegue_l", "pliegue_r",
 	"ceja_l", "ceja_r"]  # AC.6c: las cejas
@@ -614,20 +621,154 @@ func _check_export(view) -> void:
 	scene.free()
 	DirAccess.remove_absolute(path)
 	DirAccess.remove_absolute(path.get_basename() + ".tres")
+	_check_export_hand(view)
+
+
+## Paso 13.1c: el halo colgado de la mano derecha sale en el .glb con la piel en ese hueso y junto a él.
+func _check_export_hand(view) -> void:
+	check("13.1c: el halo a la mano derecha", _halo_to_hand(view))
+	var path := OS.get_user_data_dir().path_join("piezas_mano_prueba.glb")
+	var document := GLTFDocument.new()
+	var state := GLTFState.new()
+	if view.export_glb(path) != OK or document.append_from_file(path, state) != OK:
+		check("13.1c: exportar con el halo en la mano", false)
+	else:
+		var scene := document.generate_scene(state)
+		var halo := scene.find_child("halo_d", true, false) as MeshInstance3D
+		check("13.1c: el .glb trae el halo con piel", halo != null and halo.skin != null)
+		if halo != null and halo.skin != null:
+			_check_halo_skin(halo, scene.find_children("*", "Skeleton3D", true, false)[0])
+		scene.free()
+	DirAccess.remove_absolute(path)
+	DirAccess.remove_absolute(path.get_basename() + ".tres")
+	view.set_piece("base", "halo", false)
+
+
+## En reposo: cada vértice pesa 1 en RightHand y el centro de la caja de la malla queda junto al hueso.
+func _check_halo_skin(halo: MeshInstance3D, skeleton: Skeleton3D) -> void:
+	var arrays := halo.mesh.surface_get_arrays(0)
+	var vertices: PackedVector3Array = arrays[Mesh.ARRAY_VERTEX]
+	var bones: PackedInt32Array = arrays[Mesh.ARRAY_BONES]
+	var weights: PackedFloat32Array = arrays[Mesh.ARRAY_WEIGHTS]
+	var per := bones.size() / vertices.size()
+	var hand := skeleton.find_bone("RightHand")
+	var missing := 0.0
+	var low := Vector3.ONE * INF
+	var high := -low
+	for v in vertices.size():
+		var on_hand := 0.0
+		var at := Vector3.ZERO
+		for k in range(v * per, (v + 1) * per):
+			if weights[k] <= 0.0:
+				continue
+			var named := halo.skin.get_bind_name(bones[k])
+			var bone := halo.skin.get_bind_bone(bones[k]) if named == &"" else skeleton.find_bone(named)
+			on_hand += weights[k] if bone == hand else 0.0
+			at += weights[k] * (skeleton.get_bone_global_rest(bone) * halo.skin.get_bind_pose(bones[k]) * vertices[v])
+		missing = maxf(missing, absf(1.0 - on_hand))
+		low = low.min(at)
+		high = high.max(at)
+	var distance := ((low + high) / 2.0).distance_to(skeleton.get_bone_global_rest(hand).origin)
+	print("  MEDIDA 13.1c: halo exportado, peso que falta en RightHand %.6f, centro a %.2f mm del hueso" % [missing, distance * 1000.0])
+	check("13.1c: la piel del halo es al 100 % de RightHand", missing <= HAND_WEIGHT_MAX, "%.6f" % missing)
+	check("13.1c: el centro del halo queda junto a la mano", distance <= HAND_CENTER_MAX, "%.2f mm" % (distance * 1000.0))
+
+
+## Paso 13.1c: como lo dejaría «Colocar»: en RightHand, movido 3 cm, girado y a ×1,25 de su escala de serie.
+func _halo_to_hand(view) -> bool:
+	if not view.set_piece("base", "halo", true):
+		return false
+	var usual: Transform3D = RigidPiece.default_place(view.library.piece("base", "halo"))["place"]
+	var basis := Basis(Vector3(1, 2, 3).normalized(), 0.7).scaled(usual.basis.get_scale() * 1.25)
+	return RigidPiece.set_place(view.accessories["base/halo"], "RightHand", Transform3D(basis, Vector3(0.03, 0.0, 0.0)))
+
+
+## [hueso, 8 números] de un accesorio puesto, o ["", []] si no está.
+func _placed(view, key: String) -> Array:
+	var holder: BoneAttachment3D = view.accessories.get(key)
+	if holder == null:
+		return ["", []]
+	return [holder.bone_name, RigidPiece.to_array(RigidPiece.get_place(holder))]
+
+
+## Mismo hueso y mismos 8 números (con PLACE_MAX).
+func _check_same_place(label: String, found: Array, wanted: Array) -> void:
+	check("13.1c: %s: mismo hueso al abrir" % label, found[0] == wanted[0], "%s / %s" % [found[0], wanted[0]])
+	var gap := INF
+	if found[1].size() == 8 and wanted[1].size() == 8:
+		gap = 0.0
+		for i in 8:
+			var difference := absf(found[1][i] - wanted[1][i])
+			gap = maxf(gap, difference if is_finite(difference) else INF)
+	print("  MEDIDA 13.1c: %s, diferencia de colocación %.9f" % [label, gap])
+	check("13.1c: %s: mismo transform al abrir" % label, gap <= PLACE_MAX, str(found[1]))
+
+
+## Paso 13.1c: un .gmolde de AB.13 (accesorio en «Root») abre en el anclaje de serie; con un hueso que no existe,
+## también, y avisa.
+func _check_old_project(main: Control, view, path: String) -> void:
+	var io: GDScript = load(ProjectSettings.globalize_path("res://").path_join("../../godot/app/project_io.gd").simplify_path())
+	var usual: Dictionary = RigidPiece.default_place(view.library.piece("base", "halo"))
+	var wanted := [usual["hueso"], RigidPiece.to_array(usual["place"])]
+	var project: Dictionary = JSON.parse_string(FileAccess.get_file_as_string(path))
+	var pieces: Array = project["personajes"][0]["piezas"]
+	var halo: Dictionary = pieces.filter(func(p: Dictionary) -> bool: return p["pieza"] == "halo")[0]
+	halo["hueso"] = "Root"
+	halo["transform"] = [0, 0, 0, 0, 0, 0, 1, 1]
+	io.write(path, project)
+	check("13.1c: abrir un .gmolde viejo (Root)", main.body_actions.open_preset(path) == "")
+	_check_same_place("halo en Root", _placed(view, "base/halo"), wanted)
+	check("13.1c: el .gmolde viejo no avisa de huesos", io.wear_pieces(view, pieces).is_empty())
+	halo["hueso"] = "Rabo"
+	var warnings: Array[String] = io.wear_pieces(view, pieces)
+	check("13.1c: un hueso que no existe avisa", warnings.size() == 1 and "Rabo" in warnings[0] and "halo" in warnings[0], str(warnings))
+	_check_same_place("halo en un hueso que no existe", _placed(view, "base/halo"), wanted)
+	halo["hueso"] = "RightHand"
+	halo["transform"] = [0.03, 0, 0, 0, 0, 0, 1, 0]
+	io.write(path, project)
+	check("13.1c: abrir un .gmolde con escala 0", main.body_actions.open_preset(path) == "")
+	_check_same_place("halo con escala 0 en el archivo", _placed(view, "base/halo"), wanted)
+	_check_bad_places(view, io, pieces, halo, wanted)
+
+
+## Paso 13.1c: una colocación no válida no se aplica (anclaje de serie y aviso); un giro sin normalizar, sí.
+func _check_bad_places(view, io: GDScript, pieces: Array, halo: Dictionary, wanted: Array) -> void:
+	var cases := {"escala 0": {7: 0.0}, "escala negativa": {7: -1.0}, "escala NaN": {7: NAN}, "escala infinita": {7: INF},
+		"giro de longitud 0": {6: 0.0}, "giro casi 0": {6: 1e-6}, "giro NaN": {3: NAN}, "giro infinito": {4: INF},
+		"giro enorme": {3: 1e30}, "posición NaN": {0: NAN}, "posición infinita": {1: -INF}, "posición enorme": {2: 1e39}}
+	for label: String in cases:
+		var numbers := [0.03, 0.0, 0.0, 0.0, 0.0, 0.0, 1.0, 1.25]
+		for i: int in cases[label]:
+			numbers[i] = cases[label][i]
+		halo["transform"] = numbers
+		var warnings: Array[String] = io.wear_pieces(view, pieces)
+		check("13.1c: %s: avisa" % label, warnings.size() == 1 and "halo" in warnings[0] and "no válida" in warnings[0], str(warnings))
+		_check_same_place(label, _placed(view, "base/halo"), wanted)
+	halo["transform"] = [0.03, 0, 0, 1, 1, 1, 1, 1.25]  # un giro de longitud 2
+	check("13.1c: un giro sin normalizar no avisa", io.wear_pieces(view, pieces).is_empty())
+	_check_same_place("giro normalizado", _placed(view, "base/halo"), ["RightHand", [0.03, 0.0, 0.0, 0.5, 0.5, 0.5, 0.5, 1.25]])
 
 
 func _check_project(main: Control, view) -> void:
 	var path := OS.get_user_data_dir().path_join("piezas_prueba.gmolde")
+	check("13.1c: el halo a la mano derecha antes de guardar", _halo_to_hand(view))
+	var hand := _placed(view, "base/halo")
+	var horns := _placed(view, "base/cuernos")
 	var worn: Array = view.pieces.keys() + view.accessories.keys()
 	worn.sort()
 	check("guardar el proyecto", main.body_actions.save_preset(path) == OK)
 	view.set_piece("base", "tights", false)
 	view.set_piece("base", "cuernos", false)
+	view.set_piece("base", "halo", false)
 	check("abrirlo sin error", main.body_actions.open_preset(path) == "")
 	var back: Array = view.pieces.keys() + view.accessories.keys()
 	back.sort()
 	check("vuelven las mismas piezas", back == worn, str(back))
 	check("la pestaña Ropa marca las mallas", main.piece_panels["Ropa"].buttons["base/tights"].button_pressed)
+	_check_same_place("halo en la mano", _placed(view, "base/halo"), hand)
+	_check_same_place("cuernos (con simetría)", _placed(view, "base/cuernos"), horns)
+	_check_old_project(main, view, path)
+	view.set_piece("base", "halo", false)
 	DirAccess.remove_absolute(path)
 
 
