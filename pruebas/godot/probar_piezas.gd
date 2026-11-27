@@ -13,6 +13,8 @@ extends SceneTree
 # Paso 13.1c: el hueso y la colocación de un accesorio se guardan en el .gmolde y salen en el .glb. Que detecta el
 # fallo: en ProjectIO.worn_pieces, dejar "Root" -> falla «mismo hueso al abrir». En ProjectIO.wear_pieces, no mirar
 # _is_place -> falla «escala 0: avisa».
+# Paso 13.3a: un halo en socket_hand_r y en socket_back sale con piel, al 100 % del padre y donde en el editor. Que
+# detecta el fallo: en Sockets.to_nodes, no llamar a _to_socket_parent -> falla «exportar con el halo en socket_hand_r».
 
 ## Paso RE.1b: peinados de Quaternius.
 const MeshBaker := preload("res://../../godot/addons/creador/mesh_baker.gd")
@@ -22,6 +24,7 @@ const RigidPiece := preload("res://../../godot/addons/creador/rigid_piece.gd")  
 const PLACE_MAX := 1e-6  # PROVISIONAL (13.1c, ficha §1.3): cada uno de los 8 números de la colocación
 const HAND_CENTER_MAX := 0.05  # PROVISIONAL (13.1c, ficha §1.4): metros del centro del halo exportado a RightHand
 const HAND_WEIGHT_MAX := 0.001  # PROVISIONAL (13.1c): lo que le falta a un vértice del halo para pesar 1 en RightHand
+const SOCKET_CENTER_MAX := 0.001  # PROVISIONAL (13.3a, ficha §6): metros del centro del halo en un anclaje al del editor
 ## Paso AC.6b: el .glb lleva también los ojos (EyeMesh); no son piezas y no se cuentan (los mira probar_glb.gd --ojos).
 const EYE_MESHES := ["ojo_l", "ojo_r", "linea_l", "linea_r", "linea_inferior_l", "linea_inferior_r", "pliegue_l", "pliegue_r",
 	"ceja_l", "ceja_r"]  # AC.6c: las cejas
@@ -642,6 +645,84 @@ func _check_export_hand(view) -> void:
 	DirAccess.remove_absolute(path)
 	DirAccess.remove_absolute(path.get_basename() + ".tres")
 	view.set_piece("base", "halo", false)
+	for socket: String in ["socket_hand_r", "socket_back"]:
+		_check_export_socket(view, socket)
+
+
+## Paso 13.3a: el halo colgado de un anclaje sale con piel, al 100 % del padre del anclaje y donde estaba en el editor
+## (en pose T, respecto al padre: el .glb se baja al suelo).
+func _check_export_socket(view, socket: String) -> void:
+	var skeleton: Skeleton3D = view.species.skeleton
+	var usual: Transform3D = RigidPiece.default_place(view.library.piece("base", "halo"))["place"]
+	if not view.set_piece("base", "halo", true) or not RigidPiece.set_place(view.accessories["base/halo"], socket, usual):
+		check("13.3a: el halo en " + socket, false)
+		return
+	view.set_pose_t(true)
+	var parent := skeleton.get_bone_parent(skeleton.find_bone(socket))
+	var instance: MeshInstance3D = RigidPiece.meshes(view.accessories["base/halo"])[0]
+	var editor := _box_center(instance.mesh.surface_get_arrays(0)[Mesh.ARRAY_VERTEX],
+		skeleton.get_bone_global_pose(skeleton.find_bone(socket)) * instance.transform)
+	editor -= skeleton.get_bone_global_pose(parent).origin
+	var path := OS.get_user_data_dir().path_join("piezas_anclaje_prueba.glb")
+	var document := GLTFDocument.new()
+	var state := GLTFState.new()
+	if view.export_glb(path) != OK or document.append_from_file(path, state) != OK:
+		check("13.3a: exportar con el halo en " + socket, false)
+	else:
+		var scene := document.generate_scene(state)
+		var halo := scene.find_child("halo_d", true, false) as MeshInstance3D
+		var out: Skeleton3D = scene.find_children("*", "Skeleton3D", true, false)[0]
+		var skinned := halo != null and halo.skin != null and halo.skin.get_bind_count() > 0
+		check("13.3a: el halo del anclaje %s tiene piel" % socket, skinned)
+		if skinned:
+			_check_socket_skin(halo, out, skeleton.get_bone_name(parent), editor, socket)
+		scene.free()
+	DirAccess.remove_absolute(path)
+	DirAccess.remove_absolute(path.get_basename() + ".tres")
+	view.set_piece("base", "halo", false)
+	view.set_pose_t(false)
+
+
+## Peso en el hueso parent_name y centro del halo exportado en reposo, respecto a ese hueso, comparado con editor.
+func _check_socket_skin(halo: MeshInstance3D, skeleton: Skeleton3D, parent_name: String, editor: Vector3, socket: String) -> void:
+	var arrays := halo.mesh.surface_get_arrays(0)
+	var vertices: PackedVector3Array = arrays[Mesh.ARRAY_VERTEX]
+	var bones: PackedInt32Array = arrays[Mesh.ARRAY_BONES]
+	var weights: PackedFloat32Array = arrays[Mesh.ARRAY_WEIGHTS]
+	var per := bones.size() / vertices.size()
+	var parent := skeleton.find_bone(parent_name)
+	var missing := 0.0
+	var placed := PackedVector3Array()
+	for v in vertices.size():
+		var on_parent := 0.0
+		var at := Vector3.ZERO
+		for k in range(v * per, (v + 1) * per):
+			if weights[k] <= 0.0:
+				continue
+			var named := halo.skin.get_bind_name(bones[k])
+			var bone := halo.skin.get_bind_bone(bones[k]) if named == &"" else skeleton.find_bone(named)
+			on_parent += weights[k] if bone == parent else 0.0
+			at += weights[k] * (skeleton.get_bone_global_rest(bone) * halo.skin.get_bind_pose(bones[k]) * vertices[v])
+		missing = maxf(missing, absf(1.0 - on_parent))
+		placed.append(at)
+	var exported := _box_center(placed, Transform3D()) - skeleton.get_bone_global_rest(parent).origin
+	var distance := exported.distance_to(editor)
+	print("  MEDIDA 13.3a: %s, peso que falta en %s %.6f, centro a %.3f mm del editor" % [socket, parent_name, missing,
+		distance * 1000.0])
+	check("13.3a: la piel del halo en %s es al 100 %% de %s" % [socket, parent_name], missing <= HAND_WEIGHT_MAX,
+		"%.6f" % missing)
+	check("13.3a: el halo en %s queda donde en el editor" % socket, distance <= SOCKET_CENTER_MAX,
+		"%.3f mm" % (distance * 1000.0))
+
+
+## Centro de la caja de los vértices, pasados por place.
+func _box_center(vertices: PackedVector3Array, place: Transform3D) -> Vector3:
+	var low := Vector3.ONE * INF
+	var high := -low
+	for vertex in vertices:
+		low = low.min(place * vertex)
+		high = high.max(place * vertex)
+	return (low + high) / 2.0
 
 
 ## En reposo: cada vértice pesa 1 en RightHand y el centro de la caja de la malla queda junto al hueso.
