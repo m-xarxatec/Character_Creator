@@ -14,6 +14,7 @@ extends SceneTree
 ## Paso RE.1b: peinados de Quaternius.
 const MeshBaker := preload("res://../../godot/addons/creador/mesh_baker.gd")
 const BodyPiece := preload("res://../../godot/addons/creador/body_piece.gd")  # paso PE.4b
+const Cloth := preload("medidas_tela.gd")  # paso 12.1a: medidas de tela sobre piel
 ## Paso AC.6b: el .glb lleva también los ojos (EyeMesh); no son piezas y no se cuentan (los mira probar_glb.gd --ojos).
 const EYE_MESHES := ["ojo_l", "ojo_r", "linea_l", "linea_r", "linea_inferior_l", "linea_inferior_r", "pliegue_l", "pliegue_r",
 	"ceja_l", "ceja_r"]  # AC.6c: las cejas
@@ -169,7 +170,7 @@ func _check_overscore(main: Control, view) -> void:
 	check("OverScore: el pack tiene prendas", not cards.is_empty())
 	var start: Dictionary = main.editor.values.duplicate()
 	var bodies := _os_bodies(main, view, start)
-	var hands := _hand_mask(view.species.mesh, view.species.skeleton)
+	var hands := Cloth.hand_mask(view.species.mesh, view.species.skeleton, OS_HAND_BONES)
 	for card: Dictionary in cards:
 		var id: String = card["id"]
 		check("OverScore: poner %s" % id, view.set_piece("overscore", id, true))
@@ -262,7 +263,7 @@ func _check_os_attack(view, mesh: MeshInstance3D, id: String, bodies: Dictionary
 	var skeleton: Skeleton3D = view.species.skeleton
 	var tris: PackedInt32Array = mesh.mesh.surface_get_arrays(0)[Mesh.ARRAY_INDEX]
 	var cloth: PackedVector3Array = MeshBaker.bake(mesh, skeleton)["vertices"]
-	var inner := _os_inner(bodies["neutro"], cloth, tris, hands)
+	var inner := Cloth.covered_skin(bodies["neutro"], cloth, tris, hands, OS_RAY_BELOW, OS_RAY_ABOVE, OS_CELL, OS_HEM)
 	check("OverScore: %s cubre piel" % id, inner.size() > 0)
 	var worst_share := 0.0
 	var worst_peak := 0.0
@@ -272,7 +273,7 @@ func _check_os_attack(view, mesh: MeshInstance3D, id: String, bodies: Dictionary
 		view.retarget.apply()
 		var body: Dictionary = bodies["atacar %d" % i]
 		var moved: PackedVector3Array = MeshBaker.bake(mesh, skeleton)["vertices"]
-		var heights := _cloth_heights(body["vertices"], body["normals"], inner, moved, tris)
+		var heights := Cloth.cloth_heights(body["vertices"], body["normals"], inner, moved, tris, OS_RAY_BELOW, OS_RAY_ABOVE, OS_CELL)
 		var over := 0
 		var hit := 0
 		for value in heights:
@@ -286,90 +287,6 @@ func _check_os_attack(view, mesh: MeshInstance3D, id: String, bodies: Dictionary
 	print("  MEDIDA %s en Atacar: piel sobre la cara interior hasta %.2f %%, pico %.1f mm (%d vértices de piel)" % [id, worst_share, worst_peak * 1000, inner.size()])
 	check("OverScore: %s no deja asomar la piel en Atacar" % id, worst_share <= OS_ATTACK_SKIN_MAX and worst_peak <= OS_ATTACK_PEAK_MAX,
 		"%.2f %%, %.1f mm" % [worst_share, worst_peak * 1000])
-
-
-## Vértices de piel cubiertos por la tela en neutro y a más de OS_HEM de piel sin cubrir.
-func _os_inner(body: Dictionary, cloth: PackedVector3Array, tris: PackedInt32Array, hands: PackedByteArray) -> PackedInt32Array:
-	var skin: PackedVector3Array = body["vertices"]
-	var box := AABB(cloth[0], Vector3.ZERO)
-	for point in cloth:
-		box = box.expand(point)
-	box = box.grow(OS_RAY_BELOW + 0.01)
-	var near := PackedInt32Array()
-	for v in skin.size():
-		if hands[v] == 0 and box.has_point(skin[v]):
-			near.append(v)
-	var heights := _cloth_heights(skin, body["normals"], near, cloth, tris)
-	var bare := {}
-	for k in near.size():
-		if not is_finite(heights[k]):
-			var cell := Vector3i((skin[near[k]] / OS_HEM).floor())
-			if not bare.has(cell):
-				bare[cell] = PackedInt32Array()
-			bare[cell].append(near[k])
-	var inner := PackedInt32Array()
-	for k in near.size():
-		if is_finite(heights[k]) and not _has_near(skin, skin[near[k]], bare):
-			inner.append(near[k])
-	return inner
-
-
-func _has_near(skin: PackedVector3Array, point: Vector3, bare: Dictionary) -> bool:
-	var center := Vector3i((point / OS_HEM).floor())
-	for x in range(-1, 2):
-		for y in range(-1, 2):
-			for z in range(-1, 2):
-				for v: int in bare.get(center + Vector3i(x, y, z), PackedInt32Array()):
-					if point.distance_squared_to(skin[v]) < OS_HEM * OS_HEM:
-						return true
-	return false
-
-
-## Altura de la primera tela sobre cada vértice de piel, a lo largo de su normal (INF si no hay tela).
-func _cloth_heights(skin: PackedVector3Array, normals: PackedVector3Array, which: PackedInt32Array, cloth: PackedVector3Array,
-		tris: PackedInt32Array) -> PackedFloat64Array:
-	var grid := _cloth_grid(cloth, tris)
-	var stamp := PackedInt32Array()
-	stamp.resize(tris.size() / 3)
-	stamp.fill(-1)
-	var heights := PackedFloat64Array()
-	heights.resize(which.size())
-	var steps := ceili((OS_RAY_BELOW + OS_RAY_ABOVE) / (0.5 * OS_CELL))
-	for k in which.size():
-		var normal := normals[which[k]].normalized()
-		var from := skin[which[k]] - normal * OS_RAY_BELOW
-		var to := skin[which[k]] + normal * OS_RAY_ABOVE
-		var best := INF
-		for s in steps + 1:
-			var center := Vector3i((from.lerp(to, float(s) / steps) / OS_CELL).floor())
-			for t: int in grid.get(center, PackedInt32Array()):
-				if stamp[t] == k:
-					continue
-				stamp[t] = k
-				var hit: Variant = Geometry3D.segment_intersects_triangle(from, to, cloth[tris[3 * t]], cloth[tris[3 * t + 1]], cloth[tris[3 * t + 2]])
-				if hit != null:
-					best = minf(best, from.distance_to(hit) - OS_RAY_BELOW)
-		heights[k] = best
-	return heights
-
-
-## {celda: triángulos de la tela cuya caja la toca}.
-func _cloth_grid(cloth: PackedVector3Array, tris: PackedInt32Array) -> Dictionary:
-	var grid := {}
-	for t in tris.size() / 3:
-		var a := cloth[tris[3 * t]]
-		var b := cloth[tris[3 * t + 1]]
-		var c := cloth[tris[3 * t + 2]]
-		var from := Vector3i((a.min(b).min(c) / OS_CELL).floor())
-		var to := Vector3i((a.max(b).max(c) / OS_CELL).floor())
-		for x in range(from.x, to.x + 1):
-			for y in range(from.y, to.y + 1):
-				for z in range(from.z, to.z + 1):
-					var cell := Vector3i(x, y, z)
-					if not grid.has(cell):
-						grid[cell] = PackedInt32Array()
-					grid[cell].append(t)
-	return grid
 
 
 ## Criterio de RE.1c: cada prenda de torso con cada short da 0 pares de triángulos cruzados en neutro. En «Atacar» se mide.
@@ -401,7 +318,7 @@ func _check_os_layers(view, cards: Array) -> void:
 
 ## Pares (triángulo de a, triángulo de b) que se cortan: una arista de uno atraviesa al otro.
 func _cross_pairs(a: PackedVector3Array, ta: PackedInt32Array, b: PackedVector3Array, tb: PackedInt32Array) -> int:
-	var grid := _cloth_grid(b, tb)
+	var grid := Cloth.cloth_grid(b, tb, OS_CELL)
 	var count := 0
 	for s in ta.size() / 3:
 		var p := a[ta[3 * s]]
@@ -429,28 +346,6 @@ func _edges_hit(p: Vector3, q: Vector3, r: Vector3, u: Vector3, v: Vector3, w: V
 	return Geometry3D.segment_intersects_triangle(p, q, u, v, w) != null \
 		or Geometry3D.segment_intersects_triangle(q, r, u, v, w) != null \
 		or Geometry3D.segment_intersects_triangle(r, p, u, v, w) != null
-
-
-## 1 en los vértices de piel que pesan sobre todo en manos y dedos (cuelgan junto a la cadera, no van bajo la ropa).
-func _hand_mask(mesh: MeshInstance3D, skeleton: Skeleton3D) -> PackedByteArray:
-	var is_hand := {}
-	for i in mesh.skin.get_bind_count():
-		var bind_name := String(mesh.skin.get_bind_name(i))
-		var bone := bind_name if bind_name != "" else String(skeleton.get_bone_name(mesh.skin.get_bind_bone(i)))
-		is_hand[i] = OS_HAND_BONES.any(func(part: String) -> bool: return part in bone)
-	var arrays := mesh.mesh.surface_get_arrays(0)
-	var bones: PackedInt32Array = arrays[Mesh.ARRAY_BONES]
-	var weights: PackedFloat32Array = arrays[Mesh.ARRAY_WEIGHTS]
-	var sums := PackedFloat32Array()
-	sums.resize(bones.size() / 4)
-	for k in bones.size():
-		if is_hand.get(bones[k], false):
-			sums[k / 4] += weights[k]
-	var mask := PackedByteArray()
-	mask.resize(sums.size())
-	for v in sums.size():
-		mask[v] = 1 if sums[v] >= 0.5 else 0
-	return mask
 
 
 ## Peso de un hueso en cada vértice de la malla.
