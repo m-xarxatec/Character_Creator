@@ -622,3 +622,4 @@ Según `diseno/maqueta-pestana-cuerpo.html`.
 | 2026-11-27 | 13.1a | Gizmo de mover/girar/escalar (cuentas probadas sin ventana), huesos en español y `RigidPiece.set_place` (pieza en cualquier hueso; `build` lo usa) |
 | 2026-11-27 | 10.3a (cierre) | `two_bone_ik.gd` del borrador carga el `WorldPose` del núcleo; README de `ruta/codigo/` al día; `probar_ik` TODO BIEN (detecta el `preload` roto: `Parse Error`, aunque el resultado siga diciendo TODO BIEN: `ruta/PENDIENTES.md`) |
 | 2026-11-27 | 12.1b-b2 | `blender/ocultar_piel.py`: máscara de piel oculta (`HIDE_HEM` 40 mm, sin manos) para las 18 prendas (12 MH + 6 OS), oculta 63–90 % de la piel tapada, banda 149–497 vértices, PNG 26–69 kB; `pack.json` solo con el campo `oculta`; detecta `1 − v` en la UV (FALLO de 2764 vértices); `probar_packs` TODO BIEN |
+| 2026-11-27 | Pendiente 10.10 | `probar_ik` ya falla si no carga un script (probado rompiendo el `preload` de la IK) |

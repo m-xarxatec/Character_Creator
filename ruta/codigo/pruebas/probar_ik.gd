@@ -24,8 +24,10 @@ func _initialize() -> void:
 	ik = _load_core(root_dir, "two_bone_ik.gd")
 	pose = _load_core(root_dir, "world_pose.gd")
 	maker = load((get_script() as Script).resource_path.get_base_dir().path_join("esqueleto_de_prueba.gd"))
-	if ik == null or pose == null or maker == null:
-		print("ERROR: no se encuentra two_bone_ik.gd, world_pose.gd o esqueleto_de_prueba.gd")
+	# Un script con error de compilación (p. ej. un preload roto) no llega a null: load lo devuelve sin poder usarse.
+	if [ik, pose, maker].any(func(s: GDScript) -> bool: return s == null or not s.can_instantiate()):
+		print("ERROR: no carga two_bone_ik.gd, world_pose.gd o esqueleto_de_prueba.gd")
+		print("RESULTADO: FALLO")
 		quit(1)
 		return
 	_check_solve()
