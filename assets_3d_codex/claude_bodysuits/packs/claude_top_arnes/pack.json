@@ -1,0 +1,49 @@
+{
+ "formato": "gamemolde-pack",
+ "version": 1,
+ "id": "claude_top_arnes",
+ "nombre": "Top arnés (pruebas)",
+ "autor": "GameMolde",
+ "licencia": "propia",
+ "origen": "",
+ "piezas": [
+  {
+   "id": "top_arnes",
+   "nombre": "Top blanco con bodysuit arnés",
+   "archivo": "top_arnes.glb",
+   "sha256": "b783f9fa183ced1a7fd450b8ec71ef60b4efb0497d550c3bd2da238168f454ad",
+   "tipo": "ropa",
+   "ranura": "ropa_torso",
+   "especies": [
+    "humana"
+   ],
+   "colores": [
+    "principal"
+   ],
+   "color": [
+    0.92,
+    0.91,
+    0.9
+   ],
+   "sigue_al_cuerpo": true,
+   "fisica": [],
+   "miniatura": "",
+   "anclaje": {
+    "hueso": "",
+    "transform": [
+     0,
+     0,
+     0,
+     0,
+     0,
+     0,
+     1,
+     1
+    ]
+   },
+   "cubre": [
+    "ropa_piernas"
+   ]
+  }
+ ]
+}
