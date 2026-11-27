@@ -624,3 +624,4 @@ Según `diseno/maqueta-pestana-cuerpo.html`.
 | 2026-11-27 | 12.1b-b2 | `blender/ocultar_piel.py`: máscara de piel oculta (`HIDE_HEM` 40 mm, sin manos) para las 18 prendas (12 MH + 6 OS), oculta 63–90 % de la piel tapada, banda 149–497 vértices, PNG 26–69 kB; `pack.json` solo con el campo `oculta`; detecta `1 − v` en la UV (FALLO de 2764 vértices); `probar_packs` TODO BIEN |
 | 2026-11-27 | Pendiente 10.10 | `probar_ik` ya falla si no carga un script (probado rompiendo el `preload` de la IK) |
 | 2026-11-27 | 12.1b-b5 (medida) | `segment_hit` sustituye al cruce de Godot (perdía catetos ≤ 7 mm) y la rejilla de `cloth_heights` ya no salta esquinas; `probar_piezas` TODO BIEN, solo cambia 95→96 en Atacar; el resto de b5 sigue abierto con b4 |
+| 2026-11-27 | Pendiente 12.1b-b3 | La hoja de `probar_toon_soft` ya sale igual (`frame_timer` reencuadraba a mitad de captura y el pelo se reajustaba según el reloj); 4 pasadas, 0 px distintos |

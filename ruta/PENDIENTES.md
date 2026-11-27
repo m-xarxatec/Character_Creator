@@ -9,4 +9,3 @@
 | D36 | ¿Lo nuestro sale CC0 y se publica también como pack suelto? (recomendado: sí) | `propuestas/expansion_v2.md` §7 |
 | D39 | ¿Se pueden descargar peinados y armas CC0 (Quaternius, Micket, KayKit), uno a uno y con la licencia comprobada? Necesita tu permiso de red | `propuestas/expansion_v2.md` §5.3 |
 | PE.5 | Aplazado a una versión más adelantada (2026-11-26): abrir `heroe.tscn` (exportado con long01) en un proyecto de Godot vacío, sin y con BoneMap: ¿abre sin errores?, ¿el pelo se mueve como en el editor? | `ruta/pasos/PE.5_exportar_pelo.md` §8 |
-| 12.1b-b3 | La hoja de `probar_toon_soft.gd` no sale igual dos veces con el mismo código (hasta 290 704 px); no sirve para comparar antes/después | `pruebas/capturas/shader_sh2/` |

@@ -332,6 +332,8 @@ func _dress(row: Dictionary) -> bool:
 		if not _put_piece(piece, row["clothes"]):
 			return false
 	view.style.refresh()
+	view.frame_timer.stop()  # a los 0,3 s de reloj reencuadraba, a veces en mitad de una captura
+	view._refit_hair()  # lo otro que hace ese Timer, aquí y siempre en el mismo momento
 	await _wait(10)
 	return true
 
