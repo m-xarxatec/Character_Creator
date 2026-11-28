@@ -15,6 +15,8 @@ extends SceneTree
 # _is_place -> falla «escala 0: avisa».
 # Paso 13.3a: un halo en socket_hand_r y en socket_back sale con piel, al 100 % del padre y donde en el editor. Que
 # detecta el fallo: en Sockets.to_nodes, no llamar a _to_socket_parent -> falla «exportar con el halo en socket_hand_r».
+# Paso 13.1b: «Colocar» en Accesorios (PlaceRow): hueso, gizmo, Restablecer, cierre y «Tocar zonas». Que detecta el
+# fallo: en PlaceRow._on_bone_selected, no llamar a set_place -> falla «el halo pasa a RightHand».
 
 ## Paso RE.1b: peinados de Quaternius.
 const MeshBaker := preload("res://../../godot/addons/creador/mesh_baker.gd")
@@ -25,6 +27,9 @@ const PLACE_MAX := 1e-6  # (13.1c, ficha §1.3): cada uno de los 8 números de l
 const HAND_CENTER_MAX := 0.05  # (13.1c, ficha §1.4): metros del centro del halo exportado a RightHand
 const HAND_WEIGHT_MAX := 0.001  # (13.1c): lo que le falta a un vértice del halo para pesar 1 en RightHand
 const SOCKET_CENTER_MAX := 0.001  # (13.3a, ficha §6): metros del centro del halo en un anclaje al del editor
+const BoneLabels := preload("res://../../godot/app/bone_labels.gd")  # paso 13.1b
+const HAND_FOLLOW_MAX := 0.001  # PROVISIONAL (13.1b, ficha §6): metros que cambia la distancia halo–mano con «Walk»
+const HAND_MOVED_MIN := 0.02  # PROVISIONAL (13.1b): metros que se mueve el halo en 0,5 s, para que la medida diga algo
 ## Paso AC.6b: el .glb lleva también los ojos (EyeMesh); no son piezas y no se cuentan (los mira probar_glb.gd --ojos).
 const EYE_MESHES := ["ojo_l", "ojo_r", "linea_l", "linea_r", "linea_inferior_l", "linea_inferior_r", "pliegue_l", "pliegue_r",
 	"ceja_l", "ceja_r"]  # AC.6c: las cejas
@@ -68,6 +73,7 @@ func _initialize() -> void:
 	_check_overscore(main, view)
 	_check_makehuman(main, view)
 	_check_wear(main, view)
+	await _check_place(main, view)
 	_check_export(view)
 	_check_project(main, view)
 	await _check_hair_physics(main, view)
@@ -601,6 +607,133 @@ func _check_wear(main: Control, view) -> void:
 	check("el color elegido se queda", view.piece_color("base/tights").is_equal_approx(Color(0.1, 0.6, 0.3)))
 	check("is_on y meshes_of de algo no puesto", not view.is_on("base/no") and view.meshes_of("base/no").is_empty())
 	check("quitar el halo", view.set_piece("base", "halo", false) and not view.is_on("base/halo"))
+
+
+## Paso 13.1b: «Colocar» en la pestaña Accesorios. Entra con los cuernos puestos y sin halo, y lo deja igual.
+func _check_place(main: Control, view) -> void:
+	var settings: GDScript = load(ProjectSettings.globalize_path("res://").path_join("../../godot/app/settings_file.gd").simplify_path())
+	var touch: bool = settings.get_touch_zones()
+	main.set_touch_zones(true)
+	var panel = main.piece_panels["Accesorios"]
+	var button: Button = panel.place_buttons.get("base/halo")
+	check("13.1b: «Colocar» está y no se puede pulsar sin la pieza", button != null and button.disabled)
+	check("13.1b: solo los accesorios llevan «Colocar»", main.piece_panels["Ropa"].place_buttons.is_empty())
+	if button == null or not view.set_piece("base", "halo", true):
+		return
+	button.button_pressed = true
+	var row = panel.place_row
+	check("13.1b: con el halo puesto, «Colocar» abre debajo de su fila", not button.disabled and row != null
+		and row.get_index() == button.get_parent().get_index() + 1)
+	if row == null:
+		return
+	check("13.1b: el gizmo está en la vista y «Tocar zonas» apagado", _gizmos(view) == 1 and not view.touch_zones)
+	_check_place_list(row)
+	_choose_bone(row, "RightHand")
+	var holder: BoneAttachment3D = view.accessories["base/halo"]
+	check("13.1b: el halo pasa a RightHand", holder.bone_name == "RightHand", holder.bone_name)
+	var usual: Dictionary = RigidPiece.default_place(view.library.piece("base", "halo"))
+	check("13.1b: en el origen del hueso, sin giro y con la escala de serie", RigidPiece.get_place(holder).is_equal_approx(
+		Transform3D(Basis.from_scale(usual["place"].basis.get_scale()), Vector3.ZERO)), str(RigidPiece.get_place(holder)))
+	await process_frame
+	_check_place_gizmo(row, holder)
+	await _check_place_follows(view, holder)
+	row.reset.pressed.emit()
+	check("13.1b: «Restablecer» vuelve a Head y a su sitio", holder.bone_name == "Head"
+		and RigidPiece.get_place(holder).is_equal_approx(usual["place"])
+		and row.bones.get_selected_metadata() == "Head", holder.bone_name)
+	var horns: Button = panel.place_buttons["base/cuernos"]
+	horns.button_pressed = true
+	check("13.1b: una abierta a la vez", panel.place_row != row and panel.placing == "base/cuernos"
+		and not button.button_pressed and _gizmos(view) == 1 and not view.touch_zones)
+	horns.button_pressed = false
+	check("13.1b: al cerrar, sin gizmo y «Tocar zonas» encendido como estaba", panel.place_row == null
+		and _gizmos(view) == 0 and view.touch_zones)
+	main.set_touch_zones(false)
+	button.button_pressed = true
+	view.set_piece("base", "halo", false)
+	check("13.1b: quitar la pieza cierra «Colocar»", panel.place_row == null and _gizmos(view) == 0 and button.disabled
+		and not button.button_pressed)
+	check("13.1b: «Tocar zonas» sigue apagado como estaba", not view.touch_zones)
+	main.set_touch_zones(touch)
+
+
+func _gizmos(view) -> int:
+	return view.viewport.get_children().filter(func(n: Node) -> bool:  # por archivo: main.gd lo carga por otra ruta
+		var script: Script = n.get_script()
+		return script != null and script.resource_path.ends_with("/transform_gizmo.gd")).size()
+
+
+## Los anclajes arriba y, en la sección «Huesos», los huesos, todos en español; elegido, el de la pieza.
+func _check_place_list(row) -> void:
+	var found := []
+	for i: int in row.bones.item_count:
+		found.append(row.bones.get_item_text(i))
+	var spanish := func(bone: String) -> String: return BoneLabels.label(bone)
+	var wanted: Array = BoneLabels.SOCKETS.map(spanish) + ["Huesos"] + BoneLabels.BONES.map(spanish)
+	check("13.1b: anclajes y sección «Huesos» en español", found == wanted
+		and row.bones.is_item_separator(BoneLabels.SOCKETS.size()), str(found))
+	check("13.1b: la lista enseña el hueso de la pieza", row.bones.get_selected_metadata() == "Head")
+
+
+## Como elegirlo en el desplegable.
+func _choose_bone(row, bone: String) -> void:
+	for i: int in row.bones.item_count:
+		if not row.bones.is_item_separator(i) and row.bones.get_item_metadata(i) == bone:
+			row.bones.select(i)
+			row.bones.item_selected.emit(i)
+
+
+## El gizmo se dibuja sobre la pieza y cada una de sus señales la cambia; los botones cambian su modo.
+func _check_place_gizmo(row, holder: BoneAttachment3D) -> void:
+	var gizmo = row.gizmo
+	var before: Transform3D = holder.global_transform * RigidPiece.get_place(holder)
+	check("13.1b: el gizmo está sobre la pieza", gizmo.target.is_equal_approx(before), str(gizmo.target.origin))
+	gizmo.moved_by.emit(Vector3.RIGHT, 0.03)
+	var after: Transform3D = holder.global_transform * RigidPiece.get_place(holder)
+	check("13.1b: arrastrar una flecha mueve la pieza", after.origin.is_equal_approx(before.origin + Vector3(0.03, 0, 0)),
+		str(after.origin - before.origin))
+	before = after
+	gizmo.turned_by.emit(Vector3.UP, 0.5)
+	after = holder.global_transform * RigidPiece.get_place(holder)
+	check("13.1b: arrastrar un anillo la gira", after.is_equal_approx(Transform3D(Basis(Vector3.UP, 0.5) * before.basis,
+		before.origin)))
+	var size: float = RigidPiece.get_place(holder).basis.get_scale().x
+	gizmo.scaled_by.emit(1.5)
+	check("13.1b: arrastrar el círculo la escala", is_equal_approx(RigidPiece.get_place(holder).basis.get_scale().x, size * 1.5))
+	check("13.1b: la pieza sigue en su hueso al arrastrar", holder.bone_name == "RightHand")
+	for text: String in ["Girar", "Escalar", "Mover"]:
+		row.modes[text].button_pressed = true
+		check("13.1b: botón «%s»" % text, gizmo.mode == row.MODES[text])
+
+
+## Con «Caminar» (Walk) y 0,5 s avanzados, el halo se mueve con la mano: un vértice suyo queda a la misma distancia del hueso.
+func _check_place_follows(view, holder: BoneAttachment3D) -> void:
+	view.set_process(false)  # el clip avanza solo lo que diga la prueba
+	check("13.1b: poner «Caminar»", view.set_animation("caminar"))
+	await process_frame
+	await process_frame
+	var before := _halo_and_hand(view, holder)
+	view._process(0.5)
+	await process_frame
+	var after := _halo_and_hand(view, holder)
+	var moved: float = after[0].distance_to(before[0])
+	var change := absf(after[0].distance_to(after[1]) - before[0].distance_to(before[1]))
+	print("  MEDIDA 13.1b: «Caminar», halo movido %.1f mm; cambio de la distancia a la mano %.4f mm" % [moved * 1000.0,
+		change * 1000.0])
+	check("13.1b: el halo se mueve con «Caminar»", moved >= HAND_MOVED_MIN, "%.1f mm" % (moved * 1000.0))
+	check("13.1b: el halo sigue a la mano", change <= HAND_FOLLOW_MAX, "%.4f mm" % (change * 1000.0))
+	view.set_animation("")
+	view.set_process(true)
+	await process_frame
+
+
+## [un vértice del halo, el hueso RightHand], en el mundo.
+func _halo_and_hand(view, holder: BoneAttachment3D) -> Array[Vector3]:
+	var skeleton: Skeleton3D = view.species.skeleton
+	var instance: MeshInstance3D = RigidPiece.meshes(holder)[0]
+	var vertex: Vector3 = instance.mesh.surface_get_arrays(0)[Mesh.ARRAY_VERTEX][0]
+	var hand := skeleton.global_transform * skeleton.get_bone_global_pose(skeleton.find_bone("RightHand"))
+	return [instance.global_transform * vertex, hand.origin]
 
 
 func _check_export(view) -> void:

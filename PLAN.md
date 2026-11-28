@@ -394,9 +394,9 @@ Según `diseno/maqueta-pestana-cuerpo.html`.
 
 ## Por aprobar visualmente
 
-> La interfaz de estos puntos aún no está construida (13.1b, 10.3c/d, 13.3f, 13.3g y 13.3h-b/c); las prendas del 12.1b esperan a rehacerse.
+> La interfaz de estos puntos aún no está construida (10.3c/d, 13.3f, 13.3g y 13.3h-b/c); la del 13.1b sí. Las prendas del 12.1b esperan a rehacerse.
 
-- 13.1b: selector de huesos en su sección «Huesos»
+- 13.1b: ya construida; «Colocar» en Accesorios con el selector de huesos en su sección «Huesos» (preguntas en el §8 de la ficha 13.1)
 - 10.3c/d: pestaña y panel del Estudio
 - 13.3f: botón y diálogo de importar con la advertencia D59
 - 13.3g: interfaz de ocultar, restaurar y borrar piezas
@@ -666,3 +666,4 @@ Según `diseno/maqueta-pestana-cuerpo.html`.
 | 2026-11-28 | 15.2a | `godot/app/platform.gd`: tabla de 11 funciones para `pc` y `android` (móvil o etiqueta `estudio` = android; desconocida = no, con aviso; imagen 8192/4096; `simulated` para pruebas); probar_plataforma TODO BIEN y detecta 3 roturas (android exporta, ignorar `simulated`, desconocida = sí). Cerrado solo con prueba en PC por encargo del líder; la ventana aún no la consulta (15.2b). |
 | 2026-11-28 | 10.3b (Cuerpo intacto) | `duplicate()` en `StudioView._copy` borraba `hair_head` de los materiales de Cuerpo (5 mallas; Godot lo quita al recorrer sus propiedades); ahora copia los parámetros a un material nuevo; la prueba ya no usa `duplicate` ni `get_property_list`; probar_estudio, probar_material y probar_textura_pieza TODO BIEN; detecta volver a `duplicate` (1 FALLO). |
 | 2026-11-28 | Cierre técnico | Cerrados técnicamente: 12.1b, 13.1a y 13.1c, 13.3a–e, 13.3g (sin interfaz), 13.3h-a, 10.3b (sin interfaz) y 15.2a; la Fase 15, con pruebas solo en PC (hecho solo 15.2a). 13.1b sin construir. Límites del 13.3e y del Estudio aprobados sin cambiar el valor. Lo que falta, en «Por aprobar visualmente» y «Pendiente técnico». |
+| 2026-11-28 | 13.1b | Construido, pendiente del juicio visual: «Colocar» en Accesorios (`place_row.gd`: hueso con sección «Huesos», Mover/Girar/Escalar, Restablecer, gizmo y «Tocar zonas» apagado; una abierta a la vez); probar_piezas (con «Caminar» el halo se mueve 229,4 mm y su distancia a la mano cambia 0 mm; límites 1 mm y 20 mm `PROVISIONAL`), gizmo, cuernos, ventana, tema, informe y glb 4/2 TODO BIEN; detecta no llamar a `set_place` al elegir hueso (4 FALLOS). En tema claro el rótulo «Huesos» sale casi invisible (color de serie de Godot; se arregla en `theme_builder.gd`, fuera de la ficha). |
