@@ -1,0 +1,119 @@
+{
+ "formato": "gamemolde-pack",
+ "version": 1,
+ "id": "claude_armadura_modular",
+ "nombre": "Armadura modular (pruebas)",
+ "autor": "GameMolde",
+ "licencia": "propia",
+ "origen": "",
+ "piezas": [
+  {
+   "id": "armadura_body",
+   "nombre": "Body azul con mallas (armadura modular)",
+   "archivo": "armadura_body.glb",
+   "sha256": "3b6d9e61b715ba5a51f749897d532eb77d6f0d5a59798e0b8ba817962fee9702",
+   "tipo": "ropa",
+   "ranura": "ropa_torso",
+   "especies": [
+    "humana"
+   ],
+   "colores": [
+    "principal"
+   ],
+   "color": [
+    0.2,
+    0.29,
+    0.4
+   ],
+   "sigue_al_cuerpo": true,
+   "fisica": [],
+   "miniatura": "",
+   "anclaje": {
+    "hueso": "",
+    "transform": [
+     0,
+     0,
+     0,
+     0,
+     0,
+     0,
+     1,
+     1
+    ]
+   },
+   "cubre": [
+    "ropa_piernas"
+   ]
+  },
+  {
+   "id": "armadura_chaqueta",
+   "nombre": "Chaqueta corta de cuero (armadura modular)",
+   "archivo": "armadura_chaqueta.glb",
+   "sha256": "1d93cf5c886c6205e40387203f1fe16ea4e510f402ddc688694bb141ad0c9893",
+   "tipo": "ropa",
+   "ranura": "ropa_exterior",
+   "especies": [
+    "humana"
+   ],
+   "colores": [
+    "principal"
+   ],
+   "color": [
+    0.3,
+    0.2,
+    0.17
+   ],
+   "sigue_al_cuerpo": true,
+   "fisica": [],
+   "miniatura": "",
+   "anclaje": {
+    "hueso": "",
+    "transform": [
+     0,
+     0,
+     0,
+     0,
+     0,
+     0,
+     1,
+     1
+    ]
+   }
+  },
+  {
+   "id": "armadura_acero",
+   "nombre": "Armadura de acero (armadura modular)",
+   "archivo": "armadura_acero.glb",
+   "sha256": "7a3725e1d03b2f8c986fa84d118aa4dea482cf6d40cd22508f14c7b3c82920a9",
+   "tipo": "accesorio",
+   "ranura": "accesorio",
+   "especies": [
+    "humana"
+   ],
+   "colores": [
+    "principal"
+   ],
+   "color": [
+    0.66,
+    0.67,
+    0.7
+   ],
+   "sigue_al_cuerpo": true,
+   "fisica": [],
+   "miniatura": "",
+   "anclaje": {
+    "hueso": "",
+    "transform": [
+     0,
+     0,
+     0,
+     0,
+     0,
+     0,
+     1,
+     1
+    ]
+   }
+  }
+ ]
+}
