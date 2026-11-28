@@ -3,10 +3,13 @@ extends SceneTree
 # se fabrican aquí (cajas), sin assets; escribe solo en user://importar_pieza, que borra al acabar, y deja la espada de
 # prueba en pruebas/capturas/13.3/espada_prueba.glb (para el juicio visual de 13.3f).
 # Paso 13.3d: BodyView pone una pieza importada (aquí también escribe en user://packs una carpeta propia_*, que borra).
+# Paso 13.3e: guardada y abierta como proyecto .gmolde (ProjectIO) y exportada en el .glb desde socket_hand_r.
 # Uso: (prlimit --as=4096000000 timeout 120 godot --headless --path pruebas/godot -s probar_importar_pieza.gd 2>&1 | grep -E 'FALLO|MEDIDA|RESULTADO|ERROR')
 # Que detecta el fallo: en PieceImport._append, no invertir los triángulos con determinante < 0 -> falla «el nodo
 # reflejado mira hacia fuera». En BodyView._set_accessory, pintar siempre con library.color_of(card) -> falla «13.3d:
 # cada malla con su color». En PackLibrary.piece_file, no mirar el sha256 -> falla «13.3d: archivo cambiado: no se pone».
+# En ProjectIO.worn_pieces, guardar siempre «principal» -> falla «13.3e: al abrir, vuelven los dos colores».
+# En ProjectIO.build, no mirar unbuilt_pieces -> falla «13.3e: archivo cambiado, la conserva al volver a guardar».
 # Mide (MEDIDA) cuánto tarda read con 100.000 triángulos.
 
 const PieceImport := preload("res://../../godot/addons/creador/piece_import.gd")
@@ -20,6 +23,8 @@ const CAPTURE := "res://../capturas/13.3/espada_prueba.glb"
 const COLOR_MAX := 1.0 / 255.0  # aprobado (2026-11-28, 13.3c): diferencia de color tras leer
 const BOX_MAX := 1e-5  # aprobado (2026-11-28, 13.3c): metros de diferencia en la caja
 const TIME_MAX := 2.0  # aprobado (2026-11-28, 13.3c): segundos para leer 100.000 triángulos
+const PLACE_MAX := 1e-6  # PROVISIONAL (13.3e): cada uno de los 8 números de la colocación al abrir
+const HAND_WEIGHT_MAX := 0.001  # PROVISIONAL (13.3e): lo que le falta a un vértice exportado para pesar 1 en RightHand
 const GRIP := Color(0.35, 0.1, 0.05)
 const BLADE := Color(0.7, 0.72, 0.75)
 const POMMEL := Color(1.0, 0.9, 0.6)  # con textura
@@ -218,6 +223,7 @@ func _check_imported(view) -> void:
 			and not RigidPiece.is_rigid(view.library.piece("base", "tights")) and not RigidPiece.is_rigid({}))
 	_check_worn(view, id)
 	_check_generated_color(view)
+	_check_project(view, id)
 	_check_bad_file(view, id)
 	_remove_tree(USER_PACKS.path_join(id))
 	if not had_packs:
@@ -297,6 +303,147 @@ func _painted(mesh: MeshInstance3D, color: Color) -> bool:
 	var material := mesh.material_override as ShaderMaterial
 	return ["skin_color", "garment_color"].all(func(part: String) -> bool:
 		return _color_gap(material.get_shader_parameter(part), color) <= COLOR_MAX)
+
+
+# --- 13.3e: proyecto y exportación ---
+
+## Con sus colores en socket_hand_r y con un color elegido en socket_back; el .glb, desde el proyecto abierto; al final,
+## sin la carpeta de la pieza (se aparta y se devuelve).
+func _check_project(view, id: String) -> void:
+	var io: GDScript = load(ProjectSettings.globalize_path("res://").path_join("../../godot/app/project_io.gd").simplify_path())
+	var key := id.path_join(id)
+	var path := DIR.path_join("daga.gmolde")
+	if not view.set_piece(id, id, true):
+		check("13.3e: se pone", false)
+		return
+	var own := _round_trip(view, io, path, key, "socket_hand_r", [0.02, -0.01, 0.05, 0.36, 0.48, 0.64, 0.48, 1.3])
+	if own.is_empty():
+		return
+	var meshes: Array = view.meshes_of(key)
+	check("13.3e: el proyecto no guarda color de una pieza con sus colores", own["entrada"]["colores"] == {},
+			str(own["entrada"]["colores"]))
+	check("13.3e: al abrir, vuelven los dos colores", meshes.size() == 2 and _painted(meshes[0], GRIP)
+			and _painted(meshes[1], BLADE) and view.accessories[key].has_meta("own_colors"))
+	_check_export(view, id)
+	view.set_piece_color(key, CHOSEN)
+	var chosen := _round_trip(view, io, path, key, "socket_back", [-0.03, 0.04, -0.02, 0.5, 0.5, 0.5, 0.5, 0.8])
+	if chosen.is_empty():
+		return
+	meshes = view.meshes_of(key)
+	check("13.3e: el color elegido se guarda y vuelve", chosen["entrada"]["colores"].has("principal") and meshes.size() == 2
+			and _painted(meshes[0], CHOSEN) and _painted(meshes[1], CHOSEN) and not view.accessories[key].has_meta("own_colors"),
+			str(chosen["entrada"]["colores"]))
+	_check_missing(view, io, path, id, chosen["entrada"])
+	_check_changed(view, io, path, id, chosen["entrada"])
+
+
+## Coloca la pieza, guarda, la quita y abre: mismo hueso y 8 números. {entrada: la del archivo}, o {} si falla.
+func _round_trip(view, io: GDScript, path: String, key: String, bone: String, numbers: Array) -> Dictionary:
+	var placed := RigidPiece.set_place(view.accessories[key], bone, RigidPiece.to_place(numbers))
+	var wanted := RigidPiece.to_array(RigidPiece.get_place(view.accessories[key]))
+	var written: Error = io.write(path, io.build(path, view, view.values, {}))
+	view.set_piece(key.get_base_dir(), key.get_file(), false)
+	var loaded: Dictionary = io.read(path, view)
+	check("13.3e: %s: guardar y leer el proyecto" % bone, placed and written == OK and loaded["error"] == "", loaded["error"])
+	if not placed or written != OK or loaded["error"] != "":
+		return {}
+	var entries: Array = loaded["proyecto"]["personajes"][0]["piezas"]
+	var warnings: Array[String] = io.wear_pieces(view, entries)
+	var on: bool = view.accessories.has(key)
+	check("13.3e: %s: se abre sin avisos, con la pieza puesta" % bone, warnings.is_empty() and entries.size() == 1 and on,
+			str(warnings))
+	if entries.size() != 1 or not on:
+		return {}
+	var found := RigidPiece.to_array(RigidPiece.get_place(view.accessories[key]))
+	var gap := 0.0
+	for k: int in 8:
+		gap = maxf(gap, absf(found[k] - wanted[k]))
+	print("  MEDIDA 13.3e: %s, diferencia de colocación %.9f" % [bone, gap])
+	check("13.3e: %s: mismo hueso y 8 números" % bone, view.accessories[key].bone_name == bone and gap <= PLACE_MAX,
+			str(view.accessories[key].bone_name, " ", found))
+	return {"entrada": entries[0]}
+
+
+## El .glb de la pieza en socket_hand_r: sus 2 mallas al 100 % de RightHand, cada una con su color.
+func _check_export(view, id: String) -> void:
+	var path := DIR.path_join("daga_puesta.glb")
+	var document := GLTFDocument.new()
+	var state := GLTFState.new()
+	if view.export_glb(path) != OK or document.append_from_file(path, state) != OK:
+		check("13.3e: exportar y volver a leer el .glb", false)
+		return
+	var scene := document.generate_scene(state)
+	var skeleton: Skeleton3D = scene.find_children("*", "Skeleton3D", true, false)[0]
+	var colors := [GRIP, BLADE]
+	for k: int in 2:
+		var part := scene.find_child("%s_m%d" % [id, k], true, false) as MeshInstance3D
+		var skinned := part != null and part.skin != null and part.skin.get_bind_count() > 0
+		check("13.3e: el .glb trae la malla %d con piel" % k, skinned)
+		if not skinned:
+			continue
+		var missing := _missing_weight(part, skeleton, skeleton.find_bone("RightHand"))
+		print("  MEDIDA 13.3e: malla %d, peso que falta en RightHand %.6f" % [k, missing])
+		check("13.3e: la malla %d va al 100 %% en RightHand" % k, missing <= HAND_WEIGHT_MAX, "%.6f" % missing)
+		var color: Color = (part.mesh.surface_get_material(0) as BaseMaterial3D).albedo_color
+		check("13.3e: la malla %d sale con su color" % k, _color_gap(color, colors[k]) <= COLOR_MAX, str(color))
+	scene.free()
+
+
+## Lo que le falta a algún vértice para pesar 1 en bone (el peor).
+func _missing_weight(instance: MeshInstance3D, skeleton: Skeleton3D, bone: int) -> float:
+	var arrays := instance.mesh.surface_get_arrays(0)
+	var count: int = arrays[Mesh.ARRAY_VERTEX].size()
+	var bones: PackedInt32Array = arrays[Mesh.ARRAY_BONES]
+	var weights: PackedFloat32Array = arrays[Mesh.ARRAY_WEIGHTS]
+	var per := bones.size() / count
+	var worst := 0.0
+	for v: int in count:
+		var on := 0.0
+		for k: int in range(v * per, (v + 1) * per):
+			if weights[k] <= 0.0:
+				continue
+			var named := instance.skin.get_bind_name(bones[k])
+			var bound := instance.skin.get_bind_bone(bones[k]) if named == &"" else skeleton.find_bone(named)
+			on += weights[k] if bound == bone else 0.0
+		worst = maxf(worst, absf(1.0 - on))
+	return worst
+
+
+## Como en otro equipo: sin la carpeta, abrir avisa y al volver a guardar la entrada sigue igual.
+func _check_missing(view, io: GDScript, path: String, id: String, entry: Dictionary) -> void:
+	var folder := USER_PACKS.path_join(id)
+	var aside := DIR.path_join("apartada")
+	view.set_piece(id, id, false)
+	DirAccess.rename_absolute(folder, aside)
+	view.rescan_packs()
+	var loaded: Dictionary = io.read(path, view)
+	var warnings: Array[String] = io.wear_pieces(view, loaded["proyecto"]["personajes"][0]["piezas"])
+	check("13.3e: sin la carpeta, avisa y no la pone", view.library.piece(id, id).is_empty() and warnings.size() == 1
+			and id in warnings[0] and not view.is_on(id.path_join(id)), str(warnings))
+	var written: Error = io.write(path, io.build(path, view, view.values, loaded["proyecto"]))
+	var again: Dictionary = io.read(path, view)
+	var kept: Array = again["proyecto"]["personajes"][0]["piezas"] if again["error"] == "" else []
+	check("13.3e: sin la carpeta, la conserva al volver a guardar", written == OK and kept == [entry], str(kept))
+	DirAccess.rename_absolute(aside, folder)
+	view.rescan_packs()
+
+
+## Con la pieza en la biblioteca pero su archivo cambiado: abrir avisa y al volver a guardar la entrada sigue igual.
+func _check_changed(view, io: GDScript, path: String, id: String, entry: Dictionary) -> void:
+	var file := USER_PACKS.path_join(id).path_join("pieza.glb")
+	var original := FileAccess.get_file_as_bytes(file)
+	_write_text(file, "esto no es un glb")
+	var loaded: Dictionary = io.read(path, view)
+	var warnings: Array[String] = io.wear_pieces(view, loaded["proyecto"]["personajes"][0]["piezas"])
+	check("13.3e: archivo cambiado, avisa y no la pone", not view.library.piece(id, id).is_empty() and warnings.size() == 1
+			and not view.is_on(id.path_join(id)), str(warnings))
+	var written: Error = io.write(path, io.build(path, view, view.values, loaded["proyecto"]))
+	var again: Dictionary = io.read(path, view)
+	var kept: Array = again["proyecto"]["personajes"][0]["piezas"] if again["error"] == "" else []
+	check("13.3e: archivo cambiado, la conserva al volver a guardar", written == OK and kept == [entry], str(kept))
+	var restored := FileAccess.open(file, FileAccess.WRITE)
+	restored.store_buffer(original)
+	restored.close()
 
 
 # --- Fabricar .glb ---

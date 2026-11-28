@@ -9,7 +9,7 @@ extends RefCounted
 #   var icon := ProjectIO.thumbnail(path)          # Texture2D o null (para «Recientes»)
 #   var warnings := ProjectIO.wear_pieces(body_view, project["personajes"][0]["piezas"])  # paso AB.13, al abrir
 # Paso AB.13: el bloque «piezas» guarda las piezas puestas (pack, pieza, sha256, ranura y color); las que este programa
-# no tiene se conservan tal cual.
+# no tiene se conservan tal cual. Paso 13.3e: también las que tiene pero no se pudieron poner (archivo roto o cambiado).
 
 const ProjectFile := preload("../addons/creador/project_file.gd")
 const Preset := preload("../addons/creador/preset.gd")
@@ -46,8 +46,11 @@ static func build(path: String, view: SubViewportContainer, values: Dictionary, 
 		project["personajes"][0]["preset"] = preset
 	project["programa"] = version
 	project["nombre"] = title
+	var unbuilt: Array = view.get_meta("unbuilt_pieces", [])  # paso 13.3e: las deja wear_pieces
 	var kept: Array = project["personajes"][0]["piezas"].filter(func(piece: Dictionary) -> bool:
-		return view.library == null or view.library.piece(piece["pack"], piece["pieza"]).is_empty())
+		var key := String(piece["pack"]).path_join(piece["pieza"])
+		return view.library == null or view.library.piece(piece["pack"], piece["pieza"]).is_empty() \
+				or (key in unbuilt and not view.is_on(key)))
 	project["personajes"][0]["piezas"] = worn_pieces(view) + kept
 	project["miniatura"] = _capture(view)
 	return project
@@ -83,18 +86,20 @@ static func read(path: String, view: SubViewportContainer) -> Dictionary:
 
 
 ## Paso AB.13: las piezas puestas en la vista, como el bloque «piezas» del proyecto. Las que siguen al cuerpo van con
-## hueso Root; los accesorios (paso 13.1c), con su hueso y su colocación respecto a él.
+## hueso Root; los accesorios (paso 13.1c), con su hueso y su colocación respecto a él. Paso 13.3e: una pieza importada
+## con los colores de sus partes (own_colors) va sin colores, para que al abrir no se pinte toda de uno.
 static func worn_pieces(view: SubViewportContainer) -> Array:
 	var worn := []
 	for key: String in view.pieces.keys() + view.accessories.keys():
 		var card: Dictionary = view.library.piece(key.get_base_dir(), key.get_file())
 		var color: Color = view.piece_color(key)
 		var holder: BoneAttachment3D = view.accessories.get(key)
+		var own: bool = holder != null and holder.has_meta("own_colors")
 		worn.append({"pack": key.get_base_dir(), "pieza": key.get_file(), "sha256": card.get("sha256", ""),
 			"ranura": card.get("ranura", ""), "hueso": "Root" if holder == null else String(holder.bone_name),
 			"transform": ProjectFile.NO_TRANSFORM.duplicate() if holder == null
 				else RigidPiece.to_array(RigidPiece.get_place(holder)),
-			"colores": {"principal": [color.r, color.g, color.b]}, "parametros": {}})
+			"colores": {} if own else {"principal": [color.r, color.g, color.b]}, "parametros": {}})
 	return worn
 
 
@@ -105,8 +110,11 @@ static func wear_pieces(view: SubViewportContainer, pieces: Array) -> Array[Stri
 	for key: String in view.pieces.keys() + view.accessories.keys():
 		view.set_piece(key.get_base_dir(), key.get_file(), false)
 	var warnings: Array[String] = []
+	var unbuilt: Array[String] = []
+	view.set_meta("unbuilt_pieces", unbuilt)
 	for piece: Dictionary in pieces:
 		if not view.set_piece(piece["pack"], piece["pieza"], true):
+			unbuilt.append(String(piece["pack"]).path_join(piece["pieza"]))
 			warnings.append("falta la pieza %s del pack %s (se conserva en el archivo)" % [piece["pieza"], piece["pack"]])
 			continue
 		var key := String(piece["pack"]).path_join(piece["pieza"])
