@@ -1,0 +1,46 @@
+{
+ "formato": "gamemolde-pack",
+ "version": 1,
+ "id": "claude_cola_tiburon",
+ "nombre": "Cola de tiburón (pruebas)",
+ "autor": "GameMolde",
+ "licencia": "propia",
+ "origen": "",
+ "piezas": [
+  {
+   "id": "cola_tiburon",
+   "nombre": "Cola de tiburón",
+   "archivo": "cola_tiburon.glb",
+   "sha256": "036f5f51eaebaa87b4e9626e9b0c844299242164e219b29a9b6d9b5c6f7432f7",
+   "tipo": "accesorio",
+   "ranura": "accesorio",
+   "especies": [
+    "humana"
+   ],
+   "colores": [
+    "principal"
+   ],
+   "color": [
+    0.27,
+    0.33,
+    0.45
+   ],
+   "sigue_al_cuerpo": true,
+   "fisica": [],
+   "miniatura": "",
+   "anclaje": {
+    "hueso": "",
+    "transform": [
+     0,
+     0,
+     0,
+     0,
+     0,
+     0,
+     1,
+     1
+    ]
+   }
+  }
+ ]
+}
