@@ -1,0 +1,46 @@
+{
+ "formato": "gamemolde-pack",
+ "version": 1,
+ "id": "claude_guanteletes_medievales",
+ "nombre": "Guanteletes medievales (pruebas)",
+ "autor": "GameMolde",
+ "licencia": "propia",
+ "origen": "",
+ "piezas": [
+  {
+   "id": "guanteletes_medievales",
+   "nombre": "Guanteletes medievales",
+   "archivo": "guanteletes_medievales.glb",
+   "sha256": "d5da7c5cae6a7254199e7c0549b954057e5205c8fec6ba35d6b2daa839cdfeb0",
+   "tipo": "accesorio",
+   "ranura": "accesorio",
+   "especies": [
+    "humana"
+   ],
+   "colores": [
+    "principal"
+   ],
+   "color": [
+    0.66,
+    0.68,
+    0.72
+   ],
+   "sigue_al_cuerpo": true,
+   "fisica": [],
+   "miniatura": "",
+   "anclaje": {
+    "hueso": "",
+    "transform": [
+     0,
+     0,
+     0,
+     0,
+     0,
+     0,
+     1,
+     1
+    ]
+   }
+  }
+ ]
+}
