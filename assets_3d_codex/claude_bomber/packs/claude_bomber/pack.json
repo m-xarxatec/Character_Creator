@@ -1,0 +1,116 @@
+{
+ "formato": "gamemolde-pack",
+ "version": 1,
+ "id": "claude_bomber",
+ "nombre": "Bomber y shorts (pruebas)",
+ "autor": "GameMolde",
+ "licencia": "propia",
+ "origen": "",
+ "piezas": [
+  {
+   "id": "bomber_verde",
+   "nombre": "Bomber verde (bomber y shorts)",
+   "archivo": "bomber_verde.glb",
+   "sha256": "0f3756d27d4a5389dfc30e3b4e87454b0f716323ef6f1d9a1fd2a10e635e90cd",
+   "tipo": "ropa",
+   "ranura": "ropa_exterior",
+   "especies": [
+    "humana"
+   ],
+   "colores": [
+    "principal"
+   ],
+   "color": [
+    0.42,
+    0.48,
+    0.32
+   ],
+   "sigue_al_cuerpo": true,
+   "fisica": [],
+   "miniatura": "",
+   "anclaje": {
+    "hueso": "",
+    "transform": [
+     0,
+     0,
+     0,
+     0,
+     0,
+     0,
+     1,
+     1
+    ]
+   }
+  },
+  {
+   "id": "top_negro",
+   "nombre": "Top corto negro (bomber y shorts)",
+   "archivo": "top_negro.glb",
+   "sha256": "f6c1b0a37049ec5284b6799b8d2356cf27f445e944b48b215fdbe541a38afb59",
+   "tipo": "ropa",
+   "ranura": "ropa_torso",
+   "especies": [
+    "humana"
+   ],
+   "colores": [
+    "principal"
+   ],
+   "color": [
+    0.06,
+    0.06,
+    0.07
+   ],
+   "sigue_al_cuerpo": true,
+   "fisica": [],
+   "miniatura": "",
+   "anclaje": {
+    "hueso": "",
+    "transform": [
+     0,
+     0,
+     0,
+     0,
+     0,
+     0,
+     1,
+     1
+    ]
+   }
+  },
+  {
+   "id": "shorts_negros",
+   "nombre": "Shorts de ciclista negros (bomber y shorts)",
+   "archivo": "shorts_negros.glb",
+   "sha256": "84c6c5a6e9ccd93b2dbb271365915ef21dca9278ac59ffb673cbeb7e8620e225",
+   "tipo": "ropa",
+   "ranura": "ropa_piernas",
+   "especies": [
+    "humana"
+   ],
+   "colores": [
+    "principal"
+   ],
+   "color": [
+    0.06,
+    0.06,
+    0.07
+   ],
+   "sigue_al_cuerpo": true,
+   "fisica": [],
+   "miniatura": "",
+   "anclaje": {
+    "hueso": "",
+    "transform": [
+     0,
+     0,
+     0,
+     0,
+     0,
+     0,
+     1,
+     1
+    ]
+   }
+  }
+ ]
+}
