@@ -32,6 +32,7 @@ var static_pose: GDScript
 var retarget_script: GDScript
 var material_script: GDScript
 var view: SubViewport
+const FACE_BONES := ["Jaw", "LeftEye", "RightEye"]  # paso 9.3: no cuentan al encuadrar (así el encuadre es el de antes)
 var camera: Camera3D
 var caption: Label
 
@@ -212,6 +213,8 @@ func _aim(character: Node3D, name: String) -> void:
 	var skeleton: Skeleton3D = character.find_children("*", "Skeleton3D", true, false)[0]
 	var box := AABB(skeleton.get_bone_global_pose(0).origin, Vector3.ZERO)  # huesos en la pose: la caja de la malla es la de reposo
 	for bone in skeleton.get_bone_count():
+		if skeleton.get_bone_name(bone) in FACE_BONES:
+			continue
 		box = box.expand(skeleton.get_bone_global_pose(bone).origin)
 	box = box.grow(0.12 * box.size.y)
 	if name == "juego":

@@ -30,6 +30,7 @@ func _initialize() -> void:
 	_check_outline_width()
 	_check_unlit()
 	_check_standalone()
+	_check_hide_mask()
 	_check_editor_alpha()
 	species.scene.free()
 	print("RESULTADO: ", "TODO BIEN" if failures == 0 else "%d FALLOS" % failures)
@@ -219,6 +220,65 @@ func _check_standalone() -> void:
 	DirAccess.remove_absolute(ProjectSettings.globalize_path(path))
 	material.set_unlit(species.mesh, false)
 	material.set_garment_visible(species.mesh, true)
+	_check_standalone_anime()
+
+
+## SH.5: en estilo anime la copia es de toon_soft, con la piel, el acabado y el mapa de zonas, todo dentro del .tres.
+func _check_standalone_anime() -> void:
+	material.set_style(species.mesh, true)
+	material.set_skin_zones(species.mesh, species.skin_zones)
+	material.set_skin(species.mesh, "freckles", 4)
+	material.set_finish(species.mesh, "softness", 0.14)
+	material.set_color(species.mesh, "skin_color", Color(0.3, 0.19, 0.14))
+	var copy: ShaderMaterial = material.standalone(species.mesh)
+	check("copia anime: shader toon_soft incrustado", copy.shader.resource_path == "" and copy.shader.code == material.SOFT_SHADER.code)
+	check("copia anime: piel, acabado, color y zonas de la malla", copy.get_shader_parameter("freckles") == 4.0
+		and is_equal_approx(copy.get_shader_parameter("softness"), 0.14) and copy.get_shader_parameter("skin_color") == Color(0.3, 0.19, 0.14)
+		and copy.get_shader_parameter("edge_strength") == material.SKIN_START["edge_strength"]
+		and copy.get_shader_parameter("skin_zones") != null and species.skin_zones != null)
+	var path := "user://probar_material_copia_anime.tres"
+	var saved := ResourceSaver.save(copy, path)
+	var text := FileAccess.get_file_as_string(path)
+	check("copia anime guardada en .tres: sin rutas, con los dos shaders y el mapa de zonas dentro",
+		saved == OK and not text.contains("res://") and text.count("shader_type spatial") == 2 and text.contains("Image"), "error %d" % saved)
+	var reloaded := ResourceLoader.load(path, "", ResourceLoader.CACHE_MODE_IGNORE) as ShaderMaterial
+	var zones: Texture2D = reloaded.get_shader_parameter("skin_zones") if reloaded != null else null
+	var expected_size: int = material.EXPORT_ZONES_SIZE
+	check("copia anime: el .tres se vuelve a leer con el mapa de zonas (%d px) y pesa menos de 1,5 MB" % expected_size,
+		zones != null and zones.get_width() == expected_size and text.length() < 1500000, "%s, %d bytes" % [zones, text.length()])
+	DirAccess.remove_absolute(ProjectSettings.globalize_path(path))
+	material.set_style(species.mesh, false)
+
+
+## Paso 12.1b-b3: máscara de piel oculta. Sin máscara no se descarta nada: el hint debe dar A = 0 (transparente; el
+## negro de Godot es opaco, A = 1, y lo descartaría todo) y el discard va en la primera línea de fragment().
+func _check_hide_mask() -> void:
+	var discard_first := RegEx.create_from_string("void fragment\\(\\) \\{\\n\\tif \\(texture\\(hide_mask, UV\\)\\.a > 0\\.5\\) \\{ discard; \\}")
+	for file: String in ["toon.gdshader", "toon_soft.gdshader", "outline.gdshader"]:
+		var text := FileAccess.get_file_as_string(root_dir.path_join("godot/addons/creador").path_join(file))
+		check("máscara: %s con hide_mask transparente por defecto y discard al empezar fragment()" % file,
+			text.contains("uniform sampler2D hide_mask : hint_default_transparent,") and discard_first.search(text) != null)
+	check("máscara: las piezas (copias del toon) también la llevan", material.piece_shader(false).code.contains("hide_mask")
+		and material.piece_shader(true).code.contains("hide_mask"))
+	material.apply(species.mesh)
+	var outline := (species.mesh.material_override as ShaderMaterial).get_meta("outline") as ShaderMaterial
+	check("máscara: sin poner, ninguna", material.get_hide_mask(species.mesh) == null)
+	var image := Image.create(2, 2, false, Image.FORMAT_RGBA8)
+	var mask := ImageTexture.create_from_image(image)
+	material.set_hide_mask(species.mesh, mask)
+	check("máscara: ida y vuelta", material.get_hide_mask(species.mesh) == mask)
+	check("máscara: el contorno la lleva", outline.get_shader_parameter("hide_mask") == mask)
+	material.set_style(species.mesh, true)
+	check("máscara: sobrevive al cambio a anime (cuerpo y contorno)", material.get_hide_mask(species.mesh) == mask
+		and outline.get_shader_parameter("hide_mask") == mask)
+	var copy: ShaderMaterial = material.standalone(species.mesh)
+	check("máscara: la copia para el juego va sin ella (cuerpo y contorno)", copy.get_shader_parameter("hide_mask") == null
+		and (copy.next_pass as ShaderMaterial).get_shader_parameter("hide_mask") == null)
+	material.set_style(species.mesh, false)
+	check("máscara: sobrevive al volver al clásico", material.get_hide_mask(species.mesh) == mask)
+	material.set_hide_mask(species.mesh, null)
+	check("máscara: null la quita del cuerpo y del contorno", material.get_hide_mask(species.mesh) == null
+		and outline.get_shader_parameter("hide_mask") == null)
 
 
 ## Paso 3.11b: toon.gdshader lee la prenda con min(rojo, alfa); en el editor el alfa vale 1, así que manda el rojo.

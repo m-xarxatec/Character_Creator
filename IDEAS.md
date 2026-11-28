@@ -11,6 +11,10 @@
 - Comparar antes y después (dos maniquíes lado a lado).
 - Medidas reales (altura en cm) junto a los deslizadores.
 - Atajos de teclado.
+- Rehacer expresiones y visemas cuando la cara esté lista (quitadas el 2026-11-25: se veían mal; el código del 9.7 y del 9.8 se queda, `blender/expresiones.json` vacío).
+- Pesos de mandíbula y ojos (junto con el montaje de ojos): los huesos `Jaw`, `LeftEye` y `RightEye` del 9.3 no tienen pesos y no mueven nada.
+- Investigar los 0,48 GB de RAM de más respecto al 7.1 (0,83 → 1,31 GB al arrancar, medido el 2026-11-25).
+- Guardar el `.glb` en un hilo (OPT.3c, quitado el 2026-11-25): funciona y quita ~180 ms del final, pero `GlbExporter.write` necesita el hilo principal libre (bloquearlo con `wait_to_finish()` lo cuelga). Antes hay que resolver qué pasa si se cierra la ventana a mitad (`body_actions._exit_tree` espera al hilo) y que la puerta espere dibujando. Con 9.7–9.3 el final subió a 287–312 ms con ventana: `MAX_GAP_MS` pasa a 400 (2026-11-25).
 - Pies al suelo al animar (IK de pies): sin él, con las rodillas dobladas los pies flotan según las proporciones (medido en el 5.1: hasta 168 mm al sentarse).
 
 ---
@@ -26,6 +30,9 @@
 
 - **Cara y ojos:** forma de la cara, ojos (forma y color), cejas, nariz, boca, orejas; expresiones y visemas.
 - **Pelo:** peinados como piezas; melenas y coletas que se mueven con `SpringBoneSimulator3D`; más adelante, un pincel de pelo como el de VRoid.
+- **Pelo con la cabeza muy grande** (PE.4b, 2026-11-26): con Cabeza › Tamaño ×2,5 las cadenas crecen con la cabeza y la nuca se hunde hasta 41,6 mm en cuello y hombros (hair_long). En el editor la apartan los choques del simulador; en el `.glb`, no. Apartarla también ahí (por ejemplo, posar las cadenas fuera de los choques antes de hornear).
+- **Pelo que traspasa la piel al moverse** (juicio del responsable, 2026-11-26: «se ve natural, me gusta, aunque traspasan la piel con el movimiento»): los choques son por articulación, no por vértice. Probar más radio de articulación, colisiones más ajustadas o más articulaciones por cadena. PE.4c (2026-11-27) lo reduce con tiras y holgura, pero no del todo: el simulador solo choca los puntos de las articulaciones y la malla queda a 5–12 cm de ellas (hombros y nuca). Vías: empujar la malla en el shader (probado una vez: movía el pelo quieto y empujaba hasta 20 cm; no se exporta sin un script) o repartir los mechones en más sectores (16 sectores: nuca mejor, hombros peor). Decidido por el responsable (2026-11-27): se cierra así y se arreglará de verdad con **peinados hechos por nosotros**, con la malla pensada para los huesos; probados y quitados: el choque de la cara (daba tirones) y el largo más rígido (entra más: el pelo rígido sigue el giro).
+- **Ajustes de física por peinado** (PE.4): el campo `fisica` de `pack.json` (rigidez, freno, gravedad, sectores) para afinar cada peinado; hoy todos usan `HairPhysics.DEFAULTS`.
 - **Ropa:** prendas que siguen al cuerpo (anclaje tipo `.mhclo`), capas, ocultar la piel que queda bajo la ropa.
 - **Accesorios:** cascos, gafas o armas en los puntos de anclaje.
 - **Materiales:** texturas de piel, estilo pixel art. (El color de piel pasó al MVP el 2026-11-12, solo el color: paso 4.7 de `PLAN.md`.) (El estilo ilustración con contorno ya está en `PLAN.md`.)
@@ -42,11 +49,13 @@
 - Deslizador de separación de los ojos con las formas CC0 de MakeHuman que mueven los ojos; el ancla de la calcomanía es un vértice fijo, así que el ojo lo sigue. En el preset anime los ojos se ven algo separados.
 - Los ojos de calcomanía se deforman en tres cuartos y de perfil: hará falta otro sistema de ojos.
 - Un deslizador por rasgo a partir de las formas de la cara anime (`cuenca_plana`, `boca_anime`, `mandibula_anime`, `menton_anime`, `nariz_anime`): cada una, una fila de la tabla del 2.1.
-- Esas formas aplastan las bolsas interiores de la boca y los ojos (hasta 58 mm): hay que resolverlo antes de abrir la boca (expresiones, visemas).
+- ~~Esas formas aplastan las bolsas interiores de la boca y los ojos (hasta 58 mm)~~: ojos, resuelto en AC.3; boca, en el 9.6 (`ruta/pasos/9.6_bolsa_boca.md`).
+- Boca, después del 9.8b (de momento el interior va negro, D58): o un hueso de mandíbula (el `Jaw` del perfil humanoide, paso 9.3) o una boca interactiva, con dientes y lengua propios (CC0). Lo decide el responsable más adelante.
 - Candidatas CC0 de OpenGameArt para la pestaña Cara y la base chibi: Generic Anime Face (Barely_Banquo, con expresiones), 3d female anime head (ColdOneK), Base Rigged Stylized Humanoid YW (Girush) y Tiby (PINKCANNON, chibi).
 - Cabezas con licencia CC-BY-SA como pack opcional, con aviso claro de la licencia al elegirlas.
 
 ---
+- **Deslizadores de ojos más extremos** (responsable, 2026-11-25), cuando los ojos no sean solo dibujos. Cómo: el alcance `@` del CSV (como nariz, orejas y boca), con `probar_forma_ojo.py` a 0 cruces y 0 invertidos. Los que no se ampliaron en nariz, boca y orejas (`mouth_position`, `ear_wing` y una dirección de otros 6) ya añadían cruces o invertidos a ×1,1: necesitarían corregir la forma, no solo alargarla.
 
 ## Después del MVP: contorno
 
@@ -116,6 +125,7 @@ El zip está en `referencias/` (git no lo guarda). Versión gratis: 2 cuerpos es
 - **NPC en el juego:** usar el núcleo en tiempo de juego para crear multitudes variadas.
 - **Versión web** (Three.js) con la misma carpeta `datos/`.
 - **Android** (tablet).
+- **Deslizadores de cara en Android** (9.2c, aplazado hasta el build de Android, 2026-11-28): decidir cómo cargar o quitar las 40 formas de cara; punto de partida en `ruta/pasos/9.2_deslizadores_cara.md`.
 - **Rig automático con IA** (UniRig) para mallas importadas sin huesos, cuando haya una GPU con más de 8 GB.
 - **Comunidad:** repositorio de packs, guía para crear piezas, traducciones.
 - **Aleatorio con candados y semilla** (de PL.5, quitado por el responsable el 2026-11-20): candado por zona para que el azar no la cambie, «Atrevido» (0–1) y la semilla visible para repetir una tirada.
@@ -140,6 +150,10 @@ El zip está en `referencias/` (git no lo guarda). Versión gratis: 2 cuerpos es
 ---
 
 ## Descartadas (y por qué)
+
+- **Pelo anime por parámetros** (PE.1, 2026-11-25): casquete y mechones en hoja generados en Blender. Probado en el programa: «las formas están raras, no parecen cabello». Se sigue con huesos para los peinados que ya hay (Fase PE).
+- **Formas de orejas** (AB.12, 2026-11-28): las orejas serán assets del responsable.
+- **Oclusión fija** bajo el cuello, bajo los brazos y entre las piernas (SH.4c, 2026-11-28): SH.4 basta, aprobado.
 
 - **VRoid Studio como base:** es cerrado y sus mallas son de pixiv.
 - **MB-Lab:** sus personajes son AGPL.

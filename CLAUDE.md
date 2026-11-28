@@ -47,7 +47,7 @@
 - Renderizador fijado en `project.godot`: Forward+ en PC y Mobile en Android. No cambiarlo sin un paso del PLAN.
 - Sin dependencias nuevas sin aprobación.
 - Lanzar siempre Godot y Blender con límite de tiempo y memoria: `(ulimit -v 4000000; timeout 120 ...)`.
-- Abrir el editor para probarlo a mano: `(ulimit -v 4000000; timeout 900 godot --path godot)` (con 120 s se cierra a medio probar).
+- Abrir el editor para probarlo a mano: `(ulimit -v 8000000; timeout 900 godot --path godot)` (con 120 s se cierra a medio probar; con ventana el driver ya reserva 3,5 GB y con 4 GB se cerraba sin memoria).
 - Crear un personaje: `blender -b -P blender/generar_cuerpo.py -- cuerpo.json salida.glb`
 - Pruebas de Blender (una por archivo `pruebas/fase_*/probar_*.py`): `blender -b -P <archivo> 2>&1 | grep -E 'FALLO|RESULTADO'`
 - Pruebas de Godot: proyecto `pruebas/godot/`, `godot --headless --path pruebas/godot -s <script>.gd`
@@ -68,13 +68,15 @@
 | --- | --- |
 | Unidades y ejes | Metros; Y arriba; mirando a +Z |
 | Pose de reposo | Pose T (MPFB sale en pose A, que rompe los brazos al animar) |
-| Esqueleto | 53 huesos con nombres de `SkeletonProfileHumanoid` (faltan `LeftEye`, `RightEye` y `Jaw` hasta la cara); solo huesos de deformación. En Godot hay que asignar un BoneMap humanoide al importar |
+| Esqueleto | 56 huesos con nombres de `SkeletonProfileHumanoid` (`LeftEye`, `RightEye` y `Jaw` desde el paso 9.3, sin pesos); solo huesos de deformación. En Godot hay que asignar un BoneMap humanoide al importar |
 | Pesos | Máximo 4 influencias por vértice, y suman 1 |
 | Malla | La base completa de MakeHuman, sin proxy; sin Draco |
+| Formas | Ninguna (se hornean), salvo las expresiones VRM (`happy`, `angry`, `sad`, `surprised`, `blinkLeft`, `blinkRight` y las visemas `aa`, `ih`, `ou`, `ee`, `oh`) en el cuerpo y en las mallas que las tienen: solo posiciones, a 0 (D31, paso 9.7.3) |
 | Puntos de anclaje | `socket_hand_r`, `socket_hand_l`, `socket_back`, `socket_hip`: nodos vacíos hijos del hueso |
 | Cuerpo | De 5 a 60 años (D42), sin deslizador Edad: con Altura (desde ×0,65) y los demás deslizadores; neutro, sin detalle anatómico |
 | Prenda base | Pintada: color por vértice `garment` (1 = prenda), siempre en la malla; el shader la muestra o la oculta (botón) |
-| Estilo | Ilustración (anime 3D): sombra de 3 tonos (valor por defecto) y contorno negro grueso, propio. El shader va en el núcleo, no en el `.glb` |
+| Interior de la boca | Oscuro (D58, paso 9.8b): verde del color por vértice = 0 en la bolsa; en el `.glb`, RGB 0,06 ahí (la norma glTF lo multiplica) |
+| Estilo | Anime tipo VRoid por defecto (SH.7, `toon_soft`): 2 tonos con sombra calculada desde el color, banda cálida, brillo suave de piel, rubor, labios y pecas, contorno fino teñido; el clásico (3 tonos, contorno negro) se elige en Acabado. El shader va en el núcleo y en el `.tres`; el `.glb` lleva rubor y pecas pintados |
 
 ## Convenciones de código
 

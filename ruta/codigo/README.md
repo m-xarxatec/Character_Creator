@@ -1,14 +1,14 @@
 # `ruta/codigo/` — borradores del código difícil
 
-> Escritos por el modelo fuerte el 2026-11-16, en una máquina **sin Godot**. **Ningún archivo de aquí se ha ejecutado.**
-> Son borradores: no están en `godot/` ni en `pruebas/` a propósito, para no chocar con los cambios sin subir del otro ordenador y para que nada sin probar entre en el núcleo.
+> Escritos por el modelo fuerte el 2026-11-16, en una máquina **sin Godot**. Desde entonces, `world_pose.gd` pasó al núcleo (10.3a) y `probar_ik` ya se ha ejecutado.
+> Lo que queda aquí son borradores: no están en `godot/` ni en `pruebas/` a propósito, para no chocar con los cambios sin subir del otro ordenador y para que nada sin probar entre en el núcleo.
 > Cada pieza es la parte de nivel **fuerte** de un paso. Con esto, colocarla y probarla pasa a ser trabajo de nivel **medio**.
 
 ## Qué hay
 
 | Pieza | Código (`nucleo/`) | Prueba (`pruebas/`) | Paso y ficha | Cuándo se usa |
 | --- | --- | --- | --- | --- |
-| Pose como giros en el mundo | `world_pose.gd` | `probar_pose_mundo.gd` | A3 (`pasos/A3_pose_en_mundo.md`) | Ya: antes del 5.1 |
+| ~~Pose como giros en el mundo~~ | ya en el núcleo: `godot/addons/creador/world_pose.gd` | `pruebas/godot/probar_pose_mundo.gd` | 10.3a (antes A3) | Hecho |
 | IK de dos huesos | `two_bone_ik.gd` | `probar_ik.gd` | 10.10 (`pasos/10_proyecto_y_estudio.md`) | Fase 10 |
 | Largo y grosor de hueso | `bone_shape.gd` | `probar_forma_hueso.gd` | 16.1 (`pasos/16_especies_y_extremos.md`) | Fase 16 |
 | Transferir formas y pesos a la ropa | `shape_transfer.gd` | `probar_transferencia.gd` | 12.1 (`pasos/12_ropa.md`) | Fase 12 |
@@ -23,7 +23,7 @@ Desde la raíz del repositorio. Las pruebas buscan el núcleo primero en `godot/
 
 ```sh
 R=$(pwd)
-for t in pose_mundo ik forma_hueso transferencia; do
+for t in ik forma_hueso transferencia; do
   echo "== $t"
   (ulimit -v 4000000; timeout 120 godot --headless --path pruebas/godot -s "$R/ruta/codigo/pruebas/probar_$t.gd" 2>&1) | grep -E 'FALLO|MEDIDA|RESULTADO|ERROR'
 done
@@ -47,16 +47,16 @@ Después de que una prueba pase, hacer la comprobación de **«que detecta el fa
 ## Cómo colocar una pieza (cuando llegue su paso)
 
 1. Propuesta y «OK», como cualquier paso (`GUIA_MODELOS.md` §1).
-2. Copiar el archivo de `nucleo/` a `godot/addons/creador/` y su prueba (y `esqueleto_de_prueba.gd`, si la usa) a `pruebas/godot/`. Borrarlos de `ruta/codigo/` en el mismo commit, para que no haya dos copias.
+2. Copiar el archivo de `nucleo/` a `godot/addons/creador/` (en `two_bone_ik.gd`, volver el `preload` de `WorldPose` a `"world_pose.gd"`) y su prueba (y `esqueleto_de_prueba.gd`, si la usa) a `pruebas/godot/`. Borrarlos de `ruta/codigo/` en el mismo commit, para que no haya dos copias.
 3. En la cabecera de la prueba, cambiar la línea «Uso:» por la habitual: `godot --headless --path pruebas/godot -s probar_<nombre>.gd`.
 4. Lanzar la prueba y todas las demás sin ventana.
 5. Seguir con el resto de la ficha del paso (la integración en la interfaz o en `CharacterUpdater` **no** está hecha aquí).
 
 ## Notas de cada pieza
 
-### `world_pose.gd` (A3)
+### `world_pose.gd` (A3) — ya en el núcleo (paso 10.3a)
 
-Sigue la ficha A3, con estas diferencias, todas a más:
+Ya no es borrador: vive en `godot/addons/creador/world_pose.gd` y su prueba en `pruebas/godot/`. `two_bone_ik.gd` lo carga con `preload("res://../../godot/addons/creador/world_pose.gd")`, válido al lanzar desde `pruebas/godot`. Diferencias respecto a la ficha A3, todas a más:
 
 - `copy` mueve la cadera **en el mundo** (la ficha lo hacía en local y solo valía si el padre de la cadera no tenía giro). Ya no tiene ese límite.
 - Funciones añadidas: `all_deltas` (la usa la IK), `mirror` (pose en espejo, paso 10.4), `to_data` y `from_data` (para guardar la pose en el proyecto) y `angle_between`.

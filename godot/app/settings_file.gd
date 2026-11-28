@@ -2,7 +2,7 @@ extends RefCounted
 # Paso P.5c: ajustes del programa que sobreviven al cerrarlo, en user://ajustes.cfg (vale en Linux, Windows, Android y
 # dentro del build, donde res:// es de solo lectura): la última carpeta de los diálogos (P.5c), el tema (IU.1c), el
 # tamaño de la interfaz y «Reducir animaciones» (IU.9), si ya se vio la pista de la vista (IU.10a) la rejilla (IU.3) y
-# «Elegir zona tocando el cuerpo» (IU.7a).
+# «Elegir zona tocando el cuerpo» (IU.7a) y las piezas ocultas de la biblioteca (13.3g).
 # Un archivo roto o que falta da los valores por defecto.
 # Uso:
 #   SettingsFile.set_folder(path.get_base_dir())
@@ -13,6 +13,7 @@ extends RefCounted
 #   var seen := SettingsFile.get_hint_seen()  # false si no hay ajuste
 #   var grid := SettingsFile.get_grid()       # false si no hay ajuste
 #   var touch := SettingsFile.get_touch_zones()  # false si no hay ajuste (apagado por defecto)
+#   SettingsFile.hide_piece("base/halo"); var keys := SettingsFile.get_hidden_pieces(); SettingsFile.restore_pieces()
 
 const PATH := "user://ajustes.cfg"
 const RECENT_MAX := 8  # paso PL.4: presets en «Recientes»
@@ -115,6 +116,28 @@ static func add_recent(path: String) -> void:
 		if old != path:
 			recent.append(old)
 	_write("archivos", "recientes", recent.slice(0, RECENT_MAX))
+
+
+## Paso 13.3g: las piezas ocultas, como "pack/pieza"; lo que no sea texto se ignora.
+static func get_hidden_pieces() -> PackedStringArray:
+	var value: Variant = _read("piezas", "ocultas", PackedStringArray())
+	var found := PackedStringArray()
+	if typeof(value) in [TYPE_PACKED_STRING_ARRAY, TYPE_ARRAY]:
+		for key: Variant in value:
+			if typeof(key) == TYPE_STRING and not found.has(key):
+				found.append(key)
+	return found
+
+
+static func hide_piece(key: String) -> void:
+	var keys := get_hidden_pieces()
+	if not keys.has(key):
+		keys.append(key)
+		_write("piezas", "ocultas", keys)
+
+
+static func restore_pieces() -> void:
+	_write("piezas", "ocultas", PackedStringArray())
 
 
 ## Un ajuste de [interfaz] que debe ser bool; si no lo es (archivo roto o a mano), el valor por defecto.

@@ -4,7 +4,7 @@ extends SceneTree
 # Uso: (ulimit -v 4000000; timeout 120 godot --headless --path pruebas/godot -s probar_packs.gd 2>&1 | grep -E 'FALLO|RESULTADO|ERROR')
 # Que detecta el fallo: en PackLibrary._add, quitar la comprobación de LICENSES -> falla «licencia CC-BY: rechazado».
 
-const BASE_PIECES := ["tights", "hair", "casquete", "melena", "cuernos", "orejas_gato", "halo"]
+const BASE_PIECES := ["tights", "hair", "casquete", "melena", "cuernos", "halo"]
 
 ## Paso RE.1a: el pack de MakeHuman (ranura de cada pieza y tamaño total del pack).
 const MH_SLOTS := {"short02": "pelo", "bob02": "pelo", "long01": "pelo", "ponytail01": "pelo", "afro01": "pelo",
@@ -46,6 +46,7 @@ func _initialize() -> void:
 	_check_quaternius()
 	_check_overscore()
 	_check_conflicts()
+	_check_hide()
 	_check_rejected()
 	_clean()
 	print("RESULTADO: ", "TODO BIEN" if failures == 0 else "%d FALLOS" % failures)
@@ -100,6 +101,62 @@ func _check_conflicts() -> void:
 	check("sin choque: pelo con traje, y accesorios con todo", not library_script.conflicts(hair, suit)
 		and not library_script.conflicts(horns, suit) and not library_script.conflicts(shorts, horns))
 	check("una pieza con su misma ranura choca (dos peinados)", library_script.conflicts(hair, library.piece("makehuman", "bob01")))
+
+
+## Paso 12.1b: máscaras de piel oculta (PackLibrary.hide_image) y su unión (SkinHide.union).
+func _check_hide() -> void:
+	var skin_hide: GDScript = load(root_dir.path_join("godot/addons/creador/skin_hide.gd"))
+	var library = library_script.new()
+	library.scan(PackedStringArray([root_dir.path_join("godot/packs")]))
+	var cards: Array = library.pieces("ropa").filter(func(card: Dictionary) -> bool: return card.has("oculta"))
+	var bad: Array = cards.filter(func(card: Dictionary) -> bool:
+		var image: Image = library.hide_image(card["pack"], card["id"])
+		return image == null or image.get_format() != Image.FORMAT_RGBA8 or image.get_size() != Vector2i(1024, 1024))
+	check("hide_image abre las %d máscaras (RGBA8 de 1024²)" % cards.size(), cards.size() >= 7 and bad.is_empty(), str(bad.map(
+		func(card: Dictionary) -> String: return card["id"])))
+	check("una pieza sin «oculta» da null", library.hide_image("makehuman", "short02") == null)
+	check("sin piezas, la unión es null", skin_hide.union([] as Array[Image]) == null
+		and skin_hide.union([null] as Array[Image]) == null)
+	var shirt: Image = library.hide_image("makehuman", "elvs_crude_t-shirt_male")
+	var shorts: Image = library.hide_image("makehuman", "cortu_jeans_shorts")
+	var joined: ImageTexture = skin_hide.union([shirt, shorts] as Array[Image])
+	var a := shirt.get_data()
+	var b := shorts.get_data()
+	var c := joined.get_image().get_data() if joined != null else PackedByteArray()
+	var wrong := 0
+	var only_b := 0
+	for i in range(3, c.size(), 4):
+		wrong += 1 if c[i] + 1 < maxi(a[i], b[i]) else 0  # 1/255 de redondeo de blend_rect; medido 0 píxeles
+		only_b += 1 if b[i] > 127 and a[i] <= 127 else 0
+	check("la unión de camiseta y shorts tiene lo oculto de las dos", c.size() == a.size() and wrong == 0 and only_b > 0,
+		"%d píxeles por debajo; %d solo de los shorts" % [wrong, only_b])
+	# Otros tamaños (pack de usuario): una de 2² y otra de 8² sobre una primera de 4².
+	var first := Image.create(4, 4, false, Image.FORMAT_RGBA8)
+	var small := Image.create(2, 2, false, Image.FORMAT_RGBA8)
+	small.set_pixel(1, 0, Color.WHITE)
+	var big := Image.create(8, 8, false, Image.FORMAT_RGBA8)
+	big.fill_rect(Rect2i(0, 4, 4, 4), Color.WHITE)
+	var expected := Image.create(4, 4, false, Image.FORMAT_RGBA8)
+	expected.fill_rect(Rect2i(2, 0, 2, 2), Color.WHITE)
+	expected.fill_rect(Rect2i(0, 2, 2, 2), Color.WHITE)
+	var mixed: Image = skin_hide.union([first, small, big] as Array[Image]).get_image()
+	check("la unión reescala al tamaño de la primera (al más cercano) sin tocar las originales",
+		mixed.get_size() == Vector2i(4, 4) and mixed.get_data() == expected.get_data()
+		and small.get_size() == Vector2i(2, 2) and big.get_size() == Vector2i(8, 8))
+	# hidden_vertices: 4 vértices en los 4 cuartos de las UV y solo el de arriba a la derecha (u alta, v baja) oculto.
+	var quarters := Image.create(2, 2, false, Image.FORMAT_RGBA8)
+	quarters.set_pixel(1, 0, Color.WHITE)
+	var arrays := []
+	arrays.resize(Mesh.ARRAY_MAX)
+	arrays[Mesh.ARRAY_VERTEX] = PackedVector3Array([Vector3.ZERO, Vector3.RIGHT, Vector3.UP, Vector3.ONE])
+	arrays[Mesh.ARRAY_TEX_UV] = PackedVector2Array([Vector2(0.25, 0.25), Vector2(0.75, 0.25), Vector2(0.25, 0.75), Vector2(1, 1)])
+	var instance := MeshInstance3D.new()
+	instance.mesh = ArrayMesh.new()
+	instance.mesh.add_surface_from_arrays(Mesh.PRIMITIVE_TRIANGLE_STRIP, arrays)
+	var marks: PackedByteArray = skin_hide.hidden_vertices(instance, ImageTexture.create_from_image(quarters))
+	check("hidden_vertices: solo el vértice cuya UV cae en el píxel oculto", marks == PackedByteArray([0, 1, 0, 0]), str(marks))
+	check("hidden_vertices: sin máscara, ninguno", skin_hide.hidden_vertices(instance, null) == PackedByteArray([0, 0, 0, 0]))
+	instance.free()
 
 
 func _is_clean(card: Dictionary) -> bool:
@@ -197,7 +254,8 @@ func _check_rejected() -> void:
 	var glb := FileAccess.get_file_as_bytes(root_dir.path_join("godot/packs/base/hair.glb"))
 	var good := {"formato": "gamemolde-pack", "version": 1, "id": "bueno", "nombre": "Bueno", "autor": "Prueba",
 		"licencia": "CC0-1.0", "piezas": [{"id": "falda", "tipo": "ropa", "ranura": "ropa_piernas", "archivo": "falda.glb",
-		"sha256": "0".repeat(64), "sigue_al_cuerpo": true}]}
+		"sha256": "0".repeat(64), "sigue_al_cuerpo": true,
+		"oculta": {"archivo": "falda_oculta.png", "sha256": "0".repeat(64)}}]}
 	var cases := {
 		"licencia CC-BY": {"licencia": "CC-BY-4.0"},
 		"sin autor": {"autor": ""},
@@ -205,6 +263,8 @@ func _check_rejected() -> void:
 		"otro formato": {"formato": "otra-cosa"},
 		"ranura desconocida": {"piezas": [{"id": "a", "tipo": "ropa", "ranura": "cola", "archivo": "falda.glb"}]},
 		"falta el archivo": {"piezas": [{"id": "a", "tipo": "ropa", "ranura": "pelo", "archivo": "no.glb"}]},
+		"falta la máscara": {"piezas": [{"id": "a", "tipo": "ropa", "ranura": "pelo", "archivo": "falda.glb",
+			"oculta": {"archivo": "no.png", "sha256": ""}}]},
 	}
 	var n := 0
 	for label: String in cases:
@@ -220,6 +280,8 @@ func _check_rejected() -> void:
 		and library.packs.keys() == ["bueno"], str(library.packs.keys()))
 	check("licencia CC-BY: rechazado y el aviso lo dice", warnings.any(func(w: String) -> bool: return w.contains("CC-BY-4.0")))
 	check("sha256 que no coincide: load_piece da null", library.load_piece("bueno", "falda") == null)
+	check("sha256 de la máscara que no coincide: hide_image da null", library.hide_image("bueno", "falda") == null)
+	check("falta la máscara: el aviso lo dice", warnings.any(func(w: String) -> bool: return w.contains("«oculta»")))
 
 
 func _write_pack(folder: String, data: Dictionary, glb: PackedByteArray) -> void:
@@ -231,6 +293,8 @@ func _write_pack(folder: String, data: Dictionary, glb: PackedByteArray) -> void
 	file = FileAccess.open(path.path_join("falda.glb"), FileAccess.WRITE)
 	file.store_buffer(glb)
 	file.close()
+	var image := Image.create(2, 1, false, Image.FORMAT_RGBA8)  # paso 12.1b: máscara de la ficha (sha256 mal)
+	image.save_png(path.path_join("falda_oculta.png"))
 
 
 func _clean() -> void:

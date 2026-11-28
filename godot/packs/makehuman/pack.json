@@ -214,6 +214,10 @@
    "id": "female_casualsuit01",
    "miniatura": "",
    "nombre": "Traje informal (mujer 1)",
+   "oculta": {
+    "archivo": "female_casualsuit01_oculta.png",
+    "sha256": "522d515f3940acc89b54ab1c572ff6d76212752e3a9b33309eb31c5b3d844ccf"
+   },
    "ranura": "ropa_torso",
    "sha256": "2e37c20452b2146be303cb91e60f428a651b7b2874234b8597a62c02064d5681",
    "sigue_al_cuerpo": true,
@@ -252,6 +256,10 @@
    "id": "female_sportsuit01",
    "miniatura": "",
    "nombre": "Traje deportivo (mujer)",
+   "oculta": {
+    "archivo": "female_sportsuit01_oculta.png",
+    "sha256": "afdf8759d96cf7fac541b244408ca68b29f45ed7e615f5272e0d9bccd5c1d636"
+   },
    "ranura": "ropa_torso",
    "sha256": "edfe8ec922b898c6e2047f2fd2d521c5e496c7f97bf6e9dfc0af810731150601",
    "sigue_al_cuerpo": true,
@@ -290,6 +298,10 @@
    "id": "male_casualsuit02",
    "miniatura": "",
    "nombre": "Traje informal (hombre 2)",
+   "oculta": {
+    "archivo": "male_casualsuit02_oculta.png",
+    "sha256": "2fdf5df6409304d56545dae99f68b5fd896fa50cfb14d5f3e85e90c827c16f8f"
+   },
    "ranura": "ropa_torso",
    "sha256": "69f02736bb0c66660108a55dca6c85ee963dba13937bd783f8353d8f818487f0",
    "sigue_al_cuerpo": true,
@@ -328,6 +340,10 @@
    "id": "male_casualsuit04",
    "miniatura": "",
    "nombre": "Traje informal (hombre 4)",
+   "oculta": {
+    "archivo": "male_casualsuit04_oculta.png",
+    "sha256": "0f7b8eeca0ee7954848409b26b62871b3a62e114e7ff9cbd6c75ea30d6fdf26e"
+   },
    "ranura": "ropa_torso",
    "sha256": "946e47fd063f89e512bd3f4ad0f39ae24282d54702d3c8ac2e8e3097101f62fd",
    "sigue_al_cuerpo": true,
@@ -364,7 +380,7 @@
    "miniatura": "",
    "nombre": "Pelo desgreñado",
    "ranura": "pelo",
-   "sha256": "193876de833d71a8b28110587a621f69c02411b0fa5ff24e9226c0db11333be4",
+   "sha256": "31a5c2df6722a018f61a2a55da1986265e1cfa7c7ecbf2317f6c4b7da2f10124",
    "sigue_al_cuerpo": true,
    "tipo": "pelo"
   },
@@ -539,7 +555,7 @@
    "miniatura": "",
    "nombre": "Pelo corto de mechones largos",
    "ranura": "pelo",
-   "sha256": "9cca998abf6404a14aaa74ceeffb38532b82436d38b9d8c3633ea0fbd82c3f8d",
+   "sha256": "1cb0b0486fc393a09584e91ec5e3e1c48bbefe2b3b70f9adca586be752940552",
    "sigue_al_cuerpo": true,
    "tipo": "pelo"
   },
@@ -609,7 +625,7 @@
    "miniatura": "",
    "nombre": "Bob recto",
    "ranura": "pelo",
-   "sha256": "9a0be95d4c70a16b22350646836ea752c4d78661a837b4dc9b1ca75c794d0754",
+   "sha256": "3169d89bf4efc903e0462bb3e3ab27239846c46708720b59bbc251ea72f4f520",
    "sigue_al_cuerpo": true,
    "tipo": "pelo"
   },
@@ -644,7 +660,7 @@
    "miniatura": "",
    "nombre": "Bob recto con flequillo",
    "ranura": "pelo",
-   "sha256": "fef2d30dd55a6b733ec9c2971435974300d1f77d8cd136bd8a4ea0befe1ed74f",
+   "sha256": "e002fc2386f9cb0c46e992bdf77c4cc447df8cfea81e987e13634c23c4acb182",
    "sigue_al_cuerpo": true,
    "tipo": "pelo"
   },
@@ -714,7 +730,7 @@
    "miniatura": "",
    "nombre": "Bob hacia dentro con flequillo",
    "ranura": "pelo",
-   "sha256": "c0aae654b9f631e9ed2237f08b7ab97b46785436af98d5d368ef7a7b32969685",
+   "sha256": "4523ce72f88acfc8cd67a139fc712d6338b509c671ce45e8541524fe9d6846cc",
    "sigue_al_cuerpo": true,
    "tipo": "pelo"
   },
@@ -749,7 +765,7 @@
    "miniatura": "",
    "nombre": "Bob invertido",
    "ranura": "pelo",
-   "sha256": "3ebf6651566a4ab23367d1877ed488c46c39abf68e999af1af45215652ea88e9",
+   "sha256": "31b80e8ca0326dafbd3f0af620f7878b8c2959b99f4a255b29ee604c73988694",
    "sigue_al_cuerpo": true,
    "tipo": "pelo"
   },
@@ -993,6 +1009,10 @@
    "id": "cortu_jeans_shorts",
    "miniatura": "",
    "nombre": "Shorts vaqueros",
+   "oculta": {
+    "archivo": "cortu_jeans_shorts_oculta.png",
+    "sha256": "a0d8df5e5b47d1a7572d7f200f20b8addd7d38593acc41cfd4dbee6cef65af7f"
+   },
    "ranura": "ropa_piernas",
    "sha256": "78c0e1769e0416e97fe3fa014621a9a1233361e6831437155c1cbc470ffe95ce",
    "sigue_al_cuerpo": true,
@@ -1028,6 +1048,10 @@
    "id": "toigo_basic_tucked_t-shirt",
    "miniatura": "",
    "nombre": "Camiseta metida",
+   "oculta": {
+    "archivo": "toigo_basic_tucked_t-shirt_oculta.png",
+    "sha256": "932f0e5eb400c725889c5e2e5d2cb186c0ca6d404654f5bcb27189d50707db10"
+   },
    "ranura": "ropa_torso",
    "sha256": "b26d8b261133695355e8bccd17aee343c4a8ce2212c800dc735a1956573c3c48",
    "sigue_al_cuerpo": true,
@@ -1063,6 +1087,10 @@
    "id": "joepal_crude_t-shirt_female",
    "miniatura": "",
    "nombre": "Camiseta básica (mujer)",
+   "oculta": {
+    "archivo": "joepal_crude_t-shirt_female_oculta.png",
+    "sha256": "b53f9ac99224b9d49beace9fbe4c4da1d7a83a5ee40da10f21aada07218dcab2"
+   },
    "ranura": "ropa_torso",
    "sha256": "832db194e40b15eece9a97b8a8737b7f6deeaf06b526e467fbf45f42aaa8fbe4",
    "sigue_al_cuerpo": true,
@@ -1098,6 +1126,10 @@
    "id": "elvs_crude_t-shirt_male",
    "miniatura": "",
    "nombre": "Camiseta básica (hombre)",
+   "oculta": {
+    "archivo": "elvs_crude_t-shirt_male_oculta.png",
+    "sha256": "7b85168e424f201eaccfcecb9aea206c2aa6cdbe4acff25b9476b583c294cfbd"
+   },
    "ranura": "ropa_torso",
    "sha256": "3550117eacd4eab64a899c0ff2b48fd3fce2e871994a8637feabd44217af4fc9",
    "sigue_al_cuerpo": true,
@@ -1133,6 +1165,10 @@
    "id": "namuhekam_male_polo_shirt",
    "miniatura": "",
    "nombre": "Polo (hombre)",
+   "oculta": {
+    "archivo": "namuhekam_male_polo_shirt_oculta.png",
+    "sha256": "7e2ee9d44c4bb629f4b654b529207a810ae2d8019435e7ed4fc57e1868cb33b0"
+   },
    "ranura": "ropa_torso",
    "sha256": "b11d64c582c1b0aeda687cd24c21985016678d23a80d9c1725e8383de11882e1",
    "sigue_al_cuerpo": true,
@@ -1168,6 +1204,10 @@
    "id": "toigo_camisole_top",
    "miniatura": "",
    "nombre": "Camisola de tirantes",
+   "oculta": {
+    "archivo": "toigo_camisole_top_oculta.png",
+    "sha256": "963c96fc4157b6c6245389d3a541eb6f23ed5443e37d238273ee61727ffb8738"
+   },
    "ranura": "ropa_torso",
    "sha256": "7832bd3fdd1daeea9906c4165d614293e38fa3f61126ae93146c54f99b67a21f",
    "sigue_al_cuerpo": true,
@@ -1203,6 +1243,10 @@
    "id": "toigo_keyhole_tank_top",
    "miniatura": "",
    "nombre": "Top de tirantes con ojal",
+   "oculta": {
+    "archivo": "toigo_keyhole_tank_top_oculta.png",
+    "sha256": "f1fb9e06e7423457cffe9e069c92eeeefa6d2a1eb110923178e498cd0af2a3a3"
+   },
    "ranura": "ropa_torso",
    "sha256": "8cb94453c73da9578a0e5385b56948d3931687c0c9867057aea3352298421f0a",
    "sigue_al_cuerpo": true,
@@ -1238,6 +1282,10 @@
    "id": "toigo_fisherman_sweater",
    "miniatura": "",
    "nombre": "Suéter de pescador",
+   "oculta": {
+    "archivo": "toigo_fisherman_sweater_oculta.png",
+    "sha256": "db1490ccc74731982e7361ba4bc79dbacef51eb20904e3af227631298a8bf1a9"
+   },
    "ranura": "ropa_torso",
    "sha256": "48cb6bbfc9e0d6a535c84f1f2f27baad1510b747f3030822029ae8aed09aa73c",
    "sigue_al_cuerpo": true,

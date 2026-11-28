@@ -1,0 +1,6 @@
+{
+  "version": 1,
+  "fuente": "faceunits01 y visemes02 (blender/faceunits01/ y blender/visemes02/, CC0, Mika Suominen)",
+  "nota": "Vaciado el 2026-11-25: se rehacen cuando la cara este lista (IDEAS.md). Paso 9.7.1. Pesos de las unidades ARKit de cada expresion (nombres de VRM 1.0). Paso 9.8: visemas de VRM (aa, ih, ou, ee, oh) con las de visemes02. \"propio\": parpadeo de cara_anime (EyeFit.blink_delta). Para comparar con el de MakeHuman (9.7.0, A/B): blinkLeft = {\"eyeBlinkLeft\": 1.0} y blinkRight = {\"eyeBlinkRight\": 1.0}.",
+  "expresiones": {}
+}

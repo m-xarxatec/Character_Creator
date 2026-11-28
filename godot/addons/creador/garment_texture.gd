@@ -19,8 +19,9 @@ static func bake(mesh: Mesh, size: int, skin: Color, garment: Color) -> Image:
 
 
 ## Lo mismo con los arrays ya leídos: no toca el servidor de render, vale en un hilo (paso P.1).
+## skin_image (SH.8c): la piel ya pintada (SkinPaint, del mismo tamaño); null = todo del color skin.
 static func bake_arrays(uvs: PackedVector2Array, colors: PackedColorArray, indices: PackedInt32Array, size: int,
-		skin: Color, garment: Color) -> Image:
+		skin: Color, garment: Color, skin_image: Image = null) -> Image:
 	var labels := PackedByteArray()
 	labels.resize(size * size)
 	for t in range(0, indices.size(), 3):
@@ -29,7 +30,7 @@ static func bake_arrays(uvs: PackedVector2Array, colors: PackedColorArray, indic
 		var c := indices[t + 2]
 		_fill_triangle(labels, size, uvs[a] * size, uvs[b] * size, uvs[c] * size, colors[a].r, colors[b].r, colors[c].r)
 	_pad_garment(labels, size)
-	return _to_image(labels, size, skin, garment)
+	return _to_image(labels, size, skin, garment, skin_image)
 
 
 ## Marca los píxeles cuyo centro cae dentro del triángulo (coordenadas en píxeles).
@@ -70,9 +71,13 @@ static func _pad_garment(labels: PackedByteArray, size: int) -> void:
 		front = next
 
 
-static func _to_image(labels: PackedByteArray, size: int, skin: Color, garment: Color) -> Image:
-	var image := Image.create_empty(size, size, false, Image.FORMAT_RGB8)
-	image.fill(skin)
+static func _to_image(labels: PackedByteArray, size: int, skin: Color, garment: Color, skin_image: Image = null) -> Image:
+	var image: Image
+	if skin_image != null:
+		image = skin_image.duplicate() as Image
+	else:
+		image = Image.create_empty(size, size, false, Image.FORMAT_RGB8)
+		image.fill(skin)
 	for i in labels.size():
 		if labels[i] == GARMENT:
 			image.set_pixel(i % size, i / size, garment)

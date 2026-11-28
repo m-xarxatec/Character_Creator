@@ -10,6 +10,11 @@ extends RefCounted
 ## Clave de cada valor: el id del CSV, con _l / _r si el deslizador tiene dos lados. Valores de 0 a 1; el neutro n,
 ## de la columna neutro. Pesos: _decr = max(0, (n−v)/n), _incr = max(0, (v−n)/(1−n)); una forma de un lado (sin decr,
 ## se llama como su id) lleva el peso de _incr; cada corrección (a*b*…), el producto de sus partes.
+## Paso 9.7.2: las formas de expresión (expr_<nombre VRM>, FORMATO.md) no son deslizadores: sus pesos salen de
+## expression_weights() y entran en weights() antes de las correcciones (las del parpadeo, expr_blinkLeft*eye_tall_incr…).
+
+const EXPRESSION_PREFIX := "expr_"
+const EXPRESSION_GROUPS := {"blink": ["blinkLeft", "blinkRight"]}  # VRM 1.0: «blink» son los dos ojos
 
 
 ## Todos los deslizadores Forma en su valor neutro (columna neutro del CSV).
@@ -35,7 +40,9 @@ static func set_value(values: Dictionary, key: String, value: float, symmetry: b
 
 
 ## {forma: peso} de todas las formas de shape_names (las que no mueve ningún valor, 0). neutrals: neutral_values().
-static func weights(values: Dictionary, shape_names: PackedStringArray, neutrals: Dictionary) -> Dictionary:
+## expressions (paso 9.7.2): {forma expr_*: peso}, de expression_weights().
+static func weights(values: Dictionary, shape_names: PackedStringArray, neutrals: Dictionary,
+		expressions := {}) -> Dictionary:
 	var result := {}
 	for name in shape_names:
 		result[name] = 0.0
@@ -48,6 +55,7 @@ static func weights(values: Dictionary, shape_names: PackedStringArray, neutrals
 			continue
 		result[_shape(key, "decr")] = maxf(0.0, (n - v) / n) if n > 0.0 else 0.0
 		result[_shape(key, "incr")] = incr
+	result.merge(expressions, true)
 	for name in shape_names:
 		if "*" in name:
 			var product := 1.0
@@ -55,6 +63,28 @@ static func weights(values: Dictionary, shape_names: PackedStringArray, neutrals
 				product *= result[part]
 			result[name] = product
 	return result
+
+
+## Paso 9.7.2: si es una forma de expresión (expr_*).
+static func is_expression(shape_name: String) -> bool:
+	return shape_name.begins_with(EXPRESSION_PREFIX)
+
+
+## Paso 9.7.2: {nombre VRM: valor} → {forma expr_*: peso}, recortado a [0, 1]. «blink» suma a blinkLeft y blinkRight.
+## Un nombre sin forma en shape_names, o con un valor que no es un número finito, va a rejected y no se aplica.
+static func expression_weights(expressions: Dictionary, shape_names: PackedStringArray, rejected: Array[String]) -> Dictionary:
+	var out := {}
+	for key: Variant in expressions:
+		var value: Variant = expressions[key]
+		var parts: Array = EXPRESSION_GROUPS.get(key, [key]) if typeof(key) == TYPE_STRING else []
+		var known := not parts.is_empty() and parts.all(func(part: String) -> bool: return EXPRESSION_PREFIX + part in shape_names)
+		if not known or not (typeof(value) == TYPE_FLOAT or typeof(value) == TYPE_INT) or not is_finite(value):
+			rejected.append(str(key))
+			continue
+		for part: String in parts:
+			var shape := EXPRESSION_PREFIX + part
+			out[shape] = clampf(out.get(shape, 0.0) + float(value), 0.0, 1.0)
+	return out
 
 
 ## Pone los pesos en la malla. Devuelve las formas de weights que la malla no tiene (debería estar vacío).

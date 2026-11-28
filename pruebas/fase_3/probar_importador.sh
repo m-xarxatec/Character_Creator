@@ -12,4 +12,4 @@ printf 'config_version=5\n\n[application]\n\nconfig/name="Prueba de importar"\n'
 cp "$here/salida/t/al_azar.glb" "$project/t.glb"
 cp "$here/salida/a/al_azar.glb" "$project/a.glb"
 (ulimit -v 4000000; timeout 300 godot --headless --path "$project" --import) || echo "ERROR: la importación falló o tardó demasiado"
-(ulimit -v 4000000; timeout 120 godot --headless --path "$project" -s "$here/../godot/probar_importado.gd")
+(ulimit -v 4000000; timeout 120 godot --headless --path "$project" -s "$here/../godot/probar_importado.gd" -- "$(cd "$here/../.." && pwd)")

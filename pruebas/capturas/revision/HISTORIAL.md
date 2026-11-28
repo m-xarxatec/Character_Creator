@@ -6,3 +6,4 @@ Una fila por revisión del agente `revisor-visual` (notas de 1 a 5, sección 6.8
 | --- | --- | --- | --- | --- | --- | --- | --- |
 | 2026-11-12 | 3.6.x, 3.12, 3.13a-4 (estado de la Fase 3) | 3 | 3 | 2 | 4 | 3 | APTO CON RESERVAS |
 | 2026-11-14 | Cierre de la Fase 3 (3.7–3.11, 3.14–3.17) | 3 | 3 | — (lo juzga el responsable) | 4 | 4 | APTO CON RESERVAS |
+| 2026-11-24 | SH.7 (cierre de la Fase SH, estilo anime por defecto) | 3 | 3 | — (lo juzga el responsable) | 4 | 4 | APTO |

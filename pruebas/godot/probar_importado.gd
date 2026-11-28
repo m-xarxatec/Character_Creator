@@ -3,12 +3,21 @@ extends SceneTree
 # No se lanza a mano: lo ejecuta pruebas/fase_3/probar_importador.sh, que crea el proyecto e importa.
 
 const SOCKETS := {"socket_hand_r": "RightHand", "socket_hand_l": "LeftHand", "socket_back": "UpperChest", "socket_hip": "Hips"}
-const OPTIONAL := ["LeftEye", "RightEye", "Jaw"]  # el rig Game engine no los trae
+const OPTIONAL := []  # paso 9.3: ya están los 56 del perfil (antes faltaban LeftEye, RightEye y Jaw)
+## Pasos 9.7.3 y 9.8 (D31): las únicas formas del cuerpo exportado, las expresiones de VRM de blender/expresiones.json,
+## en su orden. probar_importador.sh pasa la raíz del repositorio (-- <repo>): el proyecto es temporal.
+var EXPRESSIONS: Array = []
 
 var failures := 0
 
 
 func _initialize() -> void:
+	var args := OS.get_cmdline_user_args()
+	if args.is_empty():
+		check("falta la raíz del repositorio (-- <repo>, la pasa probar_importador.sh)", false)
+		quit(1)
+		return
+	EXPRESSIONS = load(args[0].path_join("pruebas/godot/recetas_expresiones.gd")).vrm_names(args[0])
 	for file: String in ["t", "a"]:
 		_check_scene(file)
 	print("RESULTADO: ", "TODO BIEN" if failures == 0 else "%d FALLOS" % failures)
@@ -47,7 +56,7 @@ func _check_scene(file: String) -> void:
 			wrong.append(name)
 		unit = unit and skeleton.get_bone_rest(bone).basis.get_scale().is_equal_approx(Vector3.ONE) \
 			and skeleton.get_bone_pose_scale(bone).is_equal_approx(Vector3.ONE)
-	check(label + "53 huesos del perfil humanoide, con escala 1", skeleton.get_bone_count() == 53 and wrong.is_empty() and unit,
+	check(label + "56 huesos del perfil humanoide, con escala 1", skeleton.get_bone_count() == 56 and wrong.is_empty() and unit,
 		"%d huesos; mal: %s" % [skeleton.get_bone_count(), wrong])
 	var hung := true
 	for socket: String in SOCKETS:
@@ -60,8 +69,11 @@ func _check_scene(file: String) -> void:
 	var weights: PackedFloat32Array = arrays[Mesh.ARRAY_WEIGHTS]
 	var count: int = arrays[Mesh.ARRAY_VERTEX].size()
 	var eight: bool = ((mesh.mesh as ArrayMesh).surface_get_format(0) & Mesh.ARRAY_FLAG_USE_8_BONE_WEIGHTS) != 0
-	check(label + "una superficie, 0 formas, 4 influencias por vértice y color por vértice",
-		mesh.mesh.get_surface_count() == 1 and mesh.mesh.get_blend_shape_count() == 0 and not eight
+	var shapes := []
+	for i in mesh.mesh.get_blend_shape_count():
+		shapes.append(String(mesh.mesh.get_blend_shape_name(i)))
+	check(label + "una superficie, solo las formas de expresión de VRM (%d), 4 influencias y color por vértice" % EXPRESSIONS.size(),
+		mesh.mesh.get_surface_count() == 1 and shapes == EXPRESSIONS and not eight
 		and weights.size() == 4 * count and arrays[Mesh.ARRAY_COLOR] != null and mesh.skin != null, "%d vértices" % count)
 	var upper := skeleton.get_bone_global_rest(skeleton.find_bone("LeftUpperArm")).origin
 	var hand := skeleton.get_bone_global_rest(skeleton.find_bone("LeftHand")).origin

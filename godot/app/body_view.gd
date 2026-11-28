@@ -19,16 +19,22 @@ extends SubViewportContainer
 # Paso 5.9: set_animation(ROM_ID) recorre el rango de movimiento (rom.gd): cada fotograma vuelve a la pose T y gira.
 # Paso AB.4: set_piece() pone o quita una pieza de los packs (library: godot/packs y user://packs) que sigue al cuerpo
 #   (BodyPiece; una por ranura, salvo accesorios), con el mismo toon y contorno. Paso AB.7: se exportan con el cuerpo.
+# Paso 13.3d: set_piece() pone también las piezas importadas (PieceImport), con el color de cada parte; rescan_packs().
+# Paso 13.3g: remove_piece() borra una pieza propia u oculta cualquier otra (SettingsFile); restore_pieces() las devuelve.
+# Paso PE.4b: un peinado que cuelga lleva cadenas de huesos (HairChains) y su simulador (HairPhysics); al quitarlo se
+#   quitan. Las colisiones se miden otra vez al dejar quietos los deslizadores (frame_timer).
 
 ## Paso IU.7a: clic sin arrastrar en el cuerpo, con touch_zones encendido.
 signal zone_touched(zone: String)
 signal pieces_changed  # paso AB.13: se puso o se quitó una pieza
+signal packs_changed  # paso 13.3d: se volvió a leer la biblioteca (rescan_packs)
 
 const SpeciesData := preload("../addons/creador/species_data.gd")
 const CharacterUpdater := preload("../addons/creador/character_updater.gd")
 const Preset := preload("../addons/creador/preset.gd")
 const BodyMaterial := preload("../addons/creador/body_material.gd")
 const GlbExporter := preload("../addons/creador/glb_exporter.gd")
+const ShapeWeights := preload("../addons/creador/shape_weights.gd")  # paso 9.7.2
 const AnimationSet := preload("../addons/creador/animation_set.gd")
 const PoseRetarget := preload("../addons/creador/pose_retarget.gd")
 const StaticPose := preload("../addons/creador/static_pose.gd")
@@ -43,11 +49,17 @@ const CharacterBox := preload("character_box.gd")
 const SettingsFile := preload("settings_file.gd")
 const FloorShadow := preload("floor_shadow.gd")
 const ZoneRay := preload("zone_ray.gd")
+const HairScene := preload("../addons/creador/hair_scene.gd")  # paso PE.5
 const PackLibrary := preload("../addons/creador/pack_library.gd")  # paso AB.4
 const BodyPiece := preload("../addons/creador/body_piece.gd")
+const HairChains := preload("../addons/creador/hair_chains.gd")  # paso PE.4b
+const HairPhysics := preload("../addons/creador/hair_physics.gd")  # paso PE.4b
 const BodyDerived := preload("../addons/creador/body_derived.gd")  # paso AB.9a
+const EyeMesh := preload("../addons/creador/eye_mesh.gd")  # paso AC.3c
 const RigidPiece := preload("../addons/creador/rigid_piece.gd")  # paso AB.11
 const GarmentCut := preload("../addons/creador/garment_cut.gd")  # paso AB.5
+const SkinHide := preload("../addons/creador/skin_hide.gd")  # paso 12.1b
+const PieceImport := preload("../addons/creador/piece_import.gd")  # paso 13.3d
 ## Paso AB.6: capa de cada ranura (más alta = más por fuera): se adelanta BodyMaterial.PIECE_PULL × capa.
 const LAYERS := {"ropa_interior": 1, "ropa_torso": 2, "ropa_piernas": 2, "pelo": 2, "ropa_pies": 3, "ropa_exterior": 3,
 	"accesorio": 4}
@@ -62,6 +74,10 @@ const DATA_RES := "res://datos"
 const ANIMATIONS := "humanoide"
 const ROM_ID := "rango_de_movimiento"
 const LIGHT_ANGLES := Vector3(-40, 30, 0)  # desde arriba, delante y a un lado; set_light gira la Y
+## SH.4: sombra proyectada de la luz del editor, solo en estilo anime (el clásico no la usa). Los de las hojas de SH.2.
+const SHADOW := {"max_distance": 6.0, "bias": 0.03, "normal_bias": 1.0, "blur": 1.0}
+const HAIR_SLOT := "pelo"
+const HEAD_CENTER_UP := 0.075  # SH.6b: centro de la cabeza, en metros a lo largo del hueso Head (la mitad de su largo)
 const RESTYLE_WAIT := 0.3  # segundos sin cambios antes de recalcular las normales del estilo
 const REPORT_INSTANTS := 4  # momentos de un clip que mide el informe
 
@@ -71,8 +87,12 @@ var species  # SpeciesData
 var library  # PackLibrary (paso AB.4)
 var pieces := {}  # paso AB.4: "pack/pieza" → MeshInstance3D puesta
 var accessories := {}  # paso AB.11: "pack/pieza" → BoneAttachment3D de un accesorio rígido
+var hair := {}  # SH.6b: "pack/pieza" → MeshInstance3D de las piezas de ranura pelo (llevan la banda de brillo)
+var hair_physics := {}  # paso PE.4b: "pack/pieza" → SpringBoneSimulator3D del peinado (si cuelga)
+var eyes: Array[MeshInstance3D] = []  # AC.6b: capas y líneas del ojo (EyeMesh), para exportarlas
 var updater  # CharacterUpdater
 var values: Dictionary
+var expression := ""  # paso 9.7.2: la expresión que se prueba («happy»…); "" = ninguna
 var pose_t := false
 var animations  # AnimationSet; null si no cargó (animation_error dice por qué)
 var animation_error := ""
@@ -120,6 +140,7 @@ func _ready() -> void:
 	frame_timer.one_shot = true
 	frame_timer.wait_time = RESTYLE_WAIT
 	frame_timer.timeout.connect(frame_character)
+	frame_timer.timeout.connect(_refit_hair)  # paso PE.4b
 	add_child(frame_timer)
 	hover_timer = Timer.new()
 	hover_timer.one_shot = true
@@ -145,7 +166,8 @@ func _ready() -> void:
 ## Valores de Forma y Proporción juntos, como en el preset. Devuelve las claves que no aplicó.
 func set_values(new_values: Dictionary) -> Array[String]:
 	values = new_values
-	var rejected: Array[String] = updater.update(values, pose_t or clip != "")  # la animación parte de la pose T
+	var faces := {expression: 1.0} if expression != "" else {}  # paso 9.7.2: la expresión que se prueba
+	var rejected: Array[String] = updater.update(values, pose_t or clip != "", faces)  # la animación parte de la pose T
 	if clip == ROM_ID:
 		_save_t_pose()
 	if not pose_turns.is_empty():
@@ -160,6 +182,23 @@ func set_values(new_values: Dictionary) -> Array[String]:
 		else:
 			restyle_timer.start()
 	return rejected
+
+
+## Paso 9.7.2: prueba una expresión de VRM («happy», «blink»…) encima de la cara; "" = ninguna. No se guarda ni se
+## exporta (el .glb lleva las expresiones como formas, a 0). Devuelve false si la especie no la tiene.
+func set_expression(name: String) -> bool:
+	if name != "" and not has_expression(name):
+		return false
+	expression = name
+	set_values(values)
+	return true
+
+
+## Paso 9.7.4: si la especie tiene esa expresión (sus formas expr_* están en el cuerpo).
+func has_expression(name: String) -> bool:
+	var names := ShapeWeights.shape_names(species.mesh.mesh)
+	var parts: Array = ShapeWeights.EXPRESSION_GROUPS.get(name, [name])
+	return parts.all(func(p: String) -> bool: return ShapeWeights.EXPRESSION_PREFIX + p in names)
 
 
 ## Probar huesos (paso 4.5): true = pose T; false = reposo (pose A).
@@ -186,12 +225,16 @@ func set_animation(id: String) -> bool:
 
 
 func _process(delta: float) -> void:
+	if not hair.is_empty() and species != null and BodyMaterial.is_soft(species.mesh):  # SH.6b: la banda sigue a la cabeza
+		var head := head_transform()
+		for mesh: MeshInstance3D in hair.values():
+			(mesh.material_override as ShaderMaterial).set_shader_parameter("hair_head", head)
 	# Paso P.8a: con Ctrl, el cursor es una mano (Ctrl + arrastrar desplaza la cámara: orbit_camera.gd).
 	mouse_default_cursor_shape = CURSOR_POINTING_HAND if Input.is_key_pressed(KEY_CTRL) else CURSOR_ARROW
 	if clip == ROM_ID:
 		rom_time += delta
 		pose_turns = rom.turns_at(rom_time)
-		for bone in t_rotations.size():
+		for bone in mini(t_rotations.size(), species.skeleton.get_bone_count()):  # PE.4b: el pelo quita y pone huesos
 			species.skeleton.set_bone_pose_rotation(bone, t_rotations[bone])
 			species.skeleton.set_bone_pose_position(bone, t_positions[bone])
 		StaticPose.apply(species.skeleton, pose_turns, animations.hips, animations.feet)
@@ -201,21 +244,37 @@ func _process(delta: float) -> void:
 
 
 ## Exporta en pose T, sea cual sea la pose de la vista (el exportador la fija), con el .tres al lado.
-func export_glb(path: String) -> Error:
-	var job := start_export()
+func export_glb(path: String, use_cache := true) -> Error:
+	var job := start_export(use_cache)
+	GlbExporter.compute_bake(job)
+	GlbExporter.after_bake(job)
 	GlbExporter.compute(job)
 	return finish_export(job, path)
 
 
-## Paso P.1: exportar en partes (body_actions.gd hace GlbExporter.compute en un hilo entre las dos).
-## start_export lee el personaje tal como está ahora; lo que cambie después no entra en el archivo.
-func start_export() -> Dictionary:
-	return GlbExporter.prepare(species.mesh, species.skeleton, species.manifest["bones"]["sockets"], true, pieces.values(),
-		accessories.values())
+## Paso P.1: exportar en partes (body_actions.gd hace en un hilo GlbExporter.compute_bake y GlbExporter.compute, con
+## GlbExporter.after_bake entre las dos, paso OPT.3b). start_export lee el personaje tal como está ahora; lo que cambie
+## después no entra en el archivo.
+## OPT.3a: con las formas de la caché de la vista; use_cache = false las pide a la malla (para comparar en las pruebas).
+func start_export(use_cache := true) -> Dictionary:
+	var cache: Variant = style.shape_cache() if use_cache and style != null else null
+	var job := GlbExporter.start(species.mesh, species.skeleton, species.manifest["bones"]["sockets"], true, pieces.values(),
+		accessories.values(), eyes, species.eyes, cache)  # AC.6b: con los ojos
+	job["hair"] = HairScene.read(hair_physics.values()[0]) if not hair_physics.is_empty() else {}  # PE.5: un solo peinado
+	return job
 
 
+## Paso PE.5: con un peinado con cadenas, también <archivo>.tscn con la física del pelo (HairScene).
 func finish_export(job: Dictionary, path: String) -> Error:
-	return GlbExporter.write(GlbExporter.finish(job), job["toon"], path)
+	var character := GlbExporter.finish(job)
+	var hair: SpringBoneSimulator3D = HairScene.measure(job["hair"], character) if character and job["hair"] else null
+	var skeleton_path := "Armature/" + String(character.find_children("*", "Skeleton3D", true, false)[0].name) if hair else ""
+	var error := GlbExporter.write(character, job["toon"], path)
+	if hair:
+		if error == OK:
+			error = HairScene.save(hair, path, skeleton_path)
+		hair.free()
+	return error
 
 
 ## Informe del banco de pruebas (paso 5.4): comprobaciones del personaje que se exporta y, si hay una pose fija o un
@@ -414,7 +473,7 @@ func _add_world() -> void:
 	var environment := Environment.new()
 	environment.ambient_light_source = Environment.AMBIENT_SOURCE_COLOR
 	environment.ambient_light_color = Color.WHITE
-	environment.ambient_light_energy = 0.4
+	environment.ambient_light_energy = 0.0  # SH.3b: toon_soft suma el ambiente; 0 mantiene el aspecto de SH.2
 	var world := WorldEnvironment.new()
 	world.environment = environment
 	viewport.add_child(world)
@@ -436,11 +495,18 @@ func _load_character() -> String:
 	viewport.add_child(species.scene)
 	updater = CharacterUpdater.new(species)
 	library = PackLibrary.new()  # paso AB.4
-	for warning: String in library.scan(PackedStringArray([folder.path_join("../../packs").simplify_path(), "user://packs"])):
-		push_warning(warning)
+	rescan_packs()
 	BodyMaterial.apply(species.mesh)
+	BodyMaterial.set_skin_zones(species.mesh, species.skin_zones)
 	Preset.apply_look(species.mesh, loaded)
+	_set_shadow(BodyMaterial.is_soft(species.mesh))
 	set_values(loaded["valores"])
+	eyes = EyeMesh.build(species.mesh, species.skeleton, species.eyes)
+	for eye in eyes:  # siguen a las formas; no son piezas del pack
+		updater.pieces.append(eye)
+		BodyPiece.follow(eye, species.mesh)
+		if String(eye.name).begins_with("ceja_"):  # AC.6c.4a
+			_copy_brow(eye)
 	style = StyleView.new()
 	style.setup(species.mesh, species.skeleton)
 	style.refresh()
@@ -451,18 +517,63 @@ func _load_character() -> String:
 	return ""
 
 
+## Paso 13.3d: vuelve a leer los packs de serie (junto a los datos) y los del usuario; al acabar, packs_changed.
+func rescan_packs() -> void:
+	var base := _data_folder().path_join("../../packs").simplify_path()
+	for warning: String in library.scan(PackedStringArray([base, PackLibrary.USER_ROOT])):
+		push_warning(warning)
+	library.hidden = {}  # paso 13.3g
+	for key: String in SettingsFile.get_hidden_pieces():
+		library.hidden[key] = true
+	packs_changed.emit()
+
+
+## Paso 13.3g: quita una pieza de la biblioteca (y del personaje, si la lleva): una propia se borra de verdad y las
+## demás se ocultan. Devuelve el error ("" si fue bien).
+func remove_piece(pack_id: String, piece_id: String) -> String:
+	if library.piece(pack_id, piece_id).is_empty():
+		return "la pieza %s del pack %s no existe" % [piece_id, pack_id]
+	var own: bool = library.is_own(pack_id)
+	for key: String in pieces.keys() + accessories.keys():  # la propia se lleva su carpeta: fuera todo su pack
+		if key.get_base_dir() == pack_id and (own or key.get_file() == piece_id):
+			set_piece(pack_id, key.get_file(), false)
+	var error := ""
+	if not own:
+		SettingsFile.hide_piece(pack_id.path_join(piece_id))
+	elif library.delete_own(pack_id) != OK:
+		error = "no se puede borrar la pieza %s" % piece_id
+	rescan_packs()
+	return error
+
+
+## Paso 13.3g: vuelven a verse todas las piezas ocultas (las borradas no vuelven).
+func restore_pieces() -> void:
+	SettingsFile.restore_pieces()
+	rescan_packs()
+
+
 ## Paso AB.4: pone (on) o quita una pieza que sigue al cuerpo. Quita la que ocupe su ranura o choque con ella (PackLibrary.conflicts).
-## Devuelve false si no se pudo poner (no existe, no sigue al cuerpo o su archivo no vale).
+## Devuelve false si no se pudo poner (no existe, está oculta, no sigue al cuerpo o su archivo no vale).
 func set_piece(pack_id: String, piece_id: String, on: bool) -> bool:
 	var key := pack_id.path_join(piece_id)
+	if on and library.is_hidden(pack_id, piece_id):  # paso 13.3g
+		return false
 	var known: Dictionary = library.piece(pack_id, piece_id)
-	if known.has("generador") or accessories.has(key):  # paso AB.11
+	if accessories.has(key) or RigidPiece.is_rigid(known):  # pasos AB.11 y 13.3d
 		return _set_accessory(key, known, on)
 	if not on or pieces.has(key):
 		if not on and pieces.has(key):
 			updater.pieces.erase(pieces[key])
-			BodyPiece.detach(pieces[key])
+			if hair_physics.has(key):  # paso PE.4b: primero el simulador, luego la malla y al final sus huesos
+				hair_physics[key].free()
+				hair_physics.erase(key)
+				BodyPiece.detach(pieces[key])
+				HairChains.remove(species.skeleton)
+			else:
+				BodyPiece.detach(pieces[key])
 			pieces.erase(key)
+			hair.erase(key)
+			_update_hide()
 			pieces_changed.emit()
 		return true
 	var card: Dictionary = library.piece(pack_id, piece_id)
@@ -489,7 +600,7 @@ func set_piece(pack_id: String, piece_id: String, on: bool) -> bool:
 		for other: String in pieces.keys():
 			if PackLibrary.conflicts(library.piece(other.get_base_dir(), other.get_file()), card):
 				set_piece(other.get_base_dir(), other.get_file(), false)
-	BodyMaterial.apply(mesh, true)  # paso AB.6: se adelanta un poco y tapa la piel que asoma
+	BodyMaterial.apply(mesh, true, BodyMaterial.is_soft(species.mesh))  # AB.6: se adelanta y tapa la piel que asoma
 	(mesh.material_override as ShaderMaterial).set_shader_parameter("depth_pull",
 		BodyMaterial.PIECE_PULL * LAYERS.get(card["ranura"], 1))
 	var color: Color = library.color_of(card)  # el de partida, de pack.json
@@ -498,11 +609,34 @@ func set_piece(pack_id: String, piece_id: String, on: bool) -> bool:
 	var finish: Dictionary = BodyMaterial.get_finish(species.mesh)
 	for name: String in finish:
 		BodyMaterial.set_finish(mesh, name, finish[name])
+	_copy_line(mesh)
 	pieces[key] = mesh
+	if card["ranura"] == HAIR_SLOT:
+		hair[key] = mesh
+		_copy_band(mesh)
 	updater.pieces.append(mesh)
 	BodyPiece.follow(mesh, species.mesh)
+	if card["ranura"] == HAIR_SLOT:  # paso PE.4b: cadenas y simulador (con el cuerpo de ahora)
+		var simulator := HairPhysics.attach(species.skeleton, HairChains.build(mesh, species.skeleton), species.mesh)
+		if simulator != null:
+			hair_physics[key] = simulator
+	_update_hide()
 	pieces_changed.emit()
 	return true
+
+
+## Paso 12.1b: la piel que tapan las piezas puestas no se dibuja (máscaras unidas en el material del cuerpo).
+func _update_hide() -> void:
+	var images: Array[Image] = []
+	for key: String in pieces:
+		images.append(library.hide_image(key.get_base_dir(), key.get_file()))
+	BodyMaterial.set_hide_mask(species.mesh, SkinHide.union(images))
+
+
+## Paso PE.4b: con el cuerpo nuevo, colisiones medidas otra vez y simulación reiniciada (al dejar los deslizadores).
+func _refit_hair() -> void:
+	for simulator: SpringBoneSimulator3D in hair_physics.values():
+		HairPhysics.refit(simulator, species.mesh)
 
 
 ## Paso AB.11: pone o quita un accesorio rígido (RigidPiece, colgado de su hueso). Varios a la vez (ranura accesorio).
@@ -516,25 +650,119 @@ func _set_accessory(key: String, card: Dictionary, on: bool) -> bool:
 		return true
 	if accessories.has(key):
 		return true
-	var holder: BoneAttachment3D = RigidPiece.build(card, species.skeleton)
+	var parts := [] if card.get("generador") != null else _imported_parts(key)  # paso 13.3d
+	var holder: BoneAttachment3D = RigidPiece.build(card, species.skeleton, parts)
 	if holder == null:
 		return false
-	for mesh in RigidPiece.meshes(holder):
-		BodyMaterial.apply(mesh, true)
-		BodyMaterial.set_color(mesh, "skin_color", library.color_of(card))
-		BodyMaterial.set_color(mesh, "garment_color", library.color_of(card))
+	var meshes := RigidPiece.meshes(holder)
+	for k: int in meshes.size():
+		var color: Color = library.color_of(card) if parts.is_empty() else parts[k]["color"]
+		BodyMaterial.apply(meshes[k], true, BodyMaterial.is_soft(species.mesh))
+		BodyMaterial.set_color(meshes[k], "skin_color", color)
+		BodyMaterial.set_color(meshes[k], "garment_color", color)
+		_copy_line(meshes[k])
+	if not parts.is_empty():
+		holder.set_meta("own_colors", true)  # cada malla con su color, hasta que se elija uno (set_piece_color)
 	accessories[key] = holder
 	pieces_changed.emit()
 	return true
 
 
+## Paso 13.3d: las partes de una pieza importada, leídas y validadas otra vez; [] y un aviso si su archivo no vale.
+func _imported_parts(key: String) -> Array:
+	var path: String = library.piece_file(key.get_base_dir(), key.get_file())
+	var read: Dictionary = PieceImport.read(path) if path != "" else {"error": "falta su archivo o ha cambiado", "partes": []}
+	if read["error"] != "":
+		push_warning("pieza %s: %s" % [key, read["error"]])
+	return read["partes"]
+
+
 ## Color principal de una pieza puesta.
+## SH.7a: estilo anime (true) o clásico en el cuerpo, las piezas y los accesorios, sin perder colores. Las piezas
+## copian el acabado del cuerpo, como al ponerlas.
+func set_anime_style(on: bool) -> void:
+	BodyMaterial.set_style(species.mesh, on)
+	var finish: Dictionary = BodyMaterial.get_finish(species.mesh)
+	var meshes: Array = pieces.values()
+	for holder in accessories.values():
+		meshes.append_array(RigidPiece.meshes(holder))
+	for mesh: MeshInstance3D in meshes:
+		BodyMaterial.set_style(mesh, on, true)
+		for name: String in finish:
+			BodyMaterial.set_finish(mesh, name, finish[name])
+	sync_lines()
+	_set_shadow(on)
+
+
+## SH.4b: las piezas y los accesorios llevan la línea teñida como el cuerpo (cada una, del color de la pieza).
+## SH.6b: y las de pelo, la banda de brillo (la fuerza de la piel del cuerpo, hair_band). AC.6c.4a: y las cejas.
+func sync_lines() -> void:
+	var meshes: Array = pieces.values()
+	for holder in accessories.values():
+		meshes.append_array(RigidPiece.meshes(holder))
+	for mesh: MeshInstance3D in meshes:
+		_copy_line(mesh)
+	for mesh: MeshInstance3D in hair.values():
+		_copy_band(mesh)
+	for mesh: MeshInstance3D in eyes:  # AC.6c.4a: las cejas
+		if String(mesh.name).begins_with("ceja_"):
+			_copy_brow(mesh)
+
+
+func _copy_band(mesh: MeshInstance3D) -> void:
+	var strength: float = BodyMaterial.get_skin(species.mesh)["hair_band"] if BodyMaterial.is_soft(species.mesh) else 0.0
+	(mesh.material_override as ShaderMaterial).set_shader_parameter("hair_band_strength", strength)
+
+
+## AC.6c.4a: Altura, Grosor, Tamaño y Color de la ceja, del material del cuerpo a la ceja (EyeTexture los lee de ella).
+func _copy_brow(mesh: MeshInstance3D) -> void:
+	var skin: Dictionary = BodyMaterial.get_skin(species.mesh)
+	var material := mesh.material_override as ShaderMaterial
+	for key: String in BodyMaterial.BROW_SKIN:
+		material.set_shader_parameter(key, skin[key])
+	material.set_shader_parameter("brow_color", BodyMaterial.get_color(species.mesh, "brow_color"))
+
+
+## SH.6b: mundo → cabeza, con origen en su centro (para la banda del pelo).
+func head_transform() -> Transform3D:
+	return head_of(species.skeleton)
+
+
+## Paso 10.3: lo mismo con cualquier esqueleto; axes, los ejes de la cabeza respecto a los del hueso Head (el estudio
+## pasa los del vivo: el horneado tiene los del perfil).
+static func head_of(skeleton: Skeleton3D, axes := Basis.IDENTITY) -> Transform3D:
+	var bone: int = skeleton.find_bone("Head")
+	var pose: Transform3D = skeleton.global_transform * skeleton.get_bone_global_pose(bone) * Transform3D(axes)
+	return pose.translated_local(Vector3(0, HEAD_CENTER_UP, 0)).affine_inverse()
+
+
+func _copy_line(mesh: MeshInstance3D) -> void:
+	var tint: float = BodyMaterial.get_skin(species.mesh)["outline_tint"] if BodyMaterial.is_soft(species.mesh) else 0.0
+	((mesh.material_override as ShaderMaterial).get_meta("outline") as ShaderMaterial).set_shader_parameter("outline_tint", tint)
+
+
+## SH.4: la luz del editor proyecta sombra (con SHADOW) o no.
+func _set_shadow(on: bool) -> void:
+	light.shadow_enabled = on
+	light.directional_shadow_mode = DirectionalLight3D.SHADOW_ORTHOGONAL
+	light.directional_shadow_max_distance = SHADOW["max_distance"]
+	light.shadow_bias = SHADOW["bias"]
+	light.shadow_normal_bias = SHADOW["normal_bias"]
+	light.shadow_blur = SHADOW["blur"]
+
+
+func is_anime_style() -> bool:
+	return BodyMaterial.is_soft(species.mesh)
+
+
 func piece_color(key: String) -> Color:
 	var meshes := meshes_of(key)
 	return BodyMaterial.get_color(meshes[0], "skin_color") if not meshes.is_empty() else Color.WHITE
 
 
 func set_piece_color(key: String, color: Color) -> void:
+	if accessories.has(key):
+		accessories[key].remove_meta("own_colors")  # paso 13.3d: el color elegido manda sobre los de las partes
 	for mesh in meshes_of(key):
 		BodyMaterial.set_color(mesh, "skin_color", color)
 		BodyMaterial.set_color(mesh, "garment_color", color)

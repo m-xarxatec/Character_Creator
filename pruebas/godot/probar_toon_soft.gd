@@ -149,6 +149,8 @@ func _parse(type: String, value: String) -> Variant:
 	if type == "vec3":
 		var parts := value.trim_prefix("vec3(").trim_suffix(")").split(",")
 		return Color(float(parts[0]), float(parts[1]), float(parts[2]))
+	if type == "mat4":  # SH.6b: hair_head; solo se usa la identidad
+		return Transform3D.IDENTITY if value == "mat4(1.0)" else null
 	return float(value)
 
 
@@ -330,6 +332,8 @@ func _dress(row: Dictionary) -> bool:
 		if not _put_piece(piece, row["clothes"]):
 			return false
 	view.style.refresh()
+	view.frame_timer.stop()  # a los 0,3 s de reloj reencuadraba, a veces en mitad de una captura
+	view._refit_hair()  # lo otro que hace ese Timer, aquí y siempre en el mismo momento
 	await _wait(10)
 	return true
 

@@ -10,6 +10,7 @@ extends RefCounted
 ##   BodyPiece.detach(mesh)
 
 const ShapeWeights := preload("shape_weights.gd")
+const HairChains := preload("hair_chains.gd")
 
 
 ## Saca la malla de la escena de la pieza y la cuelga de skeleton, con sus binds apuntando a sus huesos (por nombre).
@@ -67,6 +68,8 @@ static func follow(piece: MeshInstance3D, body: MeshInstance3D) -> void:
 		var bone := piece.skin.get_bind_bone(i)
 		if poses.has(bone):
 			piece.skin.set_bind_pose(i, poses[bone])
+		elif bone >= 0 and HairChains.is_chain_bone(skeleton.get_bone_name(bone)):  # paso PE.3b: con su reposo de ahora
+			piece.skin.set_bind_pose(i, skeleton.get_bone_global_rest(bone).affine_inverse())
 
 
 static func detach(piece: MeshInstance3D) -> void:

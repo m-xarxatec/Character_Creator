@@ -5,12 +5,16 @@ extends HBoxContainer
 #   al final, «Rango de movimiento» (5.9).
 # - Exportar .glb: elige dónde guardar y exporta en pose T (GlbExporter); el .tres va al lado. Avisa con la ruta o el error.
 # - Prenda base: muestra u oculta la prenda (BodyMaterial); el .glb sale como se ve. No entra en Deshacer.
+# Paso 9.7.4: Expresión: lista con «Sin expresión» y las de VRM que tenga la especie (encima de la cara; no se guarda
+#   ni se hornea: el .glb las lleva como formas a 0). Va aquí, con las otras pruebas: la pestaña Cara y ojos aún no existe.
 # Paso 5.4: test_changed avisa al cambiar Probar huesos o la lista Animación (main.gd enseña el informe).
 # Paso 7.0: Guardar preset… y Abrir preset… (preset_file.gd). Abrir se deshace con Ctrl+Z (solo los valores);
 #   look_changed avisa de que cambiaron colores y acabado (main.gd refresca el panel Acabado).
 # Paso P.1: exportar no congela la ventana: lo pesado (GlbExporter.compute) va en un hilo.
+# Paso OPT.3b: también el horneado (GlbExporter.compute_bake), en otro hilo antes de ese.
 # Paso P.4: atajos Ctrl+S, Ctrl+O y Ctrl+E (Cmd en Mac) en los botones; has_changes() dice si lo que entraría en el
 #   preset es distinto de lo último guardado o abierto (exportar no cuenta). save_and_quit() guarda y cierra (main.gd).
+# Paso 13.1b: también cuenta colocar un accesorio; solo un .gmolde lo guarda (guardar un .json no lo da por guardado).
 # Paso P.5c: los tres diálogos de archivo se abren en la última carpeta usada (settings_file.gd).
 # Paso 10.2: Guardar y Abrir valen para proyectos .gmolde (project_io.gd, por defecto) y presets .json, según la
 #   extensión; el proyecto abierto se guarda entero (piezas, pose, escena). Sin carpeta usada: user://proyectos.
@@ -29,6 +33,7 @@ const ThemeBuilder := preload("tema/theme_builder.gd")  # paso IU.2: iconos
 var view: SubViewportContainer  # BodyView
 var bones_button: Button
 var animation_list: OptionButton
+var expression_list: OptionButton  # paso 9.7.4
 var export_button: Button
 var garment_check: CheckBox
 var file_dialog: FileDialog
@@ -40,6 +45,7 @@ var export_thread: Thread  # paso P.1: el hilo de exportar mientras trabaja
 var save_button: Button
 var open_button: Button
 var saved_text := ""  # paso P.4: el preset de lo último guardado o abierto (sin nombre)
+var saved_places := ""  # paso 13.1b: las colocaciones del último .gmolde guardado o abierto
 var quit_after_save := false  # paso P.4: «Guardar…» del aviso al cerrar
 var current_path := ""  # paso IU.4: el preset guardado o abierto ("" = personaje nuevo)
 var project := {}  # paso 10.2: el último proyecto abierto o guardado ({} si fue un preset)
@@ -52,6 +58,7 @@ func setup(body_view: SubViewportContainer, body_editor = null) -> void:
 	bones_button.icon = ThemeBuilder.icon("vistas")
 	bones_button.toggle_mode = true
 	_add_animation_list()
+	_add_expression_list()
 	export_button = _button("Exportar .glb", func() -> void: popup_file_dialog(file_dialog))
 	export_button.shortcut = _shortcut(KEY_E)
 	export_button.icon = ThemeBuilder.icon("exportar")
@@ -74,11 +81,12 @@ func setup(body_view: SubViewportContainer, body_editor = null) -> void:
 		open_button.shortcut = _shortcut(KEY_O)
 		open_button.icon = ThemeBuilder.icon("abrir")
 		saved_text = _current_text()
+		saved_places = ProjectIO.moved_places(view)
 
 
-## Paso P.4: ¿hay cambios sin guardar? (valores, colores, prenda o acabado; el nombre no cuenta)
+## Paso P.4: ¿hay cambios sin guardar? (valores, colores, prenda, acabado o colocación; el nombre no cuenta)
 func has_changes() -> bool:
-	return editor != null and _current_text() != saved_text
+	return editor != null and (_current_text() != saved_text or ProjectIO.moved_places(view) != saved_places)
 
 
 ## Paso IU.4: nombre del archivo para la barra de arriba.
@@ -128,6 +136,7 @@ func save_preset(path: String) -> Error:
 		error = ProjectIO.write(path, built)
 		if error == OK:
 			project = built
+			saved_places = ProjectIO.moved_places(view)
 	else:
 		error = PresetFile.save(path, view, editor.values)
 	if error == OK:
@@ -153,6 +162,7 @@ func open_preset(path: String) -> String:
 	project = loaded["proyecto"] if is_project else {}
 	if is_project:  # paso AB.13: sus piezas, en lugar de las puestas
 		loaded["avisos"].append_array(ProjectIO.wear_pieces(view, project["personajes"][0]["piezas"]))
+		saved_places = ProjectIO.moved_places(view)
 	saved_text = _current_text()
 	current_path = path
 	SettingsFile.add_recent(path)  # paso PL.4
@@ -199,6 +209,33 @@ func set_animation(index: int) -> void:
 	test_changed.emit()
 
 
+## Paso 9.7.4: las expresiones que se pueden probar, en este orden (nombre VRM → texto de la lista).
+const EXPRESSION_NAMES := {"happy": "Alegría", "angry": "Enfado", "sad": "Tristeza", "surprised": "Sorpresa",
+	"blink": "Parpadeo", "blinkLeft": "Guiño izquierdo", "blinkRight": "Guiño derecho",
+	"aa": "Vocal A", "ih": "Vocal I", "ou": "Vocal U", "ee": "Vocal E", "oh": "Vocal O"}  # paso 9.8: visemas
+
+
+## Paso 9.7.4: elige una fila: 0 = sin expresión; las demás, las de EXPRESSION_NAMES que tenga la especie.
+func set_expression(index: int) -> void:
+	expression_list.select(index)
+	view.set_expression("" if index == 0 else expression_list.get_item_metadata(index))
+
+
+func _add_expression_list() -> void:
+	expression_list = OptionButton.new()
+	expression_list.add_item("Sin expresión")
+	for name: String in EXPRESSION_NAMES:
+		if view.has_expression(name):  # solo las que tiene la especie
+			expression_list.add_item(EXPRESSION_NAMES[name])
+			expression_list.set_item_metadata(expression_list.item_count - 1, name)
+	expression_list.disabled = expression_list.item_count == 1
+	expression_list.visible = not expression_list.disabled  # sin expresiones, fuera de la barra
+	expression_list.tooltip_text = "Prueba una expresión en la cara (no se guarda; el .glb las lleva todas, a 0)" \
+		if not expression_list.disabled else "Esta especie no tiene expresiones"
+	expression_list.item_selected.connect(set_expression)
+	add_child(expression_list)
+
+
 func _add_animation_list() -> void:
 	animation_list = OptionButton.new()
 	animation_list.add_item("Sin animación")
@@ -227,16 +264,27 @@ func _on_file_selected(path: String) -> void:
 	export_button.text = "Exportando…"
 	export_button.disabled = true
 	var job: Dictionary = view.start_export()
+	if not await _in_thread(GlbExporter.compute_bake.bind(job)):  # OPT.3b: formas y huesos
+		return
+	GlbExporter.after_bake(job)
+	if not await _in_thread(GlbExporter.compute.bind(job)):
+		return
+	_export_done(path, view.finish_export(job, path))
+
+
+## Paso OPT.3b: una parte de la exportación en el hilo, dibujando mientras tanto. false si se cerró la ventana a mitad
+## (_exit_tree ya esperó al hilo). Entre dos partes no pasa ningún fotograma: export_running() no deja de ser true.
+func _in_thread(work: Callable) -> bool:
 	var tree := get_tree()
 	export_thread = Thread.new()
-	export_thread.start(GlbExporter.compute.bind(job))
+	export_thread.start(work)
 	while export_thread != null and export_thread.is_alive():
 		await tree.process_frame
-	if export_thread == null:  # se cerró la ventana mientras tanto (_exit_tree ya esperó al hilo)
-		return
+	if export_thread == null:
+		return false
 	export_thread.wait_to_finish()
 	export_thread = null
-	_export_done(path, view.finish_export(job, path))
+	return true
 
 
 func export_running() -> bool:
@@ -253,7 +301,8 @@ func _export_done(path: String, error: Error) -> void:
 	export_button.text = "Exportar .glb"
 	export_button.disabled = false
 	if error == OK:
-		_tell("Exportar .glb", "Guardado:\n%s\n%s" % [path, path.get_basename() + ".tres"])
+		_tell("Exportar .glb", "Guardado:\n%s\n%s%s" % [path, path.get_basename() + ".tres",  # PE.5: y la física del pelo
+			"" if view.hair_physics.is_empty() else "\n" + path.get_basename() + ".tscn"])
 	else:
 		_tell("Exportar .glb", "No se pudo exportar a\n%s\n(error %d: %s)" % [path, error, error_string(error)])
 

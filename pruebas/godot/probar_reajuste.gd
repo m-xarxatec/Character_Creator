@@ -49,7 +49,7 @@ func _check_body(body: Dictionary, base: Dictionary) -> void:
 		var predicted: Basis = refit.refit_basis(_basis(base[bone]), _vector(data["head"]), _vector(data["tail"]), head, tail)
 		deg[bone] = _angle(predicted, _basis(real["basis"]))
 	var name: String = body["name"]
-	check(name + ": 57 huesos", actual.size() == 57 and joints.size() == 57)
+	check(name + ": 60 huesos (56 + 4 anclajes; paso 9.3)", actual.size() == 60 and joints.size() == 60)
 	check(name + ": posición < %s mm" % MAX_MM, _max(mm) < MAX_MM, _summary(mm, "mm"))
 	check(name + ": giro < %s°" % MAX_DEG, _max(deg) < MAX_DEG, _summary(deg, "°"))
 

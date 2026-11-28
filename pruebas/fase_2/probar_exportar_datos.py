@@ -3,6 +3,7 @@
 
 Uso: blender -b -P pruebas/fase_2/probar_exportar_datos.py
 Genera los datos dos veces en pruebas/fase_2/salida/ (a y b) y compara con cuerpos creados por MPFB.
+Alcance «@» de deslizadores.csv: orejas al 50 % = MPFB con sus targets a 0,5 × alcance. Rotura: _scale sin escalar.
 """
 import itertools
 import json
@@ -29,6 +30,9 @@ COMBINED_MM = 1.0  # macros combinadas, con sus correcciones
 RANDOM_BODIES = 243
 BONE_MM, BONE_DEG = 1.0, 1.0
 REFERENCE = Vector((0.0, 1.0, 0.0))  # +Y de Blender = -Z de Godot
+# Pasos 9.7 y 9.8: las formas expr_* de cuerpo.glb, al final y en este orden: las de blender/expresiones.json.
+import expresiones  # noqa: E402
+EXPRESSION_SHAPES = expresiones.shape_names()
 failures = []
 
 
@@ -128,28 +132,30 @@ with open(os.path.join(folder, "articulaciones.json"), encoding="utf-8") as file
 check("manifiesto: versión 3, humana, pose A",
       (manifest["version"], manifest["species"], manifest["pose"]) == (3, "humana", "A"))
 check("manifiesto: 13380 vértices", manifest["vertex_count"] == 13380, manifest["vertex_count"])
-check("manifiesto: 53 huesos de deformación y 4 de anclaje",
-      len(manifest["bones"]["deform"]) == 53 and sorted(manifest["bones"]["sockets"]) == sorted(SOCKET_PARENTS))
+check("manifiesto: 56 huesos de deformación (paso 9.3) y 4 de anclaje",
+      len(manifest["bones"]["deform"]) == 56 and sorted(manifest["bones"]["sockets"]) == sorted(SOCKET_PARENTS))
 check(f"manifiesto: sha256 de los {len(ed.FILES)} archivos",
       all(manifest["files"][f]["sha256"] == ed.sha256(os.path.join(folder, f)) for f in ed.FILES))
 
 # --- articulaciones.json ---
-check("articulaciones: 57 huesos con cabeza, cola y padre",
-      len(joints) == 57 and all({"head", "tail", "parent", "deltas"} <= set(b) for b in joints.values()))
+check("articulaciones: 60 huesos (56 + 4 anclajes; paso 9.3) con cabeza, cola y padre",
+      len(joints) == 60 and all({"head", "tail", "parent", "deltas"} <= set(b) for b in joints.values()))
 check("anclajes cuelgan de su hueso", all(joints[s]["parent"] == p for s, p in SOCKET_PARENTS.items()))
 hip, hips = joints["socket_hip"]["head"], joints["Hips"]["head"]
 check("anclaje de cadera en la cadera (no en la mano)", 0.05 < hip[0] < 0.25 and abs(hip[1] - hips[1]) < 0.05, hip)
 
 # --- cuerpo.glb ---
 rows = ed.read_sliders(folder)
-expected = [name for name, _, _ in ed.shape_specs(rows)]
+expected = [name for name, *_ in ed.shape_specs(rows)]
 mesh, rig, base, shapes = read_glb(os.path.join(folder, "cuerpo.glb"))
+expressions = [n for n in shapes if n.startswith("expr_")]  # pasos 9.7 y 9.8: van aparte (las comprueba abajo)
 smoothing = [n for n in shapes if n.startswith("alisado*")]
-fixes = [n for n in shapes if "*" in n and n not in smoothing]
+fixes = [n for n in shapes if "*" in n and n not in smoothing and n not in expressions]
 face = [r["id"] for r in ed.face_rows(rows)]
 own = [f"{r['id']}_{d}" if r["decr"] else r["id"] for r in ed.own_rows(rows) for d in ("decr", "incr") if r[d]]
 check("glb: las 118 formas de la tabla",
-      len(expected) == 118 and sorted(set(shapes) - set(fixes) - set(smoothing) - set(face) - set(own)) == sorted(expected))
+      len(expected) == 118 and sorted(set(shapes) - set(fixes) - set(smoothing) - set(face) - set(own) - set(expressions))
+      == sorted(expected))
 check("glb: las 5 formas de cara (paso 3.14)", len(face) == 5 and set(face) <= set(shapes), face)
 check("glb: las 7 formas propias (paso 6.2)", len(own) == 7 and set(own) <= set(shapes), own)
 macro_ids = tuple(i for i, _ in ed.macro_sliders(rows))
@@ -160,13 +166,16 @@ check("glb: correcciones de alisado sobre las macros de SMOOTHING_SLIDERS", smoo
     p in expected and p.startswith(ed.SMOOTHING_SLIDERS) for n in smoothing for p in n.split("*")[1:]),
     f"{len(smoothing)} correcciones")
 check("glb: nombres _decr / _incr (y _l / _r)", all(p.rsplit("_", 2)[-1] in ("decr", "incr", "l", "r")
-      for n in set(shapes) - set(face) - {"alisado"} for p in n.split("*") if p != "alisado"))
+      for n in set(shapes) - set(face) - set(expressions) - {"alisado"} for p in n.split("*") if p != "alisado"))
+check("glb: las %d formas de expresión de expresiones.json, las últimas y en su orden" % len(EXPRESSION_SHAPES),
+      list(shapes)[len(shapes) - len(EXPRESSION_SHAPES):] == EXPRESSION_SHAPES and expressions == EXPRESSION_SHAPES,
+      expressions)
 colors = mesh.data.color_attributes
 values = np.empty(len(colors[0].data) * 4) if colors else np.zeros(1)
 if colors:
     colors[0].data.foreach_get("color", values)
 check("glb: color de prenda (hay piel y prenda)", bool(colors) and values[0::4].min() < 0.1 < 0.9 < values[0::4].max())
-check("glb: 57 huesos", len(rig.data.bones) == 57, len(rig.data.bones))
+check("glb: 60 huesos (paso 9.3)", len(rig.data.bones) == 60, len(rig.data.bones))
 socket_groups = {g.index for g in mesh.vertex_groups if g.name.startswith("socket_")}
 check("glb: anclajes sin peso", len(socket_groups) == 4 and not any(
     g.group in socket_groups and g.weight > 0 for v in mesh.data.vertices for g in v.groups))
@@ -240,6 +249,10 @@ compare("dos targets: cuello 60 % + dedos izq. 30 %", EXACT_MM,
         macros={}, shape_weights={"neck_length_incr": 0.6, "finger_length_incr_l": 0.3},
         targets={"measure-neck-height-incr": 0.6, "l-hand-fingers-length-incr": 0.3})
 compare("una macro sola: músculo 80 %", EXACT_MM, macros={"muscle": 0.8})
+ear = next(r for r in rows if r["id"] == "ear_size")  # alcance «@» (2026-11-25): la forma, escalada tras medirla
+ear_cell, ear_reach = ed.split_reach(ear["incr"])
+compare(f"un target con alcance: orejas 50 % × {ear_reach}", EXACT_MM, macros={}, shape_weights={"ear_size_incr": 0.5},
+        targets={t: 0.5 * ear_reach for t in ear_cell.split("+")})
 compare("macros combinadas (a): músculo 100 % + peso 100 %", COMBINED_MM, macros={"muscle": 1.0, "weight": 1.0})
 compare("macros combinadas (b): sexo 0 % + músculo 0 % + peso 100 %", COMBINED_MM,
         macros={"gender": 0.0, "muscle": 0.0, "weight": 1.0})

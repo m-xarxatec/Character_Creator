@@ -111,8 +111,8 @@ func _compare(label: String, skeleton: Skeleton3D, mesh: MeshInstance3D, memory_
 	var bones: Dictionary = Compare.bone_errors(skeleton, memory_skeleton)
 	var mm: float = Compare.stats(bones["mm"]).x
 	var deg: float = Compare.stats(bones["deg"]).x
-	check(label + "53 huesos iguales que en memoria (< %s mm) y con escala 1" % SAME_MM,
-		bones["count"] == 53 and mm < SAME_MM and bones["unit"], "máximo %.5f mm, %.4f°" % [mm, deg])
+	check(label + "56 huesos iguales que en memoria (< %s mm) y con escala 1" % SAME_MM,
+		bones["count"] == 56 and mm < SAME_MM and bones["unit"], "máximo %.5f mm, %.4f°" % [mm, deg])
 
 	# Anclajes.
 	var sockets: Dictionary = Compare.socket_errors(skeleton, memory_skeleton, socket_names)
@@ -135,6 +135,14 @@ func _compare(label: String, skeleton: Skeleton3D, mesh: MeshInstance3D, memory_
 	for i in vertices.size():
 		if absf(weights[4 * i] + weights[4 * i + 1] + weights[4 * i + 2] + weights[4 * i + 3] - 1.0) > 1e-4:
 			wrong += 1
-	check(label + "0 formas, 4 influencias por vértice que suman 1 y color por vértice",
-		mesh.mesh.get_blend_shape_count() == 0 and not eight and weights.size() == 4 * vertices.size() and wrong == 0
+	check(label + "sin formas sueltas (solo expresiones VRM), 4 influencias por vértice que suman 1 y color por vértice",
+		_only_expressions(mesh.mesh) and not eight and weights.size() == 4 * vertices.size() and wrong == 0
 		and arrays[Mesh.ARRAY_COLOR] != null and mesh.mesh.get_surface_count() == 1, "%d vértices no suman 1" % wrong)
+
+## Pasos 9.7.3 y 9.8: el personaje horneado solo puede llevar como formas las expresiones de VRM (FORMATO.md).
+func _only_expressions(mesh: Mesh) -> bool:
+	for i in mesh.get_blend_shape_count():
+		if not String(mesh.get_blend_shape_name(i)) in ["happy", "angry", "sad", "surprised", "blinkLeft", "blinkRight",
+				"aa", "ih", "ou", "ee", "oh"]:
+			return false
+	return true

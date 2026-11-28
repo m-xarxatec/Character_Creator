@@ -46,6 +46,9 @@
    "RightThumbDistal",
    "Neck",
    "Head",
+   "LeftEye",
+   "RightEye",
+   "Jaw",
    "LeftUpperLeg",
    "LeftLowerLeg",
    "LeftFoot",
@@ -64,22 +67,28 @@
  },
  "files": {
   "articulaciones.json": {
-   "sha256": "cb4088677a396768390123d7fea94c0b10a7d3ee77afab7adcb6881195c9cdfc"
+   "sha256": "fbd2ee078a507a1f1ea2818234b730b2d6966f8c0c7b55b17fe4cb3544301c66"
   },
   "cuerpo.glb": {
-   "sha256": "7203126c088f39c6d65f6b19aab4b3956db90315075fc95072e5f35e737f1841"
+   "sha256": "456283a423899c904eead443ec991b49f30a376d11ae9af69cc87b5b508ffb49"
   },
   "deslizadores.csv": {
-   "sha256": "286cbbebe0b64678bc9342ceff65a93d623b00148a8ac098a992329e7183fb5f"
+   "sha256": "74b1b041f673192a370e89e6cd49e5d22ef0079024f8d7df7e5c6a5725ab796c"
+  },
+  "ojos.json": {
+   "sha256": "a025062fdc96b9200a3a29652eafcc4d549b13bf2bb936f4d6ffd037379bc063"
+  },
+  "piel.png": {
+   "sha256": "aa8086e1e9caab68c4a6a53fa34597091c547767e618dbf276f7d234d702e192"
   },
   "presets/anime.json": {
-   "sha256": "8d54f16bb967c5f851bef9afee15848622b676412ba1b3de8702f5045b5cba24"
+   "sha256": "0afbd68af0f10ec15a9e88b3d92c129def63dc2e6e282402e78764295b9ce910"
   },
   "presets/femenino.json": {
-   "sha256": "5f3b76453c9fbd679d32ad240c09ea6aaf0414dfd5c573cfdb021de97ebdd6f5"
+   "sha256": "6c1e12e34a9e3be91d1518cd0ad05407e5ce35cffa0805e22920076366a49dca"
   },
   "presets/masculino.json": {
-   "sha256": "e5328b4a592d5d88cbd8f4067c770bbc3c2d3f4524ce8f3902a64b9ecfe56887"
+   "sha256": "b012c9ea3ef810f76721a37068bd5417ded156502be5a40e83ff6436c40c8786"
   }
  },
  "pose": "A",

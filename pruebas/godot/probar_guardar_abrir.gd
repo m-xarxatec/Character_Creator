@@ -31,7 +31,8 @@ func _initialize() -> void:
 	check("guardar va bien", actions.save_preset(path) == OK)
 	var text := FileAccess.get_file_as_string(path)
 	var expected: String = Preset.to_text(Preset.to_dict("heroe", "humana", saved_values,
-		{"skin_color": SKIN, "garment_color": BodyMaterial.get_color(mesh, "garment_color")}, false, BodyMaterial.get_finish(mesh)))
+		{"skin_color": SKIN, "garment_color": BodyMaterial.get_color(mesh, "garment_color")}, false, BodyMaterial.get_finish(mesh),
+		"anime" if BodyMaterial.is_soft(mesh) else "clasico", BodyMaterial.get_skin(mesh)))  # SH.7a: estilo y piel
 	check("el archivo es el preset del personaje (nombre = el del archivo)", text == expected + "\n")
 
 	main.editor.set_value("height", 0.2)

@@ -4,9 +4,38 @@ extends SceneTree
 # Sin ventana.
 # Uso: (ulimit -v 4000000; timeout 300 godot --headless --path pruebas/godot -s probar_piezas.gd 2>&1 | grep -E 'FALLO|MEDIDA|RESULTADO|ERROR')
 # Que detecta el fallo: en BodyPiece.follow, quitar ShapeWeights.apply -> falla «las mallas siguen a weight».
+# Paso PE.4b: un peinado que cuelga lleva cadenas y simulador; poner y quitar con un clip y en ROM sin errores.
+# Paso PE.5: el .glb lleva los mismos x_pelo_* que el editor y la piel del peinado apunta a ellos; en pose A, igual que
+# sin cadenas; pasa CharacterChecks. Que detecta el fallo: volver al CharacterBaker de PE.4b (sin cadenas y sus binds a
+# la cabeza) -> falla «PE.5: el .glb lleva los huesos de pelo del editor» (solo el `break`: la exportación se rompe).
+# Exportar con bob02 deja también la .tscn (HairScene); con el rapado, no. Que detecta el fallo: en
+# BodyView.finish_export, no llamar a HairScene.save -> falla «PE.5: exportar con bob02 deja .glb, .tres y .tscn».
+# Paso 13.1c: el hueso y la colocación de un accesorio se guardan en el .gmolde y salen en el .glb. Que detecta el
+# fallo: en ProjectIO.worn_pieces, dejar "Root" -> falla «mismo hueso al abrir». En ProjectIO.wear_pieces, no mirar
+# _is_place -> falla «escala 0: avisa».
+# Paso 13.3a: un halo en socket_hand_r y en socket_back sale con piel, al 100 % del padre y donde en el editor. Que
+# detecta el fallo: en Sockets.to_nodes, no llamar a _to_socket_parent -> falla «exportar con el halo en socket_hand_r».
+# Paso 13.1b: «Colocar» en Accesorios (PlaceRow): hueso, gizmo, Restablecer, cierre y «Tocar zonas». Que detecta el
+# fallo: en PlaceRow._on_bone_selected, no llamar a set_place -> falla «el halo pasa a RightHand». En PiecesPanel, no
+# cerrar al ocultarse -> falla «cambiar de pestaña»; en BodyActions.has_changes, no mirar moved_places -> falla
+# «sin guardar»; en PlaceRow._add_bones, quitar el separador sin texto -> falla «en español».
 
 ## Paso RE.1b: peinados de Quaternius.
 const MeshBaker := preload("res://../../godot/addons/creador/mesh_baker.gd")
+const BodyPiece := preload("res://../../godot/addons/creador/body_piece.gd")  # paso PE.4b
+const Cloth := preload("medidas_tela.gd")  # paso 12.1a: medidas de tela sobre piel
+const RigidPiece := preload("res://../../godot/addons/creador/rigid_piece.gd")  # paso 13.1c
+const PLACE_MAX := 1e-6  # (13.1c, ficha §1.3): cada uno de los 8 números de la colocación
+const HAND_CENTER_MAX := 0.05  # (13.1c, ficha §1.4): metros del centro del halo exportado a RightHand
+const HAND_WEIGHT_MAX := 0.001  # (13.1c): lo que le falta a un vértice del halo para pesar 1 en RightHand
+const SOCKET_CENTER_MAX := 0.001  # (13.3a, ficha §6): metros del centro del halo en un anclaje al del editor
+const BoneLabels := preload("res://../../godot/app/bone_labels.gd")  # paso 13.1b
+const ProjectIO := preload("res://../../godot/app/project_io.gd")  # paso 13.1b
+const HAND_FOLLOW_MAX := 0.001  # (13.1b, ficha §6): metros que cambia la distancia halo–mano con «Walk»
+const HAND_MOVED_MIN := 0.02  # (13.1b): metros que se mueve el halo en 0,5 s, para que la medida diga algo
+## Paso AC.6b: el .glb lleva también los ojos (EyeMesh); no son piezas y no se cuentan (los mira probar_glb.gd --ojos).
+const EYE_MESHES := ["ojo_l", "ojo_r", "linea_l", "linea_r", "linea_inferior_l", "linea_inferior_r", "pliegue_l", "pliegue_r",
+	"ceja_l", "ceja_r"]  # AC.6c: las cejas
 const QU_HAIR := ["hair_buns", "hair_long", "hair_buzzed_female", "hair_buzzed", "hair_simple_parted"]
 const QU_SHAPES := ["head_width_incr", "head_height_incr", "gender_incr", "torso_length_incr", "neck_length_incr"]
 ## Cambio de la distancia con signo a la piel al deformar, en el pelo pegado al cuero cabelludo. Mide si se despega.
@@ -16,6 +45,7 @@ const QU_SCALP := 0.015  # metros: en neutro, más cerca de la piel de la cabeza
 const QU_GAP_CELL := 0.03  # metros: celda de la rejilla de triángulos (se busca en la celda y sus vecinas)
 const QU_CASES := {"torso": {"torso_length": 1.0}, "complexión": {"gender": 1.0}, "ambos": {"torso_length": 1.0, "gender": 1.0}}
 const QU_NECK_DEPTH_MAX := 0.02  # PROVISIONAL: metros bajo la piel de cuello y hombros con la cabeza a ×2,5; medido 14,4 mm
+const QU_NECK_DEPTH_CHAINS_MAX := 0.045  # PROVISIONAL (2026-11-26, aprobado): con cadenas el pelo crece con la cabeza (PE.3b, opción A); medido 41,6 mm con hair_long
 const QU_CELL := 0.04  # metros: celda de la rejilla que busca el vértice de piel más cercano
 
 ## Paso RE.1c: ropa de OverScore. Distancia tela-piel al deformar y piel que asoma por la tela en «Atacar».
@@ -42,12 +72,16 @@ func _initialize() -> void:
 	root.add_child(main)
 	await process_frame
 	var view = main.body_view
-	_check_quaternius(main, view)
+	_check_hairs(main, view, "quaternius", QU_HAIR, "Quaternius")
 	_check_overscore(main, view)
 	_check_makehuman(main, view)
 	_check_wear(main, view)
+	await _check_place(main, view)
+	_check_place_tab(main, view)
+	_check_place_unsaved(main, view)
 	_check_export(view)
 	_check_project(main, view)
+	await _check_hair_physics(main, view)
 	main.free()
 	print("RESULTADO: ", "TODO BIEN" if failures == 0 else "%d FALLOS" % failures)
 	quit(1 if failures else 0)
@@ -59,25 +93,25 @@ func check(label: String, ok: bool, detail := "") -> void:
 		failures += 1
 
 
-## Paso RE.1b: cada peinado de Quaternius se pone, sigue a la cabeza, no se hunde en cuello y hombros y se exporta.
-func _check_quaternius(main: Control, view) -> void:
+## Paso RE.1b: cada peinado del pack se pone, sigue a la cabeza, no se hunde en cuello y hombros y se exporta.
+func _check_hairs(main: Control, view, pack: String, ids: Array, label: String) -> void:
 	var start: Dictionary = main.editor.values.duplicate()
 	var head_weight := _bone_weight(view.species.mesh, view.species.skeleton, "Head")
 	var previous := ""
-	for id: String in QU_HAIR:
-		check("Quaternius: poner %s" % id, view.set_piece("quaternius", id, true))
-		var mesh: MeshInstance3D = view.pieces.get("quaternius/" + id)
+	for id: String in ids:
+		check("%s: poner %s" % [label, id], view.set_piece(pack, id, true))
+		var mesh: MeshInstance3D = view.pieces.get(pack + "/" + id)
 		if mesh == null:
 			continue
-		check("Quaternius: %s cuelga del esqueleto y trae las formas" % id, mesh.get_parent() == view.species.skeleton
+		check("%s: %s cuelga del esqueleto y trae las formas" % [label, id], mesh.get_parent() == view.species.skeleton
 			and QU_SHAPES.all(func(shape: String) -> bool: return mesh.find_blend_shape_by_name(shape) >= 0))
 		if previous != "":
-			check("Quaternius: %s quita el anterior (misma ranura)" % id, not view.is_on("quaternius/" + previous))
+			check("%s: %s quita el anterior (misma ranura)" % [label, id], not view.is_on(pack + "/" + previous))
 		previous = id
 		_check_follows(main, view, mesh, id, start, head_weight)
 		_check_big_head(main, view, mesh, id, start, head_weight)
-		_check_exports(view, id)
-	view.set_piece("quaternius", previous, false)
+		_check_exports(view, id, label)
+	view.set_piece(pack, previous, false)
 	main.editor.load_values(start)
 
 
@@ -96,7 +130,7 @@ func _check_follows(main: Control, view, mesh: MeshInstance3D, id: String, start
 			measured.append(all[k])
 			before.append(neutral["gaps"][k])
 	print("  MEDIDA %s: %d de %d vértices medidos (%.1f %%)" % [id, measured.size(), all.size(), 100.0 * measured.size() / all.size()])
-	check("Quaternius: %s tiene vértices sobre el cuero cabelludo" % id, measured.size() > 0)
+	check("%s tiene vértices sobre el cuero cabelludo" % id, measured.size() > 0)
 	if measured.is_empty():
 		return
 	for label: String in QU_CASES:
@@ -113,7 +147,7 @@ func _check_follows(main: Control, view, mesh: MeshInstance3D, id: String, start
 			peak = maxf(peak, change)
 		var rms := sqrt(sum / measured.size())
 		print("  MEDIDA %s (%s): cambio de distancia a la piel RMS %.2f mm, pico %.2f mm" % [id, label, rms * 1000, peak * 1000])
-		check("Quaternius: %s no se despega de la piel (%s)" % [id, label], rms <= QU_GAP_RMS_MAX and peak <= QU_GAP_PEAK_MAX,
+		check("%s no se despega de la piel (%s)" % [id, label], rms <= QU_GAP_RMS_MAX and peak <= QU_GAP_PEAK_MAX,
 			"RMS %.2f, pico %.2f mm" % [rms * 1000, peak * 1000])
 	main.editor.load_values(start)
 
@@ -125,8 +159,10 @@ func _check_big_head(main: Control, view, mesh: MeshInstance3D, id: String, star
 	main.editor.load_values(values)
 	var body: Dictionary = MeshBaker.bake(view.species.mesh, view.species.skeleton)
 	var depth := _neck_depth(MeshBaker.bake(mesh, view.species.skeleton)["vertices"], body, head_weight)
-	print("  MEDIDA %s con cabeza ×2,5: %.1f mm bajo la piel de cuello y hombros" % [id, depth * 1000])
-	check("Quaternius: %s no se hunde en cuello y hombros a ×2,5" % id, depth <= QU_NECK_DEPTH_MAX, "%.1f mm" % (depth * 1000))
+	var chains: bool = view.hair_physics.keys().any(func(key: String) -> bool: return key.get_file() == id)
+	var limit := QU_NECK_DEPTH_CHAINS_MAX if chains else QU_NECK_DEPTH_MAX
+	print("  MEDIDA %s con cabeza ×2,5: %.1f mm bajo la piel de cuello y hombros%s" % [id, depth * 1000, " (con cadenas)" if chains else ""])
+	check("%s no se hunde en cuello y hombros a ×2,5" % id, depth <= limit, "%.1f mm" % (depth * 1000))
 	main.editor.load_values(start)
 
 
@@ -141,7 +177,7 @@ func _check_exports(view, id: String, label := "Quaternius") -> void:
 		if ok:
 			var scene := document.generate_scene(state)
 			var meshes := scene.find_children("*", "MeshInstance3D", true, false)
-			count = meshes.size()
+			count = _without_eyes(meshes).size()
 			ok = meshes.all(func(m: MeshInstance3D) -> bool: return m.skin != null)
 			scene.free()
 	check("%s: %s se exporta con el cuerpo" % [label, id], ok and count == 2, str(count))
@@ -155,7 +191,7 @@ func _check_overscore(main: Control, view) -> void:
 	check("OverScore: el pack tiene prendas", not cards.is_empty())
 	var start: Dictionary = main.editor.values.duplicate()
 	var bodies := _os_bodies(main, view, start)
-	var hands := _hand_mask(view.species.mesh, view.species.skeleton)
+	var hands := Cloth.hand_mask(view.species.mesh, view.species.skeleton, OS_HAND_BONES)
 	for card: Dictionary in cards:
 		var id: String = card["id"]
 		check("OverScore: poner %s" % id, view.set_piece("overscore", id, true))
@@ -248,7 +284,7 @@ func _check_os_attack(view, mesh: MeshInstance3D, id: String, bodies: Dictionary
 	var skeleton: Skeleton3D = view.species.skeleton
 	var tris: PackedInt32Array = mesh.mesh.surface_get_arrays(0)[Mesh.ARRAY_INDEX]
 	var cloth: PackedVector3Array = MeshBaker.bake(mesh, skeleton)["vertices"]
-	var inner := _os_inner(bodies["neutro"], cloth, tris, hands)
+	var inner := Cloth.covered_skin(bodies["neutro"], cloth, tris, hands, OS_RAY_BELOW, OS_RAY_ABOVE, OS_CELL, OS_HEM)
 	check("OverScore: %s cubre piel" % id, inner.size() > 0)
 	var worst_share := 0.0
 	var worst_peak := 0.0
@@ -258,7 +294,7 @@ func _check_os_attack(view, mesh: MeshInstance3D, id: String, bodies: Dictionary
 		view.retarget.apply()
 		var body: Dictionary = bodies["atacar %d" % i]
 		var moved: PackedVector3Array = MeshBaker.bake(mesh, skeleton)["vertices"]
-		var heights := _cloth_heights(body["vertices"], body["normals"], inner, moved, tris)
+		var heights := Cloth.cloth_heights(body["vertices"], body["normals"], inner, moved, tris, OS_RAY_BELOW, OS_RAY_ABOVE, OS_CELL)
 		var over := 0
 		var hit := 0
 		for value in heights:
@@ -272,90 +308,6 @@ func _check_os_attack(view, mesh: MeshInstance3D, id: String, bodies: Dictionary
 	print("  MEDIDA %s en Atacar: piel sobre la cara interior hasta %.2f %%, pico %.1f mm (%d vértices de piel)" % [id, worst_share, worst_peak * 1000, inner.size()])
 	check("OverScore: %s no deja asomar la piel en Atacar" % id, worst_share <= OS_ATTACK_SKIN_MAX and worst_peak <= OS_ATTACK_PEAK_MAX,
 		"%.2f %%, %.1f mm" % [worst_share, worst_peak * 1000])
-
-
-## Vértices de piel cubiertos por la tela en neutro y a más de OS_HEM de piel sin cubrir.
-func _os_inner(body: Dictionary, cloth: PackedVector3Array, tris: PackedInt32Array, hands: PackedByteArray) -> PackedInt32Array:
-	var skin: PackedVector3Array = body["vertices"]
-	var box := AABB(cloth[0], Vector3.ZERO)
-	for point in cloth:
-		box = box.expand(point)
-	box = box.grow(OS_RAY_BELOW + 0.01)
-	var near := PackedInt32Array()
-	for v in skin.size():
-		if hands[v] == 0 and box.has_point(skin[v]):
-			near.append(v)
-	var heights := _cloth_heights(skin, body["normals"], near, cloth, tris)
-	var bare := {}
-	for k in near.size():
-		if not is_finite(heights[k]):
-			var cell := Vector3i((skin[near[k]] / OS_HEM).floor())
-			if not bare.has(cell):
-				bare[cell] = PackedInt32Array()
-			bare[cell].append(near[k])
-	var inner := PackedInt32Array()
-	for k in near.size():
-		if is_finite(heights[k]) and not _has_near(skin, skin[near[k]], bare):
-			inner.append(near[k])
-	return inner
-
-
-func _has_near(skin: PackedVector3Array, point: Vector3, bare: Dictionary) -> bool:
-	var center := Vector3i((point / OS_HEM).floor())
-	for x in range(-1, 2):
-		for y in range(-1, 2):
-			for z in range(-1, 2):
-				for v: int in bare.get(center + Vector3i(x, y, z), PackedInt32Array()):
-					if point.distance_squared_to(skin[v]) < OS_HEM * OS_HEM:
-						return true
-	return false
-
-
-## Altura de la primera tela sobre cada vértice de piel, a lo largo de su normal (INF si no hay tela).
-func _cloth_heights(skin: PackedVector3Array, normals: PackedVector3Array, which: PackedInt32Array, cloth: PackedVector3Array,
-		tris: PackedInt32Array) -> PackedFloat64Array:
-	var grid := _cloth_grid(cloth, tris)
-	var stamp := PackedInt32Array()
-	stamp.resize(tris.size() / 3)
-	stamp.fill(-1)
-	var heights := PackedFloat64Array()
-	heights.resize(which.size())
-	var steps := ceili((OS_RAY_BELOW + OS_RAY_ABOVE) / (0.5 * OS_CELL))
-	for k in which.size():
-		var normal := normals[which[k]].normalized()
-		var from := skin[which[k]] - normal * OS_RAY_BELOW
-		var to := skin[which[k]] + normal * OS_RAY_ABOVE
-		var best := INF
-		for s in steps + 1:
-			var center := Vector3i((from.lerp(to, float(s) / steps) / OS_CELL).floor())
-			for t: int in grid.get(center, PackedInt32Array()):
-				if stamp[t] == k:
-					continue
-				stamp[t] = k
-				var hit: Variant = Geometry3D.segment_intersects_triangle(from, to, cloth[tris[3 * t]], cloth[tris[3 * t + 1]], cloth[tris[3 * t + 2]])
-				if hit != null:
-					best = minf(best, from.distance_to(hit) - OS_RAY_BELOW)
-		heights[k] = best
-	return heights
-
-
-## {celda: triángulos de la tela cuya caja la toca}.
-func _cloth_grid(cloth: PackedVector3Array, tris: PackedInt32Array) -> Dictionary:
-	var grid := {}
-	for t in tris.size() / 3:
-		var a := cloth[tris[3 * t]]
-		var b := cloth[tris[3 * t + 1]]
-		var c := cloth[tris[3 * t + 2]]
-		var from := Vector3i((a.min(b).min(c) / OS_CELL).floor())
-		var to := Vector3i((a.max(b).max(c) / OS_CELL).floor())
-		for x in range(from.x, to.x + 1):
-			for y in range(from.y, to.y + 1):
-				for z in range(from.z, to.z + 1):
-					var cell := Vector3i(x, y, z)
-					if not grid.has(cell):
-						grid[cell] = PackedInt32Array()
-					grid[cell].append(t)
-	return grid
 
 
 ## Criterio de RE.1c: cada prenda de torso con cada short da 0 pares de triángulos cruzados en neutro. En «Atacar» se mide.
@@ -387,7 +339,7 @@ func _check_os_layers(view, cards: Array) -> void:
 
 ## Pares (triángulo de a, triángulo de b) que se cortan: una arista de uno atraviesa al otro.
 func _cross_pairs(a: PackedVector3Array, ta: PackedInt32Array, b: PackedVector3Array, tb: PackedInt32Array) -> int:
-	var grid := _cloth_grid(b, tb)
+	var grid := Cloth.cloth_grid(b, tb, OS_CELL)
 	var count := 0
 	for s in ta.size() / 3:
 		var p := a[ta[3 * s]]
@@ -412,31 +364,9 @@ func _cross_pairs(a: PackedVector3Array, ta: PackedInt32Array, b: PackedVector3A
 
 
 func _edges_hit(p: Vector3, q: Vector3, r: Vector3, u: Vector3, v: Vector3, w: Vector3) -> bool:
-	return Geometry3D.segment_intersects_triangle(p, q, u, v, w) != null \
-		or Geometry3D.segment_intersects_triangle(q, r, u, v, w) != null \
-		or Geometry3D.segment_intersects_triangle(r, p, u, v, w) != null
-
-
-## 1 en los vértices de piel que pesan sobre todo en manos y dedos (cuelgan junto a la cadera, no van bajo la ropa).
-func _hand_mask(mesh: MeshInstance3D, skeleton: Skeleton3D) -> PackedByteArray:
-	var is_hand := {}
-	for i in mesh.skin.get_bind_count():
-		var bind_name := String(mesh.skin.get_bind_name(i))
-		var bone := bind_name if bind_name != "" else String(skeleton.get_bone_name(mesh.skin.get_bind_bone(i)))
-		is_hand[i] = OS_HAND_BONES.any(func(part: String) -> bool: return part in bone)
-	var arrays := mesh.mesh.surface_get_arrays(0)
-	var bones: PackedInt32Array = arrays[Mesh.ARRAY_BONES]
-	var weights: PackedFloat32Array = arrays[Mesh.ARRAY_WEIGHTS]
-	var sums := PackedFloat32Array()
-	sums.resize(bones.size() / 4)
-	for k in bones.size():
-		if is_hand.get(bones[k], false):
-			sums[k / 4] += weights[k]
-	var mask := PackedByteArray()
-	mask.resize(sums.size())
-	for v in sums.size():
-		mask[v] = 1 if sums[v] >= 0.5 else 0
-	return mask
+	return Cloth.segment_hit(p, q, u, v, w) != null \
+		or Cloth.segment_hit(q, r, u, v, w) != null \
+		or Cloth.segment_hit(r, p, u, v, w) != null
 
 
 ## Peso de un hueso en cada vértice de la malla.
@@ -641,8 +571,8 @@ func _check_makehuman(main: Control, view) -> void:
 	else:
 		var scene := document.generate_scene(state)
 		var meshes := scene.find_children("*", "MeshInstance3D", true, false)
-		check("MakeHuman: el .glb trae cuerpo + 3 mallas, todas con piel", meshes.size() == 4
-			and meshes.all(func(m: MeshInstance3D) -> bool: return m.skin != null), str(meshes.size()))
+		check("MakeHuman: el .glb trae cuerpo + 3 mallas, todas con piel", _without_eyes(meshes).size() == 4
+			and meshes.all(func(m: MeshInstance3D) -> bool: return m.skin != null), str(_without_eyes(meshes).size()))
 		scene.free()
 	DirAccess.remove_absolute(path)
 	DirAccess.remove_absolute(path.get_basename() + ".tres")
@@ -684,6 +614,197 @@ func _check_wear(main: Control, view) -> void:
 	check("quitar el halo", view.set_piece("base", "halo", false) and not view.is_on("base/halo"))
 
 
+## Paso 13.1b: «Colocar» en la pestaña Accesorios. Entra con los cuernos puestos y sin halo, y lo deja igual.
+func _check_place(main: Control, view) -> void:
+	var settings: GDScript = load(ProjectSettings.globalize_path("res://").path_join("../../godot/app/settings_file.gd").simplify_path())
+	var touch: bool = settings.get_touch_zones()
+	main.set_touch_zones(true)
+	var panel = main.piece_panels["Accesorios"]
+	var button: Button = panel.place_buttons.get("base/halo")
+	check("13.1b: «Colocar» está y no se puede pulsar sin la pieza", button != null and button.disabled)
+	check("13.1b: solo los accesorios llevan «Colocar»", main.piece_panels["Ropa"].place_buttons.is_empty())
+	if button == null or not view.set_piece("base", "halo", true):
+		return
+	button.button_pressed = true
+	var row = panel.place_row
+	check("13.1b: con el halo puesto, «Colocar» abre debajo de su fila", not button.disabled and row != null
+		and row.get_index() == button.get_parent().get_index() + 1)
+	if row == null:
+		return
+	check("13.1b: el gizmo está en la vista y «Tocar zonas» apagado", _gizmos(view) == 1 and not view.touch_zones)
+	_check_place_list(row, main.dark)
+	_choose_bone(row, "RightHand")
+	var holder: BoneAttachment3D = view.accessories["base/halo"]
+	check("13.1b: el halo pasa a RightHand", holder.bone_name == "RightHand", holder.bone_name)
+	var usual: Dictionary = RigidPiece.default_place(view.library.piece("base", "halo"))
+	check("13.1b: en el origen del hueso, sin giro y con la escala de serie", RigidPiece.get_place(holder).is_equal_approx(
+		Transform3D(Basis.from_scale(usual["place"].basis.get_scale()), Vector3.ZERO)), str(RigidPiece.get_place(holder)))
+	await process_frame
+	_check_place_gizmo(row, holder)
+	await _check_place_follows(view, holder)
+	row.reset.pressed.emit()
+	check("13.1b: «Restablecer» vuelve a Head y a su sitio", holder.bone_name == "Head"
+		and RigidPiece.get_place(holder).is_equal_approx(usual["place"])
+		and row.bones.get_selected_metadata() == "Head", holder.bone_name)
+	var horns: Button = panel.place_buttons["base/cuernos"]
+	horns.button_pressed = true
+	check("13.1b: una abierta a la vez", panel.place_row != row and panel.placing == "base/cuernos"
+		and not button.button_pressed and _gizmos(view) == 1 and not view.touch_zones)
+	horns.button_pressed = false
+	check("13.1b: al cerrar, sin gizmo y «Tocar zonas» encendido como estaba", panel.place_row == null
+		and _gizmos(view) == 0 and view.touch_zones)
+	main.set_touch_zones(false)
+	button.button_pressed = true
+	view.set_piece("base", "halo", false)
+	check("13.1b: quitar la pieza cierra «Colocar»", panel.place_row == null and _gizmos(view) == 0 and button.disabled
+		and not button.button_pressed)
+	check("13.1b: «Tocar zonas» sigue apagado como estaba", not view.touch_zones)
+	main.set_touch_zones(touch)
+
+
+func _gizmos(view) -> int:
+	return view.viewport.get_children().filter(func(n: Node) -> bool:  # por archivo: main.gd lo carga por otra ruta
+		var script: Script = n.get_script()
+		return script != null and script.resource_path.ends_with("/transform_gizmo.gd")).size()
+
+
+## Los anclajes arriba y, en la sección «Huesos», los huesos, todos en español; elegido, el de la pieza.
+func _check_place_list(row, dark: bool) -> void:
+	var found := []
+	for i: int in row.bones.item_count:
+		found.append(row.bones.get_item_text(i))
+	var spanish := func(bone: String) -> String: return BoneLabels.label(bone)
+	var wanted: Array = BoneLabels.SOCKETS.map(spanish) + ["Huesos", ""] + BoneLabels.BONES.map(spanish)
+	var title := BoneLabels.SOCKETS.size()
+	check("13.1b: anclajes y sección «Huesos» (subrayada) en español", found == wanted
+		and row.bones.is_item_separator(title) and row.bones.is_item_separator(title + 1), str(found))
+	var popup: PopupMenu = row.bones.get_popup()
+	var line := popup.get_theme_stylebox("separator") as StyleBoxLine
+	var colors: Dictionary = load(ProjectSettings.globalize_path("res://").path_join("../../godot/app/tema/tokens.gd")
+		.simplify_path()).palette(dark)
+	check("13.1b: al desplegable le llega la línea del tema", line != null
+		and line.color.is_equal_approx(colors["texto_3" if dark else "texto"]))
+	check("13.1b: la lista enseña el hueso de la pieza", row.bones.get_selected_metadata() == "Head")
+
+
+## Como elegirlo en el desplegable.
+func _choose_bone(row, bone: String) -> void:
+	for i: int in row.bones.item_count:
+		if not row.bones.is_item_separator(i) and row.bones.get_item_metadata(i) == bone:
+			row.bones.select(i)
+			row.bones.item_selected.emit(i)
+
+
+## El gizmo se dibuja sobre la pieza y cada una de sus señales la cambia; los botones cambian su modo.
+func _check_place_gizmo(row, holder: BoneAttachment3D) -> void:
+	var gizmo = row.gizmo
+	var before: Transform3D = holder.global_transform * RigidPiece.get_place(holder)
+	check("13.1b: el gizmo está sobre la pieza", gizmo.target.is_equal_approx(before), str(gizmo.target.origin))
+	gizmo.moved_by.emit(Vector3.RIGHT, 0.03)
+	var after: Transform3D = holder.global_transform * RigidPiece.get_place(holder)
+	check("13.1b: arrastrar una flecha mueve la pieza", after.origin.is_equal_approx(before.origin + Vector3(0.03, 0, 0)),
+		str(after.origin - before.origin))
+	before = after
+	gizmo.turned_by.emit(Vector3.UP, 0.5)
+	after = holder.global_transform * RigidPiece.get_place(holder)
+	check("13.1b: arrastrar un anillo la gira", after.is_equal_approx(Transform3D(Basis(Vector3.UP, 0.5) * before.basis,
+		before.origin)))
+	var size: float = RigidPiece.get_place(holder).basis.get_scale().x
+	gizmo.scaled_by.emit(1.5)
+	check("13.1b: arrastrar el círculo la escala", is_equal_approx(RigidPiece.get_place(holder).basis.get_scale().x, size * 1.5))
+	check("13.1b: la pieza sigue en su hueso al arrastrar", holder.bone_name == "RightHand")
+	for text: String in ["Girar", "Escalar", "Mover"]:
+		row.modes[text].button_pressed = true
+		check("13.1b: botón «%s»" % text, gizmo.mode == row.MODES[text])
+
+
+## Con «Caminar» (Walk) y 0,5 s avanzados, el halo se mueve con la mano: un vértice suyo queda a la misma distancia del hueso.
+func _check_place_follows(view, holder: BoneAttachment3D) -> void:
+	view.set_process(false)  # el clip avanza solo lo que diga la prueba
+	check("13.1b: poner «Caminar»", view.set_animation("caminar"))
+	await process_frame
+	await process_frame
+	var before := _halo_and_hand(view, holder)
+	view._process(0.5)
+	await process_frame
+	var after := _halo_and_hand(view, holder)
+	var moved: float = after[0].distance_to(before[0])
+	var change := absf(after[0].distance_to(after[1]) - before[0].distance_to(before[1]))
+	print("  MEDIDA 13.1b: «Caminar», halo movido %.1f mm; cambio de la distancia a la mano %.4f mm" % [moved * 1000.0,
+		change * 1000.0])
+	check("13.1b: el halo se mueve con «Caminar»", moved >= HAND_MOVED_MIN, "%.1f mm" % (moved * 1000.0))
+	check("13.1b: el halo sigue a la mano", change <= HAND_FOLLOW_MAX, "%.4f mm" % (change * 1000.0))
+	view.set_animation("")
+	view.set_process(true)
+	await process_frame
+
+
+## [un vértice del halo, el hueso RightHand], en el mundo.
+func _halo_and_hand(view, holder: BoneAttachment3D) -> Array[Vector3]:
+	var skeleton: Skeleton3D = view.species.skeleton
+	var instance: MeshInstance3D = RigidPiece.meshes(holder)[0]
+	var vertex: Vector3 = instance.mesh.surface_get_arrays(0)[Mesh.ARRAY_VERTEX][0]
+	var hand := skeleton.global_transform * skeleton.get_bone_global_pose(skeleton.find_bone("RightHand"))
+	return [instance.global_transform * vertex, hand.origin]
+
+
+## Paso 13.1b: cambiar de pestaña cierra «Colocar», apaga el gizmo y repone «Tocar zonas».
+func _check_place_tab(main: Control, view) -> void:
+	var accessories: int = main.TAB_NAMES.find("Accesorios")
+	main.top_bar.tab_bar.current_tab = accessories
+	var panel = main.piece_panels["Accesorios"]
+	var button: Button = panel.place_buttons["base/cuernos"]
+	var settings: GDScript = load(ProjectSettings.globalize_path("res://").path_join("../../godot/app/settings_file.gd").simplify_path())
+	var touch: bool = settings.get_touch_zones()
+	main.set_touch_zones(true)
+	button.button_pressed = true
+	check("13.1b: en Accesorios, «Colocar» abierto", panel.is_visible_in_tree() and panel.place_row != null
+		and _gizmos(view) == 1 and not view.touch_zones)
+	main.top_bar.tab_bar.current_tab = main.ACTIVE_TAB
+	check("13.1b: cambiar de pestaña cierra «Colocar» y apaga el gizmo", panel.place_row == null and _gizmos(view) == 0
+		and not button.button_pressed)
+	check("13.1b: al cambiar de pestaña, «Tocar zonas» vuelve a como estaba", view.touch_zones)
+	main.set_touch_zones(touch)
+
+
+## Paso 13.1b: cada forma de colocar deja el proyecto «sin guardar» (• en la barra); guardar el .gmolde lo quita.
+func _check_place_unsaved(main: Control, view) -> void:
+	var actions = main.body_actions
+	var path := OS.get_user_data_dir().path_join("colocar_prueba.gmolde")
+	var preset := path.get_basename() + ".json"
+	check("13.1b: poner el halo y guardar", view.set_piece("base", "halo", true) and actions.save_preset(path) == OK
+		and not actions.has_changes())
+	var panel = main.piece_panels["Accesorios"]
+	panel.place_buttons["base/halo"].button_pressed = true
+	var row = panel.place_row
+	var steps := {
+		"cambiar de hueso": func() -> void: _choose_bone(row, "RightHand"),
+		"mover": func() -> void: row.gizmo.moved_by.emit(Vector3.RIGHT, 0.03),
+		"girar": func() -> void: row.gizmo.turned_by.emit(Vector3.UP, 0.5),
+		"escalar": func() -> void: row.gizmo.scaled_by.emit(1.5),
+		"restablecer": func() -> void: row.reset.pressed.emit(),
+	}
+	for step: String in steps:
+		steps[step].call()
+		main.refresh_top_bar()
+		check("13.1b: %s deja el proyecto sin guardar" % step, actions.has_changes() and main.top_bar.file_label.text.ends_with("•"))
+		check("13.1b: guardar tras %s" % step, actions.save_preset(path) == OK and not actions.has_changes())
+	row.gizmo.moved_by.emit(Vector3.UP, 0.03)
+	check("13.1b: un .json no guarda la colocación: sigue sin guardar", actions.save_preset(preset) == OK
+		and actions.has_changes())
+	var other := path.get_basename() + "_2.gmolde"
+	check("13.1b: guardar movido, restablecer y guardar en otro", actions.save_preset(path) == OK)
+	row.reset.pressed.emit()
+	check("13.1b: el otro queda guardado", actions.save_preset(other) == OK and not actions.has_changes())
+	check("13.1b: abrir el .gmolde con la pieza movida deja sin cambios", actions.open_preset(path) == ""
+		and ProjectIO.moved_places(view) != "[]" and not actions.has_changes())
+	view.set_piece("base", "halo", false)
+	actions.project = {}
+	actions.current_path = ""
+	for file: String in [path, preset, other]:
+		DirAccess.remove_absolute(file)
+
+
 func _check_export(view) -> void:
 	var path := OS.get_user_data_dir().path_join("piezas_prueba.glb")
 	check("exportar con piezas", view.export_glb(path) == OK)
@@ -694,9 +815,9 @@ func _check_export(view) -> void:
 		return
 	var scene := document.generate_scene(state)
 	var meshes := scene.find_children("*", "MeshInstance3D", true, false)
-	var names: Array = meshes.map(func(m: MeshInstance3D) -> String: return m.name)
+	var names: Array = _without_eyes(meshes).map(func(m: MeshInstance3D) -> String: return m.name)
 	# cuerpo + malla + casquete + 2 cuernos
-	check("el .glb trae el cuerpo primero y 4 mallas de piezas, todas con piel", meshes.size() == 5 and names[0] == "Body"
+	check("el .glb trae el cuerpo primero y 4 mallas de piezas, todas con piel", names.size() == 5 and names[0] == "Body"
 		and meshes.all(func(m: MeshInstance3D) -> bool: return m.skin != null), str(names))
 	var lowest := INF
 	for m: MeshInstance3D in meshes:
@@ -705,18 +826,322 @@ func _check_export(view) -> void:
 	scene.free()
 	DirAccess.remove_absolute(path)
 	DirAccess.remove_absolute(path.get_basename() + ".tres")
+	_check_export_hand(view)
+
+
+## Paso 13.1c: el halo colgado de la mano derecha sale en el .glb con la piel en ese hueso y junto a él.
+func _check_export_hand(view) -> void:
+	check("13.1c: el halo a la mano derecha", _halo_to_hand(view))
+	var path := OS.get_user_data_dir().path_join("piezas_mano_prueba.glb")
+	var document := GLTFDocument.new()
+	var state := GLTFState.new()
+	if view.export_glb(path) != OK or document.append_from_file(path, state) != OK:
+		check("13.1c: exportar con el halo en la mano", false)
+	else:
+		var scene := document.generate_scene(state)
+		var halo := scene.find_child("halo_d", true, false) as MeshInstance3D
+		check("13.1c: el .glb trae el halo con piel", halo != null and halo.skin != null)
+		if halo != null and halo.skin != null:
+			_check_halo_skin(halo, scene.find_children("*", "Skeleton3D", true, false)[0])
+		scene.free()
+	DirAccess.remove_absolute(path)
+	DirAccess.remove_absolute(path.get_basename() + ".tres")
+	view.set_piece("base", "halo", false)
+	for socket: String in ["socket_hand_r", "socket_back"]:
+		_check_export_socket(view, socket)
+
+
+## Paso 13.3a: el halo colgado de un anclaje sale con piel, al 100 % del padre del anclaje y donde estaba en el editor
+## (en pose T, respecto al padre: el .glb se baja al suelo).
+func _check_export_socket(view, socket: String) -> void:
+	var skeleton: Skeleton3D = view.species.skeleton
+	var usual: Transform3D = RigidPiece.default_place(view.library.piece("base", "halo"))["place"]
+	if not view.set_piece("base", "halo", true) or not RigidPiece.set_place(view.accessories["base/halo"], socket, usual):
+		check("13.3a: el halo en " + socket, false)
+		return
+	view.set_pose_t(true)
+	var parent := skeleton.get_bone_parent(skeleton.find_bone(socket))
+	var instance: MeshInstance3D = RigidPiece.meshes(view.accessories["base/halo"])[0]
+	var editor := _box_center(instance.mesh.surface_get_arrays(0)[Mesh.ARRAY_VERTEX],
+		skeleton.get_bone_global_pose(skeleton.find_bone(socket)) * instance.transform)
+	editor -= skeleton.get_bone_global_pose(parent).origin
+	var path := OS.get_user_data_dir().path_join("piezas_anclaje_prueba.glb")
+	var document := GLTFDocument.new()
+	var state := GLTFState.new()
+	if view.export_glb(path) != OK or document.append_from_file(path, state) != OK:
+		check("13.3a: exportar con el halo en " + socket, false)
+	else:
+		var scene := document.generate_scene(state)
+		var halo := scene.find_child("halo_d", true, false) as MeshInstance3D
+		var out: Skeleton3D = scene.find_children("*", "Skeleton3D", true, false)[0]
+		var skinned := halo != null and halo.skin != null and halo.skin.get_bind_count() > 0
+		check("13.3a: el halo del anclaje %s tiene piel" % socket, skinned)
+		if skinned:
+			_check_socket_skin(halo, out, skeleton.get_bone_name(parent), editor, socket)
+		scene.free()
+	DirAccess.remove_absolute(path)
+	DirAccess.remove_absolute(path.get_basename() + ".tres")
+	view.set_piece("base", "halo", false)
+	view.set_pose_t(false)
+
+
+## Peso en el hueso parent_name y centro del halo exportado en reposo, respecto a ese hueso, comparado con editor.
+func _check_socket_skin(halo: MeshInstance3D, skeleton: Skeleton3D, parent_name: String, editor: Vector3, socket: String) -> void:
+	var arrays := halo.mesh.surface_get_arrays(0)
+	var vertices: PackedVector3Array = arrays[Mesh.ARRAY_VERTEX]
+	var bones: PackedInt32Array = arrays[Mesh.ARRAY_BONES]
+	var weights: PackedFloat32Array = arrays[Mesh.ARRAY_WEIGHTS]
+	var per := bones.size() / vertices.size()
+	var parent := skeleton.find_bone(parent_name)
+	var missing := 0.0
+	var placed := PackedVector3Array()
+	for v in vertices.size():
+		var on_parent := 0.0
+		var at := Vector3.ZERO
+		for k in range(v * per, (v + 1) * per):
+			if weights[k] <= 0.0:
+				continue
+			var named := halo.skin.get_bind_name(bones[k])
+			var bone := halo.skin.get_bind_bone(bones[k]) if named == &"" else skeleton.find_bone(named)
+			on_parent += weights[k] if bone == parent else 0.0
+			at += weights[k] * (skeleton.get_bone_global_rest(bone) * halo.skin.get_bind_pose(bones[k]) * vertices[v])
+		missing = maxf(missing, absf(1.0 - on_parent))
+		placed.append(at)
+	var exported := _box_center(placed, Transform3D()) - skeleton.get_bone_global_rest(parent).origin
+	var distance := exported.distance_to(editor)
+	print("  MEDIDA 13.3a: %s, peso que falta en %s %.6f, centro a %.3f mm del editor" % [socket, parent_name, missing,
+		distance * 1000.0])
+	check("13.3a: la piel del halo en %s es al 100 %% de %s" % [socket, parent_name], missing <= HAND_WEIGHT_MAX,
+		"%.6f" % missing)
+	check("13.3a: el halo en %s queda donde en el editor" % socket, distance <= SOCKET_CENTER_MAX,
+		"%.3f mm" % (distance * 1000.0))
+
+
+## Centro de la caja de los vértices, pasados por place.
+func _box_center(vertices: PackedVector3Array, place: Transform3D) -> Vector3:
+	var low := Vector3.ONE * INF
+	var high := -low
+	for vertex in vertices:
+		low = low.min(place * vertex)
+		high = high.max(place * vertex)
+	return (low + high) / 2.0
+
+
+## En reposo: cada vértice pesa 1 en RightHand y el centro de la caja de la malla queda junto al hueso.
+func _check_halo_skin(halo: MeshInstance3D, skeleton: Skeleton3D) -> void:
+	var arrays := halo.mesh.surface_get_arrays(0)
+	var vertices: PackedVector3Array = arrays[Mesh.ARRAY_VERTEX]
+	var bones: PackedInt32Array = arrays[Mesh.ARRAY_BONES]
+	var weights: PackedFloat32Array = arrays[Mesh.ARRAY_WEIGHTS]
+	var per := bones.size() / vertices.size()
+	var hand := skeleton.find_bone("RightHand")
+	var missing := 0.0
+	var low := Vector3.ONE * INF
+	var high := -low
+	for v in vertices.size():
+		var on_hand := 0.0
+		var at := Vector3.ZERO
+		for k in range(v * per, (v + 1) * per):
+			if weights[k] <= 0.0:
+				continue
+			var named := halo.skin.get_bind_name(bones[k])
+			var bone := halo.skin.get_bind_bone(bones[k]) if named == &"" else skeleton.find_bone(named)
+			on_hand += weights[k] if bone == hand else 0.0
+			at += weights[k] * (skeleton.get_bone_global_rest(bone) * halo.skin.get_bind_pose(bones[k]) * vertices[v])
+		missing = maxf(missing, absf(1.0 - on_hand))
+		low = low.min(at)
+		high = high.max(at)
+	var distance := ((low + high) / 2.0).distance_to(skeleton.get_bone_global_rest(hand).origin)
+	print("  MEDIDA 13.1c: halo exportado, peso que falta en RightHand %.6f, centro a %.2f mm del hueso" % [missing, distance * 1000.0])
+	check("13.1c: la piel del halo es al 100 % de RightHand", missing <= HAND_WEIGHT_MAX, "%.6f" % missing)
+	check("13.1c: el centro del halo queda junto a la mano", distance <= HAND_CENTER_MAX, "%.2f mm" % (distance * 1000.0))
+
+
+## Paso 13.1c: como lo dejaría «Colocar»: en RightHand, movido 3 cm, girado y a ×1,25 de su escala de serie.
+func _halo_to_hand(view) -> bool:
+	if not view.set_piece("base", "halo", true):
+		return false
+	var usual: Transform3D = RigidPiece.default_place(view.library.piece("base", "halo"))["place"]
+	var basis := Basis(Vector3(1, 2, 3).normalized(), 0.7).scaled(usual.basis.get_scale() * 1.25)
+	return RigidPiece.set_place(view.accessories["base/halo"], "RightHand", Transform3D(basis, Vector3(0.03, 0.0, 0.0)))
+
+
+## [hueso, 8 números] de un accesorio puesto, o ["", []] si no está.
+func _placed(view, key: String) -> Array:
+	var holder: BoneAttachment3D = view.accessories.get(key)
+	if holder == null:
+		return ["", []]
+	return [holder.bone_name, RigidPiece.to_array(RigidPiece.get_place(holder))]
+
+
+## Mismo hueso y mismos 8 números (con PLACE_MAX).
+func _check_same_place(label: String, found: Array, wanted: Array) -> void:
+	check("13.1c: %s: mismo hueso al abrir" % label, found[0] == wanted[0], "%s / %s" % [found[0], wanted[0]])
+	var gap := INF
+	if found[1].size() == 8 and wanted[1].size() == 8:
+		gap = 0.0
+		for i in 8:
+			var difference := absf(found[1][i] - wanted[1][i])
+			gap = maxf(gap, difference if is_finite(difference) else INF)
+	print("  MEDIDA 13.1c: %s, diferencia de colocación %.9f" % [label, gap])
+	check("13.1c: %s: mismo transform al abrir" % label, gap <= PLACE_MAX, str(found[1]))
+
+
+## Paso 13.1c: un .gmolde de AB.13 (accesorio en «Root») abre en el anclaje de serie; con un hueso que no existe,
+## también, y avisa.
+func _check_old_project(main: Control, view, path: String) -> void:
+	var io: GDScript = load(ProjectSettings.globalize_path("res://").path_join("../../godot/app/project_io.gd").simplify_path())
+	var usual: Dictionary = RigidPiece.default_place(view.library.piece("base", "halo"))
+	var wanted := [usual["hueso"], RigidPiece.to_array(usual["place"])]
+	var project: Dictionary = JSON.parse_string(FileAccess.get_file_as_string(path))
+	var pieces: Array = project["personajes"][0]["piezas"]
+	var halo: Dictionary = pieces.filter(func(p: Dictionary) -> bool: return p["pieza"] == "halo")[0]
+	halo["hueso"] = "Root"
+	halo["transform"] = [0, 0, 0, 0, 0, 0, 1, 1]
+	io.write(path, project)
+	check("13.1c: abrir un .gmolde viejo (Root)", main.body_actions.open_preset(path) == "")
+	_check_same_place("halo en Root", _placed(view, "base/halo"), wanted)
+	check("13.1c: el .gmolde viejo no avisa de huesos", io.wear_pieces(view, pieces).is_empty())
+	halo["hueso"] = "Rabo"
+	var warnings: Array[String] = io.wear_pieces(view, pieces)
+	check("13.1c: un hueso que no existe avisa", warnings.size() == 1 and "Rabo" in warnings[0] and "halo" in warnings[0], str(warnings))
+	_check_same_place("halo en un hueso que no existe", _placed(view, "base/halo"), wanted)
+	halo["hueso"] = "RightHand"
+	halo["transform"] = [0.03, 0, 0, 0, 0, 0, 1, 0]
+	io.write(path, project)
+	check("13.1c: abrir un .gmolde con escala 0", main.body_actions.open_preset(path) == "")
+	_check_same_place("halo con escala 0 en el archivo", _placed(view, "base/halo"), wanted)
+	_check_bad_places(view, io, pieces, halo, wanted)
+
+
+## Paso 13.1c: una colocación no válida no se aplica (anclaje de serie y aviso); un giro sin normalizar, sí.
+func _check_bad_places(view, io: GDScript, pieces: Array, halo: Dictionary, wanted: Array) -> void:
+	var cases := {"escala 0": {7: 0.0}, "escala negativa": {7: -1.0}, "escala NaN": {7: NAN}, "escala infinita": {7: INF},
+		"giro de longitud 0": {6: 0.0}, "giro casi 0": {6: 1e-6}, "giro NaN": {3: NAN}, "giro infinito": {4: INF},
+		"giro enorme": {3: 1e30}, "posición NaN": {0: NAN}, "posición infinita": {1: -INF}, "posición enorme": {2: 1e39}}
+	for label: String in cases:
+		var numbers := [0.03, 0.0, 0.0, 0.0, 0.0, 0.0, 1.0, 1.25]
+		for i: int in cases[label]:
+			numbers[i] = cases[label][i]
+		halo["transform"] = numbers
+		var warnings: Array[String] = io.wear_pieces(view, pieces)
+		check("13.1c: %s: avisa" % label, warnings.size() == 1 and "halo" in warnings[0] and "no válida" in warnings[0], str(warnings))
+		_check_same_place(label, _placed(view, "base/halo"), wanted)
+	halo["transform"] = [0.03, 0, 0, 1, 1, 1, 1, 1.25]  # un giro de longitud 2
+	check("13.1c: un giro sin normalizar no avisa", io.wear_pieces(view, pieces).is_empty())
+	_check_same_place("giro normalizado", _placed(view, "base/halo"), ["RightHand", [0.03, 0.0, 0.0, 0.5, 0.5, 0.5, 0.5, 1.25]])
 
 
 func _check_project(main: Control, view) -> void:
 	var path := OS.get_user_data_dir().path_join("piezas_prueba.gmolde")
+	check("13.1c: el halo a la mano derecha antes de guardar", _halo_to_hand(view))
+	var hand := _placed(view, "base/halo")
+	var horns := _placed(view, "base/cuernos")
 	var worn: Array = view.pieces.keys() + view.accessories.keys()
 	worn.sort()
 	check("guardar el proyecto", main.body_actions.save_preset(path) == OK)
 	view.set_piece("base", "tights", false)
 	view.set_piece("base", "cuernos", false)
+	view.set_piece("base", "halo", false)
 	check("abrirlo sin error", main.body_actions.open_preset(path) == "")
 	var back: Array = view.pieces.keys() + view.accessories.keys()
 	back.sort()
 	check("vuelven las mismas piezas", back == worn, str(back))
 	check("la pestaña Ropa marca las mallas", main.piece_panels["Ropa"].buttons["base/tights"].button_pressed)
+	_check_same_place("halo en la mano", _placed(view, "base/halo"), hand)
+	_check_same_place("cuernos (con simetría)", _placed(view, "base/cuernos"), horns)
+	_check_old_project(main, view, path)
+	view.set_piece("base", "halo", false)
 	DirAccess.remove_absolute(path)
+
+
+## Paso AC.6b: las mallas del .glb sin las de los ojos.
+func _without_eyes(meshes: Array) -> Array:
+	return meshes.filter(func(m: MeshInstance3D) -> bool: return not m.name in EYE_MESHES)
+
+
+## Paso PE.4b: el pelo con movimiento en el editor.
+func _check_hair_physics(main: Control, view) -> void:
+	var skeleton: Skeleton3D = view.species.skeleton
+	var base := skeleton.get_bone_count()
+	check("PE.4b: poner bob02", view.set_piece("makehuman", "bob02", true))
+	var key := "makehuman/bob02"
+	var simulator: SpringBoneSimulator3D = view.hair_physics.get(key)
+	check("PE.4b: bob02 lleva simulador y cadenas", simulator != null and simulator.get_parent() == skeleton
+		and skeleton.get_bone_count() > base, "%d huesos" % skeleton.get_bone_count())
+	_check_hair_export(view, skeleton, key, base)
+	check("PE.5: exportar con bob02 deja .glb, .tres y .tscn", _exported_files(view) == [true, true, true])
+	var reports: Array[Dictionary] = view.check_report()
+	var errors := reports.filter(func(r: Dictionary) -> bool: return r["nivel"] == "error")
+	check("PE.4b: con cadenas, el informe no tiene errores", errors.is_empty(), str(errors.map(func(r: Dictionary) -> String: return r["id"])))
+	for clip: String in ["atacar", view.ROM_ID]:
+		view.set_animation(clip)
+		for f in 20:
+			await process_frame
+		view.set_piece("makehuman", "bob02", false)
+		for f in 5:
+			await process_frame
+		check("PE.4b: quitar bob02 con «%s» deja los huesos del cuerpo" % clip, skeleton.get_bone_count() == base
+			and view.hair_physics.is_empty() and skeleton.find_children("*", "SpringBoneSimulator3D", false, false).is_empty())
+		view.set_piece("makehuman", "bob02", true)
+		for f in 5:
+			await process_frame
+	view.set_animation("")
+	view.set_piece("makehuman", "bob02", false)
+	check("PE.4b: al final, los huesos del cuerpo", skeleton.get_bone_count() == base)
+	view.set_piece("quaternius", "hair_buzzed", true)
+	check("PE.4b: el rapado no lleva cadenas", view.hair_physics.is_empty() and skeleton.get_bone_count() == base,
+		"%d huesos" % skeleton.get_bone_count())
+	check("PE.5: exportar con el rapado no deja .tscn", _exported_files(view) == [true, true, false])
+	view.set_piece("quaternius", "hair_buzzed", false)
+
+
+## Paso PE.5: exporta con el editor y dice qué hay: [.glb, .tres, .tscn]; luego los borra.
+func _exported_files(view) -> Array:
+	var path := OS.get_user_data_dir().path_join("pe5_prueba.glb")
+	view.export_glb(path)
+	var found := []
+	for file: String in [path, path.get_basename() + ".tres", path.get_basename() + ".tscn"]:
+		found.append(FileAccess.file_exists(file))
+		DirAccess.remove_absolute(file)
+	return found
+
+
+## Paso PE.5: el .glb con los huesos de pelo del editor (nombre y padre) y la piel del peinado en ellos; en pose A, el
+## peinado como el mismo sin cadenas. En pose T solo se mide la distancia.
+func _check_hair_export(view, skeleton: Skeleton3D, key: String, base: int) -> void:
+	var baker: GDScript = load(ProjectSettings.globalize_path("res://").path_join("../../godot/addons/creador/character_baker.gd").simplify_path())
+	var plain: MeshInstance3D = BodyPiece.attach(view.library.load_piece("makehuman", "bob02"), skeleton)
+	BodyPiece.follow(plain, view.species.mesh)
+	for t_pose: bool in [false, true]:
+		var with_chains: Node3D = baker.bake(view.species.mesh, skeleton, t_pose, false, [view.pieces[key]])
+		var without: Node3D = baker.bake(view.species.mesh, skeleton, t_pose, false, [plain])
+		var a_skeleton: Skeleton3D = with_chains.find_children("*", "Skeleton3D", true, false)[0]
+		var b_skeleton: Skeleton3D = without.find_children("*", "Skeleton3D", true, false)[0]
+		var a: PackedVector3Array = MeshBaker.bake(a_skeleton.get_child(1), a_skeleton)["vertices"]
+		var b: PackedVector3Array = MeshBaker.bake(b_skeleton.get_child(1), b_skeleton)["vertices"]
+		var worst := 0.0
+		for i in mini(a.size(), b.size()):
+			worst = maxf(worst, a[i].distance_to(b[i]))
+		var pose := "T" if t_pose else "A"
+		print("  MEDIDA PE.4b: en pose %s, el peinado exportado con cadenas a %.4f mm de sin ellas" % [pose, worst * 1000.0])
+		if t_pose:
+			var family := func(s: Skeleton3D) -> Array:  # [hueso, padre] de cada x_pelo_*
+				return range(s.get_bone_count()).filter(func(b: int) -> bool: return s.get_bone_name(b).begins_with("x_pelo_")).map(
+					func(b: int) -> Array: return [s.get_bone_name(b), s.get_bone_name(s.get_bone_parent(b))])
+			check("PE.5: el .glb lleva los huesos de pelo del editor", a_skeleton.get_bone_count() > base
+				and family.call(a_skeleton) == family.call(skeleton), "%d" % a_skeleton.get_bone_count())
+			var hair_skin: Skin = (a_skeleton.get_child(1) as MeshInstance3D).skin
+			var valid: bool = hair_skin != null and hair_skin.get_bind_count() == (view.pieces[key] as MeshInstance3D).skin.get_bind_count()
+			var on_chain := 0
+			for i in hair_skin.get_bind_count() if hair_skin != null else 0:
+				var bone := hair_skin.get_bind_bone(i)
+				valid = valid and bone >= 0 and bone < a_skeleton.get_bone_count()
+				on_chain += int(valid and a_skeleton.get_bone_name(bone).begins_with("x_pelo_"))
+			check("PE.5: la piel del peinado exportado apunta a huesos que existen, también x_pelo_*", valid and on_chain > 0, "%d" % on_chain)
+		else:
+			check("PE.5: exportar con cadenas da lo mismo que sin ellas (pose A)", a.size() == b.size()
+				and worst * 1000.0 <= 0.1, "%.4f mm" % (worst * 1000.0))
+		with_chains.free()
+		without.free()
+	BodyPiece.detach(plain)

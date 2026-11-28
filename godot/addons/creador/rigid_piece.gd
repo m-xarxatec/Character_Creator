@@ -1,13 +1,16 @@
 class_name RigidPiece
 extends RefCounted
 ## Paso AB.11: accesorio rígido hecho por un generador (pack.json: «generador»: {tipo, parametros, simetria}; hoy, cuernos)
-## (cuernos y aros: orejas de gato, halo) y colgado de un hueso con un BoneAttachment3D: sigue su pose, su escala (Cabeza › Tamaño) y el reajuste del esqueleto.
+## (cuernos y aros: halo) y colgado de un hueso con un BoneAttachment3D: sigue su pose, su escala (Cabeza › Tamaño) y el reajuste del esqueleto.
 ## «anclaje.transform» lo coloca respecto al hueso (posición, giro como cuaternión y escala uniforme); con «simetria»,
 ## una segunda copia reflejada en X (geometría reflejada, sin escala negativa). Sin assets: la malla sale de los
 ## parámetros (se regenera igual al abrir).
+## Paso 13.3d: o una pieza importada (is_rigid), sin generador: una malla por parte de PieceImport.read.
 ## Uso:
 ##   var holder := RigidPiece.build(card, species.skeleton)   # BoneAttachment3D ya colgado, o null
+##   var holder := RigidPiece.build(card, species.skeleton, PieceImport.read(path)["partes"])   # importada
 ##   for mesh in RigidPiece.meshes(holder): …                  # sus mallas (una o dos)
+##   RigidPiece.set_place(holder, "RightHand", place)          # paso 13.1a: otro hueso u otro sitio (false si no existe)
 ## Al exportar, CharacterBaker.bake(…, rigid) las pasa a mallas con piel, al 100 % de su hueso.
 
 const HornGenerator := preload("horn_generator.gd")
@@ -15,31 +18,89 @@ const RingGenerator := preload("ring_generator.gd")
 const GENERATORS := {"cuernos": HornGenerator, "aro": RingGenerator}
 
 
-static func build(card: Dictionary, skeleton: Skeleton3D) -> BoneAttachment3D:
-	var generator: Dictionary = card.get("generador", {})
-	var script: GDScript = GENERATORS.get(generator.get("tipo", ""))
+## Paso 13.3d: ¿es un accesorio rígido? Con generador, o accesorio con archivo que no sigue al cuerpo (pieza importada).
+static func is_rigid(card: Dictionary) -> bool:
+	return card.get("generador") != null or (card.get("tipo") == "accesorio" and card.get("sigue_al_cuerpo") != true
+		and card.get("archivo", "") != "")
+
+
+## parts (paso 13.3d): las de PieceImport.read, para una pieza sin generador. null si no hay mallas o falta el hueso.
+static func build(card: Dictionary, skeleton: Skeleton3D, parts := []) -> BoneAttachment3D:
+	var made := _generated(card) if card.get("generador") != null else _imported(card["id"], parts)
 	var bone: String = card["anclaje"]["hueso"]
-	if script == null or skeleton.find_bone(bone) < 0:
+	if made.is_empty() or skeleton.find_bone(bone) < 0:
 		return null
-	var mesh: ArrayMesh = script.build(generator.get("parametros", {}))
 	var holder := BoneAttachment3D.new()
 	holder.name = card["id"]
 	skeleton.add_child(holder)
-	holder.bone_name = bone
-	var t: Array = card["anclaje"]["transform"]
-	var place := Transform3D(Basis(Quaternion(t[3], t[4], t[5], t[6]).normalized()).scaled(Vector3.ONE * t[7]),
-		Vector3(t[0], t[1], t[2]))
-	var sides: Array = [1.0, -1.0] if generator.get("simetria", false) == true else [1.0]
-	var mirror := Transform3D(Basis.from_scale(Vector3(-1.0, 1.0, 1.0)), Vector3.ZERO)
-	for side: float in sides:
+	for mesh_name: String in made:
 		var instance := MeshInstance3D.new()
-		instance.name = "%s_%s" % [card["id"], "d" if side > 0.0 else "i"]
-		# La copia reflejada lleva la malla reflejada y mirror·place·mirror (sin escala negativa): con escala negativa
-		# el contorno (outline.gdshader, caras de atrás) no salía.
-		instance.mesh = mesh if side > 0.0 else _mirrored(mesh)
-		instance.transform = place if side > 0.0 else mirror * place * mirror
+		instance.name = mesh_name
+		instance.mesh = made[mesh_name]
 		holder.add_child(instance)
+	var anchor := default_place(card)
+	set_place(holder, anchor["hueso"], anchor["place"])
 	return holder
+
+
+## {nombre: malla} del generador de la ficha («<id>_d» y, con simetría, «<id>_i»); {} si no se conoce.
+static func _generated(card: Dictionary) -> Dictionary:
+	var generator: Dictionary = card["generador"]
+	var script: GDScript = GENERATORS.get(generator.get("tipo", ""))
+	if script == null:
+		return {}
+	var mesh: ArrayMesh = script.build(generator.get("parametros", {}))
+	var made := {card["id"] + "_d": mesh}
+	if generator.get("simetria", false) == true:
+		made[card["id"] + "_i"] = _mirrored(mesh)
+	return made
+
+
+## {nombre: malla} de las partes importadas, en su orden: «<id>_m<k>» (nunca «_i», que set_place reflejaría).
+static func _imported(id: String, parts: Array) -> Dictionary:
+	var made := {}
+	for k: int in parts.size():
+		made["%s_m%d" % [id, k]] = parts[k]["mesh"]
+	return made
+
+
+## Paso 13.1a: [px, py, pz, qx, qy, qz, qw, escala] → Transform3D.
+static func to_place(numbers: Array) -> Transform3D:
+	var t := numbers
+	return Transform3D(Basis(Quaternion(t[3], t[4], t[5], t[6]).normalized()).scaled(Vector3.ONE * t[7]),
+		Vector3(t[0], t[1], t[2]))
+
+
+## Al revés, redondeado a 6 decimales (como ProjectFile). Escala = media de get_scale(); giro de basis.orthonormalized().
+static func to_array(place: Transform3D) -> Array:
+	var q := place.basis.orthonormalized().get_rotation_quaternion()
+	var s := place.basis.get_scale()
+	var numbers := [place.origin.x, place.origin.y, place.origin.z, q.x, q.y, q.z, q.w, (s.x + s.y + s.z) / 3.0]
+	return numbers.map(func(n: float) -> float: return snappedf(n, 1e-6))
+
+
+## El anclaje de serie de la ficha (card["anclaje"]).
+static func default_place(card: Dictionary) -> Dictionary:
+	return {"hueso": card["anclaje"]["hueso"], "place": to_place(card["anclaje"]["transform"])}
+
+
+## Cuelga el accesorio de bone (si existe) y coloca sus mallas: «_d» = place; «_i» = mirror·place·mirror (la malla
+## ya va reflejada: sin escala negativa, que quitaba el contorno de outline.gdshader). Guarda place en la meta
+## "place". false si el hueso no existe (no cambia nada).
+static func set_place(holder: BoneAttachment3D, bone: String, place: Transform3D) -> bool:
+	var skeleton := holder.get_parent() as Skeleton3D
+	if skeleton == null or skeleton.find_bone(bone) < 0:
+		return false
+	holder.bone_name = bone
+	var mirror := Transform3D(Basis.from_scale(Vector3(-1.0, 1.0, 1.0)), Vector3.ZERO)
+	for instance in meshes(holder):
+		instance.transform = mirror * place * mirror if String(instance.name).ends_with("_i") else place
+	holder.set_meta("place", place)
+	return true
+
+
+static func get_place(holder: BoneAttachment3D) -> Transform3D:
+	return holder.get_meta("place", Transform3D())
 
 
 ## La malla reflejada en X, con las normales reflejadas y los triángulos al revés (siguen mirando hacia fuera).

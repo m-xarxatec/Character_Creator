@@ -127,8 +127,8 @@ func _self_check() -> void:
 					if not key in outside_all[column]:
 						outside_all[column].append(key)
 			if body == "anime":
-				check("anime %s: 26.756 triángulos, 53 huesos y 1 material (los de la guía)" % ("con prenda" if garment else "sin prenda"),
-					values["triangulos"] == 26756 and values["huesos"] == 53 and values["materiales"] == 1, str(values))
+				check("anime %s: 26.756 triángulos, 56 huesos y 1 material (los de la guía)" % ("con prenda" if garment else "sin prenda"),
+					values["triangulos"] == 26756 and values["huesos"] == 56 and values["materiales"] == 1, str(values))
 				check("anime %s: textura %s" % ["con prenda" if garment else "sin prenda", "2048 px" if garment else "0 px"],
 					values["textura"] == (2048 if garment else 0), str(values["textura"]))
 	material.set_garment_visible(species.mesh, true)

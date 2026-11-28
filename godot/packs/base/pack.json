@@ -36,6 +36,10 @@
    "id": "tights",
    "miniatura": "",
    "nombre": "Malla de cuerpo completo",
+   "oculta": {
+    "archivo": "tights_oculta.png",
+    "sha256": "f05545a70354518c1437240710a3ade369c92b7f3f1e3c7a0b43abc3fa9618e5"
+   },
    "ranura": "ropa_interior",
    "sha256": "59f3322b6da1448d1ec06cebe84e8030ee2a80dd3b802deac4b87989252d5e60",
    "sigue_al_cuerpo": true,
@@ -173,50 +177,6 @@
    "ranura": "pelo",
    "sigue_al_cuerpo": true,
    "tipo": "pelo"
-  },
-  {
-   "anclaje": {
-    "hueso": "Head",
-    "transform": [
-     0.055,
-     0.12,
-     0.0,
-     0,
-     0,
-     -0.1305,
-     0.9914,
-     1
-    ]
-   },
-   "color": [
-    0.24,
-    0.16,
-    0.12
-   ],
-   "colores": [
-    "principal"
-   ],
-   "especies": [
-    "humana"
-   ],
-   "generador": {
-    "parametros": {
-     "afilado": 1.0,
-     "anillos": 0,
-     "curva": 0,
-     "lados": 3,
-     "largo": 0.07,
-     "radio": 0.028,
-     "segmentos": 4
-    },
-    "simetria": true,
-    "tipo": "cuernos"
-   },
-   "id": "orejas_gato",
-   "nombre": "Orejas de gato",
-   "ranura": "accesorio",
-   "sigue_al_cuerpo": false,
-   "tipo": "accesorio"
   },
   {
    "anclaje": {

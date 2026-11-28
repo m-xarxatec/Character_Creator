@@ -137,7 +137,7 @@ func _measure(index: int, label: String, variant: String, skeleton: Skeleton3D, 
 	var bones: Dictionary = Compare.bone_errors(skeleton, memory_skeleton)
 	_add(variant, "huesos_mm", bones["mm"])
 	_add(variant, "huesos_deg", bones["deg"])
-	check(label + "53 huesos, todos con escala 1", bones["count"] == 53 and bones["unit"])
+	check(label + "56 huesos, todos con escala 1", bones["count"] == 56 and bones["unit"])
 	var sockets: Dictionary = Compare.socket_errors(skeleton, memory_skeleton, socket_names)
 	_add(variant, "anclajes_mm", sockets["mm"])
 	_add(variant, "anclajes_deg", sockets["deg"])
@@ -165,8 +165,8 @@ func _measure(index: int, label: String, variant: String, skeleton: Skeleton3D, 
 		sums.append(absf(weights[4 * i] + weights[4 * i + 1] + weights[4 * i + 2] + weights[4 * i + 3] - 1.0))
 	_add(variant, "suma_pesos", sums)
 	var eight: bool = ((mesh.mesh as ArrayMesh).surface_get_format(0) & Mesh.ARRAY_FLAG_USE_8_BONE_WEIGHTS) != 0
-	check(label + "0 formas, 4 influencias por vértice, color por vértice y una superficie",
-		mesh.mesh.get_blend_shape_count() == 0 and not eight and weights.size() == 4 * vertices.size()
+	check(label + "sin formas sueltas (solo expresiones VRM), 4 influencias por vértice, color por vértice y una superficie",
+		_only_expressions(mesh.mesh) and not eight and weights.size() == 4 * vertices.size()
 		and arrays[Mesh.ARRAY_COLOR] != null and mesh.mesh.get_surface_count() == 1)
 	var influences: Array = Compare.influence_errors(mesh, skeleton, memory_mesh, memory_skeleton)
 	var normals: Array = Compare.normal_errors(mesh, memory_mesh)
@@ -192,8 +192,8 @@ func _report() -> void:
 		var heights: Array = errors[variant].get("altura_m", [0.0])
 		check("los cuerpos son distintos entre sí (alturas de %.2f a %.2f m, diferencia > %s m)" % [heights.min(), heights.max(), MIN_SPREAD_M],
 			heights.max() - heights.min() > MIN_SPREAD_M)
-		_limit(variant, "huesos_mm", "53 huesos, posición", "mm", SAME_MM)
-		_measure_only(variant, "huesos_deg", "53 huesos, giro", "°")
+		_limit(variant, "huesos_mm", "56 huesos, posición", "mm", SAME_MM)
+		_measure_only(variant, "huesos_deg", "56 huesos, giro", "°")
 		_limit(variant, "anclajes_mm", "anclajes, posición", "mm", SAME_MM)
 		_limit(variant, "anclajes_deg", "anclajes, giro", "°", SOCKET_DEG)
 		_limit(variant, "malla_mm", "vértices de la malla", "mm", SAME_MM)
@@ -211,3 +211,11 @@ func _limit(variant: String, measure_name: String, label: String, unit: String, 
 func _measure_only(variant: String, measure_name: String, label: String, unit: String) -> void:
 	var s: Vector2 = Compare.stats(errors[variant].get(measure_name, [INF]))
 	print("  medida  %s: máximo %.6f %s, media %.6f %s" % [label, s.x, unit, s.y, unit])
+
+## Pasos 9.7.3 y 9.8: el personaje horneado solo puede llevar como formas las expresiones de VRM (FORMATO.md).
+func _only_expressions(mesh: Mesh) -> bool:
+	for i in mesh.get_blend_shape_count():
+		if not String(mesh.get_blend_shape_name(i)) in ["happy", "angry", "sad", "surprised", "blinkLeft", "blinkRight",
+				"aa", "ih", "ou", "ee", "oh"]:
+			return false
+	return true

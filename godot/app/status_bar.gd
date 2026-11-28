@@ -2,7 +2,7 @@ extends PanelContainer
 # Paso IU.8b: barra de estado (diseno/GUIA_INTERFAZ.md §2 y §4): la pastilla del informe (icono + texto; al pulsarla
 # avisa con report_pressed para abrir el desplegable del P.2), la altura y las cabezas de alto, y el presupuesto
 # (triángulos y huesos). Números con coma decimal y punto de miles. No calcula nada: main.gd le da los datos.
-# Uso: bar.set_report(report_panel.rows); bar.set_measures({height, heads}); bar.set_budget(26756, 53)
+# Uso: bar.set_report(report_panel.rows); bar.set_measures({height, heads}); bar.set_budget(26756, 56)
 
 signal report_pressed
 

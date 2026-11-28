@@ -53,6 +53,7 @@ static func build(dark := true) -> Theme:
 	_silhouette(theme, c)
 	_scroll(theme, c)
 	_popups(theme, c)
+	_section_title(theme, c, dark)
 	return theme
 
 
@@ -282,3 +283,17 @@ static func _popups(theme: Theme, c: Dictionary) -> void:
 	theme.set_stylebox("hover", "PopupMenu", box(c["panel_2"], Tokens.RADIO["boton"], 6))
 	_set_colors(theme, "PopupMenu", {"font_color": c["texto"], "font_hover_color": c["texto"],
 		"font_disabled_color": c["texto_3"]})
+
+
+## Paso 13.1b: título de sección de un desplegable (hoy «Huesos»), subrayado por el separador sin texto que le sigue.
+## En claro, además, letra oscura y sin las rayas de los lados (con el color de serie de Godot casi no se veía).
+static func _section_title(theme: Theme, c: Dictionary, dark: bool) -> void:
+	var line := StyleBoxLine.new()
+	line.color = c["texto_3"] if dark else c["texto"]
+	theme.set_stylebox("separator", "PopupMenu", line)
+	if dark:
+		return
+	theme.set_color("font_separator_color", "PopupMenu", c["texto"])
+	for side: String in ["labeled_separator_left", "labeled_separator_right"]:
+		theme.set_stylebox(side, "PopupMenu", StyleBoxEmpty.new())
+

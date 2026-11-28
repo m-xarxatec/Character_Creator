@@ -34,6 +34,12 @@ func setup(source_mesh: MeshInstance3D, source_skeleton: Skeleton3D) -> void:
 	visible = false
 
 
+## Paso OPT.3a: la caché de formas, para que el exportador no las pida otra vez. Solo en el hilo principal (los hilos de
+## refresh_async usan la suya y _finish_async la junta aquí, también en el principal).
+func shape_cache() -> Dictionary:
+	return _shape_cache
+
+
 ## Enseña la copia si sigue valiendo (mismas formas); si no, la malla original. Devuelve si la copia vale.
 func show_if_current() -> bool:
 	var current := _weights == _shape_weights()

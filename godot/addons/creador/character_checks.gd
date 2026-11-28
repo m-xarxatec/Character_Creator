@@ -7,14 +7,17 @@ extends RefCounted
 ##   CharacterChecks.worst(results)   # "bien", "aviso" o "error"
 ## Cada resultado: {"id": String, "nivel": "bien" | "aviso" | "error", "texto": String, "huesos": PackedStringArray}
 ## Una entrada por comprobación, también cuando pasa. `huesos`: los afectados, para señalar la zona (paso 5.4).
-## Los huesos se comparan con el manifiesto (53 en la humana) y con SkeletonProfileHumanoid (todos deben ser suyos);
-## no se exigen los 56 del perfil: los ojos y la mandíbula llegan con la cara (decisión D10).
+## Los huesos se comparan con el manifiesto (56 en la humana desde el paso 9.3) y con SkeletonProfileHumanoid (todos
+## deben ser suyos); no se exigen los 56 del perfil, para que otra especie pueda tener menos (D10).
 
 const WEIGHT_SUM_EPS := 1e-4  # Godot guarda los pesos en 16 bits: la suma es 1 ± 0,00005 (FORMATO.md)
 const SCALE_EPS := 1e-4
 const BUDGET := {"triangulos": 40000, "huesos": 75}  # PC, GUIA_ESTILO.md §7: PROPUESTA sin aprobar, por eso solo avisa
 const LEVELS := ["bien", "aviso", "error"]
+## Pasos 9.7.3 y 9.8: las formas que el .glb puede llevar (expresiones y visemas de VRM 1.0, FORMATO.md).
+const EXPRESSIONS := ["happy", "angry", "sad", "surprised", "blinkLeft", "blinkRight", "aa", "ih", "ou", "ee", "oh"]
 const MeshChecks := preload("mesh_checks.gd")  # paso P.5b: num() pone la coma decimal
+const HairChains := preload("hair_chains.gd")  # paso PE.5: los x_pelo_* cuelgan de Head o de otro x_pelo_*
 
 
 static func run(character: Node3D, manifest: Dictionary) -> Array[Dictionary]:
@@ -95,6 +98,11 @@ static func _profile_bones(skeleton: Skeleton3D) -> Dictionary:
 	for bone in skeleton.get_bone_count():
 		var name := skeleton.get_bone_name(bone)
 		var index := profile.find_bone(name)
+		if HairChains.is_chain_bone(name):
+			var parent := skeleton.get_bone_name(skeleton.get_bone_parent(bone)) if skeleton.get_bone_parent(bone) >= 0 else ""
+			if parent != "Head" and not HairChains.is_chain_bone(parent):
+				wrong.append(name)
+			continue
 		if index < 0:
 			wrong.append(name)
 			continue
@@ -113,7 +121,7 @@ static func _profile_bones(skeleton: Skeleton3D) -> Dictionary:
 static func _manifest_bones(skeleton: Skeleton3D, deform: Array) -> Dictionary:
 	var odd := PackedStringArray()
 	for bone in skeleton.get_bone_count():
-		if not skeleton.get_bone_name(bone) in deform:
+		if not skeleton.get_bone_name(bone) in deform and not HairChains.is_chain_bone(skeleton.get_bone_name(bone)):
 			odd.append(skeleton.get_bone_name(bone))
 	var extra := odd.size()
 	for name: String in deform:
@@ -153,11 +161,16 @@ static func _sockets(skeleton: Skeleton3D, sockets: Array) -> Dictionary:
 	return _result("anclajes", "error", "Anclajes que faltan o están mal: " + ", ".join(missing), bones)
 
 
+## Pasos 9.7.3 y 9.8 (D31): solo pueden quedar las expresiones de VRM (sin el prefijo expr_ de los datos).
 static func _no_shapes(mesh: MeshInstance3D) -> Dictionary:
 	var count: int = mesh.mesh.get_blend_shape_count() if mesh.mesh is ArrayMesh else 0
-	if count == 0:
-		return _result("sin_formas", "bien", "Sin formas: todo horneado")
-	return _result("sin_formas", "error", "La malla lleva %d formas; el personaje no está horneado" % count)
+	var loose := 0
+	for i in count:
+		if not String(mesh.mesh.get_blend_shape_name(i)) in EXPRESSIONS:
+			loose += 1
+	if loose == 0:
+		return _result("sin_formas", "bien", "Sin formas sueltas: todo horneado" + (" (y %d expresiones)" % count if count > 0 else ""))
+	return _result("sin_formas", "error", "La malla lleva %d formas sin hornear; el personaje no está horneado" % loose)
 
 
 static func _budget(mesh: MeshInstance3D, skeleton: Skeleton3D) -> Dictionary:
@@ -166,6 +179,9 @@ static func _budget(mesh: MeshInstance3D, skeleton: Skeleton3D) -> Dictionary:
 		var arrays := mesh.mesh.surface_get_arrays(surface)
 		var indices: PackedInt32Array = arrays[Mesh.ARRAY_INDEX] if arrays[Mesh.ARRAY_INDEX] != null else PackedInt32Array()
 		triangles += indices.size() / 3 if indices.size() > 0 else (arrays[Mesh.ARRAY_VERTEX] as PackedVector3Array).size() / 3
-	var text := "%d triángulos (presupuesto %d) y %d huesos (%d)" % [triangles, BUDGET["triangulos"], skeleton.get_bone_count(), BUDGET["huesos"]]
-	var over := triangles > BUDGET["triangulos"] or skeleton.get_bone_count() > BUDGET["huesos"]
+	var bones := 0  # paso PE.5: el pelo no cuenta como hueso del cuerpo
+	for bone in skeleton.get_bone_count():
+		bones += int(not HairChains.is_chain_bone(skeleton.get_bone_name(bone)))
+	var text := "%d triángulos (presupuesto %d) y %d huesos (%d)" % [triangles, BUDGET["triangulos"], bones, BUDGET["huesos"]]
+	var over := triangles > BUDGET["triangulos"] or bones > BUDGET["huesos"]
 	return _result("presupuesto", "aviso" if over else "bien", text)

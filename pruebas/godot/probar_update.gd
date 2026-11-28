@@ -213,8 +213,8 @@ func _vertex_distances(a: Dictionary, b: Dictionary) -> Array:
 func _same_export(label: String, reference: Dictionary, other: Dictionary) -> void:
 	var bones: Dictionary = Compare.bone_errors(other["skeleton"], reference["skeleton"])
 	var mesh := Compare.stats(_vertex_distances(reference, other))
-	check(label + ": 53 huesos y malla iguales (< %s mm)" % SAME_MM,
-		bones["count"] == 53 and Compare.stats(bones["mm"]).x < SAME_MM and mesh.x < SAME_MM,
+	check(label + ": 56 huesos y malla iguales (< %s mm)" % SAME_MM,
+		bones["count"] == 56 and Compare.stats(bones["mm"]).x < SAME_MM and mesh.x < SAME_MM,
 		"huesos máx. %.6f mm / media %.6f, malla máx. %.6f mm / media %.6f" % [Compare.stats(bones["mm"]).x,
 		Compare.stats(bones["mm"]).y, mesh.x, mesh.y])
 	print("  medida  %s, giro de huesos: máx. %.6f°" % [label, Compare.stats(bones["deg"]).x])

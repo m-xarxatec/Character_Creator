@@ -155,9 +155,13 @@ func _check_vertices(label: String, image: Image, mesh: MeshInstance3D, shown: b
 	var counted := [0, 0]  # piel, prenda
 	var wrong := 0
 	var white := true
+	var dark := 0  # 9.8b (D58): el interior de la boca, gris oscuro (y nunca en la prenda)
 	for color in colors:
-		white = white and color.r == 1.0 and color.g == 1.0 and color.b == 1.0
-	check(label.get_slice(":", 0) + ": color por vértice: RGB blanco (no tiñe) y `garment` en el alfa", white)
+		var gray := color.r == color.g and color.g == color.b
+		white = white and gray and (color.r == 1.0 or color.a < 0.5)
+		dark += 1 if color.r < 1.0 else 0
+	print("MEDIDA %s: %d vértices oscuros (interior de la boca)" % [label.get_slice(":", 0), dark])
+	check(label.get_slice(":", 0) + ": color por vértice: RGB blanco (no tiñe) salvo la boca, y `garment` en el alfa", white)
 	for i in vertices.size():
 		var point := to_scene * vertices[i]
 		var value := colors[i].a

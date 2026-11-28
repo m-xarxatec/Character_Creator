@@ -47,7 +47,7 @@ Todo va en un solo archivo: no hace falta instalar Godot.
 | --- | --- |
 | Unidades y ejes | Metros; Y arriba; mirando a +Z |
 | Pose de reposo | Pose T |
-| Esqueleto | 53 huesos con nombres de `SkeletonProfileHumanoid` (faltan `LeftEye`, `RightEye` y `Jaw`, que llegarán con la cara), con los ejes del perfil |
+| Esqueleto | 56 huesos con nombres de `SkeletonProfileHumanoid` (los ojos y la mandíbula, sin pesos: para animar la mirada o la boca más adelante), con los ejes del perfil |
 | Pesos | Máximo 4 influencias por vértice, y suman 1 |
 | Malla | La base completa de MakeHuman (unos 27.000 triángulos), sin detalle anatómico; prenda base pintada, que se puede quitar |
 | Anclajes | `socket_hand_r`, `socket_hand_l`, `socket_back`, `socket_hip`: nodos vacíos hijos del hueso |

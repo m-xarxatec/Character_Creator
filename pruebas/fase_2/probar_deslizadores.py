@@ -23,6 +23,7 @@ COLUMNS = ["id", "zona", "nombre", "tipo", "decr", "incr", "lados", "neutro"]
 ZONES = 19  # sin contar «Cara» ni «Base» (pasos 3.14 y 6.2: sin deslizadores visibles en el MVP)
 FACE_ZONE = "Cara"
 HIDDEN_ZONES = {FACE_ZONE, "Base"}
+MAX_REACH = 1.3  # alcance de una celda (ideas, 2026-11-25: «un poco más extremos»)
 failures = []
 
 
@@ -46,7 +47,10 @@ def target_ok(name):
 
 
 def shape_ok(row, value):
-    """Forma: 'target+target' o 'macro:nombre=valor'."""
+    """Forma: 'target+target' (con alcance opcional '@1.3', de 1 a MAX_REACH) o 'macro:nombre=valor'."""
+    value, reach = ed.split_reach(value)
+    if not 1.0 <= reach <= MAX_REACH:
+        return False
     macro = re.fullmatch(r"macro:(\w+)=([\d.]+)", value)
     if macro:
         return macro[1] in TargetService.get_default_macro_info_dict() and 0 <= float(macro[2]) <= 1

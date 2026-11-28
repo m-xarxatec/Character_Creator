@@ -8,8 +8,12 @@ extends RefCounted
 ## - Skeleton3D solo con los huesos de deformación (mismo reposo y padres).
 ## - Por anclaje: BoneAttachment3D "<anclaje>_attachment" pegado al hueso padre y, dentro, el nodo vacío "<anclaje>"
 ##   donde estaba el hueso de anclaje (posición y giro; escala 1 porque el horneado ya quitó las escalas).
-## - Skin sin los anclajes; los índices de hueso de la malla se corrigen si cambian.
+## - Skin sin los anclajes; los índices de hueso de la malla se corrigen si cambian. Paso 13.3a: un accesorio colgado
+##   de un anclaje pasa al padre del anclaje (al 100 %, en el mismo sitio).
 ## El personaje de entrada no cambia (quien llama lo libera).
+## Paso 9.7.3: las mallas conservan sus formas (las expresiones, en el personaje que se exporta).
+
+const MeshBaker := preload("mesh_baker.gd")
 
 
 ## "" si se puede convertir; si no, el motivo.
@@ -63,7 +67,8 @@ static func to_nodes(character: Node3D, socket_names: Array) -> Node3D:
 			piece.name = extra.name
 			skeleton.add_child(piece)
 			piece.skeleton = NodePath("..")
-			piece.mesh = _mesh(extra.mesh, _skin(extra.skin, new_index, piece))
+			var extra_skin := _to_socket_parent(extra.skin, source, socket_names)
+			piece.mesh = _mesh(extra.mesh, _skin(extra_skin, new_index, piece))
 	for socket: String in socket_names:
 		var bone := source.find_bone(socket)
 		var holder := BoneAttachment3D.new()
@@ -75,6 +80,17 @@ static func to_nodes(character: Node3D, socket_names: Array) -> Node3D:
 		node.transform = source.get_bone_rest(bone)
 		holder.add_child(node)
 	return root
+
+
+## Paso 13.3a: un accesorio colgado de un anclaje tiene un solo bind, el del anclaje; se pasa al padre del anclaje
+## con rest(anclaje) × bind, porque global(anclaje) = global(padre) × rest(anclaje). Cualquier otra piel, igual.
+static func _to_socket_parent(skin: Skin, source: Skeleton3D, socket_names: Array) -> Skin:
+	if skin.get_bind_count() != 1 or not source.get_bone_name(skin.get_bind_bone(0)) in socket_names:
+		return skin
+	var socket := skin.get_bind_bone(0)
+	var moved := Skin.new()
+	moved.add_bind(source.get_bone_parent(socket), source.get_bone_rest(socket) * skin.get_bind_pose(0))
+	return moved
 
 
 ## Skin sin los anclajes. Devuelve {bind viejo: bind nuevo}.
@@ -97,6 +113,4 @@ static func _mesh(source: Mesh, new_bind: Dictionary) -> ArrayMesh:
 		bones[i] = new_bind.get(bones[i], 0)
 	arrays[Mesh.ARRAY_BONES] = bones
 	arrays[Mesh.ARRAY_TANGENT] = null
-	var mesh := ArrayMesh.new()
-	mesh.add_surface_from_arrays(Mesh.PRIMITIVE_TRIANGLES, arrays)
-	return mesh
+	return MeshBaker.with_morphs(arrays, MeshBaker.morph_deltas(source as ArrayMesh))

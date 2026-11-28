@@ -11,7 +11,8 @@ extends RefCounted
 ## (giros globales). La referencia de la fuente es su reposo, que debe ser una pose T; la del personaje, su pose T.
 ## El hueso `hips` además se desplaza lo que la fuente, por la proporción entre las alturas de las dos caderas.
 ## Solo cambia giros (y la posición de `hips`): la escala de Proporción no se toca. Los huesos sin pareja
-## (anclajes, o los que falten en otra especie) siguen a su padre.
+## (anclajes, o los que falten en otra especie) siguen a su padre. PE.4b: solo mueve los huesos que había al crearlo;
+## los que se añadan después (cadenas de pelo, al final) se quedan con su pose.
 
 var source: Skeleton3D
 var target: Skeleton3D
@@ -49,7 +50,7 @@ func capture() -> void:
 
 func apply() -> void:
 	var globals: Array[Quaternion] = []
-	for bone in target.get_bone_count():  # en un Skeleton3D el padre siempre va antes que el hijo
+	for bone in mini(pairs.size(), target_ref.size()):  # en un Skeleton3D el padre siempre va antes que el hijo
 		var parent := target.get_bone_parent(bone)
 		var parent_rotation := Quaternion.IDENTITY if parent < 0 else globals[parent]
 		var pair := pairs[bone]

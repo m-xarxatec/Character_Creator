@@ -8,6 +8,7 @@ extends RefCounted
 ##   WorldPose.copy(animated_skeleton, character_skeleton)   # banco de pruebas: copia una animación
 ##   var data := WorldPose.to_data(deltas)              # {hueso: [x, y, z, w]} para JSON; from_data lo lee
 ##   var flipped := WorldPose.mirror(deltas)            # pose en espejo (izquierda <-> derecha)
+##   WorldPose.turn(skeleton, bone, skeleton.global_basis.inverse() * axis_world, radians)   # paso 10.3a: el estudio
 ## Un delta es «cuánto ha girado el hueso en el mundo respecto a su reposo». No depende de los ejes locales
 ## del hueso: la misma pose vale para dos esqueletos con ejes distintos si los dos están en la misma pose de reposo.
 ## Un hueso sin delta sigue a su padre (conserva su giro local de reposo).
@@ -35,6 +36,16 @@ static func apply(skeleton: Skeleton3D, deltas: Dictionary) -> void:
 		posed.append(delta * rest[i])  # el giro en el mundo va a la izquierda
 		var local := posed[i] if parent < 0 else posed[parent].inverse() * posed[i]
 		skeleton.set_bone_pose_rotation(i, local.get_rotation_quaternion())
+
+
+## Gira el hueso (y con él sus hijos) radians alrededor de axis, en el espacio del esqueleto, sobre su cabeza.
+## Parte de la pose actual (no del reposo) y solo cambia el giro de pose de ese hueso.
+static func turn(skeleton: Skeleton3D, bone: int, axis: Vector3, radians: float) -> void:
+	var posed := _posed_bases(skeleton)
+	var new_global := Basis(axis.normalized(), radians) * posed[bone]
+	var parent := skeleton.get_bone_parent(bone)
+	var local := new_global if parent < 0 else posed[parent].inverse() * new_global
+	skeleton.set_bone_pose_rotation(bone, local.get_rotation_quaternion())
 
 
 ## La pose actual como deltas. Solo guarda los huesos que giran respecto a su padre más de MIN_DEG.

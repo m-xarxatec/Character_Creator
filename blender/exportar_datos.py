@@ -2,10 +2,11 @@
 """Genera los datos de una especie para Godot (paso 2.3), segun datos/FORMATO.md.
 
 Uso: blender -b -P blender/exportar_datos.py -- godot/datos/humana
-Lee <carpeta>/deslizadores.csv y escribe cuerpo.glb, articulaciones.json y manifiesto.json.
+Lee <carpeta>/deslizadores.csv y escribe cuerpo.glb, ojos.json (AC.3b), articulaciones.json y manifiesto.json.
 presets/anime.json (paso 3.15) se escribe aparte, como deslizadores.csv; aqui solo entra en el manifiesto.
 Las formas de cara (filas «cara:<forma>», paso 3.14) salen de blender/cara_anime.py y las propias (filas
 «propia:<forma>», paso 6.2), de blender/formas_propias.py, con las correcciones de «alisado» (ver own_shapes).
+Las de expresion (expr_*, paso 9.7.1), de blender/expresiones.py, al final: no son deslizadores.
 
 Cada forma se mide creando un cuerpo nuevo con MPFB (target o macro al 100 %, con su rig)
 y restandole el cuerpo neutro: asi la malla y los huesos salen tal cual los calcula MPFB.
@@ -36,6 +37,7 @@ from prenda_base import paint_base_garment  # noqa: E402
 FORMAT_VERSION = 3
 FACE = "cara:"  # fuente de las formas de cara: cara:<forma de cara_anime.py>
 OWN = "propia:"  # fuente de las formas propias: propia:<forma de formas_propias.py>
+REACH = "@"  # alcance de una celda de targets: «a+b@1.3» lleva la forma al 130 % (ideas, 2026-11-25)
 SMOOTHING_SLIDERS = ("gender", "muscle", "weight", "breast_volume", "breast_firmness")  # ver own_shapes
 SPECIES = "humana"
 SOURCE = "MakeHuman system assets (CC0) con MPFB 2.0.18"
@@ -44,6 +46,8 @@ MIN_DELTA = 1e-6  # metros; por debajo, el hueso no se mueve con esa forma
 CORRECTION_MIN = 0.0005  # metros; una correccion mas pequena no se guarda
 TEMPLATES = ("anime", "femenino", "masculino")  # presets/: el de personaje nuevo (Neutro) y los de genero (PL.10)
 FILES = ("cuerpo.glb", "articulaciones.json", "deslizadores.csv") + tuple(f"presets/{t}.json" for t in TEMPLATES)
+EYES_FILE = "ojos.json"  # opcional: una especie sin este archivo no tiene capas de ojo (AC.3b)
+SKIN_FILE = "piel.png"  # opcional (SH.8): lo escribe generar_zonas_piel.py; hay que volver a lanzarlo tras exportar
 PC_ONLY_ZONES = ("Ojos", "Nariz", "Boca", "Mandíbula", "Orejas")  # paso 9.2: Android no carga sus formas
 
 
@@ -70,14 +74,22 @@ def own_rows(rows):
 
 
 def shape_specs(rows):
-    """[(nombre de la forma, macros, {target: peso})] de cada deslizador Forma de MPFB, por sentido y lado."""
+    """[(nombre de la forma, macros, {target: peso}, alcance)] de cada deslizador Forma de MPFB, por sentido y lado."""
     specs = []
     for row in (r for r in rows if r["tipo"] == "Forma" and r not in face_rows(rows) and r not in own_rows(rows)):
         for direction in ("decr", "incr"):
             for side in ("l", "r") if row["lados"] == "2" else (None,):
                 name = f"{row['id']}_{direction}" + (f"_{side}" if side else "")
-                specs.append((name, *_source(row[direction], side)))
+                cell, reach = split_reach(row[direction])
+                specs.append((name, *_source(cell, side), reach))
     return specs
+
+
+def split_reach(value):
+    """(celda sin alcance, alcance): 'a+b@1.3' -> ('a+b', 1.3); sin '@', alcance 1. MPFB limita el valor de una forma
+    a 1 (shape_key.value), asi que el alcance no va en el peso del target: escala la forma ya medida (es lineal)."""
+    cell, _, reach = value.partition(REACH)
+    return cell, float(reach) if reach else 1.0
 
 
 def _source(value, side):
@@ -138,7 +150,8 @@ def measure_shapes(rows):
     respecto al cuerpo neutro. Primero las formas de la tabla y despues las correcciones de las macros combinadas.
     """
     neutral = sample(raw_body(neutral_macros(), {}))
-    shapes = {name: _minus(sample(raw_body(macros, targets)), neutral) for name, macros, targets in shape_specs(rows)}
+    shapes = {name: _scale(_minus(sample(raw_body(macros, targets)), neutral), reach)
+              for name, macros, targets, reach in shape_specs(rows)}
     bodies = corner_bodies(macro_sliders(rows))
     shapes.update(corrections(bodies))
     return neutral[0], shapes, bodies
@@ -146,6 +159,10 @@ def measure_shapes(rows):
 
 def _minus(a, b):
     return a[0] - b[0], {bone: (h - b[1][bone][0], t - b[1][bone][1]) for bone, (h, t) in a[1].items()}
+
+
+def _scale(shape, factor):
+    return shape[0] * factor, {bone: (h * factor, t * factor) for bone, (h, t) in shape[1].items()}
 
 
 def _combine(terms):
@@ -258,10 +275,10 @@ def shape_weights(values, names, neutrals, fixed=None):
     return weights
 
 
-def face_shapes(basemesh, rows):
+def face_shapes(basemesh, rows, fit=None):
     """{id: (desplazamiento de cada vertice, huesos sin mover)} de las filas «cara:<forma>»: no mueven huesos."""
     import cara_anime  # aqui y no arriba: cara_anime importa este archivo
-    deltas = cara_anime.feature_shapes(basemesh)
+    deltas = cara_anime.feature_shapes(basemesh, fit)
     still = {b.name: (np.zeros(3), np.zeros(3)) for b in basemesh.parent.data.bones}
     return {r["id"]: (deltas[r["incr"][len(FACE):]], still) for r in face_rows(rows)}
 
@@ -364,6 +381,7 @@ def joints_json(rig, shapes, socket_rules):
 
 
 def manifest(folder, basemesh, rig):
+    files = FILES + tuple(name for name in (EYES_FILE, SKIN_FILE) if os.path.exists(os.path.join(folder, name)))
     return {
         "version": FORMAT_VERSION,
         "species": SPECIES,
@@ -375,7 +393,7 @@ def manifest(folder, basemesh, rig):
             "sockets": [b.name for b in rig.data.bones if not b.use_deform],
         },
         "zonas_solo_pc": list(PC_ONLY_ZONES),
-        "files": {name: {"sha256": sha256(os.path.join(folder, name))} for name in FILES},
+        "files": {name: {"sha256": sha256(os.path.join(folder, name))} for name in files},
     }
 
 
@@ -396,11 +414,24 @@ def export_species(folder):
     rows = read_sliders(folder)
     _, shapes, bodies = measure_shapes(rows)
     basemesh, socket_rules = build_base()
-    shapes.update(face_shapes(basemesh, rows))
+    import cara_anime  # aqui y no arriba: cara_anime importa este archivo
+    fit = cara_anime.EyeFit(basemesh)
+    fit.fix_eye_shapes(shapes)
+    shapes.update(face_shapes(basemesh, rows, fit))
     shapes.update(own_shapes(basemesh, rows, bodies))
+    import expresiones  # paso 9.7.1: expr_*, al final (no cambian el orden de las formas de antes)
+    shapes.update(expresiones.expression_shapes(basemesh, fit, shapes))
     add_shape_keys(basemesh, shapes)
+    cara_anime.add_mask_uv(basemesh, fit.mask())
+    cara_anime.paint_mouth(basemesh, fit.mouth[0])  # paso 9.8b: interior de la boca oscuro (D58)
     export_glb(basemesh, [], os.path.join(folder, "cuerpo.glb"), morph=True, deform_only=False)
     write_full_names(os.path.join(folder, "cuerpo.glb"), list(shapes))
+    with open(os.path.join(folder, "presets", "anime.json"), encoding="utf-8") as file:
+        preset = json.load(file)["valores"]
+    eyes = cara_anime.eye_data(fit, os.path.join(folder, "cuerpo.glb"), preset)
+    with open(os.path.join(folder, EYES_FILE), "w", encoding="utf-8") as file:
+        json.dump(eyes, file, sort_keys=True, separators=(",", ":"))
+        file.write("\n")
     write_json(os.path.join(folder, "articulaciones.json"), joints_json(basemesh.parent, shapes, socket_rules))
     data = manifest(folder, basemesh, basemesh.parent)
     write_json(os.path.join(folder, "manifiesto.json"), data)

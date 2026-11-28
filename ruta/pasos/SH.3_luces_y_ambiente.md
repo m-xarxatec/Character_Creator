@@ -1,5 +1,7 @@
 # SH.3 — Luces correctas y luz ambiente en `toon_soft`
 
+> **Hecha el 2026-11-23 (SH.3a y SH.3b), pendiente del juicio visual de §8.** Cambio respecto a esta ficha: también se toca `godot/addons/creador/eye_layers.gdshader` (la ficha es anterior al ojo de AC.3c): su `light()` debe ser idéntico al de `toon_soft` (SH.2b) y recibe el mismo ambiente que la piel, con `rim_strength` 0. Medidas en el registro de `PLAN.md`; todas las previstas coinciden.
+
 > Ficha del 2026-11-22 (nivel: medio, en dos subpasos). **Aprobada por el responsable el 2026-11-22**, aceptando que las luces de frente no se suman (manda la más fuerte), que a oscuras se vea el contorno hasta SH.4b y que los juegos usen ambiente de color plano (`AMBIENT_SOURCE_COLOR`), sin el plan B. Escrita sin ejecutar nada (hay una batería corriendo): toda medida que no estaba ya en los documentos va marcada **POR MEDIR** y toda función de Godot sin comprobar, **NO VERIFICADO**. Decisiones: D47 y D48 (opción c) en `ruta/DECISIONES.md`. Parte del cierre de SH.2.
 
 ## 1. Objetivo y «Hecho cuando»
@@ -39,8 +41,8 @@ Ambos: `probar_luces.gd` termina en `RESULTADO: TODO BIEN` en Forward+ y en Mobi
 
 | Subpaso | Se crean | Se cambian |
 | --- | --- | --- |
-| SH.3a | `pruebas/godot/probar_luces.gd`, `pruebas/godot/estilo/toon_soft_sh2.gdshader` (copia exacta del actual, congelada como referencia) | `godot/addons/creador/toon_soft.gdshader` |
-| SH.3b | — | `toon_soft.gdshader`, `godot/app/body_view.gd` (una línea), `probar_luces.gd` |
+| SH.3a | `pruebas/godot/probar_luces.gd`, `pruebas/godot/estilo/toon_soft_sh2.gdshader` (copia exacta del actual, congelada como referencia) | `godot/addons/creador/toon_soft.gdshader`, `eye_layers.gdshader` (bloque común, SH.2b) |
+| SH.3b | — | `toon_soft.gdshader`, `eye_layers.gdshader` (sin `ambient_light_disabled`; `rim_*` con fuerza 0), `godot/app/body_view.gd` (una línea), `probar_luces.gd` |
 
 - **Al cerrar cada subpaso:** `PLAN.md` (marcar, «Estado actual», una fila de registro), solo después de confirmar con el responsable que otra sesión no lo está editando. Al cerrar SH.3b, además una línea en `diseno/GUIA_ESTILO.md`: el juego decide la oscuridad con su `WorldEnvironment` (si el responsable lo aprueba).
 - **No se tocan:** `toon.gdshader`, `outline.gdshader`, `body_material.gd` (sin `uniform` nuevos: `SOFT_DEFAULTS` no cambia), `preset.gd`, `finish_panel.gd`, `glb_exporter.gd`, las capturas aprobadas ni los límites de otras pruebas.

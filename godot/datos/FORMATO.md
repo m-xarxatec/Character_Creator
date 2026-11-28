@@ -9,6 +9,8 @@ Unidades y ejes de Godot: metros, Y arriba, mirando a +Z.
 | `manifiesto.json` | Versión, especie y lista de archivos con su `sha256` |
 | `cuerpo.glb` | Malla base completa en **pose A**, esqueleto, pesos, color `garment` y formas |
 | `articulaciones.json` | Dónde está cada hueso en el cuerpo base y cuánto lo mueve cada forma |
+| `ojos.json` | Opcional (AC.3b): lazo, bolsa y datos fijos de cada ojo, en el estado anime. Sin él, la especie no tiene capas de ojo |
+| `piel.png` | Opcional (SH.8): zonas de la piel sobre las UV de `cuerpo.glb` (abajo). Sin él, la especie no tiene rubor, labios ni pecas |
 | `deslizadores.csv` | La tabla del paso 2.1, con la columna `neutro`, las formas de cara (versión 2) y las propias (versión 3) |
 | `presets/anime.json` | Preset de personaje nuevo (paso 3.15), en el formato de `godot/addons/creador/preset.gd` |
 | `presets/<género>.json` | Presets de género (paso PL.10): `femenino` y `masculino` (el neutro es `anime.json`); mismo formato |
@@ -37,7 +39,7 @@ Al cargar, el núcleo comprueba `version` y el `sha256` de cada archivo; si no c
 ## `cuerpo.glb`
 
 - La malla base de MakeHuman sin proxy (13.380 vértices) y con los pies en el suelo.
-- 53 huesos humanoides + 4 **huesos de anclaje** sin peso: `socket_hand_r` / `socket_hand_l` (hijos de la mano), `socket_back` (hijo de `UpperChest`) y `socket_hip` (hijo de `Hips`). Al ser huesos, se reajustan como los demás. Al exportar el personaje (paso 3.6) pasan a ser nodos vacíos, como pide `CLAUDE.md`.
+- 56 huesos humanoides (paso 9.3: `LeftEye`, `RightEye` y `Jaw`, hijos de `Head`, sin pesos, en los cubos de articulación de MakeHuman) + 4 **huesos de anclaje** sin peso: `socket_hand_r` / `socket_hand_l` (hijos de la mano), `socket_back` (hijo de `UpperChest`) y `socket_hip` (hijo de `Hips`). Al ser huesos, se reajustan como los demás. Al exportar el personaje (paso 3.6) pasan a ser nodos vacíos, como pide `CLAUDE.md`.
 - Color por vértice `garment` (ver más abajo).
 - Formas (*blend shapes*): `<id>_decr` e `<id>_incr`, con `<id>` del CSV. Si `lados` = 2, hay una por lado: `<id>_incr_l`, `<id>_incr_r`.
   Un deslizador Forma sin `decr` (**de un lado**) tiene una sola forma, que se llama como su `<id>`.
@@ -77,6 +79,7 @@ peso(<id>)      = el de <id>_incr               (forma de un lado; con n = 0, pe
 El neutro **se lee de la tabla**: el código no supone 0,5. En los Proporción, el neutro da escala 1.
 
 - Los deslizadores Forma con targets usan la misma regla con sus formas `_decr` e `_incr`: todos van de 0 a 1 y se manejan igual.
+- **Alcance** (2026-11-25): una celda de targets puede acabar en `@<factor>` (de 1 a 1,3), p. ej. `nose-scale-horiz-incr@1.3`: esa forma sale al 130 % de lo que mide MPFB. Solo cambia `cuerpo.glb`; el deslizador sigue yendo de 0 a 1.
 - Si solo se mueve **una** macro, el resultado es igual al de MakeHuman, porque entre 0 y 0,5 y entre 0,5 y 1 MakeHuman también mezcla en línea recta.
 - Si se mueven **varias**, sumar no basta: en MakeHuman, mucho músculo y mucho peso juntos dan un cuerpo que no es
   "el musculado + el gordo". Ese extra se guarda como **forma de corrección**.
@@ -124,6 +127,51 @@ Filas de tipo Forma con `incr` = `propia:<forma>` (y `decr` = `propia:<forma>` s
   así que sigue al cuerpo. Sin ellas, el alisado fijo del neutro hundía el pezón de los cuerpos que ya lo traen más
   plano. Donde un triángulo se daría la vuelta, el alisado se queda a medias (PL.0c). Su peso es el producto de sus partes.
 - El preset `anime.json` lleva `alisado` = 1 («sin detalle anatómico» desde el primer momento). Un preset sin la clave la deja en 0.
+
+- Paso 9.8b (D58): el color por vértice `garment` lleva en el **verde** el interior de la boca: 0 en la bolsa, 1 en el
+  resto (antes repetía la prenda). Los shaders lo pintan de `mouth_color` y el `.glb` lo oscurece (RGB `MOUTH_DARK`).
+- Paso 9.6: la bolsa interior de la boca (los vértices de la zona `mouth` que no se ven de frente) no se aplasta en
+  `boca_anime` y `nariz_anime`: sigue a los labios (`cara_anime.mouth_bag`). Lo que se ve no cambia.
+
+### Formas de expresión (paso 9.7.1)
+
+- Prefijo `expr_` + nombre de VRM 1.0: `expr_happy`, `expr_angry`, `expr_sad`, `expr_surprised`, `expr_blinkLeft` y
+  `expr_blinkRight` (VRM `blink` = las dos). **No son deslizadores:** no están en `deslizadores.csv`, no se guardan en el
+  preset y en el editor valen 0 salvo al probarlas. Van al final de las formas (no cambian las de antes).
+- Correcciones del parpadeo: `expr_blinkLeft*eye_tall_incr` (y `_decr`, y `eye_size_*`, y las de `blinkRight`), con la
+  regla del producto: el ojo se cierra también con Ojos › Alto y Tamaño en sus extremos.
+- Paso 9.8: las visemas de VRM `expr_aa`, `expr_ih`, `expr_ou`, `expr_ee` y `expr_oh`, al final (después de las
+  correcciones), de visemes02 (CC0, en `blender/visemes02/`). Abren la boca.
+- Las escribe `blender/expresiones.py`: cejas, mejillas y boca, mezcla de unidades ARKit de faceunits01 (CC0, en
+  `blender/faceunits01/`) con los pesos de `blender/expresiones.json`; parpadeo propio (`cara_anime.EyeFit.blink_delta`).
+  No mueven huesos. Al exportar no se hornean: salen como formas del `.glb` con su nombre VRM (D31, paso 9.7.3).
+
+## `ojos.json` (paso AC.3b)
+
+Lo escribe `blender/cara_anime.py` (`eye_data`) tras exportar `cuerpo.glb`. Si existe, va en el manifiesto. `version` propia: 1.
+
+```json
+{"version": 1, "l": {"lazo": [0], "esquinas": [0, 20], "arco_superior": [20], "arco_inferior": [20], "bolsa": [0],
+  "uv": [[0.0, 0.0]], "altura": [0.0], "elevacion": [0.0], "centro": [0.0, 0.0, 0.0], "normal": [0.0, 0.0, 1.0]}, "r": {}}
+```
+
+- `lazo`: 36 índices de vértice del `.glb`. `esquinas`, `arco_superior` y `arco_inferior`: posiciones dentro de `lazo`.
+- `bolsa`: índices del `.glb`, con los repetidos de las costuras (412 por ojo; sus triángulos son 730). `uv`, `altura` y `elevacion` van con cada índice de `bolsa`.
+- `uv`: posición anime (x, y) menos `centro`, en metros. `altura`: de 0 (párpado de abajo) a 1 (de arriba). `elevacion`: metros en +Z hasta la membrana del lazo.
+- `normal`: la de estilo (`StyleNormals`), media del lazo en el estado anime.
+- Si cambia el número de vértices del `.glb` (14.517), cambian estos índices.
+- AC.6a: `tira_superior` (línea de arriba, con 3 columnas de cola para las pestañas), `tira_inferior` (línea de abajo) y
+  `pliegue`: `{"ids": [[a, b, c]], "bary": [[x, y, z]], "offset": [[x, y, z]], "uv": [[u, fila]], "filas": n, "largo": m}`.
+  Cada vértice = mezcla baricéntrica de los vértices `ids` del `.glb` + `offset` (metros), y sigue a sus formas y huesos.
+  Van por columnas (de la esquina interior a la exterior) y, en cada columna, `filas` vértices. `uv`: u por longitud de
+  arco (1 en la esquina exterior), fila en metros (+ hacia fuera). `largo`: metros del arco. Apoyadas en la piel (fuera)
+  o en el blanco (dentro), 0,12 mm por encima; sin superficie, rectas (`ids` repetido y `offset` hasta el punto).
+- AC.6c: `ceja` (opcional; sin ella no hay cejas), banda sobre la frente con el mismo formato: 32 columnas (de dentro
+  afuera) × 15 filas (de abajo arriba). `uv`: u de 0 a 1; fila = metros sobre la base de la banda. `largo`: ancho de la
+  banda en metros. Caja desde el marco del ojo: de 8 mm antes de la esquina interior a 12 mm después de la exterior, y de
+  2 a 28 mm sobre lo alto del lazo; apoyada siempre en la piel, 0,12 mm por encima. La derecha es el reflejo de la izquierda.
+
+`cuerpo.glb` lleva en `TEXCOORD_1` (x) la máscara del contorno, por vértice: 1 en bolsa, lazo y anillos 1–5; 0,5 en el anillo 6; 0 en el resto.
 
 ## `presets/`
 
@@ -217,3 +265,14 @@ En una malla ligera (proxy) las aristas son mucho más largas y el borde saldrí
 - `CLAUDE.md` pide la malla completa sin proxy, e `IDEAS.md` deja el proxy ligero para después del MVP.
 - La prenda pintada por vértice saldría dentada en el proxy (ver arriba).
 - Añadirlo después no rompe nada: es un archivo más en `files`.
+
+## `piel.png` (paso SH.8)
+
+PNG RGBA de 1024 × 1024 sobre `TEXCOORD_0` de `cuerpo.glb`, valores lineales (no es un color). Lo genera `blender/generar_zonas_piel.py` desde la geometría (sin pintar a mano) y hay que volver a generarlo si cambian las UV o la forma base. Su `.import` es `importer="keep"`: viaja tal cual dentro del `.pck` y el núcleo lo lee con `Image.load_png_from_buffer`.
+
+| Canal | Qué guarda |
+| --- | --- |
+| R | Rubor: mejillas, punta de la nariz y de las orejas, hombros, codos, rodillas y nudillos (0–1) |
+| G | Cercanía para las pecas: 1 en la nariz y las mejillas, baja con la distancia; 0 = nunca (ojos, labios, palmas, plantas) |
+| B | Labios (0–1) |
+| A | Fuera de la cara (SH.4): 0 en la cara, 1 en el resto; al revés para que, sin textura, todo cuente como fuera de la cara |

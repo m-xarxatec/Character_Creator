@@ -9,7 +9,7 @@ extends RefCounted
 
 const Preset := preload("../addons/creador/preset.gd")
 const BodyMaterial := preload("../addons/creador/body_material.gd")
-const COLORS := ["skin_color", "garment_color"]
+const COLORS := ["skin_color", "garment_color", "brow_color"]  # AC.6c.4a: también el de la ceja
 
 
 static func save(path: String, view: SubViewportContainer, values: Dictionary) -> Error:
@@ -34,7 +34,7 @@ static func to_dict(preset_name: String, view: SubViewportContainer, values: Dic
 	for key: String in COLORS:
 		colors[key] = BodyMaterial.get_color(mesh, key)
 	return Preset.to_dict(preset_name, view.SPECIES, values, colors, BodyMaterial.is_garment_visible(mesh),
-		BodyMaterial.get_finish(mesh))
+		BodyMaterial.get_finish(mesh), "anime" if BodyMaterial.is_soft(mesh) else "clasico", BodyMaterial.get_skin(mesh))
 
 
 static func read(path: String, view: SubViewportContainer) -> Dictionary:
@@ -45,5 +45,7 @@ static func read(path: String, view: SubViewportContainer) -> Dictionary:
 
 ## Valores al editor (un cambio para Deshacer) y aspecto al material.
 static func apply(loaded: Dictionary, view: SubViewportContainer, editor) -> void:
+	view.set_anime_style(loaded.get("estilo", "clasico") == "anime")  # SH.7a: también las piezas
 	Preset.apply_look(view.species.mesh, loaded)
+	view.sync_lines()
 	editor.load_values(loaded["valores"])

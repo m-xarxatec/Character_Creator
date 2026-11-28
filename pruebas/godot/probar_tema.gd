@@ -2,7 +2,8 @@ extends SceneTree
 # Paso IU.1a: tokens y tema de la interfaz (godot/app/tema/). Sin ventana. Comprobaciones de diseno/GUIA_INTERFAZ.md §8:
 # (1) claro y oscuro con las mismas claves; (2) contrastes WCAG ≥ 4,5 del texto y ≥ 3 del agarrador (D43);
 # (3) estilo para cada control de la guía §5.2 y todas las variaciones; (4) ninguna letra por debajo de 12 px.
-# (5) IU.1b: sin colores ni estilos a mano fuera de tema/; (6) IU.1c: botón de tema; (7) IU.2: iconos; (8) casillas, tirador, lupa y etiqueta de zona (IU.12).
+# (5) IU.1b: sin colores ni estilos a mano fuera de tema/; (6) IU.1c: botón de tema; (7) IU.2: iconos; (8) casillas, tirador, lupa y etiqueta de zona (IU.12);
+# (9) 13.1b: el título de sección de un desplegable se lee (≥ 4,5) y tiene su línea.
 # Uso: (ulimit -v 4000000; timeout 120 godot --headless --path pruebas/godot -s probar_tema.gd 2>&1 | grep -E 'FALLO|MEDIDA|RESULTADO|ERROR')
 # Que detecta el fallo: poner texto_3 a #B0B0B0 en tokens.gd -> falla la (2); quitar los iconos de CheckBox -> falla la (8);
 # no teñir la lupa (slider_panel._tint_search) -> falla la (6).
@@ -26,7 +27,7 @@ const STYLES := {
 	"LineEdit": ["normal", "focus", "read_only"],
 	"TooltipPanel": ["panel"],
 	"VScrollBar": ["scroll", "grabber", "grabber_highlight"], "HScrollBar": ["scroll", "grabber", "grabber_highlight"],
-	"PopupMenu": ["panel", "hover"], "AcceptDialog": ["panel"], "Fondo": ["panel"],
+	"PopupMenu": ["panel", "hover", "separator"], "AcceptDialog": ["panel"], "Fondo": ["panel"],
 	"BotonPrincipal": ["normal", "hover", "pressed"], "BotonFantasma": ["normal", "hover", "pressed"],
 	"Chip": ["normal", "hover", "pressed"],
 	"InsigniaForma": ["normal"], "InsigniaProporcion": ["normal"], "InsigniaCrear": ["normal"],
@@ -72,6 +73,7 @@ func _initialize() -> void:
 		var seen := minf(minf(contrast(knob, c["panel"]), contrast(lens, c["panel_2"])), label)
 		check("(8) %s: tirador, lupa y etiqueta de zona ≥ %.0f:1" % [mode, GRABBER_MIN], seen >= GRABBER_MIN
 			and theme.has_stylebox("normal", "EtiquetaZona"), "%.2f" % seen)
+		_check_section_title(theme, c, dark)
 		var missing: Array[String] = []
 		for type: String in STYLES:
 			for style: String in STYLES[type]:
@@ -100,6 +102,21 @@ func _initialize() -> void:
 	await _check_theme_button(tema.get_base_dir())
 	print("RESULTADO: ", "TODO BIEN" if failures == 0 else "%d FALLOS" % failures)
 	quit(1 if failures else 0)
+
+
+## (9) 13.1b: el título de sección («Huesos») sobre el fondo del desplegable, y la línea que lo subraya. En oscuro el
+## color de la letra es el de serie de Godot; en claro, el de los tokens.
+func _check_section_title(theme: Theme, c: Dictionary, dark: bool) -> void:
+	var mode := "oscuro" if dark else "claro"
+	var source: Theme = theme if theme.has_color("font_separator_color", "PopupMenu") else ThemeDB.get_default_theme()
+	var back: Color = (theme.get_stylebox("panel", "PopupMenu") as StyleBoxFlat).bg_color
+	var title: Color = source.get_color("font_separator_color", "PopupMenu")
+	var ratio := contrast(title, back)
+	print("  MEDIDA %s: contraste del título de sección %.2f" % [mode, ratio])
+	check("(9) %s: título de sección ≥ %.1f:1" % [mode, TEXT_MIN], ratio >= TEXT_MIN, "%.2f" % ratio)
+	var line := theme.get_stylebox("separator", "PopupMenu") as StyleBoxLine
+	check("(9) %s: la línea bajo el título, con color de los tokens" % mode, line != null
+		and line.color.is_equal_approx(c["texto_3" if dark else "texto"]) and contrast(line.color, back) >= GRABBER_MIN)
 
 
 ## (5) IU.1b: en app/, fuera de tema/, nadie escribe colores ni estilos a mano (guía §5.4).

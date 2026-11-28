@@ -12,10 +12,11 @@ signal zone_chosen(zone: String)
 const LEVEL_VARIATIONS := {"bien": "NivelBien", "aviso": "NivelAviso", "error": "NivelError"}
 const LEVEL_ORDER := ["error", "aviso", "bien"]
 ## Trozo del nombre del hueso (sin Left/Right) → zona de deslizadores.csv. Gana el primero que encaja: UpperChest antes que Chest.
-const BONE_ZONES := [["Head", "Cabeza"], ["Neck", "Cuello"], ["Shoulder", "Hombros"], ["UpperArm", "Brazos"],
-	["LowerArm", "Brazos"], ["Hand", "Manos"], ["Thumb", "Dedos"], ["Index", "Dedos"], ["Middle", "Dedos"],
-	["Ring", "Dedos"], ["Little", "Dedos"], ["UpperChest", "Pecho"], ["Chest", "Torso"], ["Spine", "Cintura"],
-	["Hips", "Caderas"], ["UpperLeg", "Piernas"], ["LowerLeg", "Piernas"], ["Foot", "Pies"], ["Toes", "Pies"]]
+const BONE_ZONES := [["Head", "Cabeza"], ["Eye", "Cabeza"], ["Jaw", "Cabeza"], ["Neck", "Cuello"],
+	["Shoulder", "Hombros"], ["UpperArm", "Brazos"], ["LowerArm", "Brazos"], ["Hand", "Manos"], ["Thumb", "Dedos"],
+	["Index", "Dedos"], ["Middle", "Dedos"], ["Ring", "Dedos"], ["Little", "Dedos"], ["UpperChest", "Pecho"],
+	["Chest", "Torso"], ["Spine", "Cintura"], ["Hips", "Caderas"], ["UpperLeg", "Piernas"], ["LowerLeg", "Piernas"],
+	["Foot", "Pies"], ["Toes", "Pies"]]
 
 var rows: Array[Dictionary] = []  # lo que se enseña, en orden (para las pruebas)
 var summary: Label
