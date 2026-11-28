@@ -1,12 +1,12 @@
 extends SceneTree
 # Paso 10.3b: el estudio de poses sobre la vista (godot/app/studio_view.gd): entrar hornea y esconde el vivo, salir
 # guarda la pose y lo devuelve; la pose vuelve al entrar, también con otro cuerpo. Sin ventana.
-# Acabado: cada malla del horneado (salvo los ojos) con los mismos parámetros que en Cuerpo, Cuerpo sin cambiar, la banda
-# del pelo con la cabeza de Cuerpo y siguiendo a la posada; entrar en ≤ ENTER_MAX_MS.
+# Acabado: cada malla del horneado (salvo los ojos) con los mismos parámetros que en Cuerpo; Cuerpo sin cambiar al entrar
+# y salir (todos los parámetros, también hair_head); la banda del pelo con la cabeza de Cuerpo y siguiendo a la posada; entrar en ≤ ENTER_MAX_MS.
 # Uso: prlimit --as=4096000000 timeout 120 godot --headless --path godot -s "$PWD/pruebas/godot/probar_estudio.gd" < /dev/null 2>&1 | grep -E 'FALLO|MEDIDA|RESULTADO|ERROR'
 # Que detecta el fallo: en StudioView.leave, no hacer capture -> falla «salir y entrar conserva la pose»; en _paint,
 # poner al cuerpo BodyMaterial.standalone -> falla «cuerpo: el material de Cuerpo»; en enter, no llamar a follow_head ->
-# falla «la banda sigue a la cabeza posada»; sin _head_axes -> falla «la banda con la cabeza de Cuerpo».
+# falla «la banda sigue a la cabeza posada»; en _copy, usar material.duplicate() -> falla «Cuerpo no cambia»; sin _head_axes -> falla «la banda con la cabeza de Cuerpo».
 
 const WorldPose := preload("res://addons/creador/world_pose.gd")
 const BodyMaterial := preload("res://addons/creador/body_material.gd")
@@ -54,6 +54,10 @@ func check(label: String, ok: bool, detail := "") -> void:
 func _check_enter(view, studio) -> PackedVector3Array:
 	var nodes := _nodes(view)
 	var painted := _painted(view)
+	for mesh: MeshInstance3D in view.hair.values():  # como en la ventana: la vista pone la cabeza cada fotograma
+		mesh.material_override.set_shader_parameter("hair_head", view.head_transform())
+	check("antes de entrar, Cuerpo tiene hair_head", not view.hair.is_empty() and painted.all(func(m: MeshInstance3D) -> bool:
+		return m.material_override.get_shader_parameter("hair_head") is Transform3D))
 	var snapshot := _snapshot(painted)
 	var start := Time.get_ticks_msec()
 	var error: Error = studio.enter(view)
@@ -85,7 +89,8 @@ func _check_enter(view, studio) -> PackedVector3Array:
 	for i in painted.size():
 		if painted[i].material_override != snapshot[i]["material"]:
 			changed.append("otro material")
-		changed.append_array(_differences(snapshot[i]["copy"], painted[i].material_override))
+		changed.append_array(_changed(snapshot[i]["values"], _parameters(painted[i].material_override))
+			.map(func(key: String) -> String: return "%s:%s" % [painted[i].name, key]))
 	check("Cuerpo no cambia: los mismos materiales, con los mismos parámetros", changed.is_empty(),
 		"%d mallas %s" % [painted.size(), changed])
 	studio.leave()
@@ -124,16 +129,25 @@ func _differences(a: ShaderMaterial, b: ShaderMaterial) -> Array:
 	if a.shader != b.shader or outlines.has(null) or outlines[0].shader != outlines[1].shader \
 			or (a.next_pass == null) != (b.next_pass == null) or (b.next_pass != null and b.next_pass != outlines[1]):
 		return ["shader"]
-	var out := []
-	var compared := 0
-	for pair: Array in [[a, b], outlines]:
-		for property: Dictionary in pair[0].get_property_list():
-			var name: String = property["name"]
-			if name.begins_with("shader_parameter/") and name != "shader_parameter/hair_head":
-				compared += 1
-				if pair[0].get(name) != pair[1].get(name):
-					out.append(name.get_file())
-	return out if compared > 0 else ["ningún parámetro"]
+	var values := _parameters(a)
+	var others := _parameters(b)
+	values.erase("hair_head")
+	others.erase("hair_head")
+	return _changed(values, others) if not values.is_empty() else ["ningún parámetro"]
+
+
+## {parámetro: valor} de los dos pases. Sin get_property_list() ni duplicate(): ahí Godot borra del material hair_head
+## (Transform3D en un mat4), y la prueba cambiaría lo que mide.
+func _parameters(material: ShaderMaterial) -> Dictionary:
+	var values := {}
+	for pair: Array in [["", material], ["contorno/", material.get_meta("outline")]]:
+		for uniform: Dictionary in pair[1].shader.get_shader_uniform_list():
+			values[pair[0] + uniform["name"]] = pair[1].get_shader_parameter(uniform["name"])
+	return values
+
+
+func _changed(a: Dictionary, b: Dictionary) -> Array:
+	return a.keys().filter(func(key: String) -> bool: return typeof(a[key]) != typeof(b.get(key)) or a[key] != b.get(key))
 
 
 ## Las mallas con material de BodyMaterial en Cuerpo: el cuerpo, las piezas y los accesorios.
@@ -144,15 +158,10 @@ func _painted(view) -> Array[MeshInstance3D]:
 	return meshes
 
 
-## De cada malla, su material y una copia (los dos pases) para ver luego que no cambió.
+## De cada malla, su material y sus parámetros, para ver luego que no cambió.
 func _snapshot(meshes: Array[MeshInstance3D]) -> Array:
-	var out := []
-	for mesh in meshes:
-		var copy := mesh.material_override.duplicate() as ShaderMaterial
-		copy.set_meta("outline", mesh.material_override.get_meta("outline").duplicate())
-		copy.next_pass = copy.get_meta("outline") if mesh.material_override.next_pass != null else null
-		out.append({"material": mesh.material_override, "copy": copy})
-	return out
+	return meshes.map(func(mesh: MeshInstance3D) -> Dictionary:
+		return {"material": mesh.material_override, "values": _parameters(mesh.material_override)})
 
 
 ## 10.3: en pose T, la banda del pelo del horneado con la cabeza de la de Cuerpo (hair_head).

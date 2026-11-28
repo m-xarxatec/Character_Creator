@@ -105,8 +105,20 @@ func _paint() -> void:
 
 ## El material con su contorno (next_pass y la meta «outline» de BodyMaterial), los dos copiados.
 static func _copy(material: ShaderMaterial) -> ShaderMaterial:
-	var copy := material.duplicate() as ShaderMaterial
-	var outline := (material.get_meta("outline") as ShaderMaterial).duplicate() as ShaderMaterial
+	var copy := _clone(material)
+	var outline := _clone(material.get_meta("outline"))
 	copy.set_meta("outline", outline)
 	copy.next_pass = outline if material.next_pass != null else null
+	return copy
+
+
+## Shader y parámetros en un material nuevo. Sin duplicate(): recorre get_property_list(), y ahí Godot borra del
+## ORIGINAL hair_head (Transform3D en un mat4).
+static func _clone(material: ShaderMaterial) -> ShaderMaterial:
+	var copy := ShaderMaterial.new()
+	copy.shader = material.shader
+	for uniform: Dictionary in material.shader.get_shader_uniform_list():
+		var value: Variant = material.get_shader_parameter(uniform["name"])
+		if value != null:
+			copy.set_shader_parameter(uniform["name"], value)
 	return copy

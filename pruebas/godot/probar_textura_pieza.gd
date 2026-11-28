@@ -142,7 +142,7 @@ func _check_texture(soft: bool, label: String) -> void:
 	var left := _parameters(mesh).keys().filter(func(k: String) -> bool: return _parameters(mesh)[k] != plain[k])
 	left.erase("contorno/width_px")  # set_style pone el grosor del estilo
 	check(label + "quitada, queda como sin textura", left.is_empty(), str(left))
-	BodyMaterial.set_base_texture(mesh, texture)  # duplicar suelta hair_head (Transform3D en un mat4): al final
+	BodyMaterial.set_base_texture(mesh, texture)
 	var copy := MeshInstance3D.new()
 	copy.material_override = StudioView._copy(mesh.material_override)
 	check(label + "la copia del Estudio la lleva", copy.material_override != mesh.material_override
