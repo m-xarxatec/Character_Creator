@@ -695,9 +695,14 @@ func _copy_brow(mesh: MeshInstance3D) -> void:
 
 ## SH.6b: mundo → cabeza, con origen en su centro (para la banda del pelo).
 func head_transform() -> Transform3D:
-	var skeleton: Skeleton3D = species.skeleton
+	return head_of(species.skeleton)
+
+
+## Paso 10.3: lo mismo con cualquier esqueleto; axes, los ejes de la cabeza respecto a los del hueso Head (el estudio
+## pasa los del vivo: el horneado tiene los del perfil).
+static func head_of(skeleton: Skeleton3D, axes := Basis.IDENTITY) -> Transform3D:
 	var bone: int = skeleton.find_bone("Head")
-	var pose: Transform3D = skeleton.global_transform * skeleton.get_bone_global_pose(bone)
+	var pose: Transform3D = skeleton.global_transform * skeleton.get_bone_global_pose(bone) * Transform3D(axes)
 	return pose.translated_local(Vector3(0, HEAD_CENTER_UP, 0)).affine_inverse()
 
 
