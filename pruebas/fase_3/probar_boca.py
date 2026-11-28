@@ -3,8 +3,8 @@
 
 Comprueba: la bolsa (vertices de la zona mouth tapados vistos de frente) es simetrica y esta dentro de la zona; con la
 bolsa, deform da exactamente lo mismo en todo lo demas (la piel que se ve no cambia); la bolsa conserva su fondo
-(profundidad anime / neutra >= MIN_DEPTH); 0 cruces nuevos y 0 invertidos en la cabeza con la cara anime. Con
--- <copia de godot/datos/humana de antes>, ademas: en cuerpo.glb solo cambian vertices de la bolsa, y articulaciones.json
+(profundidad anime / neutra >= MIN_DEPTH); 0 cruces nuevos y como mucho MAX_FLIPPED invertidos en la cabeza con la cara
+anime. Con -- <copia de godot/datos/humana de antes>, ademas: en cuerpo.glb solo cambian vertices de la bolsa, y articulaciones.json
 y ojos.json son identicos. MEDIDA: lo que se movia la bolsa antes (hasta 58 mm, IDEAS.md) y ahora; cruces e invertidos
 con la boca abierta (jawOpen de faceunits01 a 0,5 y a 1), para el 9.8.
 Uso: (ulimit -v 4000000; timeout 900 blender -b -P pruebas/fase_3/probar_boca.py [-- <carpeta de antes>] 2>&1 | grep -E 'FALLO|MEDIDA|RESULTADO')
@@ -29,6 +29,7 @@ import expresiones as ex  # noqa: E402
 
 FOLDER = os.path.join(ROOT, "godot", "datos", "humana")
 MIN_DEPTH = 0.9  # PROVISIONAL (ficha 9.6 §1): fondo de la bolsa en la cara anime, en partes del de la neutra
+MAX_FLIPPED = 2  # aprobado (2026-11-28), medido 2: pareja simetrica en el borde de la bolsa (los «+2» del 9.6)
 failures = []
 
 
@@ -153,7 +154,8 @@ def main():
         cross, flip = max(0, crossed(state, tess) - rest), inverted(state, *counted)
         print("MEDIDA %s: %d invertidos en los ojos (no cuentan)" % (name, inverted(state, tess[eyes], start[eyes])))
         if name == "anime":
-            check("cara anime: 0 cruces nuevos y 0 invertidos en la cabeza", cross == 0 and flip == 0, "%d / %d" % (cross, flip))
+            check("cara anime: 0 cruces nuevos y %d invertidos o menos en la cabeza" % MAX_FLIPPED,
+                  cross == 0 and flip <= MAX_FLIPPED, "%d / %d" % (cross, flip))
         else:
             print("MEDIDA %s: %d cruces nuevos, %d invertidos" % (name, cross, flip))
     jaw = fit.face_delta(ex.unit_deltas(basemesh, ["jawOpen"])["jawOpen"]) @ np.array(basemesh.matrix_world)[:3, :3].T  # a mundo

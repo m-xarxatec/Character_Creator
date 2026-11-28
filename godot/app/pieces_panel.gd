@@ -4,7 +4,7 @@ extends ScrollContainer
 # enseñan aquí: van solo en el panel de Créditos (D45, paso AB.13b). Aún no entra en Deshacer ni en el proyecto .gmolde
 # (bloque «piezas»: siguiente paso).
 # Paso 13.1b: las filas de accesorio llevan «Colocar» (solo con la pieza puesta): abre debajo una PlaceRow, una a la vez;
-# quitar la pieza o cambiar de pestaña la cierra.
+# quitar la pieza o cambiar de pestaña la cierra. Con la fila abierta, el botón dice «Aplicar».
 # Uso: panel.setup(body_view, "pelo")
 
 const BodyMaterial := preload("../addons/creador/body_material.gd")
@@ -90,6 +90,7 @@ func _add_place_button(row: HBoxContainer, key: String) -> void:
 func _open_place(key: String) -> void:
 	placing = key
 	place_buttons[key].set_pressed_no_signal(true)
+	place_buttons[key].text = "Aplicar"
 	place_row = PlaceRow.new()
 	list.add_child(place_row)
 	list.move_child(place_row, place_buttons[key].get_parent().get_index() + 1)
@@ -100,6 +101,7 @@ func _close_place() -> void:
 	if place_row == null:
 		return
 	place_buttons[placing].set_pressed_no_signal(false)
+	place_buttons[placing].text = "Colocar"
 	place_row.close()
 	list.remove_child(place_row)
 	place_row.queue_free()

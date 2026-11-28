@@ -97,6 +97,7 @@
 - Margen entre los textos del panel derecho («4 ajustes», «Más alto»…) y la barra de desplazamiento (revisor, IU.11).
 - Cambio de color de 120 ms al pasar el ratón por los botones (guía §3 «Movimiento»): Godot no lo anima solo; pide código en cada botón. Fuera de IU.10.
 - Miniaturas de piezas después del shader nuevo: imágenes comprimidas (WebP o PNG), generadas con un solo comando, sin depender del shader en tiempo de ejecución
+- Mejorar la interfaz de Colocar (13.1b), pedido del responsable; detalles por concretar.
 
 ## Pack "Universal Base Characters" de Quaternius (CC0)
 

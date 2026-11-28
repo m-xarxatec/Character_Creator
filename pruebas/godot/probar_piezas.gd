@@ -19,6 +19,8 @@ extends SceneTree
 # fallo: en PlaceRow._on_bone_selected, no llamar a set_place -> falla «el halo pasa a RightHand». En PiecesPanel, no
 # cerrar al ocultarse -> falla «cambiar de pestaña»; en BodyActions.has_changes, no mirar moved_places -> falla
 # «sin guardar»; en PlaceRow._add_bones, quitar el separador sin texto -> falla «en español».
+# Con la fila abierta el botón dice «Aplicar». Que detecta el fallo: en PiecesPanel._close_place, no reponer el texto ->
+# falla «vuelve a decir «Colocar»».
 
 ## Paso RE.1b: peinados de Quaternius.
 const MeshBaker := preload("res://../../godot/addons/creador/mesh_baker.gd")
@@ -79,6 +81,7 @@ func _initialize() -> void:
 	await _check_place(main, view)
 	_check_place_tab(main, view)
 	_check_place_unsaved(main, view)
+	_check_place_text(main, view)
 	_check_export(view)
 	_check_project(main, view)
 	await _check_hair_physics(main, view)
@@ -803,6 +806,31 @@ func _check_place_unsaved(main: Control, view) -> void:
 	actions.current_path = ""
 	for file: String in [path, preset, other]:
 		DirAccess.remove_absolute(file)
+
+
+## Paso 13.1b: el botón dice «Aplicar» solo con su fila abierta. Entra con los cuernos puestos y sin halo, y lo deja igual.
+func _check_place_text(main: Control, view) -> void:
+	main.top_bar.tab_bar.current_tab = main.TAB_NAMES.find("Accesorios")
+	var panel = main.piece_panels["Accesorios"]
+	var horns: Button = panel.place_buttons["base/cuernos"]
+	var halo: Button = panel.place_buttons["base/halo"]
+	view.set_piece("base", "halo", true)
+	check("13.1b: cerrada, el botón dice «Colocar»", horns.text == "Colocar" and halo.text == "Colocar")
+	horns.button_pressed = true
+	check("13.1b: abierta, su botón dice «Aplicar»", horns.text == "Aplicar" and halo.text == "Colocar", horns.text)
+	horns.button_pressed = false
+	check("13.1b: «Aplicar» cierra la fila y vuelve a decir «Colocar»", panel.place_row == null and horns.text == "Colocar",
+		horns.text)
+	horns.button_pressed = true
+	halo.button_pressed = true
+	check("13.1b: al abrir otra fila, la anterior vuelve a decir «Colocar»", horns.text == "Colocar"
+		and halo.text == "Aplicar", "%s / %s" % [horns.text, halo.text])
+	view.set_piece("base", "halo", false)
+	check("13.1b: al quitar la pieza, vuelve a decir «Colocar»", panel.place_row == null and halo.text == "Colocar", halo.text)
+	horns.button_pressed = true
+	main.top_bar.tab_bar.current_tab = main.ACTIVE_TAB
+	check("13.1b: al cambiar de pestaña, vuelve a decir «Colocar»", panel.place_row == null and horns.text == "Colocar",
+		horns.text)
 
 
 func _check_export(view) -> void:
