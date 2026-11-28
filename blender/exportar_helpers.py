@@ -191,7 +191,20 @@ def export_pieces(data_folder, pack_folder):
     pieces = cards + DERIVED + GENERATED + CUTS
     for card in pieces:
         card["color"] = COLORS[card["id"]]
-    ed.write_json(os.path.join(pack_folder, "pack.json"), dict(PACK, piezas=pieces))
+    write_pack(os.path.join(pack_folder, "pack.json"), pieces)
+
+
+def write_pack(pack_json, pieces):
+    """Escribe pack.json con `pieces`, conservando el campo oculta (12.1b, lo pone ocultar_piel.py) de las fichas que
+    ya lo tenían. Si la malla cambia en neutro, hay que repetir ocultar_piel.py (el sha256 de la máscara no lo nota)."""
+    old = {}
+    if os.path.exists(pack_json):
+        with open(pack_json, encoding="utf-8") as file:
+            old = {card["id"]: card for card in json.load(file).get("piezas", [])}
+    for card in pieces:
+        if "oculta" in old.get(card["id"], {}):
+            card["oculta"] = old[card["id"]]["oculta"]
+    ed.write_json(pack_json, dict(PACK, piezas=pieces))
 
 
 def main():

@@ -38,7 +38,7 @@
    "nombre": "Shorts de golf",
    "oculta": {
     "archivo": "os_golf_shorts_oculta.png",
-    "sha256": "50cb185a313af3c3407833a54504dc4fdf47f3a16461330c2203379017dd216d"
+    "sha256": "db58e1100de4b5d619964f1da00d11c43d418395430920a940f47f485aeacb30"
    },
    "ranura": "ropa_piernas",
    "sha256": "d96f3f084487d966ac1795141e3b0fb12b1650a4b04407ed2ff62baf833d319d",
@@ -77,7 +77,7 @@
    "nombre": "Shorts muy cortos",
    "oculta": {
     "archivo": "os_short_shorts_oculta.png",
-    "sha256": "8b8716815786a77a9b35649a93347c82ee2e5d1bda8d35402eae35bb9b85b222"
+    "sha256": "6e755aade89bd38e9f095adb1ebcf9415521c44489d5e643de1a34c3d7c78d8c"
    },
    "ranura": "ropa_piernas",
    "sha256": "b60db6b6df5a3d33af24c505a5e20740844a40ad4aab68c5957e7ba4104f21f3",

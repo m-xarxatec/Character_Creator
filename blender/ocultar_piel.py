@@ -5,14 +5,17 @@ Uso: (ulimit -v 4000000; timeout 600 blender -b -P blender/ocultar_piel.py -- go
 Sin ids, todas las fichas de tipo ropa con .glb. Lee cuerpo.glb y el .glb de cada prenda (los dos en pose A y neutros,
 sin pasar por MPFB) y escribe <id>_oculta.png (RGBA de 1024², sobre las UV de cuerpo.glb como piel.png: RGB = 1,
 A = oculta), su .import y el campo "oculta" de la ficha en pack.json (solo ese campo; el resto del archivo no cambia).
-Oculta = piel con tela encima (rayo por su normal) a más de HIDE_HEM de piel sin tapar. Sin manos.
-Salida: MEDIDA <id>: tapada N, oculta M (x %), banda B, png K kB; FALLO si la banda es 0 o si las UV no cuadran.
+Oculta = piel con tela encima (rayo por su normal, sin otra piel por medio: 12.1b-b5) a más de HIDE_HEM de piel sin
+tapar. Sin manos. La de la axila o el muslo cuyo rayo cruza el costado o la otra pierna antes de la tela no está tapada.
+Salida: MEDIDA <id>: tapada N, oculta M (x %), banda B, png K kB, con otra piel por medio S; FALLO si la banda es 0 o si
+las UV no cuadran.
 """
 import json
 import os
 import sys
 
 import numpy as np
+from mathutils import Vector
 from mathutils.kdtree import KDTree
 
 sys.path.insert(0, os.path.dirname(os.path.abspath(__file__)))
@@ -24,6 +27,7 @@ import generar_zonas_piel as gz  # noqa: E402
 
 HIDE_HEM = 0.04  # metros: la piel a menos de esto de piel sin tapar no se oculta (la prueba mide desde HEM = 0,025)
 HAND_PARTS = ("Hand", "Thumb", "Index", "Middle", "Ring", "Little")  # los de generar_zonas_piel
+SKIN_GAP = 0.002  # metros: el rayo que busca otra piel sale de esto por encima de la suya (para no tocarse a sí mismo)
 
 
 def moved_meshes(path):
@@ -36,15 +40,28 @@ def moved_meshes(path):
     return bad
 
 
+def skin_between(skin, normals, tris, which, heights):
+    """bool por cada `which`: otra piel corta su rayo antes de la tela (la tela es de otra parte del cuerpo: la manga
+    sobre el costado, la pernera de la otra pierna). Paso 12.1b-b5."""
+    tree = eq.tree_of(skin, tris)
+    found = np.zeros(len(which), bool)
+    for k in np.nonzero(heights > SKIN_GAP)[0].tolist():
+        i = which[k]
+        origin = Vector((skin[i] + normals[i] * SKIN_GAP).tolist())
+        found[k] = tree.ray_cast(origin, Vector(normals[i].tolist()), heights[k] - SKIN_GAP)[0] is not None
+    return found
+
+
 def hidden_skin(skin, normals, tris, free, cloth, cloth_tris):
-    """bool por vértice de piel: tela encima (rayo por la normal) y a más de HIDE_HEM de piel sin tapar. free: los que
-    cuentan (sin manos). Sirve igual para los .glb (b2) que para la malla de Blender (b6). Devuelve (oculta, tapada)."""
+    """bool por vértice de piel: tela encima (rayo por la normal, sin otra piel por medio) y a más de HIDE_HEM de piel
+    sin tapar. free: los que cuentan (sin manos). Devuelve (oculta, tapada, cuántos tenían otra piel por medio)."""
     low, high = cloth.min(0) - eo.BELOW, cloth.max(0) + eo.BELOW
     near = free & (skin >= low).all(1) & (skin <= high).all(1)
     which = np.nonzero(near)[0]
     heights = eo.ray_heights(eq.tree_of(cloth, cloth_tris), skin, normals, which)[0]
+    behind = skin_between(skin, normals, tris, which, heights)
     covered = np.zeros(len(skin), bool)
-    covered[which[np.isfinite(heights)]] = True
+    covered[which[np.isfinite(heights) & ~behind]] = True
     bare = np.nonzero(near & ~covered)[0]
     hidden = covered.copy()
     if len(bare):
@@ -54,7 +71,7 @@ def hidden_skin(skin, normals, tris, free, cloth, cloth_tris):
         tree.balance()
         for i in np.nonzero(covered)[0].tolist():
             hidden[i] = tree.find(skin[i].tolist())[2] > HIDE_HEM
-    return hidden, covered
+    return hidden, covered, int(behind.sum())
 
 
 def write_mask(path, uv, index, hidden):
@@ -114,7 +131,7 @@ def mask_for(body, pack_folder, piece_id):
         print(f"  FALLO {piece_id}: la malla tiene transformación o primitivas de más ({moved}): read_glb no las aplica")
         return None, 1
     cloth, _ = gz.read_glb(path)
-    hidden, covered = hidden_skin(mesh["POSITION"], normals, mesh["INDEX"], free, cloth["POSITION"], cloth["INDEX"])
+    hidden, covered, behind = hidden_skin(mesh["POSITION"], normals, mesh["INDEX"], free, cloth["POSITION"], cloth["INDEX"])
     band = int((covered & ~hidden).sum())
     out = os.path.join(pack_folder, piece_id + "_oculta.png")
     image = write_mask(out + ".tmp", mesh["TEXCOORD_0"], mesh["INDEX"], hidden)  # .tmp: si falla, no pisa la buena
@@ -134,7 +151,7 @@ def mask_for(body, pack_folder, piece_id):
         file.write(eh.KEEP_IMPORT)
     tapada, oculta = int(covered.sum()), int(hidden.sum())
     print(f"MEDIDA {piece_id}: tapada {tapada}, oculta {oculta} ({100.0 * oculta / max(tapada, 1):.1f} %),"
-          f" banda {band}, png {os.path.getsize(out) / 1024:.0f} kB")
+          f" banda {band}, png {os.path.getsize(out) / 1024:.0f} kB, con otra piel por medio {behind}")
     return {"oculta": {"archivo": piece_id + "_oculta.png", "sha256": eh.sha256(out)}}, 0
 
 

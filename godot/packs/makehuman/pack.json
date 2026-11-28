@@ -216,7 +216,7 @@
    "nombre": "Traje informal (mujer 1)",
    "oculta": {
     "archivo": "female_casualsuit01_oculta.png",
-    "sha256": "e2e307e4f17a21c19e8806b736c5c2b954c3cbf849bd854718d7dd5c7f92647a"
+    "sha256": "522d515f3940acc89b54ab1c572ff6d76212752e3a9b33309eb31c5b3d844ccf"
    },
    "ranura": "ropa_torso",
    "sha256": "2e37c20452b2146be303cb91e60f428a651b7b2874234b8597a62c02064d5681",
@@ -258,7 +258,7 @@
    "nombre": "Traje deportivo (mujer)",
    "oculta": {
     "archivo": "female_sportsuit01_oculta.png",
-    "sha256": "322098b9bf4fe75322f75d9452e077b2a38d781736b21e2e8127439f465789f9"
+    "sha256": "afdf8759d96cf7fac541b244408ca68b29f45ed7e615f5272e0d9bccd5c1d636"
    },
    "ranura": "ropa_torso",
    "sha256": "edfe8ec922b898c6e2047f2fd2d521c5e496c7f97bf6e9dfc0af810731150601",
@@ -300,7 +300,7 @@
    "nombre": "Traje informal (hombre 2)",
    "oculta": {
     "archivo": "male_casualsuit02_oculta.png",
-    "sha256": "3ae3c638c8e5248026cb3af977e4bce56b67b2a9fe3b68c7363f25bf9569a7a8"
+    "sha256": "2fdf5df6409304d56545dae99f68b5fd896fa50cfb14d5f3e85e90c827c16f8f"
    },
    "ranura": "ropa_torso",
    "sha256": "69f02736bb0c66660108a55dca6c85ee963dba13937bd783f8353d8f818487f0",
@@ -342,7 +342,7 @@
    "nombre": "Traje informal (hombre 4)",
    "oculta": {
     "archivo": "male_casualsuit04_oculta.png",
-    "sha256": "6d5b885aafb0b4ee769b0bd1fa21c83a1c34388a500b98c58810d2518eb1935c"
+    "sha256": "0f7b8eeca0ee7954848409b26b62871b3a62e114e7ff9cbd6c75ea30d6fdf26e"
    },
    "ranura": "ropa_torso",
    "sha256": "946e47fd063f89e512bd3f4ad0f39ae24282d54702d3c8ac2e8e3097101f62fd",
@@ -1011,7 +1011,7 @@
    "nombre": "Shorts vaqueros",
    "oculta": {
     "archivo": "cortu_jeans_shorts_oculta.png",
-    "sha256": "dc7bf54279713aa538537dfd3cb9878b8c9a627fe7b1c7dbf9ae16f21f225ecc"
+    "sha256": "a0d8df5e5b47d1a7572d7f200f20b8addd7d38593acc41cfd4dbee6cef65af7f"
    },
    "ranura": "ropa_piernas",
    "sha256": "78c0e1769e0416e97fe3fa014621a9a1233361e6831437155c1cbc470ffe95ce",

@@ -1,7 +1,8 @@
 extends SceneTree
 # Pasos 12.1a y 12.1b: cuánta piel asoma por la ropa con el cuerpo en los extremos de los deslizadores (godot/app/main.gd).
 # Por prenda, caso y zona: «asoma» (piel por fuera de la primera tela, oculta o no; en el .glb se ve hasta 12.5), «oculta»
-# (la máscara puesta en el editor no la dibuja), «hueco» (la oculta la máscara de la prenda y no tiene su tela encima) y,
+# (la máscara puesta en el editor no la dibuja), «hueco» (la oculta la máscara de la prenda, no tiene su tela por la normal
+# y se ve a través desde fuera: algún rayo de la sonda, PROBE_TILTS × PROBE_TURNS + la normal, no cruza su prenda) y,
 # solo en la no oculta, «visible» (asoma más que el adelanto de AB.6, PIECE_PULL × capa) y «destapada» (la tela se va de
 # la piel; aparte). «Banda»: la piel tapada que queda sin ocultar, o sea la que «visible» sigue midiendo. Sin ventana.
 # Uso: (ulimit -v 4000000; timeout 600 godot --headless --path pruebas/godot -s probar_ropa_extremos.gd 2>&1 | grep -E 'FALLO|MEDIDA|RESULTADO|ERROR')
@@ -9,7 +10,8 @@ extends SceneTree
 # sin _update_hide en BodyView.set_piece -> vuelve «visible» y «oculta» da 0; en SkinHide.union, todo oculto -> «hueco»;
 # en Cloth.cloth_heights, Geometry3D.segment_intersects_triangle en vez de segment_hit -> falla «triángulos pequeños»; con Cloth.EDGE 0 -> «justo por una arista»;
 # en Cloth.cloth_heights, mirar solo las celdas de puntos a media celda del rayo -> falla «esquina de celda»;
-# sin el campo «oculta» de tights en godot/packs/base/pack.json -> falla «… corvas y codos».
+# sin el campo «oculta» de tights en godot/packs/base/pack.json -> falla «… corvas y codos»;
+# _seen_through que siempre ve -> falla «la sonda del hueco».
 
 const MeshBaker := preload("res://../../godot/addons/creador/mesh_baker.gd")
 const BodyMaterial := preload("res://../../godot/addons/creador/body_material.gd")
@@ -32,7 +34,12 @@ const HEM := 0.025
 const HAND_BONES := ["Hand", "Thumb", "Index", "Middle", "Ring", "Little"]
 const VISIBLE_MAX := 0  # aprobado (2026-11-28): vértices visibles en el editor; el objetivo de la fase
 const ASOMA_MAX := 30.0  # aprobado (2026-11-27): % de la piel tapada que asoma; medido 28,3 % (traje: 23,9 % ya en neutro), 19,1 % sin él
-const HUECO_MAX := 0  # aprobado (2026-11-27, ficha 12.1b): vértices ocultos por la prenda sin su tela encima
+const HUECO_MAX := 0  # aprobado (2026-11-27, ficha 12.1b): vértices ocultos por la prenda que se ven a través desde fuera
+## Sonda del hueco (2026-11-28): rayos de PROBE_LENGTH desde BELOW por debajo de la piel, la normal y PROBE_TURNS más por
+## cada inclinación (17); solo cuenta la tela de su prenda (la otra piel no tapa: el hueco deja ver el interior).
+const PROBE_TILTS := [30.0, 60.0]  # grados desde la normal
+const PROBE_TURNS := 8
+const PROBE_LENGTH := 0.30  # metros
 const WORST := 5
 const SMALL_LEGS := [0.007, 0.005, 0.003, 0.001]  # metros: catetos del caso de la medida (los de Godot los perdía)
 const HEIGHT_TOL := 0.00001  # PROVISIONAL: metros de error de la altura en ese caso
@@ -49,6 +56,7 @@ func _initialize() -> void:
 	var begin := Time.get_ticks_msec()
 	_check_ray()
 	_check_cell_corner()
+	_check_probe()
 	var main: Control = load(ProjectSettings.globalize_path("res://").path_join("../../godot/app/main.gd").simplify_path()).new()
 	root.add_child(main)
 	await process_frame
@@ -108,6 +116,25 @@ func _check_cell_corner() -> void:
 	check("12.1b: la medida encuentra tela en una esquina de celda", absf(heights[0] - 0.014) <= HEIGHT_TOL, str(heights))
 
 
+## La sonda: un punto 10 mm bajo un cuadrado de tela de 1 m no se ve; bajo uno de 2 cm (el rayo a 60° lo esquiva), sí;
+## 10 mm por encima del de 1 m (la tela, dentro de BELOW), no; sin tela, sí.
+func _check_probe() -> void:
+	var at := Vector3(0.1, 1.2, 0.05)
+	var up := Vector3.BACK
+	var results := []
+	for case: Array in [[0.5, -0.01, false], [0.01, -0.01, true], [0.5, 0.01, false], [0.0, -0.01, true]]:
+		var half: float = case[0]
+		var cloth := PackedVector3Array()
+		var tris := PackedInt32Array()
+		if half > 0.0:
+			var c: Vector3 = at - up * case[1]
+			cloth = PackedVector3Array([c + Vector3(-half, -half, 0), c + Vector3(half, -half, 0), c + Vector3(half, half, 0),
+				c + Vector3(-half, half, 0)])
+			tris = PackedInt32Array([0, 1, 2, 0, 2, 3])
+		results.append(_seen_through(at, up, cloth, tris, Cloth.cloth_grid(cloth, tris, CELL)) == case[2])
+	check("12.1b: la sonda del hueco ve lo destapado y no lo tapado", not results.has(false), str(results))
+
+
 ## Pone el conjunto, mide cada prenda en cada caso de sus zonas y la quita.
 func _check_set(main: Control, view, keys: Array, start: Dictionary, hands: PackedByteArray, bones: PackedStringArray) -> void:
 	main.editor.load_values(start)
@@ -133,7 +160,8 @@ func _check_set(main: Control, view, keys: Array, start: Dictionary, hands: Pack
 		var image: Image = view.library.hide_image(key.get_base_dir(), key.get_file())
 		var own := SkinHide.hidden_vertices(view.species.mesh, SkinHide.union([image] as Array[Image]))
 		garments.append({"id": key.get_file(), "mesh": mesh, "tris": tris, "covered": covered, "zones": zones, "pull": pull,
-			"own": own, "measured": _with_own(covered, own), "results": [], "spots": {}, "visible_spots": {}, "hole_spots": {}})
+			"own": own, "measured": _with_own(covered, own), "results": [], "spots": {}, "visible_spots": {}, "hole_spots": {},
+			"by_bone": {"visible": {}, "hueco": {}}})
 	# La máscara que tiene puesta el editor con el conjunto entero (la unión de sus prendas).
 	var all_hidden := SkinHide.hidden_vertices(view.species.mesh, BodyMaterial.get_hide_mask(view.species.mesh))
 	for garment: Dictionary in garments:
@@ -205,6 +233,7 @@ func _measure(garment: Dictionary, label: String, body: Dictionary, skeleton: Sk
 	var cloth: PackedVector3Array = MeshBaker.bake(garment["mesh"], skeleton)["vertices"]
 	var heights := Cloth.cloth_heights(body["vertices"], body["normals"], measured, cloth, garment["tris"], BELOW, ABOVE, CELL)
 	var result := {"case": label, "over": 0, "visible": 0, "bare": 0, "peak": 0.0, "hidden": 0, "hole": 0}
+	var grid := {}  # la de la sonda: solo se hace si algún oculto no tiene tela por la normal
 	for k in measured.size():
 		var v := measured[k]
 		var h := heights[k]
@@ -216,17 +245,48 @@ func _measure(garment: Dictionary, label: String, body: Dictionary, skeleton: Sk
 		if garment["hidden"][v] == 1:
 			result["hidden"] += 1
 			if garment["own"][v] == 1 and not is_finite(h):
-				result["hole"] += 1
-				_count(garment["hole_spots"], spot)
+				if grid.is_empty():
+					grid = Cloth.cloth_grid(cloth, garment["tris"], CELL)
+				if _seen_through(body["vertices"][v], body["normals"][v].normalized(), cloth, garment["tris"], grid):
+					result["hole"] += 1
+					_count(garment["hole_spots"], spot)
+					garment["by_bone"]["hueco"].get_or_add(bones[v], {})[v] = true
 		elif not is_finite(h):
 			result["bare"] += 1
 		elif h < -garment["pull"]:
 			result["visible"] += 1
 			_count(garment["visible_spots"], spot)
+			garment["by_bone"]["visible"].get_or_add(bones[v], {})[v] = true
 	garment["results"].append(result)
 	if label == "neutro":
 		print("  MEDIDA %s en neutro: asoma %d, visible %d, destapada %d, oculta %d, hueco %d, banda %d" % [garment["id"],
 			result["over"], result["visible"], result["bare"], result["hidden"], result["hole"], garment["band"]])
+
+
+## La sonda: ¿algún rayo (la normal y PROBE_TURNS por cada PROBE_TILTS) sale sin cruzar la tela de su prenda?
+func _seen_through(point: Vector3, normal: Vector3, cloth: PackedVector3Array, tris: PackedInt32Array, grid: Dictionary) -> bool:
+	var side := normal.cross(Vector3.UP if absf(normal.y) < 0.9 else Vector3.RIGHT).normalized()
+	var directions: Array[Vector3] = [normal]
+	for tilt: float in PROBE_TILTS:
+		for turn in PROBE_TURNS:
+			var across := side.rotated(normal, TAU * turn / PROBE_TURNS)
+			directions.append(normal.rotated(across, deg_to_rad(tilt)))
+	for direction: Vector3 in directions:
+		var from := point - direction * BELOW
+		var to := point + direction * PROBE_LENGTH
+		var blocked := false
+		var seen := {}
+		for key: Vector3i in Cloth._box_cells(from, to, CELL):
+			for t: int in grid.get(key, PackedInt32Array()):
+				if blocked or seen.has(t):
+					continue
+				seen[t] = true
+				blocked = Cloth.segment_hit(from, to, cloth[tris[3 * t]], cloth[tris[3 * t + 1]], cloth[tris[3 * t + 2]]) != null
+			if blocked:
+				break
+		if not blocked:
+			return true
+	return false
 
 
 func _count(spots: Dictionary, spot: String) -> void:
@@ -269,6 +329,11 @@ func _report(garment: Dictionary) -> void:
 		id, worst["case"], worst["over"], 100.0 * worst["over"] / total, worst["visible"], worst["bare"], worst["peak"] * 1000,
 		top_share, total, garment["results"].size(), worst["hidden"], worst["hole"], garment["band"]])
 	print("  MEDIDA %s: máximos en un caso: visible %d, hueco %d" % [id, top_visible, top_hole])
+	for kind: String in ["visible", "hueco"]:  # vértices distintos en algún caso, por hueso: la lista para rehacer la prenda
+		var found: Dictionary = garment["by_bone"][kind]
+		if not found.is_empty():
+			print("  MEDIDA %s: %s por hueso (vértices distintos) %s" % [id, kind, ", ".join(PackedStringArray(
+				found.keys().map(func(bone: String) -> String: return "%s %d" % [bone, found[bone].size()])))])
 	for kind: Array in [["asoma", "spots"], ["visible", "visible_spots"], ["hueco", "hole_spots"]]:
 		if not garment[kind[1]].is_empty():
 			print("  MEDIDA %s: peores %s (caso/zona) %s" % [id, kind[0], _worst_spots(garment[kind[1]])])
@@ -276,7 +341,7 @@ func _report(garment: Dictionary) -> void:
 		"%d casos: %s" % [too_visible.size(), ", ".join(PackedStringArray(too_visible))])
 	check("12.1a: %s deja asomar ≤ %.2f %% de la piel tapada" % [id, ASOMA_MAX], too_over.is_empty(),
 		"%d casos: %s" % [too_over.size(), ", ".join(PackedStringArray(too_over))])
-	check("12.1b: %s sin huecos (piel oculta sin su tela encima ≤ %d)" % [id, HUECO_MAX], holed.is_empty(),
+	check("12.1b: %s sin huecos (piel oculta que se ve a través ≤ %d)" % [id, HUECO_MAX], holed.is_empty(),
 		"%d casos: %s" % [holed.size(), ", ".join(PackedStringArray(holed))])
 	check("12.1b: %s deja piel tapada sin ocultar que medir (banda > 0)" % id, garment["band"] > 0, str(garment["band"]))
 
