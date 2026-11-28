@@ -13,6 +13,8 @@ extends RefCounted
 ## El personaje del editor no cambia.
 ## Paso AB.7: pieces (BodyPiece) salen como mallas aparte del mismo esqueleto, horneadas igual, con un
 ## StandardMaterial3D de su color (el toon del .tres es el del cuerpo; en el juego se puede poner también a ellas).
+## Paso 13.3h-c: la pieza con textura (BodyMaterial.get_base_texture) la lleva en albedo_texture, con su color (glTF los
+## multiplica, como la vista).
 ## Material: StandardMaterial3D con luz, sin brillo (metálico 0, rugosidad 1; paso 3.11a), para que reciba sombra fuera
 ## del editor, con la prenda horneada en una textura (garment_texture.gd). Con la prenda oculta, sin textura: todo color piel.
 ## SH.8c: en estilo anime, la piel de esa textura lleva el rubor, los labios y las pecas (skin_paint.gd).
@@ -68,18 +70,22 @@ static func prepare(mesh: MeshInstance3D, skeleton: Skeleton3D, socket_names: Ar
 static func start(mesh: MeshInstance3D, skeleton: Skeleton3D, socket_names: Array, t_pose: bool,
 		pieces: Array = [], rigid: Array = [], eyes: Array = [], eye_data: Dictionary = {}, cache: Variant = null) -> Dictionary:
 	var colors := {}  # paso AB.7 y AB.11: color del editor de cada pieza y accesorio, por nombre
+	var textures := {}  # paso 13.3h-c: textura de las que la tienen, por nombre
 	var colored: Array = pieces.duplicate()
 	for holder: Node in rigid:
 		colored.append_array(holder.get_children().filter(func(n: Node) -> bool: return n is MeshInstance3D))
 	for piece: MeshInstance3D in colored:
 		colors[piece.name] = BodyMaterial.get_color(piece, "skin_color")
+		var texture := BodyMaterial.get_base_texture(piece)
+		if texture != null:
+			textures[piece.name] = texture
 	var eye_values := []  # AC.6b
 	for eye: MeshInstance3D in eyes:
 		var is_eye := String(eye.name).begins_with("ojo_")
 		eye_values.append({"name": eye.name, "is_eye": is_eye,
 			"values": EyeTexture.eye_values(eye) if is_eye else EyeTexture.line_values(eye)})
 	var job := {"bake": CharacterBaker.prepare_bake(mesh, skeleton, t_pose, t_pose, pieces + eyes, rigid, cache),
-		"sockets": socket_names, "colors": colors, "eye_values": eye_values, "eye_data": eye_data,
+		"sockets": socket_names, "colors": colors, "textures": textures, "eye_values": eye_values, "eye_data": eye_data,
 		"toon": BodyMaterial.standalone(mesh),
 		"skin": BodyMaterial.get_color(mesh, "skin_color"), "garment": BodyMaterial.get_color(mesh, "garment_color"),
 		"garment_visible": BodyMaterial.is_garment_visible(mesh)}
@@ -113,7 +119,8 @@ static func after_bake(job: Dictionary) -> void:
 	job["character"] = character
 	if character == null:
 		return
-	_color_pieces(character, job["colors"], job["eye_values"].map(func(e: Dictionary) -> StringName: return e["name"]))
+	_color_pieces(character, job["colors"], job["eye_values"].map(func(e: Dictionary) -> StringName: return e["name"]),
+		job["textures"])
 	var exported := character.find_children("*", "MeshInstance3D", true, false)[0] as MeshInstance3D
 	job["arrays"] = exported.mesh.surface_get_arrays(0)
 	job["morphs"] = body_morphs  # paso 9.7.3: las expresiones (desplazamientos)
@@ -251,7 +258,8 @@ static func save(mesh: MeshInstance3D, skeleton: Skeleton3D, socket_names: Array
 
 ## Paso AB.7: material de cada pieza exportada (todas las mallas detrás de la primera), con el color del editor.
 ## colors: {nombre: color}, leído en start. skip (AC.6b): nombres de las mallas del ojo, que llevan su textura (finish).
-static func _color_pieces(character: Node3D, colors: Dictionary, skip: Array = []) -> void:
+## textures (13.3h-c): {nombre: Texture2D}, leído en start; el color la tiñe.
+static func _color_pieces(character: Node3D, colors: Dictionary, skip: Array = [], textures: Dictionary = {}) -> void:
 	for exported: MeshInstance3D in character.find_children("*", "MeshInstance3D", true, false).slice(1):
 		if exported.name in skip:
 			continue
@@ -260,6 +268,7 @@ static func _color_pieces(character: Node3D, colors: Dictionary, skip: Array = [
 		material.metallic = 0.0
 		material.roughness = 1.0
 		material.albedo_color = colors.get(exported.name, Color.WHITE)
+		material.albedo_texture = textures.get(exported.name)
 		exported.mesh.surface_set_material(0, material)
 
 
