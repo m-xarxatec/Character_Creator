@@ -16,10 +16,12 @@ signal released
 
 enum Mode { MOVE, TURN, SCALE }
 
+const Tokens := preload("tema/tokens.gd")
+
 const SIZE_PX := 90.0  # largo de flecha y radio de anillo, en píxeles de pantalla
 const PICK_PX := 10.0  # distancia máxima al asa para cogerla
-const AXIS_COLORS := [Color(0.9, 0.25, 0.25), Color(0.3, 0.8, 0.3), Color(0.3, 0.5, 0.95)]  # X, Y, Z
-const SCALE_COLOR := Color(0.7, 0.7, 0.7)
+const AXIS_COLORS := Tokens.GIZMO_EJES
+const SCALE_COLOR := Tokens.GIZMO_ESCALA
 const RING_SIDES := 48
 const MIN_SCALE := 0.05
 const MAX_SCALE := 20.0

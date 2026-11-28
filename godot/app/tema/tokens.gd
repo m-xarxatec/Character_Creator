@@ -73,6 +73,8 @@ const MARGEN_PANEL := 16
 const PANEL_DERECHO := 360  # paso IU.6: ancho del panel de ajustes
 const PANEL_IZQUIERDO := 280  # paso IU.5: ancho del panel de zonas
 const FUENTE := "fuentes/nunito.ttf"  # relativa a esta carpeta (las pruebas cargan app/ desde otro proyecto)
+const GIZMO_EJES := [Color(0.9, 0.25, 0.25), Color(0.3, 0.8, 0.3), Color(0.3, 0.5, 0.95)]  # X, Y, Z; igual en los dos temas
+const GIZMO_ESCALA := Color(0.7, 0.7, 0.7)
 
 
 static func palette(dark: bool) -> Dictionary:
