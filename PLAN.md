@@ -392,6 +392,25 @@ Según `diseno/maqueta-pestana-cuerpo.html`.
 
 ---
 
+## Por aprobar visualmente
+
+> La interfaz de estos puntos aún no está construida (13.1b, 10.3c/d, 13.3f, 13.3g y 13.3h-b/c); las prendas del 12.1b esperan a rehacerse.
+
+- 13.1b: selector de huesos en su sección «Huesos»
+- 10.3c/d: pestaña y panel del Estudio
+- 13.3f: botón y diálogo de importar con la advertencia D59
+- 13.3g: interfaz de ocultar, restaurar y borrar piezas
+- 13.3h-b/c: texturas de piezas visibles y exportadas
+- 12.1b: 18 prendas MakeHuman/Overscore por rehacer (lista `REMAKE` de `probar_ropa_extremos.gd`)
+
+## Pendiente técnico
+
+- 13.3h-c: exportar texturas (fuerte)
+- Ficha 17, VRM (necesita permiso de red)
+- 15.2b (necesita la interfaz del 10.3)
+
+---
+
 ## Registro
 
 > Las filas de las Fases 0 a 3 están en `REGISTRO.md`.
@@ -646,3 +665,4 @@ Según `diseno/maqueta-pestana-cuerpo.html`.
 | 2026-11-28 | 13.3h-a | uniform `base_tex` (blanco por defecto) en toon, toon_soft y outline multiplica el color; `BodyMaterial.set_base_texture`/`get_base_texture`, que sigue al contorno, al cambio de estilo y a la copia del Estudio; P6 teñir y P7 opaca con aviso (líder); sin las dos adiciones, los tres shaders son iguales byte a byte a los de antes; probar_textura_pieza (detecta 7 roturas), probar_material, probar_piezas y probar_estudio TODO BIEN. Sin ventana: faltan los píxeles, probar_linea, probar_toon_soft y probar_base_ojo. |
 | 2026-11-28 | 15.2a | `godot/app/platform.gd`: tabla de 11 funciones para `pc` y `android` (móvil o etiqueta `estudio` = android; desconocida = no, con aviso; imagen 8192/4096; `simulated` para pruebas); probar_plataforma TODO BIEN y detecta 3 roturas (android exporta, ignorar `simulated`, desconocida = sí). Cerrado solo con prueba en PC por encargo del líder; la ventana aún no la consulta (15.2b). |
 | 2026-11-28 | 10.3b (Cuerpo intacto) | `duplicate()` en `StudioView._copy` borraba `hair_head` de los materiales de Cuerpo (5 mallas; Godot lo quita al recorrer sus propiedades); ahora copia los parámetros a un material nuevo; la prueba ya no usa `duplicate` ni `get_property_list`; probar_estudio, probar_material y probar_textura_pieza TODO BIEN; detecta volver a `duplicate` (1 FALLO). |
+| 2026-11-28 | Cierre técnico | Cerrados técnicamente: 12.1b, 13.1a y 13.1c, 13.3a–e, 13.3g (sin interfaz), 13.3h-a, 10.3b (sin interfaz) y 15.2a; la Fase 15, con pruebas solo en PC (hecho solo 15.2a). 13.1b sin construir. Límites del 13.3e y del Estudio aprobados sin cambiar el valor. Lo que falta, en «Por aprobar visualmente» y «Pendiente técnico». |
