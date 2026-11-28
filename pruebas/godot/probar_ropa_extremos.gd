@@ -17,13 +17,30 @@ const MeshBaker := preload("res://../../godot/addons/creador/mesh_baker.gd")
 const BodyMaterial := preload("res://../../godot/addons/creador/body_material.gd")
 const SkinHide := preload("res://../../godot/addons/creador/skin_hide.gd")
 const Cloth := preload("medidas_tela.gd")
-## Se ponen juntas (ranuras distintas): 2 camisetas y unos shorts de cada pipeline (MPFB y propio) y un traje entero.
-const SETS := [["makehuman/elvs_crude_t-shirt_male", "makehuman/cortu_jeans_shorts"],
+## Cada lista se pone junta (ranuras distintas). Las de una prenda: 3 trajes (torso y piernas) y 8 de torso, sueltas
+## porque todas ocupan el torso. Una prenda se mide al sacarla de REMAKE.
+const SETS := [["makehuman/female_sportsuit01"], ["makehuman/male_casualsuit02"], ["makehuman/male_casualsuit04"],
+	["makehuman/toigo_basic_tucked_t-shirt"], ["makehuman/namuhekam_male_polo_shirt"], ["makehuman/toigo_camisole_top"],
+	["makehuman/toigo_keyhole_tank_top"], ["makehuman/toigo_fisherman_sweater"], ["overscore/os_vneck_top"],
+	["overscore/os_scrubs_top"], ["overscore/os_camisole_top"],
+	["makehuman/elvs_crude_t-shirt_male", "makehuman/cortu_jeans_shorts"],
 	["makehuman/joepal_crude_t-shirt_female", "overscore/os_short_shorts"],
 	["overscore/os_tank_top", "overscore/os_golf_shorts"], ["makehuman/female_casualsuit01"]]
 ## Las rehace el responsable, 28-11; volver a meterlas cuando estén (quitarlas de aquí): ni se ponen ni se miden.
+## Las 11 últimas, medidas el 28-11: vértices en el peor caso (casos que fallan). Ahora están las 18: no se mide ropa.
 const REMAKE := ["female_casualsuit01", "os_golf_shorts", "os_short_shorts", "cortu_jeans_shorts", "os_tank_top",
-	"elvs_crude_t-shirt_male", "joepal_crude_t-shirt_female"]
+	"elvs_crude_t-shirt_male", "joepal_crude_t-shirt_female",
+	"female_sportsuit01",  # visible 21 (13), hueco 18 (14)
+	"male_casualsuit02",  # visible 6 (6), hueco 12 (11)
+	"male_casualsuit04",  # visible 4 (6), hueco 6 (10)
+	"toigo_basic_tucked_t-shirt",  # hueco 7 (13)
+	"namuhekam_male_polo_shirt",  # hueco 2 (3)
+	"toigo_camisole_top",  # hueco 45 (6)
+	"toigo_keyhole_tank_top",  # hueco 18 (3)
+	"toigo_fisherman_sweater",  # visible 34 (6), hueco 6 (2)
+	"os_vneck_top",  # visible 4 (1), hueco 4 (2)
+	"os_scrubs_top",  # hueco 10 (9)
+	"os_camisole_top"]  # hueco 16 (3)
 ## Zonas de deslizadores que mueven la piel tapada por cada ranura (la cara y las manos no: triplicarían el tiempo).
 const ZONES := {"ropa_torso": ["Global", "Cuello", "Hombros", "Torso", "Pecho", "Cintura", "Brazos", "Base"],
 	"ropa_piernas": ["Global", "Cintura", "Caderas", "Glúteos", "Piernas", "Base"]}
