@@ -4,7 +4,7 @@ extends ScrollContainer
 # enseñan aquí: van solo en el panel de Créditos (D45, paso AB.13b). Aún no entra en Deshacer ni en el proyecto .gmolde
 # (bloque «piezas»: siguiente paso).
 # Paso 13.1b: las filas de accesorio llevan «Colocar» (solo con la pieza puesta): abre debajo una PlaceRow, una a la vez;
-# quitar la pieza la cierra.
+# quitar la pieza o cambiar de pestaña la cierra.
 # Uso: panel.setup(body_view, "pelo")
 
 const BodyMaterial := preload("../addons/creador/body_material.gd")
@@ -24,6 +24,9 @@ func _init() -> void:
 	horizontal_scroll_mode = SCROLL_MODE_DISABLED
 	list.size_flags_horizontal = SIZE_EXPAND_FILL
 	add_child(list)
+	visibility_changed.connect(func() -> void:  # paso 13.1b: al cambiar de pestaña, sin gizmo
+		if not is_visible_in_tree():
+			_close_place())
 
 
 func setup(body_view: SubViewportContainer, type: String) -> void:

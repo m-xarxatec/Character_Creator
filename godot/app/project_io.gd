@@ -8,6 +8,7 @@ extends RefCounted
 #   var loaded := ProjectIO.read(path, body_view)  # {error, proyecto, preset (como Preset.from_dict), avisos}
 #   var icon := ProjectIO.thumbnail(path)          # Texture2D o null (para «Recientes»)
 #   var warnings := ProjectIO.wear_pieces(body_view, project["personajes"][0]["piezas"])  # paso AB.13, al abrir
+#   var places := ProjectIO.moved_places(body_view)  # paso 13.1b: para saber si hay cambios sin guardar
 # Paso AB.13: el bloque «piezas» guarda las piezas puestas (pack, pieza, sha256, ranura y color); las que este programa
 # no tiene se conservan tal cual. Paso 13.3e: también las que tiene pero no se pudieron poner (archivo roto o cambiado).
 # Paso 13.3g: y las ocultas de la biblioteca (con su propio aviso).
@@ -133,6 +134,22 @@ static func wear_pieces(view: SubViewportContainer, pieces: Array) -> Array[Stri
 		elif not RigidPiece.set_place(view.accessories[key], piece["hueso"], RigidPiece.to_place(piece["transform"])):
 			warnings.append("la pieza %s iba en el hueso %s, que no existe: vuelve a su sitio" % [piece["pieza"], piece["hueso"]])
 	return warnings
+
+
+## Paso 13.1b: los accesorios fuera de su sitio de serie (clave, hueso y 8 números), como texto; sirve para saber si hay
+## colocaciones sin guardar. Poner o quitar una pieza en su sitio no lo cambia.
+static func moved_places(view: SubViewportContainer) -> String:
+	var moved := []
+	var keys: Array = view.accessories.keys()
+	keys.sort()
+	for key: String in keys:
+		var holder: BoneAttachment3D = view.accessories[key]
+		var now := [String(holder.bone_name), RigidPiece.to_array(RigidPiece.get_place(holder))]
+		var card: Dictionary = view.library.piece(key.get_base_dir(), key.get_file())
+		var usual := {} if card.is_empty() else RigidPiece.default_place(card)
+		if usual.is_empty() or now != [usual["hueso"], RigidPiece.to_array(usual["place"])]:
+			moved.append([key] + now)
+	return str(moved)
 
 
 ## Paso 13.1c: ¿sirven estos 8 números (de un archivo que se puede editar a mano)? Finitos, también ya como

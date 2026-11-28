@@ -9,6 +9,8 @@ y ojos.json son identicos. MEDIDA: lo que se movia la bolsa antes (hasta 58 mm, 
 con la boca abierta (jawOpen de faceunits01 a 0,5 y a 1), para el 9.8.
 Uso: (ulimit -v 4000000; timeout 900 blender -b -P pruebas/fase_3/probar_boca.py [-- <carpeta de antes>] 2>&1 | grep -E 'FALLO|MEDIDA|RESULTADO')
 Rotura: deform sin bags en EyeFit._socket_shapes -> falla «la bolsa conserva su fondo».
+Decidido por el responsable (2026-11-28): los invertidos no cuentan los triangulos del ojo (zona del ojo de AC.3:
+EyeFit.mask() > 0 en sus tres vertices); su bolsa se rehace a proposito y no es la boca. Los cruces, sobre toda la cabeza.
 Paso 9.8b (D58), con la carpeta de antes: COLOR_0 con verde 0 en la bolsa y 1 en el resto; lo demas del color, igual.
 """
 import hashlib
@@ -52,6 +54,11 @@ def normals(points, tris):
 
 def inverted(points, tris, start):
     return int((((normals(points, tris) * start).sum(1) < 0) & (np.linalg.norm(start, axis=1) > 1e-12)).sum())
+
+
+def eye_triangles(fit, tris):
+    """Triangulos enteros dentro de la zona del ojo (la mascara del contorno de AC.3)."""
+    return (fit.mask() > 0)[tris].all(1)
 
 
 def depth(points, bag, mouth):
@@ -139,8 +146,12 @@ def main():
     tess = fit.head
     start = normals(points, tess)
     rest = crossed(points, tess)
+    eyes = eye_triangles(fit, tess)
+    counted = tess[~eyes], start[~eyes]  # para los invertidos
+    print("MEDIDA zona del ojo: %d de %d triangulos de la cabeza no cuentan como invertidos" % (eyes.sum(), len(tess)))
     for name, state in (("anime antes", old_anime), ("anime", fit.anime)):
-        cross, flip = max(0, crossed(state, tess) - rest), inverted(state, tess, start)
+        cross, flip = max(0, crossed(state, tess) - rest), inverted(state, *counted)
+        print("MEDIDA %s: %d invertidos en los ojos (no cuentan)" % (name, inverted(state, tess[eyes], start[eyes])))
         if name == "anime":
             check("cara anime: 0 cruces nuevos y 0 invertidos en la cabeza", cross == 0 and flip == 0, "%d / %d" % (cross, flip))
         else:
@@ -148,8 +159,8 @@ def main():
     jaw = fit.face_delta(ex.unit_deltas(basemesh, ["jawOpen"])["jawOpen"]) @ np.array(basemesh.matrix_world)[:3, :3].T  # a mundo
     for amount in (0.5, 1.0):
         state = fit.anime + amount * jaw
-        print("MEDIDA boca abierta (jawOpen %.1f): %d cruces nuevos, %d invertidos" % (amount, max(0, crossed(state, tess) - rest),
-                                                                                    inverted(state, tess, start)))
+        print("MEDIDA boca abierta (jawOpen %.1f): %d cruces nuevos, %d invertidos sin los ojos" % (
+            amount, max(0, crossed(state, tess) - rest), inverted(state, *counted)))
     if before:
         check_before(before, fit, bag)
     else:

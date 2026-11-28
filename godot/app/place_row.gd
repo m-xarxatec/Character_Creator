@@ -64,6 +64,7 @@ func _add_bones() -> void:
 	for bone: String in BoneLabels.SOCKETS:
 		_add_bone(bone)
 	bones.add_separator(SECTION)
+	bones.add_separator()  # la línea que subraya el título (theme_builder.gd)
 	for bone: String in BoneLabels.BONES:
 		_add_bone(bone)
 	bones.item_selected.connect(_on_bone_selected)

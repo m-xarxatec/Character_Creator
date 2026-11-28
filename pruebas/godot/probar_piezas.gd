@@ -16,7 +16,9 @@ extends SceneTree
 # Paso 13.3a: un halo en socket_hand_r y en socket_back sale con piel, al 100 % del padre y donde en el editor. Que
 # detecta el fallo: en Sockets.to_nodes, no llamar a _to_socket_parent -> falla «exportar con el halo en socket_hand_r».
 # Paso 13.1b: «Colocar» en Accesorios (PlaceRow): hueso, gizmo, Restablecer, cierre y «Tocar zonas». Que detecta el
-# fallo: en PlaceRow._on_bone_selected, no llamar a set_place -> falla «el halo pasa a RightHand».
+# fallo: en PlaceRow._on_bone_selected, no llamar a set_place -> falla «el halo pasa a RightHand». En PiecesPanel, no
+# cerrar al ocultarse -> falla «cambiar de pestaña»; en BodyActions.has_changes, no mirar moved_places -> falla
+# «sin guardar»; en PlaceRow._add_bones, quitar el separador sin texto -> falla «en español».
 
 ## Paso RE.1b: peinados de Quaternius.
 const MeshBaker := preload("res://../../godot/addons/creador/mesh_baker.gd")
@@ -28,8 +30,9 @@ const HAND_CENTER_MAX := 0.05  # (13.1c, ficha §1.4): metros del centro del hal
 const HAND_WEIGHT_MAX := 0.001  # (13.1c): lo que le falta a un vértice del halo para pesar 1 en RightHand
 const SOCKET_CENTER_MAX := 0.001  # (13.3a, ficha §6): metros del centro del halo en un anclaje al del editor
 const BoneLabels := preload("res://../../godot/app/bone_labels.gd")  # paso 13.1b
-const HAND_FOLLOW_MAX := 0.001  # PROVISIONAL (13.1b, ficha §6): metros que cambia la distancia halo–mano con «Walk»
-const HAND_MOVED_MIN := 0.02  # PROVISIONAL (13.1b): metros que se mueve el halo en 0,5 s, para que la medida diga algo
+const ProjectIO := preload("res://../../godot/app/project_io.gd")  # paso 13.1b
+const HAND_FOLLOW_MAX := 0.001  # (13.1b, ficha §6): metros que cambia la distancia halo–mano con «Walk»
+const HAND_MOVED_MIN := 0.02  # (13.1b): metros que se mueve el halo en 0,5 s, para que la medida diga algo
 ## Paso AC.6b: el .glb lleva también los ojos (EyeMesh); no son piezas y no se cuentan (los mira probar_glb.gd --ojos).
 const EYE_MESHES := ["ojo_l", "ojo_r", "linea_l", "linea_r", "linea_inferior_l", "linea_inferior_r", "pliegue_l", "pliegue_r",
 	"ceja_l", "ceja_r"]  # AC.6c: las cejas
@@ -74,6 +77,8 @@ func _initialize() -> void:
 	_check_makehuman(main, view)
 	_check_wear(main, view)
 	await _check_place(main, view)
+	_check_place_tab(main, view)
+	_check_place_unsaved(main, view)
 	_check_export(view)
 	_check_project(main, view)
 	await _check_hair_physics(main, view)
@@ -627,7 +632,7 @@ func _check_place(main: Control, view) -> void:
 	if row == null:
 		return
 	check("13.1b: el gizmo está en la vista y «Tocar zonas» apagado", _gizmos(view) == 1 and not view.touch_zones)
-	_check_place_list(row)
+	_check_place_list(row, main.dark)
 	_choose_bone(row, "RightHand")
 	var holder: BoneAttachment3D = view.accessories["base/halo"]
 	check("13.1b: el halo pasa a RightHand", holder.bone_name == "RightHand", holder.bone_name)
@@ -664,14 +669,21 @@ func _gizmos(view) -> int:
 
 
 ## Los anclajes arriba y, en la sección «Huesos», los huesos, todos en español; elegido, el de la pieza.
-func _check_place_list(row) -> void:
+func _check_place_list(row, dark: bool) -> void:
 	var found := []
 	for i: int in row.bones.item_count:
 		found.append(row.bones.get_item_text(i))
 	var spanish := func(bone: String) -> String: return BoneLabels.label(bone)
-	var wanted: Array = BoneLabels.SOCKETS.map(spanish) + ["Huesos"] + BoneLabels.BONES.map(spanish)
-	check("13.1b: anclajes y sección «Huesos» en español", found == wanted
-		and row.bones.is_item_separator(BoneLabels.SOCKETS.size()), str(found))
+	var wanted: Array = BoneLabels.SOCKETS.map(spanish) + ["Huesos", ""] + BoneLabels.BONES.map(spanish)
+	var title := BoneLabels.SOCKETS.size()
+	check("13.1b: anclajes y sección «Huesos» (subrayada) en español", found == wanted
+		and row.bones.is_item_separator(title) and row.bones.is_item_separator(title + 1), str(found))
+	var popup: PopupMenu = row.bones.get_popup()
+	var line := popup.get_theme_stylebox("separator") as StyleBoxLine
+	var colors: Dictionary = load(ProjectSettings.globalize_path("res://").path_join("../../godot/app/tema/tokens.gd")
+		.simplify_path()).palette(dark)
+	check("13.1b: al desplegable le llega la línea del tema", line != null
+		and line.color.is_equal_approx(colors["texto_3" if dark else "texto"]))
 	check("13.1b: la lista enseña el hueso de la pieza", row.bones.get_selected_metadata() == "Head")
 
 
@@ -734,6 +746,63 @@ func _halo_and_hand(view, holder: BoneAttachment3D) -> Array[Vector3]:
 	var vertex: Vector3 = instance.mesh.surface_get_arrays(0)[Mesh.ARRAY_VERTEX][0]
 	var hand := skeleton.global_transform * skeleton.get_bone_global_pose(skeleton.find_bone("RightHand"))
 	return [instance.global_transform * vertex, hand.origin]
+
+
+## Paso 13.1b: cambiar de pestaña cierra «Colocar», apaga el gizmo y repone «Tocar zonas».
+func _check_place_tab(main: Control, view) -> void:
+	var accessories: int = main.TAB_NAMES.find("Accesorios")
+	main.top_bar.tab_bar.current_tab = accessories
+	var panel = main.piece_panels["Accesorios"]
+	var button: Button = panel.place_buttons["base/cuernos"]
+	var settings: GDScript = load(ProjectSettings.globalize_path("res://").path_join("../../godot/app/settings_file.gd").simplify_path())
+	var touch: bool = settings.get_touch_zones()
+	main.set_touch_zones(true)
+	button.button_pressed = true
+	check("13.1b: en Accesorios, «Colocar» abierto", panel.is_visible_in_tree() and panel.place_row != null
+		and _gizmos(view) == 1 and not view.touch_zones)
+	main.top_bar.tab_bar.current_tab = main.ACTIVE_TAB
+	check("13.1b: cambiar de pestaña cierra «Colocar» y apaga el gizmo", panel.place_row == null and _gizmos(view) == 0
+		and not button.button_pressed)
+	check("13.1b: al cambiar de pestaña, «Tocar zonas» vuelve a como estaba", view.touch_zones)
+	main.set_touch_zones(touch)
+
+
+## Paso 13.1b: cada forma de colocar deja el proyecto «sin guardar» (• en la barra); guardar el .gmolde lo quita.
+func _check_place_unsaved(main: Control, view) -> void:
+	var actions = main.body_actions
+	var path := OS.get_user_data_dir().path_join("colocar_prueba.gmolde")
+	var preset := path.get_basename() + ".json"
+	check("13.1b: poner el halo y guardar", view.set_piece("base", "halo", true) and actions.save_preset(path) == OK
+		and not actions.has_changes())
+	var panel = main.piece_panels["Accesorios"]
+	panel.place_buttons["base/halo"].button_pressed = true
+	var row = panel.place_row
+	var steps := {
+		"cambiar de hueso": func() -> void: _choose_bone(row, "RightHand"),
+		"mover": func() -> void: row.gizmo.moved_by.emit(Vector3.RIGHT, 0.03),
+		"girar": func() -> void: row.gizmo.turned_by.emit(Vector3.UP, 0.5),
+		"escalar": func() -> void: row.gizmo.scaled_by.emit(1.5),
+		"restablecer": func() -> void: row.reset.pressed.emit(),
+	}
+	for step: String in steps:
+		steps[step].call()
+		main.refresh_top_bar()
+		check("13.1b: %s deja el proyecto sin guardar" % step, actions.has_changes() and main.top_bar.file_label.text.ends_with("•"))
+		check("13.1b: guardar tras %s" % step, actions.save_preset(path) == OK and not actions.has_changes())
+	row.gizmo.moved_by.emit(Vector3.UP, 0.03)
+	check("13.1b: un .json no guarda la colocación: sigue sin guardar", actions.save_preset(preset) == OK
+		and actions.has_changes())
+	var other := path.get_basename() + "_2.gmolde"
+	check("13.1b: guardar movido, restablecer y guardar en otro", actions.save_preset(path) == OK)
+	row.reset.pressed.emit()
+	check("13.1b: el otro queda guardado", actions.save_preset(other) == OK and not actions.has_changes())
+	check("13.1b: abrir el .gmolde con la pieza movida deja sin cambios", actions.open_preset(path) == ""
+		and ProjectIO.moved_places(view) != "[]" and not actions.has_changes())
+	view.set_piece("base", "halo", false)
+	actions.project = {}
+	actions.current_path = ""
+	for file: String in [path, preset, other]:
+		DirAccess.remove_absolute(file)
 
 
 func _check_export(view) -> void:

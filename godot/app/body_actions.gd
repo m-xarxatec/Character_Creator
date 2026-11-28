@@ -14,6 +14,7 @@ extends HBoxContainer
 # Paso OPT.3b: también el horneado (GlbExporter.compute_bake), en otro hilo antes de ese.
 # Paso P.4: atajos Ctrl+S, Ctrl+O y Ctrl+E (Cmd en Mac) en los botones; has_changes() dice si lo que entraría en el
 #   preset es distinto de lo último guardado o abierto (exportar no cuenta). save_and_quit() guarda y cierra (main.gd).
+# Paso 13.1b: también cuenta colocar un accesorio; solo un .gmolde lo guarda (guardar un .json no lo da por guardado).
 # Paso P.5c: los tres diálogos de archivo se abren en la última carpeta usada (settings_file.gd).
 # Paso 10.2: Guardar y Abrir valen para proyectos .gmolde (project_io.gd, por defecto) y presets .json, según la
 #   extensión; el proyecto abierto se guarda entero (piezas, pose, escena). Sin carpeta usada: user://proyectos.
@@ -44,6 +45,7 @@ var export_thread: Thread  # paso P.1: el hilo de exportar mientras trabaja
 var save_button: Button
 var open_button: Button
 var saved_text := ""  # paso P.4: el preset de lo último guardado o abierto (sin nombre)
+var saved_places := ""  # paso 13.1b: las colocaciones del último .gmolde guardado o abierto
 var quit_after_save := false  # paso P.4: «Guardar…» del aviso al cerrar
 var current_path := ""  # paso IU.4: el preset guardado o abierto ("" = personaje nuevo)
 var project := {}  # paso 10.2: el último proyecto abierto o guardado ({} si fue un preset)
@@ -79,11 +81,12 @@ func setup(body_view: SubViewportContainer, body_editor = null) -> void:
 		open_button.shortcut = _shortcut(KEY_O)
 		open_button.icon = ThemeBuilder.icon("abrir")
 		saved_text = _current_text()
+		saved_places = ProjectIO.moved_places(view)
 
 
-## Paso P.4: ¿hay cambios sin guardar? (valores, colores, prenda o acabado; el nombre no cuenta)
+## Paso P.4: ¿hay cambios sin guardar? (valores, colores, prenda, acabado o colocación; el nombre no cuenta)
 func has_changes() -> bool:
-	return editor != null and _current_text() != saved_text
+	return editor != null and (_current_text() != saved_text or ProjectIO.moved_places(view) != saved_places)
 
 
 ## Paso IU.4: nombre del archivo para la barra de arriba.
@@ -133,6 +136,7 @@ func save_preset(path: String) -> Error:
 		error = ProjectIO.write(path, built)
 		if error == OK:
 			project = built
+			saved_places = ProjectIO.moved_places(view)
 	else:
 		error = PresetFile.save(path, view, editor.values)
 	if error == OK:
@@ -158,6 +162,7 @@ func open_preset(path: String) -> String:
 	project = loaded["proyecto"] if is_project else {}
 	if is_project:  # paso AB.13: sus piezas, en lugar de las puestas
 		loaded["avisos"].append_array(ProjectIO.wear_pieces(view, project["personajes"][0]["piezas"]))
+		saved_places = ProjectIO.moved_places(view)
 	saved_text = _current_text()
 	current_path = path
 	SettingsFile.add_recent(path)  # paso PL.4
