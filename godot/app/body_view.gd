@@ -19,12 +19,14 @@ extends SubViewportContainer
 # Paso 5.9: set_animation(ROM_ID) recorre el rango de movimiento (rom.gd): cada fotograma vuelve a la pose T y gira.
 # Paso AB.4: set_piece() pone o quita una pieza de los packs (library: godot/packs y user://packs) que sigue al cuerpo
 #   (BodyPiece; una por ranura, salvo accesorios), con el mismo toon y contorno. Paso AB.7: se exportan con el cuerpo.
+# Paso 13.3d: set_piece() pone también las piezas importadas (PieceImport), con el color de cada parte; rescan_packs().
 # Paso PE.4b: un peinado que cuelga lleva cadenas de huesos (HairChains) y su simulador (HairPhysics); al quitarlo se
 #   quitan. Las colisiones se miden otra vez al dejar quietos los deslizadores (frame_timer).
 
 ## Paso IU.7a: clic sin arrastrar en el cuerpo, con touch_zones encendido.
 signal zone_touched(zone: String)
 signal pieces_changed  # paso AB.13: se puso o se quitó una pieza
+signal packs_changed  # paso 13.3d: se volvió a leer la biblioteca (rescan_packs)
 
 const SpeciesData := preload("../addons/creador/species_data.gd")
 const CharacterUpdater := preload("../addons/creador/character_updater.gd")
@@ -56,6 +58,7 @@ const EyeMesh := preload("../addons/creador/eye_mesh.gd")  # paso AC.3c
 const RigidPiece := preload("../addons/creador/rigid_piece.gd")  # paso AB.11
 const GarmentCut := preload("../addons/creador/garment_cut.gd")  # paso AB.5
 const SkinHide := preload("../addons/creador/skin_hide.gd")  # paso 12.1b
+const PieceImport := preload("../addons/creador/piece_import.gd")  # paso 13.3d
 ## Paso AB.6: capa de cada ranura (más alta = más por fuera): se adelanta BodyMaterial.PIECE_PULL × capa.
 const LAYERS := {"ropa_interior": 1, "ropa_torso": 2, "ropa_piernas": 2, "pelo": 2, "ropa_pies": 3, "ropa_exterior": 3,
 	"accesorio": 4}
@@ -491,8 +494,7 @@ func _load_character() -> String:
 	viewport.add_child(species.scene)
 	updater = CharacterUpdater.new(species)
 	library = PackLibrary.new()  # paso AB.4
-	for warning: String in library.scan(PackedStringArray([folder.path_join("../../packs").simplify_path(), "user://packs"])):
-		push_warning(warning)
+	rescan_packs()
 	BodyMaterial.apply(species.mesh)
 	BodyMaterial.set_skin_zones(species.mesh, species.skin_zones)
 	Preset.apply_look(species.mesh, loaded)
@@ -514,12 +516,20 @@ func _load_character() -> String:
 	return ""
 
 
+## Paso 13.3d: vuelve a leer los packs de serie (junto a los datos) y los del usuario; al acabar, packs_changed.
+func rescan_packs() -> void:
+	var base := _data_folder().path_join("../../packs").simplify_path()
+	for warning: String in library.scan(PackedStringArray([base, "user://packs"])):
+		push_warning(warning)
+	packs_changed.emit()
+
+
 ## Paso AB.4: pone (on) o quita una pieza que sigue al cuerpo. Quita la que ocupe su ranura o choque con ella (PackLibrary.conflicts).
 ## Devuelve false si no se pudo poner (no existe, no sigue al cuerpo o su archivo no vale).
 func set_piece(pack_id: String, piece_id: String, on: bool) -> bool:
 	var key := pack_id.path_join(piece_id)
 	var known: Dictionary = library.piece(pack_id, piece_id)
-	if known.has("generador") or accessories.has(key):  # paso AB.11
+	if accessories.has(key) or RigidPiece.is_rigid(known):  # pasos AB.11 y 13.3d
 		return _set_accessory(key, known, on)
 	if not on or pieces.has(key):
 		if not on and pieces.has(key):
@@ -610,17 +620,31 @@ func _set_accessory(key: String, card: Dictionary, on: bool) -> bool:
 		return true
 	if accessories.has(key):
 		return true
-	var holder: BoneAttachment3D = RigidPiece.build(card, species.skeleton)
+	var parts := [] if card.get("generador") != null else _imported_parts(key)  # paso 13.3d
+	var holder: BoneAttachment3D = RigidPiece.build(card, species.skeleton, parts)
 	if holder == null:
 		return false
-	for mesh in RigidPiece.meshes(holder):
-		BodyMaterial.apply(mesh, true, BodyMaterial.is_soft(species.mesh))
-		BodyMaterial.set_color(mesh, "skin_color", library.color_of(card))
-		BodyMaterial.set_color(mesh, "garment_color", library.color_of(card))
-		_copy_line(mesh)
+	var meshes := RigidPiece.meshes(holder)
+	for k: int in meshes.size():
+		var color: Color = library.color_of(card) if parts.is_empty() else parts[k]["color"]
+		BodyMaterial.apply(meshes[k], true, BodyMaterial.is_soft(species.mesh))
+		BodyMaterial.set_color(meshes[k], "skin_color", color)
+		BodyMaterial.set_color(meshes[k], "garment_color", color)
+		_copy_line(meshes[k])
+	if not parts.is_empty():
+		holder.set_meta("own_colors", true)  # cada malla con su color, hasta que se elija uno (set_piece_color)
 	accessories[key] = holder
 	pieces_changed.emit()
 	return true
+
+
+## Paso 13.3d: las partes de una pieza importada, leídas y validadas otra vez; [] y un aviso si su archivo no vale.
+func _imported_parts(key: String) -> Array:
+	var path: String = library.piece_file(key.get_base_dir(), key.get_file())
+	var read: Dictionary = PieceImport.read(path) if path != "" else {"error": "falta su archivo o ha cambiado", "partes": []}
+	if read["error"] != "":
+		push_warning("pieza %s: %s" % [key, read["error"]])
+	return read["partes"]
 
 
 ## Color principal de una pieza puesta.
@@ -702,6 +726,8 @@ func piece_color(key: String) -> Color:
 
 
 func set_piece_color(key: String, color: Color) -> void:
+	if accessories.has(key):
+		accessories[key].remove_meta("own_colors")  # paso 13.3d: el color elegido manda sobre los de las partes
 	for mesh in meshes_of(key):
 		BodyMaterial.set_color(mesh, "skin_color", color)
 		BodyMaterial.set_color(mesh, "garment_color", color)

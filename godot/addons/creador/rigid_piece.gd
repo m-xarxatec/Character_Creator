@@ -5,8 +5,10 @@ extends RefCounted
 ## «anclaje.transform» lo coloca respecto al hueso (posición, giro como cuaternión y escala uniforme); con «simetria»,
 ## una segunda copia reflejada en X (geometría reflejada, sin escala negativa). Sin assets: la malla sale de los
 ## parámetros (se regenera igual al abrir).
+## Paso 13.3d: o una pieza importada (is_rigid), sin generador: una malla por parte de PieceImport.read.
 ## Uso:
 ##   var holder := RigidPiece.build(card, species.skeleton)   # BoneAttachment3D ya colgado, o null
+##   var holder := RigidPiece.build(card, species.skeleton, PieceImport.read(path)["partes"])   # importada
 ##   for mesh in RigidPiece.meshes(holder): …                  # sus mallas (una o dos)
 ##   RigidPiece.set_place(holder, "RightHand", place)          # paso 13.1a: otro hueso u otro sitio (false si no existe)
 ## Al exportar, CharacterBaker.bake(…, rigid) las pasa a mallas con piel, al 100 % de su hueso.
@@ -16,25 +18,50 @@ const RingGenerator := preload("ring_generator.gd")
 const GENERATORS := {"cuernos": HornGenerator, "aro": RingGenerator}
 
 
-static func build(card: Dictionary, skeleton: Skeleton3D) -> BoneAttachment3D:
-	var generator: Dictionary = card.get("generador", {})
-	var script: GDScript = GENERATORS.get(generator.get("tipo", ""))
+## Paso 13.3d: ¿es un accesorio rígido? Con generador, o accesorio con archivo que no sigue al cuerpo (pieza importada).
+static func is_rigid(card: Dictionary) -> bool:
+	return card.get("generador") != null or (card.get("tipo") == "accesorio" and card.get("sigue_al_cuerpo") != true
+		and card.get("archivo", "") != "")
+
+
+## parts (paso 13.3d): las de PieceImport.read, para una pieza sin generador. null si no hay mallas o falta el hueso.
+static func build(card: Dictionary, skeleton: Skeleton3D, parts := []) -> BoneAttachment3D:
+	var made := _generated(card) if card.get("generador") != null else _imported(card["id"], parts)
 	var bone: String = card["anclaje"]["hueso"]
-	if script == null or skeleton.find_bone(bone) < 0:
+	if made.is_empty() or skeleton.find_bone(bone) < 0:
 		return null
-	var mesh: ArrayMesh = script.build(generator.get("parametros", {}))
 	var holder := BoneAttachment3D.new()
 	holder.name = card["id"]
 	skeleton.add_child(holder)
-	var sides: Array = [1.0, -1.0] if generator.get("simetria", false) == true else [1.0]
-	for side: float in sides:
+	for mesh_name: String in made:
 		var instance := MeshInstance3D.new()
-		instance.name = "%s_%s" % [card["id"], "d" if side > 0.0 else "i"]
-		instance.mesh = mesh if side > 0.0 else _mirrored(mesh)
+		instance.name = mesh_name
+		instance.mesh = made[mesh_name]
 		holder.add_child(instance)
 	var anchor := default_place(card)
 	set_place(holder, anchor["hueso"], anchor["place"])
 	return holder
+
+
+## {nombre: malla} del generador de la ficha («<id>_d» y, con simetría, «<id>_i»); {} si no se conoce.
+static func _generated(card: Dictionary) -> Dictionary:
+	var generator: Dictionary = card["generador"]
+	var script: GDScript = GENERATORS.get(generator.get("tipo", ""))
+	if script == null:
+		return {}
+	var mesh: ArrayMesh = script.build(generator.get("parametros", {}))
+	var made := {card["id"] + "_d": mesh}
+	if generator.get("simetria", false) == true:
+		made[card["id"] + "_i"] = _mirrored(mesh)
+	return made
+
+
+## {nombre: malla} de las partes importadas, en su orden: «<id>_m<k>» (nunca «_i», que set_place reflejaría).
+static func _imported(id: String, parts: Array) -> Dictionary:
+	var made := {}
+	for k: int in parts.size():
+		made["%s_m%d" % [id, k]] = parts[k]["mesh"]
+	return made
 
 
 ## Paso 13.1a: [px, py, pz, qx, qy, qz, qw, escala] → Transform3D.

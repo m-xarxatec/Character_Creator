@@ -2,13 +2,18 @@ extends SceneTree
 # Paso 13.3c: PieceImport lee un .glb ajeno, lo aplana en partes, lo escala y lo guarda como pack propio (D59). Los .glb
 # se fabrican aquí (cajas), sin assets; escribe solo en user://importar_pieza, que borra al acabar, y deja la espada de
 # prueba en pruebas/capturas/13.3/espada_prueba.glb (para el juicio visual de 13.3f).
+# Paso 13.3d: BodyView pone una pieza importada (aquí también escribe en user://packs una carpeta propia_*, que borra).
 # Uso: (prlimit --as=4096000000 timeout 120 godot --headless --path pruebas/godot -s probar_importar_pieza.gd 2>&1 | grep -E 'FALLO|MEDIDA|RESULTADO|ERROR')
 # Que detecta el fallo: en PieceImport._append, no invertir los triángulos con determinante < 0 -> falla «el nodo
-# reflejado mira hacia fuera».
+# reflejado mira hacia fuera». En BodyView._set_accessory, pintar siempre con library.color_of(card) -> falla «13.3d:
+# cada malla con su color». En PackLibrary.piece_file, no mirar el sha256 -> falla «13.3d: archivo cambiado: no se pone».
 # Mide (MEDIDA) cuánto tarda read con 100.000 triángulos.
 
 const PieceImport := preload("res://../../godot/addons/creador/piece_import.gd")
 const PackLibrary := preload("res://../../godot/addons/creador/pack_library.gd")
+const RigidPiece := preload("res://../../godot/addons/creador/rigid_piece.gd")
+const USER_PACKS := "user://packs"  # donde la vista lee los del usuario (13.3d)
+const CHOSEN := Color(0.1, 0.6, 0.3)  # un color elegido a mano (13.3d)
 const DIR := "user://importar_pieza"
 const PACKS := "user://importar_pieza/packs"
 const CAPTURE := "res://../capturas/13.3/espada_prueba.glb"
@@ -40,6 +45,7 @@ func _initialize() -> void:
 		_check_save(r)
 	_check_far_origin()
 	_measure_heavy()
+	await _check_wear()
 	_remove_tree(DIR)
 	check("user://importar_pieza borrada", not DirAccess.dir_exists_absolute(DIR))
 	print("RESULTADO: ", "TODO BIEN" if failures == 0 else "%d FALLOS" % failures)
@@ -62,8 +68,7 @@ func _check_parts(r: Dictionary, label: String, box := SWORD_BOX) -> void:
 	var colors := [GRIP, BLADE, POMMEL]
 	var worst := 0.0
 	for k: int in 3:
-		var color: Color = parts[k]["color"]
-		worst = maxf(worst, maxf(absf(color.r - colors[k].r), maxf(absf(color.g - colors[k].g), absf(color.b - colors[k].b))))
+		worst = maxf(worst, _color_gap(parts[k]["color"], colors[k]))
 	check(label + "colores a 1/255", worst <= COLOR_MAX, "peor %.5f" % worst)
 	var image: Image = parts[2]["textura"]
 	check(label + "el pomo trae su textura del mismo tamaño, con UV", image != null and image.get_size() == TEXTURE_SIZE
@@ -186,6 +191,114 @@ func _measure_heavy() -> void:
 			and seconds <= TIME_MAX, str(r["error"], " ", r["triangulos"]))
 
 
+# --- 13.3d: poner la pieza ---
+
+func _check_wear() -> void:
+	var view = load(ProjectSettings.globalize_path("res://").path_join("../../godot/app/body_view.gd").simplify_path()).new()
+	root.add_child(view)
+	await process_frame
+	check("13.3d: la vista carga", view.error == "", view.error)
+	if view.error == "":
+		_check_imported(view)
+	view.free()
+
+
+func _check_imported(view) -> void:
+	var had_packs := DirAccess.dir_exists_absolute(USER_PACKS)
+	var id := _save_dagger()
+	if id == "":
+		return
+	var heard := []
+	view.packs_changed.connect(func() -> void: heard.append(true))
+	view.rescan_packs()
+	var card: Dictionary = view.library.piece(id, id)
+	check("13.3d: rescan_packs la encuentra y avisa (packs_changed)", not card.is_empty() and heard.size() == 1)
+	check("13.3d: is_rigid: la importada y el halo sí; las mallas y {} no", RigidPiece.is_rigid(card)
+			and RigidPiece.is_rigid(view.library.piece("base", "halo"))
+			and not RigidPiece.is_rigid(view.library.piece("base", "tights")) and not RigidPiece.is_rigid({}))
+	_check_worn(view, id)
+	_check_generated_color(view)
+	_check_bad_file(view, id)
+	_remove_tree(USER_PACKS.path_join(id))
+	if not had_packs:
+		DirAccess.remove_absolute(USER_PACKS)
+	check("13.3d: la pieza de prueba borrada de user://packs", not DirAccess.dir_exists_absolute(USER_PACKS.path_join(id)))
+
+
+## Una pieza de dos partes (mango y hoja) guardada en user://packs: su id, o "" si falla.
+func _save_dagger() -> String:
+	var dagger := Node3D.new()
+	_add_box(dagger, Vector3(0.03, 0.15, 0.03), Vector3.ZERO, _material(GRIP))
+	_add_box(dagger, Vector3(0.05, 0.3, 0.01), Vector3(0, 0.25, 0), _material(BLADE))
+	var r := PieceImport.read(_write("daga.glb", dagger))
+	var saved := PieceImport.save(r["partes"], META, USER_PACKS)
+	check("13.3d: pieza de dos colores guardada en user://packs", r["error"] == "" and saved["error"] == "",
+			str(r["error"], " ", saved["error"]))
+	return saved["pack"]
+
+
+func _check_worn(view, id: String) -> void:
+	var key := id.path_join(id)
+	check("13.3d: se pone", view.set_piece(id, id, true) and view.is_on(key))
+	var holder: BoneAttachment3D = view.accessories.get(key)
+	var meshes: Array = view.meshes_of(key)
+	check("13.3d: 2 mallas en el hueso del anclaje", meshes.size() == 2 and holder.bone_name == "socket_hand_r"
+			and holder.get_parent() == view.species.skeleton and meshes[0].name == id + "_m0" and meshes[1].name == id + "_m1",
+			str(meshes.size()))
+	if meshes.size() != 2:
+		return
+	check("13.3d: cada malla con su color", _painted(meshes[0], GRIP) and _painted(meshes[1], BLADE)
+			and holder.has_meta("own_colors"))
+	var place := RigidPiece.to_place([0.02, -0.01, 0.05, 0.36, 0.48, 0.64, 0.48, 1.3])
+	check("13.3d: set_place la mueve", RigidPiece.set_place(holder, "RightHand", place) and holder.bone_name == "RightHand"
+			and meshes.all(func(m: MeshInstance3D) -> bool: return m.transform.is_equal_approx(place)))
+	view.set_piece_color(key, CHOSEN)
+	check("13.3d: un color elegido pinta las dos y quita own_colors", _painted(meshes[0], CHOSEN)
+			and _painted(meshes[1], CHOSEN) and not holder.has_meta("own_colors"))
+	check("13.3d: se quita", view.set_piece(id, id, false) and not view.is_on(key) and view.meshes_of(key).is_empty())
+	var again: bool = view.set_piece(id, id, true)
+	meshes = view.meshes_of(key)
+	check("13.3d: otra vez puesta, con sus colores y en su anclaje", again and meshes.size() == 2 and _painted(meshes[0], GRIP)
+			and _painted(meshes[1], BLADE) and view.accessories[key].bone_name == "socket_hand_r")
+	view.set_piece(id, id, false)
+
+
+## El accesorio de generador sigue igual: sin own_colors, y elegir su color no da errores.
+func _check_generated_color(view) -> void:
+	var on: bool = view.set_piece("base", "halo", true)
+	view.set_piece_color("base/halo", CHOSEN)
+	check("13.3d: el halo se pone sin own_colors y se pinta", on and not view.accessories["base/halo"].has_meta("own_colors")
+			and view.piece_color("base/halo").is_equal_approx(CHOSEN))
+	view.set_piece("base", "halo", false)
+
+
+## Con el archivo cambiado (otro .glb válido), roto (sin sha256 en la ficha) o borrado, no se pone ni queda nada colgado.
+func _check_bad_file(view, id: String) -> void:
+	var folder := USER_PACKS.path_join(id)
+	var path := folder.path_join("pieza.glb")
+	var children: int = view.species.skeleton.get_child_count()
+	DirAccess.copy_absolute(DIR.path_join("espada.glb"), path)
+	check("13.3d: archivo cambiado: no se pone", not view.set_piece(id, id, true) and not view.is_on(id.path_join(id))
+			and view.library.piece_file(id, id) == "")
+	var data: Dictionary = JSON.parse_string(FileAccess.get_file_as_string(folder.path_join("pack.json")))
+	data["piezas"][0]["sha256"] = ""
+	_write_text(folder.path_join("pack.json"), JSON.stringify(data))
+	_write_text(path, "esto no es un glb")
+	view.rescan_packs()
+	check("13.3d: archivo roto sin sha256: no se pone", view.library.piece_file(id, id) != ""
+			and not view.set_piece(id, id, true))
+	DirAccess.remove_absolute(path)
+	check("13.3d: sin archivo: no se pone", view.library.piece_file(id, id) == "" and not view.set_piece(id, id, true))
+	check("13.3d: nada colgado de más en el esqueleto", view.species.skeleton.get_child_count() == children)
+
+
+## Los dos colores del material de la malla son color.
+func _painted(mesh: MeshInstance3D, color: Color) -> bool:
+	var material := mesh.material_override as ShaderMaterial
+	return ["skin_color", "garment_color"].all(func(part: String) -> bool:
+		return _color_gap(material.get_shader_parameter(part), color) <= COLOR_MAX)
+
+
 # --- Fabricar .glb ---
 
 func _sword() -> Node3D:
@@ -246,6 +359,16 @@ func _copy_capture(path: String) -> void:
 	var target := ProjectSettings.globalize_path(CAPTURE)
 	DirAccess.make_dir_recursive_absolute(target.get_base_dir())
 	DirAccess.copy_absolute(path, target)
+
+
+func _write_text(path: String, text: String) -> void:
+	var file := FileAccess.open(path, FileAccess.WRITE)
+	file.store_string(text)
+	file.close()
+
+
+func _color_gap(a: Color, b: Color) -> float:
+	return maxf(absf(a.r - b.r), maxf(absf(a.g - b.g), absf(a.b - b.b)))
 
 
 func _box_error(a: AABB, b: AABB) -> float:

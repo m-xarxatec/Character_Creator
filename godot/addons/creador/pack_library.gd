@@ -68,17 +68,25 @@ func piece(pack_id: String, piece_id: String) -> Dictionary:
 
 ## La escena de la pieza, o null si falta, si no se puede abrir o si su sha256 no coincide con la ficha.
 func load_piece(pack_id: String, piece_id: String) -> Node3D:
-	var card := piece(pack_id, piece_id)
-	if card.is_empty() or card["archivo"] == "":
-		return null
-	var path: String = (packs[pack_id]["carpeta"] as String).path_join(card["archivo"])
-	if card["sha256"] != "" and FileAccess.get_sha256(path) != card["sha256"]:
+	var path := piece_file(pack_id, piece_id)
+	if path == "":
 		return null
 	var document := GLTFDocument.new()
 	var state := GLTFState.new()
 	if document.append_from_file(path, state) != OK:
 		return null
 	return document.generate_scene(state) as Node3D
+
+
+## La ruta del archivo de la pieza, o "" si no tiene, si falta o si su sha256 no coincide con la ficha.
+func piece_file(pack_id: String, piece_id: String) -> String:
+	var card := piece(pack_id, piece_id)
+	if card.is_empty() or card["archivo"] == "":
+		return ""
+	var path: String = (packs[pack_id]["carpeta"] as String).path_join(card["archivo"])
+	if not FileAccess.file_exists(path) or (card["sha256"] != "" and FileAccess.get_sha256(path) != card["sha256"]):
+		return ""
+	return path
 
 
 ## Paso 12.1b: la máscara de piel oculta de la pieza (RGBA8), o null si no tiene, si falta o si su sha256 no coincide.
