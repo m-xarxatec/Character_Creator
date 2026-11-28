@@ -1,0 +1,49 @@
+{
+ "formato": "gamemolde-pack",
+ "version": 1,
+ "id": "claude_jersey_rosa",
+ "nombre": "Jersey rosa (pruebas)",
+ "autor": "GameMolde",
+ "licencia": "propia",
+ "origen": "",
+ "piezas": [
+  {
+   "id": "jersey_rosa",
+   "nombre": "Jersey corto rosa con body crema",
+   "archivo": "jersey_rosa.glb",
+   "sha256": "b60b3415f53ee589c14d7ca5e895722986235b59c29468a6641c0614c85b09b7",
+   "tipo": "ropa",
+   "ranura": "ropa_torso",
+   "especies": [
+    "humana"
+   ],
+   "colores": [
+    "principal"
+   ],
+   "color": [
+    0.8,
+    0.47,
+    0.52
+   ],
+   "sigue_al_cuerpo": true,
+   "fisica": [],
+   "miniatura": "",
+   "anclaje": {
+    "hueso": "",
+    "transform": [
+     0,
+     0,
+     0,
+     0,
+     0,
+     0,
+     1,
+     1
+    ]
+   },
+   "cubre": [
+    "ropa_piernas"
+   ]
+  }
+ ]
+}
