@@ -10,6 +10,7 @@ extends RefCounted
 #   var warnings := ProjectIO.wear_pieces(body_view, project["personajes"][0]["piezas"])  # paso AB.13, al abrir
 # Paso AB.13: el bloque «piezas» guarda las piezas puestas (pack, pieza, sha256, ranura y color); las que este programa
 # no tiene se conservan tal cual. Paso 13.3e: también las que tiene pero no se pudieron poner (archivo roto o cambiado).
+# Paso 13.3g: y las ocultas de la biblioteca (con su propio aviso).
 
 const ProjectFile := preload("../addons/creador/project_file.gd")
 const Preset := preload("../addons/creador/preset.gd")
@@ -50,7 +51,7 @@ static func build(path: String, view: SubViewportContainer, values: Dictionary, 
 	var kept: Array = project["personajes"][0]["piezas"].filter(func(piece: Dictionary) -> bool:
 		var key := String(piece["pack"]).path_join(piece["pieza"])
 		return view.library == null or view.library.piece(piece["pack"], piece["pieza"]).is_empty() \
-				or (key in unbuilt and not view.is_on(key)))
+				or ((view.library.is_hidden(piece["pack"], piece["pieza"]) or key in unbuilt) and not view.is_on(key)))
 	project["personajes"][0]["piezas"] = worn_pieces(view) + kept
 	project["miniatura"] = _capture(view)
 	return project
@@ -115,7 +116,11 @@ static func wear_pieces(view: SubViewportContainer, pieces: Array) -> Array[Stri
 	for piece: Dictionary in pieces:
 		if not view.set_piece(piece["pack"], piece["pieza"], true):
 			unbuilt.append(String(piece["pack"]).path_join(piece["pieza"]))
-			warnings.append("falta la pieza %s del pack %s (se conserva en el archivo)" % [piece["pieza"], piece["pack"]])
+			var text := "falta la pieza %s del pack %s (se conserva en el archivo)"
+			if view.library.is_hidden(piece["pack"], piece["pieza"]) \
+					and not view.library.piece(piece["pack"], piece["pieza"]).is_empty():  # paso 13.3g
+				text = "la pieza %s del pack %s está oculta: se recupera con «Restaurar» (se conserva en el archivo)"
+			warnings.append(text % [piece["pieza"], piece["pack"]])
 			continue
 		var key := String(piece["pack"]).path_join(piece["pieza"])
 		var color: Variant = piece["colores"].get("principal")

@@ -12,7 +12,7 @@ extends RefCounted
 
 const GlbInspect := preload("glb_inspect.gd")
 const PackLibrary := preload("pack_library.gd")
-const PREFIX := "propia_"
+const PREFIX := PackLibrary.OWN_PREFIX
 const LICENSE := "propia"  # D59: siempre la misma, sin texto libre (está en PackLibrary.LICENSES)
 const FILE := "pieza.glb"
 const NAME_MAX := 60

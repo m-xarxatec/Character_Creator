@@ -20,6 +20,7 @@ extends SubViewportContainer
 # Paso AB.4: set_piece() pone o quita una pieza de los packs (library: godot/packs y user://packs) que sigue al cuerpo
 #   (BodyPiece; una por ranura, salvo accesorios), con el mismo toon y contorno. Paso AB.7: se exportan con el cuerpo.
 # Paso 13.3d: set_piece() pone también las piezas importadas (PieceImport), con el color de cada parte; rescan_packs().
+# Paso 13.3g: remove_piece() borra una pieza propia u oculta cualquier otra (SettingsFile); restore_pieces() las devuelve.
 # Paso PE.4b: un peinado que cuelga lleva cadenas de huesos (HairChains) y su simulador (HairPhysics); al quitarlo se
 #   quitan. Las colisiones se miden otra vez al dejar quietos los deslizadores (frame_timer).
 
@@ -519,15 +520,44 @@ func _load_character() -> String:
 ## Paso 13.3d: vuelve a leer los packs de serie (junto a los datos) y los del usuario; al acabar, packs_changed.
 func rescan_packs() -> void:
 	var base := _data_folder().path_join("../../packs").simplify_path()
-	for warning: String in library.scan(PackedStringArray([base, "user://packs"])):
+	for warning: String in library.scan(PackedStringArray([base, PackLibrary.USER_ROOT])):
 		push_warning(warning)
+	library.hidden = {}  # paso 13.3g
+	for key: String in SettingsFile.get_hidden_pieces():
+		library.hidden[key] = true
 	packs_changed.emit()
 
 
+## Paso 13.3g: quita una pieza de la biblioteca (y del personaje, si la lleva): una propia se borra de verdad y las
+## demás se ocultan. Devuelve el error ("" si fue bien).
+func remove_piece(pack_id: String, piece_id: String) -> String:
+	if library.piece(pack_id, piece_id).is_empty():
+		return "la pieza %s del pack %s no existe" % [piece_id, pack_id]
+	var own: bool = library.is_own(pack_id)
+	for key: String in pieces.keys() + accessories.keys():  # la propia se lleva su carpeta: fuera todo su pack
+		if key.get_base_dir() == pack_id and (own or key.get_file() == piece_id):
+			set_piece(pack_id, key.get_file(), false)
+	var error := ""
+	if not own:
+		SettingsFile.hide_piece(pack_id.path_join(piece_id))
+	elif library.delete_own(pack_id) != OK:
+		error = "no se puede borrar la pieza %s" % piece_id
+	rescan_packs()
+	return error
+
+
+## Paso 13.3g: vuelven a verse todas las piezas ocultas (las borradas no vuelven).
+func restore_pieces() -> void:
+	SettingsFile.restore_pieces()
+	rescan_packs()
+
+
 ## Paso AB.4: pone (on) o quita una pieza que sigue al cuerpo. Quita la que ocupe su ranura o choque con ella (PackLibrary.conflicts).
-## Devuelve false si no se pudo poner (no existe, no sigue al cuerpo o su archivo no vale).
+## Devuelve false si no se pudo poner (no existe, está oculta, no sigue al cuerpo o su archivo no vale).
 func set_piece(pack_id: String, piece_id: String, on: bool) -> bool:
 	var key := pack_id.path_join(piece_id)
+	if on and library.is_hidden(pack_id, piece_id):  # paso 13.3g
+		return false
 	var known: Dictionary = library.piece(pack_id, piece_id)
 	if accessories.has(key) or RigidPiece.is_rigid(known):  # pasos AB.11 y 13.3d
 		return _set_accessory(key, known, on)

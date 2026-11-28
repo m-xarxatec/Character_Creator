@@ -9,6 +9,8 @@ extends RefCounted
 ##   del cuerpo (load_piece da null; quien la pone llama a BodyDerived.build).
 ## - Paso 12.1b: una pieza con «oculta»: {"archivo", "sha256"} (opcional) trae un PNG RGBA sobre las UV del cuerpo con la
 ##   piel que tapa (A = oculta); lo da hide_image y lo une SkinHide.
+## - Paso 13.3g: las piezas de «hidden» no salen en pieces() (piece, piece_file y load_piece sí las dan: un «corte» usa
+##   su origen aunque esté oculto). Un pack propio (user://packs/propia_*) se borra con delete_own.
 ## Uso:
 ##   var library := PackLibrary.new()
 ##   var warnings := library.scan(PackedStringArray(["res://packs", "user://packs"]))
@@ -22,8 +24,11 @@ const TYPES := ["pelo", "ropa", "accesorio", "ojos", "cejas"]
 const SLOTS := ["pelo", "cejas", "ojos", "ropa_interior", "ropa_torso", "ropa_piernas", "ropa_pies", "ropa_exterior",
 	"accesorio"]
 const MULTI_SLOT := "accesorio"  # la única ranura que admite varias piezas a la vez
+const USER_ROOT := "user://packs"  # los del usuario
+const OWN_PREFIX := "propia_"  # carpeta de una pieza importada (PieceImport): la única que se borra
 
 var packs := {}  # id → {"carpeta": String, "datos": Dictionary}
+var hidden := {}  # "pack/pieza" → true: piezas ocultas; quien usa la biblioteca la rellena. Un id que no esté se ignora
 
 
 ## Vuelve a leer los packs de las carpetas. Devuelve los avisos (pack rechazado y por qué).
@@ -41,13 +46,15 @@ func scan(folders: PackedStringArray) -> Array[String]:
 	return warnings
 
 
-## Fichas de las piezas (copias), del tipo y la especie pedidos ("" = todas), con el pack, el autor y la licencia.
+## Fichas de las piezas (copias) no ocultas, del tipo y la especie pedidos ("" = todas), con el pack, el autor y la
+## licencia.
 func pieces(type := "", species := "") -> Array[Dictionary]:
 	var found: Array[Dictionary] = []
 	for pack_id: String in packs:
 		var data: Dictionary = packs[pack_id]["datos"]
 		for piece: Dictionary in data["piezas"]:
-			if (type == "" or piece["tipo"] == type) and (species == "" or species in piece["especies"]):
+			if (type == "" or piece["tipo"] == type) and (species == "" or species in piece["especies"]) \
+					and not is_hidden(pack_id, piece["id"]):
 				var card := piece.duplicate(true)
 				card["pack"] = pack_id
 				card["autor"] = data["autor"]
@@ -64,6 +71,28 @@ func piece(pack_id: String, piece_id: String) -> Dictionary:
 		if item["id"] == piece_id:
 			return item.duplicate(true)
 	return {}
+
+
+func is_hidden(pack_id: String, piece_id: String) -> bool:
+	return hidden.has(pack_id.path_join(piece_id))
+
+
+## ¿Es una pieza propia, de las que se borran? Su carpeta es user://packs/propia_*.
+func is_own(pack_id: String) -> bool:
+	if not packs.has(pack_id):
+		return false
+	var folder: String = packs[pack_id]["carpeta"]
+	return folder.get_base_dir() == USER_ROOT and folder.get_file().begins_with(OWN_PREFIX)
+
+
+## Borra de verdad la carpeta de un pack propio y lo saca de la biblioteca. Con otro pack, ERR_UNAUTHORIZED y nada.
+func delete_own(pack_id: String) -> Error:
+	if not is_own(pack_id):
+		return ERR_UNAUTHORIZED
+	var error := _remove_tree(packs[pack_id]["carpeta"])
+	if error == OK:
+		packs.erase(pack_id)
+	return error
 
 
 ## La escena de la pieza, o null si falta, si no se puede abrir o si su sha256 no coincide con la ficha.
@@ -187,6 +216,27 @@ func _check_piece(item: Variant, folder: String, ids: Dictionary) -> String:
 		return "pieza %s: «color» no son 3 números" % id
 	card["color"] = card.get("color", [0.8, 0.8, 0.8])  # color de partida (RGB de 0 a 1)
 	return ""
+
+
+## Borra la carpeta con todo, también lo oculto. De un enlace se borra el enlace, sin entrar en lo que señala.
+static func _remove_tree(path: String) -> Error:
+	var parent := DirAccess.open(path.get_base_dir())
+	if parent == null:
+		return DirAccess.get_open_error()
+	if not parent.is_link(path):
+		var folder := DirAccess.open(path)
+		if folder == null:
+			return DirAccess.get_open_error()
+		folder.include_hidden = true
+		for name: String in folder.get_directories():
+			var error := _remove_tree(path.path_join(name))
+			if error != OK:
+				return error
+		for name: String in folder.get_files():
+			var error := folder.remove(path.path_join(name))
+			if error != OK:
+				return error
+	return parent.remove(path)
 
 
 ## Paso RE.1a: ¿no pueden llevarse a la vez? Misma ranura (salvo accesorios), o una cubre la ranura de la otra
