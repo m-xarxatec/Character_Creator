@@ -36,6 +36,10 @@
    "id": "tights",
    "miniatura": "",
    "nombre": "Malla de cuerpo completo",
+   "oculta": {
+    "archivo": "tights_oculta.png",
+    "sha256": "58cc59ef53ff32572cd739de8e680ae510f0746be240e158bcb6e4e09265c02c"
+   },
    "ranura": "ropa_interior",
    "sha256": "59f3322b6da1448d1ec06cebe84e8030ee2a80dd3b802deac4b87989252d5e60",
    "sigue_al_cuerpo": true,

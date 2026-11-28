@@ -10,4 +10,4 @@ Piezas de serie de GameMolde. Licencia de todo el pack: **CC0-1.0** (dominio pú
 | Cuernos, Halo | Generadores por parámetros | Los hace el programa al vuelo (`horn_generator.gd`, `ring_generator.gd`, `rigid_piece.gd`) |
 
 Formato de `pack.json`: `ruta/ARQUITECTURA.md` §6 (más los campos `derivada` y `generador`, pasos AB.9a y AB.11).
-Volver a generarlo: `blender -b -P blender/exportar_helpers.py -- godot/datos/humana godot/packs/base`.
+Volver a generarlo: `blender -b -P blender/exportar_helpers.py -- godot/datos/humana godot/packs/base` y después, para la piel que oculta la malla (`tights_oculta.png`, paso 12.1b), `blender -b -P blender/ocultar_piel.py -- godot/datos/humana godot/packs/base tights`.
