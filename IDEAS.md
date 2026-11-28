@@ -125,6 +125,7 @@ El zip está en `referencias/` (git no lo guarda). Versión gratis: 2 cuerpos es
 - **NPC en el juego:** usar el núcleo en tiempo de juego para crear multitudes variadas.
 - **Versión web** (Three.js) con la misma carpeta `datos/`.
 - **Android** (tablet).
+- **Deslizadores de cara en Android** (9.2c, aplazado hasta el build de Android, 2026-11-28): decidir cómo cargar o quitar las 40 formas de cara; punto de partida en `ruta/pasos/9.2_deslizadores_cara.md`.
 - **Rig automático con IA** (UniRig) para mallas importadas sin huesos, cuando haya una GPU con más de 8 GB.
 - **Comunidad:** repositorio de packs, guía para crear piezas, traducciones.
 - **Aleatorio con candados y semilla** (de PL.5, quitado por el responsable el 2026-11-20): candado por zona para que el azar no la cambie, «Atrevido» (0–1) y la semilla visible para repetir una tirada.
@@ -151,6 +152,8 @@ El zip está en `referencias/` (git no lo guarda). Versión gratis: 2 cuerpos es
 ## Descartadas (y por qué)
 
 - **Pelo anime por parámetros** (PE.1, 2026-11-25): casquete y mechones en hoja generados en Blender. Probado en el programa: «las formas están raras, no parecen cabello». Se sigue con huesos para los peinados que ya hay (Fase PE).
+- **Formas de orejas** (AB.12, 2026-11-28): las orejas serán assets del responsable.
+- **Oclusión fija** bajo el cuello, bajo los brazos y entre las piernas (SH.4c, 2026-11-28): SH.4 basta, aprobado.
 
 - **VRoid Studio como base:** es cerrado y sus mallas son de pixiv.
 - **MB-Lab:** sus personajes son AGPL.
