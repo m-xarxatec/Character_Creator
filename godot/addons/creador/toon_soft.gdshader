@@ -40,6 +40,7 @@ uniform mat4 hair_head = mat4(1.0);  // X.7: baja el umbral en la cara (más car
 uniform sampler2D detail_tex : source_color, filter_linear_mipmap, repeat_enable;
 uniform float detail_amount : hint_range(0.0, 1.0) = 0.0;
 uniform sampler2D hide_mask : hint_default_transparent, filter_nearest, repeat_disable;  // 12.1b: piel bajo la ropa
+uniform sampler2D base_tex : source_color, hint_default_white, filter_linear_mipmap, repeat_enable;  // 13.3h: textura de la pieza
 
 // ==== Común (SH.2b): idéntico en toon_soft.gdshader y eye_layers.gdshader; lo vigila probar_base_ojo.gd ====
 const float SHADE_VALUE_LIGHT = 0.78;  // cuánto oscurece un color claro
@@ -189,7 +190,7 @@ vec3 floor_dark(vec3 color) {
 void fragment() {
 	if (texture(hide_mask, UV).a > 0.5) { discard; }
 	float garment = show_garment ? step(0.5, min(COLOR.r, COLOR.a)) : 0.0;
-	vec3 color = mix(skin_color, garment_color, garment);
+	vec3 color = mix(skin_color, garment_color, garment) * texture(base_tex, UV).rgb;
 	vec4 all_zones = texture(skin_zones, UV);
 	vec3 zones = all_zones.rgb;  // SH.8: solo en la piel, nunca en la prenda
 	receive = shadow_receive * mix(face_shadow_receive, 1.0, all_zones.a);  // A: 0 en la cara (sin textura, 1)

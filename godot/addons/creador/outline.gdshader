@@ -18,6 +18,7 @@ uniform float outline_tint : hint_range(0.0, 1.0) = 0.0;
 uniform float face_line : hint_range(0.0, 1.0) = 1.0;
 uniform sampler2D skin_zones : hint_default_black, filter_linear, repeat_disable;
 uniform sampler2D hide_mask : hint_default_transparent, filter_nearest, repeat_disable;  // 12.1b: piel bajo la ropa
+uniform sampler2D base_tex : source_color, hint_default_white, filter_linear_mipmap, repeat_enable;  // 13.3h: textura de la pieza
 
 const float LINE_VALUE = 0.42;  // la línea teñida: valor del color × esto (en sRGB)
 const float LINE_SATURATION = 1.4;  // y saturación × esto
@@ -58,7 +59,7 @@ void vertex() {
 void fragment() {
 	if (texture(hide_mask, UV).a > 0.5) { discard; }
 	float garment = show_garment ? min(COLOR.r, COLOR.a) : 0.0;
-	vec3 hsv = rgb_to_hsv(to_srgb(clamp(mix(skin_color, garment_color, garment), 0.0, 1.0)));
+	vec3 hsv = rgb_to_hsv(to_srgb(clamp(mix(skin_color, garment_color, garment) * texture(base_tex, UV).rgb, 0.0, 1.0)));
 	vec3 tinted = to_linear(hsv_to_rgb(vec3(hsv.x, min(hsv.y * LINE_SATURATION, 1.0), hsv.z * LINE_VALUE)));
 	ALBEDO = mix(outline_color, tinted, outline_tint);
 }
