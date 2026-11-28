@@ -21,6 +21,9 @@ const Cloth := preload("medidas_tela.gd")
 const SETS := [["makehuman/elvs_crude_t-shirt_male", "makehuman/cortu_jeans_shorts"],
 	["makehuman/joepal_crude_t-shirt_female", "overscore/os_short_shorts"],
 	["overscore/os_tank_top", "overscore/os_golf_shorts"], ["makehuman/female_casualsuit01"]]
+## Las rehace el responsable, 28-11; volver a meterlas cuando estén (quitarlas de aquí): ni se ponen ni se miden.
+const REMAKE := ["female_casualsuit01", "os_golf_shorts", "os_short_shorts", "cortu_jeans_shorts", "os_tank_top",
+	"elvs_crude_t-shirt_male", "joepal_crude_t-shirt_female"]
 ## Zonas de deslizadores que mueven la piel tapada por cada ranura (la cara y las manos no: triplicarían el tiempo).
 const ZONES := {"ropa_torso": ["Global", "Cuello", "Hombros", "Torso", "Pecho", "Cintura", "Brazos", "Base"],
 	"ropa_piernas": ["Global", "Cintura", "Caderas", "Glúteos", "Piernas", "Base"]}
@@ -135,8 +138,17 @@ func _check_probe() -> void:
 	check("12.1b: la sonda del hueco ve lo destapado y no lo tapado", not results.has(false), str(results))
 
 
-## Pone el conjunto, mide cada prenda en cada caso de sus zonas y la quita.
-func _check_set(main: Control, view, keys: Array, start: Dictionary, hands: PackedByteArray, bones: PackedStringArray) -> void:
+## Pone el conjunto (sin las de REMAKE), mide cada prenda en cada caso de sus zonas y la quita.
+func _check_set(main: Control, view, all_keys: Array, start: Dictionary, hands: PackedByteArray, bones: PackedStringArray) -> void:
+	var keys := []
+	for key: String in all_keys:
+		if key.get_file() in REMAKE:
+			print("  POR REHACER: %s" % key.get_file())
+		else:
+			keys.append(key)
+	if keys.is_empty():
+		print("  MEDIDA conjunto sin prendas que medir: %s" % ", ".join(PackedStringArray(all_keys)))
+		return
 	main.editor.load_values(start)
 	var skeleton: Skeleton3D = view.species.skeleton
 	var body: Dictionary = MeshBaker.bake(view.species.mesh, skeleton)
